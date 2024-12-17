@@ -18,6 +18,10 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+export function SetCostPriceAndVolume(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SetCostPriceAndVolume'](arg1, arg2, arg3);
+}
+
 export function UnFollow(arg1) {
   return window['go']['main']['App']['UnFollow'](arg1);
 }

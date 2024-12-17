@@ -1,15 +1,28 @@
 <script setup>
-import {onBeforeMount, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
-import {Greet,Follow,UnFollow,GetFollowList,GetStockList} from '../../wailsjs/go/main/App'
-import {NText, useMessage} from 'naive-ui'
+import {h, onBeforeMount, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
+import {Greet, Follow, UnFollow, GetFollowList, GetStockList, SetCostPriceAndVolume} from '../../wailsjs/go/main/App'
+import {NButton, NFlex, NForm, NFormItem, NInput, NInputNumber, NText, useMessage, useModal} from 'naive-ui'
 
 const message = useMessage()
+const modal = useModal()
 
 const stocks=ref([])
 const results=ref({})
 const ticker=ref({})
 const stockList=ref([])
+const followList=ref([])
 const options=ref([])
+
+const formModel = ref({
+  costPrice: 0.000,
+  volume: 0
+})
+
+const form = h(NForm, { labelPlacement: 'left',model: formModel}, [
+  h(NFormItem, { label: '成本(元)',path:"costPrice" }, [h(NInputNumber, {path:"costPrice", onUpdateValue: updateCostPrice, clearable: true,precision:3, placeholder: '买入成本价(元)', })]),
+  h(NFormItem, { label: '数量(股)',path:"volume" }, [h(NInputNumber, {path:"volume",onUpdateValue: updateVolume, clearable: true,precision:0, placeholder: '买入股数,1手=100股', })]),
+]);
+
 
 const data = reactive({
   name: "",
@@ -28,12 +41,8 @@ onBeforeMount(()=>{
       }
     })
   })
-})
-
-onMounted(() => {
-  message.loading("Loading...")
-  console.log(`the component is now mounted.`)
   GetFollowList().then(result => {
+    followList.value = result
     for (const followedStock of result) {
       if (!stocks.value.includes(followedStock.StockCode)) {
         stocks.value.push(followedStock.StockCode)
@@ -42,9 +51,11 @@ onMounted(() => {
     monitor()
     message.destroyAll
   })
+})
 
-
-
+onMounted(() => {
+  message.loading("Loading...")
+  console.log(`the component is now mounted.`)
 
     ticker.value=setInterval(() => {
       if(isTradingTime()){
@@ -114,7 +125,7 @@ function getStockList(){
 
 function monitor() {
   for (let code of stocks.value) {
-    console.log(code)
+   // console.log(code)
     Greet(code).then(result => {
       let s=(result["当前价格"]-result["昨日收盘价"])*100/result["昨日收盘价"]
       let roundedNum = s.toFixed(2);  // 将数字转换为保留两位小数的字符串形式
@@ -129,6 +140,12 @@ function monitor() {
         result.type="default"
         result.color="#FFFFFF"
       }
+      let res= followList.value.filter(item => item.StockCode===code)
+      if (res.length>0) {
+        result.costPrice=res[0].CostPrice
+        result.volume=res[0].Volume
+        result.profit=((result["当前价格"]-result.costPrice)*100/result.costPrice).toFixed(3)
+      }
       results.value[result["股票名称"]]=result
     })
   }
@@ -138,22 +155,110 @@ function onSelect(item) {
   data.code=item.split(".")[1].toLowerCase()+item.split(".")[0]
 }
 
+function search(code,name){
+  setTimeout(() => {
+    window.open("https://xueqiu.com/S/"+code)
+  }, 500)
+}
+function updateCostPrice(v) {
+  console.log(formModel.value.costPrice)
+  formModel.value.costPrice=v
+  console.log(formModel.value.costPrice)
+
+}
+
+function updateVolume(v) {
+  console.log(formModel.value.volume)
+  formModel.value.volume=v
+  console.log(formModel.value.volume)
+}
+
+function setStock(code,name){
+
+  let res=followList.value.filter(item => item.StockCode===code)
+  console.log("res:",res)
+   formModel.value.volume=res[0].Volume
+   formModel.value.costPrice=res[0].CostPrice
+
+  const m = modal.create({
+    title: name,
+    preset: 'card',
+    style: {
+      width: '400px'
+    },
+    content: () => form,
+    footer: () =>
+        h(NFlex, { justify: 'center' },[
+          h(
+              NButton,
+              {size:'small', type: 'primary', onClick: () =>updateCostPriceAndVolume(m,code,formModel.value.costPrice,formModel.value.volume) },
+              () => '保存'
+          ),
+            h(
+            NButton,
+            { size:'small', type: 'warning', onClick: () => m.destroy() },
+            () => '关闭'
+        ),
+        ])
+
+
+  })
+}
+function updateCostPriceAndVolume(m,code,price,volume){
+  console.log(code,price,volume)
+  SetCostPriceAndVolume(code,price,volume).then(result => {
+    message.success(result)
+    m.destroy()
+    GetFollowList().then(result => {
+      followList.value = result
+      for (const followedStock of result) {
+        if (!stocks.value.includes(followedStock.StockCode)) {
+          stocks.value.push(followedStock.StockCode)
+        }
+      }
+      monitor()
+      message.destroyAll
+    })
+  })
+}
 </script>
 
 <template>
-    <n-grid x-gap="12" :cols="4"  :y-gap="12">
+    <n-grid :x-gap="8" :cols="3"  :y-gap="8">
       <n-gi v-for="result in results" >
-         <n-card :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"  :content-style="'font-size: 16px;'" closable @close="removeMonitor(result['股票代码'],result['股票名称'])">
-           <n-text :type="result.type" >{{result["当前价格"]}}</n-text><n-text style="padding-left: 10px;" :type="result.type">{{ result.s}}</n-text>
-           <template #footer>
-             <n-text :type="'info'">{{"今开: "+result["今日开盘价"]}}</n-text><br>
-             <n-text :type="'info'">{{"昨收: "+result["昨日收盘价"]}}</n-text>
+         <n-card size="small" :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"  :content-style="'font-size: 18px;'" closable @close="removeMonitor(result['股票代码'],result['股票名称'])">
+           <n-grid :cols="1" :y-gap="6">
+             <n-gi>
+               <n-text :type="result.type" >{{result["当前价格"]}}</n-text><n-text style="padding-left: 10px;" :type="result.type">{{ result.s}}</n-text>
+             </n-gi>
+           </n-grid>
+           <n-grid :cols="2" :y-gap="4" :x-gap="4" :item-style="'font-size: 14px;'">
+             <n-gi>
+               <n-text :type="'info'">{{"最高 "+result["今日最高价"]}}</n-text>
+             </n-gi>
+             <n-gi>
+               <n-text :type="'info'">{{"最低 "+result["今日最低价"]}}</n-text>
+             </n-gi>
+             <n-gi>
+               <n-text :type="'info'">{{"昨收 "+result["昨日收盘价"]}}</n-text>
+             </n-gi>
+             <n-gi>
+               <n-text :type="'info'">{{"今开 "+result["今日开盘价"]}}</n-text>
+             </n-gi>
+           </n-grid>
+           <template #header-extra>
+             <n-tag size="small" v-if="result.volume>0" :type="result.type">{{result.volume+"股"}}</n-tag>
+           </template>
+           <template #action>
+             <n-flex justify="space-between">
+               <n-tag size="small" v-if="result.costPrice>0" :type="result.type">{{"成本:"+result.costPrice+"  "+result.profit+"%"}}</n-tag>
+               <n-button size="tiny" type="info" @click="setStock(result['股票代码'],result['股票名称'])"> 设置 </n-button>
+                <n-button size="tiny" type="warning" @click="search(result['股票代码'],result['股票名称'])"> 详情 </n-button>
+             </n-flex>
            </template>
          </n-card >
       </n-gi>
     </n-grid>
-
-
           <n-auto-complete v-model:value="data.name" type="text"
                            :input-props="{
                               autocomplete: 'disabled',
@@ -162,8 +267,6 @@ function onSelect(item) {
                            placeholder="股票名称或者代码"
                            clearable class="input" @input="getStockList" :on-select="onSelect"/>
           <n-button type="info" @click="AddStock"> 添加 </n-button>
-
-
 </template>
 
 <style scoped>

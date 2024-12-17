@@ -21,7 +21,9 @@ const content = ref('数据来源于网络,仅供参考\n投资有风险,入市�
   >
   <n-flex justify="center">
     <n-message-provider >
+      <n-modal-provider>
       <stockInfo/>
+      </n-modal-provider>
     </n-message-provider>
   </n-flex>
   </n-watermark>

@@ -127,6 +127,8 @@ type StockBasic struct {
 type FollowedStock struct {
 	StockCode     string
 	Name          string
+	Volume        int64
+	CostPrice     float64
 	Price         float64
 	PriceChange   float64
 	ChangePercent float64
@@ -243,6 +245,15 @@ func (receiver StockDataApi) Follow(stockCode string) string {
 func (receiver StockDataApi) UnFollow(stockCode string) string {
 	db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", stockCode).Delete(&FollowedStock{})
 	return "取消关注成功"
+}
+
+func (receiver StockDataApi) SetCostPriceAndVolume(price float64, volume int64, stockCode string) string {
+	err := db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", stockCode).Update("cost_price", price).Update("volume", volume).Error
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+		return "设置失败"
+	}
+	return "设置成功"
 }
 
 func (receiver StockDataApi) GetFollowList() []FollowedStock {

@@ -3,6 +3,8 @@ export namespace data {
 	export class FollowedStock {
 	    StockCode: string;
 	    Name: string;
+	    Volume: number;
+	    CostPrice: number;
 	    Price: number;
 	    PriceChange: number;
 	    ChangePercent: number;
@@ -18,6 +20,8 @@ export namespace data {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.StockCode = source["StockCode"];
 	        this.Name = source["Name"];
+	        this.Volume = source["Volume"];
+	        this.CostPrice = source["CostPrice"];
 	        this.Price = source["Price"];
 	        this.PriceChange = source["PriceChange"];
 	        this.ChangePercent = source["ChangePercent"];

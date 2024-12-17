@@ -59,3 +59,7 @@ func (a *App) GetFollowList() []data.FollowedStock {
 func (a *App) GetStockList(key string) []data.StockBasic {
 	return data.NewStockDataApi().GetStockList(key)
 }
+
+func (a *App) SetCostPriceAndVolume(stockCode string, price float64, volume int64) string {
+	return data.NewStockDataApi().SetCostPriceAndVolume(price, volume, stockCode)
+}
