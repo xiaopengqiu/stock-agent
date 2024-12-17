@@ -138,7 +138,6 @@ func initStockData() {
 	}
 }
 
-// 判断目录是否存在，不存在则创建
 func checkDir(dir string) {
 	_, err := os.Stat(dir)
 	if os.IsNotExist(err) {
