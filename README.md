@@ -6,6 +6,7 @@
 ## About
 
 A China stock data viewer build by  [Wails](https://wails.io/) with [NavieUI](https://www.naiveui.com/).
+A股数据可视化工具，基于Wails和NaiveUI。
 
 ## Prerequisites
 INSTALL [GO](https://golang.org) AND [Wails](https://wails.io/)
