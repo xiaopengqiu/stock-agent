@@ -108,3 +108,4 @@ dist
 .idea/
 data/*.db
 build/*.exe
+/build/bin/go-stock-dev.exe

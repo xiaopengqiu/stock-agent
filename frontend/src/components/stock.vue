@@ -12,17 +12,13 @@ const ticker=ref({})
 const stockList=ref([])
 const followList=ref([])
 const options=ref([])
-
+const modalShow = ref(false)
 const formModel = ref({
+  name: "",
+  code: "",
   costPrice: 0.000,
   volume: 0
 })
-
-const form = h(NForm, { labelPlacement: 'left',model: formModel}, [
-  h(NFormItem, { label: '成本(元)',path:"costPrice" }, [h(NInputNumber, {path:"costPrice", onUpdateValue: updateCostPrice, clearable: true,precision:3, placeholder: '买入成本价(元)', })]),
-  h(NFormItem, { label: '数量(股)',path:"volume" }, [h(NInputNumber, {path:"volume",onUpdateValue: updateVolume, clearable: true,precision:0, placeholder: '买入股数,1手=100股', })]),
-]);
-
 
 const data = reactive({
   name: "",
@@ -160,55 +156,21 @@ function search(code,name){
     window.open("https://xueqiu.com/S/"+code)
   }, 500)
 }
-function updateCostPrice(v) {
-  console.log(formModel.value.costPrice)
-  formModel.value.costPrice=v
-  console.log(formModel.value.costPrice)
-
-}
-
-function updateVolume(v) {
-  console.log(formModel.value.volume)
-  formModel.value.volume=v
-  console.log(formModel.value.volume)
-}
-
 function setStock(code,name){
-
-  let res=followList.value.filter(item => item.StockCode===code)
-  console.log("res:",res)
-   formModel.value.volume=res[0].Volume
-   formModel.value.costPrice=res[0].CostPrice
-
-  const m = modal.create({
-    title: name,
-    preset: 'card',
-    style: {
-      width: '400px'
-    },
-    content: () => form,
-    footer: () =>
-        h(NFlex, { justify: 'center' },[
-          h(
-              NButton,
-              {size:'small', type: 'primary', onClick: () =>updateCostPriceAndVolume(m,code,formModel.value.costPrice,formModel.value.volume) },
-              () => '保存'
-          ),
-            h(
-            NButton,
-            { size:'small', type: 'warning', onClick: () => m.destroy() },
-            () => '关闭'
-        ),
-        ])
-
-
-  })
+    let res=followList.value.filter(item => item.StockCode===code)
+    console.log("res:",res)
+    formModel.value.name=name
+    formModel.value.code=code
+    formModel.value.volume=res[0].Volume
+    formModel.value.costPrice=res[0].CostPrice
+    modalShow.value=true
 }
-function updateCostPriceAndVolume(m,code,price,volume){
+
+function updateCostPriceAndVolumeNew(code,price,volume){
   console.log(code,price,volume)
   SetCostPriceAndVolume(code,price,volume).then(result => {
+    modalShow.value=false
     message.success(result)
-    m.destroy()
     GetFollowList().then(result => {
       followList.value = result
       for (const followedStock of result) {
@@ -267,6 +229,20 @@ function updateCostPriceAndVolume(m,code,price,volume){
                            placeholder="股票名称或者代码"
                            clearable class="input" @input="getStockList" :on-select="onSelect"/>
           <n-button type="info" @click="AddStock"> 添加 </n-button>
+
+      <n-modal transform-origin="center" size="small" v-model:show="modalShow" :title="formModel.name" style="width: 400px" :preset="'card'">
+            <n-form :model="formModel" :rules="{ costPrice: { required: true, message: '请输入成本'}, volume: { required: true, message: '请输入数量'} }" label-placement="left" label-width="80px">
+              <n-form-item label="成本(元)" path="costPrice">
+                <n-input-number v-model:value="formModel.costPrice" min="0"  placeholder="请输入股票成本" />
+              </n-form-item>
+              <n-form-item label="数量(股)" path="volume">
+                <n-input-number v-model:value="formModel.volume"  min="0" placeholder="请输入股票数量" />
+              </n-form-item>
+            </n-form>
+            <template #footer>
+              <n-button type="primary" @click="updateCostPriceAndVolumeNew(formModel.code,formModel.costPrice,formModel.volume)">保存</n-button>
+            </template>
+      </n-modal>
 </template>
 
 <style scoped>
