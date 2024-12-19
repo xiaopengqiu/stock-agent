@@ -199,7 +199,7 @@ function updateCostPriceAndVolumeNew(code,price,volume){
 <template>
     <n-grid :x-gap="8" :cols="3"  :y-gap="8">
       <n-gi v-for="result in results" >
-         <n-card size="medium" :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"  :content-style="'font-size: 18px;'" closable @close="removeMonitor(result['股票代码'],result['股票名称'])">
+         <n-card size="medium" style="min-height: 270px" :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"  :content-style="'font-size: 18px;'" closable @close="removeMonitor(result['股票代码'],result['股票名称'])">
            <n-grid :cols="1" :y-gap="6">
              <n-gi>
                <n-text :type="result.type" >{{result["当前价格"]}}</n-text><n-text style="padding-left: 10px;" :type="result.type">{{ result.s}}</n-text>&nbsp;
