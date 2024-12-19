@@ -18,9 +18,6 @@ jobs:
       matrix:
         build:
           - name: 'go-stock'
-            platform:  'linux/amd64'
-            os: 'ubuntu-latest'
-          - name: 'go-stock'
             platform:  'windows/amd64'
             os: 'windows-latest'
 
