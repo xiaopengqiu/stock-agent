@@ -13,6 +13,8 @@ const stockList=ref([])
 const followList=ref([])
 const options=ref([])
 const modalShow = ref(false)
+const modalShow2 = ref(false)
+const modalShow3 = ref(false)
 const formModel = ref({
   name: "",
   code: "",
@@ -23,6 +25,8 @@ const formModel = ref({
 const data = reactive({
   name: "",
   code: "",
+  fenshiURL:"",
+  kURL:"",
   resultText: "Please enter your name below 👇",
 })
 
@@ -177,6 +181,20 @@ function setStock(code,name){
     modalShow.value=true
 }
 
+function showFenshi(code,name){
+  data.code=code
+  data.name=name
+  data.fenshiURL='http://image.sinajs.cn/newchart/min/n/'+data.code+'.gif'+"?t="+Date.now()
+  modalShow2.value=true
+}
+function showK(code,name){
+  data.code=code
+  data.name=name
+  data.kURL='http://image.sinajs.cn/newchart/daily/n/'+data.code+'.gif'+"?t="+Date.now()
+  modalShow3.value=true
+}
+
+
 function updateCostPriceAndVolumeNew(code,price,volume){
   console.log(code,price,volume)
   SetCostPriceAndVolume(code,price,volume).then(result => {
@@ -206,29 +224,35 @@ function updateCostPriceAndVolumeNew(code,price,volume){
                <n-text  size="small" v-if="result.profitAmountToday>0" :type="result.type">{{result.profitAmountToday}}</n-text>
              </n-gi>
            </n-grid>
-           <n-grid :cols="2" :y-gap="4" :x-gap="4" :item-style="'font-size: 14px;'">
-             <n-gi>
-               <n-text :type="'info'">{{"最高 "+result["今日最高价"]+" "+result.highRate }}</n-text>
-             </n-gi>
-             <n-gi>
-               <n-text :type="'info'">{{"最低 "+result["今日最低价"]+" "+result.lowRate }}</n-text>
-             </n-gi>
-             <n-gi>
-               <n-text :type="'info'">{{"昨收 "+result["昨日收盘价"]}}</n-text>
-             </n-gi>
-             <n-gi>
-               <n-text :type="'info'">{{"今开 "+result["今日开盘价"]}}</n-text>
-             </n-gi>
-           </n-grid>
+             <n-grid :cols="2" :y-gap="4" :x-gap="4" :item-style="'font-size: 14px;'" >
+               <n-gi>
+                 <n-text :type="'info'">{{"最高 "+result["今日最高价"]+" "+result.highRate }}</n-text>
+               </n-gi>
+               <n-gi>
+                 <n-text :type="'info'">{{"最低 "+result["今日最低价"]+" "+result.lowRate }}</n-text>
+               </n-gi>
+               <n-gi>
+                 <n-text :type="'info'">{{"昨收 "+result["昨日收盘价"]}}</n-text>
+               </n-gi>
+               <n-gi>
+                 <n-text :type="'info'">{{"今开 "+result["今日开盘价"]}}</n-text>
+               </n-gi>
+             </n-grid>
            <template #header-extra>
-             <n-tag size="small" v-if="result.volume>0" :type="result.profitType">{{result.volume+"股"}}</n-tag>
+<!--             <n-tag size="small" v-if="result.volume>0" :type="result.profitType">{{result.volume+"股"}}</n-tag>-->
            </template>
            <template #footer>
-             <n-tag size="small" v-if="result.costPrice>0" :type="result.profitType">{{"成本:"+result.costPrice+"  "+result.profit+"%"+" ( "+result.profitAmount+" ¥ )"}}</n-tag>
+             <n-flex justify="center">
+               <n-tag size="small" v-if="result.volume>0" :type="result.profitType">{{result.volume+"股"}}</n-tag>
+              <n-tag size="small" v-if="result.costPrice>0" :type="result.profitType">{{"成本:"+result.costPrice+"  "+result.profit+"%"+" ( "+result.profitAmount+" ¥ )"}}</n-tag>
+             </n-flex>
            </template>
            <template #action>
              <n-flex justify="space-between">
+               <n-text :type="'info'">{{result["日期"]+" "+result["时间"]}}</n-text>
                <n-button size="tiny" type="info" @click="setStock(result['股票代码'],result['股票名称'])"> 设置 </n-button>
+               <n-button size="tiny" type="success" @click="showFenshi(result['股票代码'],result['股票名称'])"> 分时 </n-button>
+               <n-button size="tiny" type="error" @click="showK(result['股票代码'],result['股票名称'])"> 日K </n-button>
                 <n-button size="tiny" type="warning" @click="search(result['股票代码'],result['股票名称'])"> 详情 </n-button>
              </n-flex>
            </template>
@@ -257,6 +281,13 @@ function updateCostPriceAndVolumeNew(code,price,volume){
               <n-button type="primary" @click="updateCostPriceAndVolumeNew(formModel.code,formModel.costPrice,formModel.volume)">保存</n-button>
             </template>
       </n-modal>
+
+  <n-modal v-model:show="modalShow2" :title="data.name" style="width: 600px" :preset="'card'">
+    <n-image :src="data.fenshiURL" />
+  </n-modal>
+  <n-modal v-model:show="modalShow3" :title="data.name" style="width: 600px" :preset="'card'">
+    <n-image :src="data.kURL" />
+  </n-modal>
 </template>
 
 <style scoped>
