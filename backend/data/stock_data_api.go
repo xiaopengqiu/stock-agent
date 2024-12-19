@@ -220,7 +220,7 @@ func (receiver StockDataApi) GetStockCodeRealTimeData(StockCode string) (*StockI
 		return &StockInfo{}, nil
 	}
 	stockData, err := ParseFullSingleStockData(GB18030ToUTF8(resp.Body()))
-	go db.Dao.Model(&StockInfo{}).Create(stockData)
+	//go db.Dao.Model(&StockInfo{}).Create(stockData)
 	return stockData, err
 }
 
