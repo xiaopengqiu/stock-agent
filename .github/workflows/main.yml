@@ -23,9 +23,6 @@ jobs:
           - name: 'App'
             platform:  'windows/amd64'
             os: 'windows-latest'
-          - name: 'App'
-            platform:  'darwin/universal'
-            os: 'macos-latest'
 
     runs-on: ${{ matrix.build.os }}
     steps:
