@@ -64,7 +64,7 @@ onMounted(() => {
       if(isTradingTime()){
         monitor()
       }
-    }, 1000)
+    }, 1500)
 
 })
 
@@ -126,7 +126,7 @@ function getStockList(){
   })
 }
 
-function monitor() {
+async function monitor() {
   for (let code of stocks.value) {
    // console.log(code)
     Greet(code).then(result => {
@@ -227,7 +227,7 @@ function fullscreen(){
 </script>
 
 <template>
-    <n-grid :x-gap="8" :cols="3"  :y-gap="8">
+  <n-grid :x-gap="8" :cols="3"  :y-gap="8" ref="containerRef">
       <n-gi v-for="result in results" >
          <n-card size="small" style="min-height: 240px" :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"   closable @close="removeMonitor(result['股票代码'],result['股票名称'])">
            <n-grid :cols="1" :y-gap="6">
@@ -270,17 +270,22 @@ function fullscreen(){
            </template>
          </n-card >
       </n-gi>
+    <n-gi>
+      <n-card size="small" style="min-height: 240px;vertical-align: center;padding-top: 100px">
+          <n-button-group>
+            <n-auto-complete v-model:value="data.name" type="text"
+                             :input-props="{
+                                autocomplete: 'disabled',
+                              }"
+                             :options="options"
+                             placeholder="输入股票名称或者代码"
+                             clearable class="input" @input="getStockList" :on-select="onSelect"/>
+            <n-button type="info" @click="AddStock">添加 </n-button>&nbsp;&nbsp;
+            <n-button type="warning" @click="fullscreen"> {{data.fullscreen?'退出全屏':'全屏'}} </n-button>
+          </n-button-group>
+      </n-card>
+    </n-gi>
     </n-grid>
-          <n-auto-complete v-model:value="data.name" type="text"
-                           :input-props="{
-                              autocomplete: 'disabled',
-                            }"
-                           :options="options"
-                           placeholder="股票名称或者代码"
-                           clearable class="input" @input="getStockList" :on-select="onSelect"/>
-          <n-button type="info" @click="AddStock"> 添加 </n-button>
-          <n-button type="warning" @click="fullscreen"> {{data.fullscreen?'退出全屏':'全屏'}} </n-button>
-
       <n-modal transform-origin="center" size="small" v-model:show="modalShow" :title="formModel.name" style="width: 400px" :preset="'card'">
             <n-form :model="formModel" :rules="{ costPrice: { required: true, message: '请输入成本'}, volume: { required: true, message: '请输入数量'} }" label-placement="left" label-width="80px">
               <n-form-item label="成本(元)" path="costPrice">
