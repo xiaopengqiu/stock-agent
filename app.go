@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"go-stock/backend/data"
+	"go-stock/backend/logger"
 )
 
 // App struct
@@ -22,7 +24,7 @@ func (a *App) startup(ctx context.Context) {
 }
 
 // domReady is called after front-end resources have been loaded
-func (a App) domReady(ctx context.Context) {
+func (a *App) domReady(ctx context.Context) {
 	// Add your action here
 }
 
@@ -30,6 +32,23 @@ func (a App) domReady(ctx context.Context) {
 // either by clicking the window close button or calling runtime.Quit.
 // Returning true will cause the application to continue, false will continue shutdown as normal.
 func (a *App) beforeClose(ctx context.Context) (prevent bool) {
+
+	dialog, err := runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
+		Type:         runtime.QuestionDialog,
+		Title:        "go-stock",
+		Message:      "确定关闭吗？",
+		Buttons:      []string{"确定"},
+		Icon:         icon,
+		CancelButton: "取消",
+	})
+
+	if err != nil {
+		return false
+	}
+	logger.SugaredLogger.Debugf("dialog:%s", dialog)
+	if dialog == "No" {
+		return true
+	}
 	return false
 }
 
