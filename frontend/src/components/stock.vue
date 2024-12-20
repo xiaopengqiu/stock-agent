@@ -262,7 +262,7 @@ function fullscreen(){
            <template #action>
              <n-flex justify="space-between">
                <n-text :type="'info'">{{result["日期"]+" "+result["时间"]}}</n-text>
-               <n-button size="tiny" type="info" @click="setStock(result['股票代码'],result['股票名称'])"> 设置 </n-button>
+               <n-button size="tiny" type="info" @click="setStock(result['股票代码'],result['股票名称'])"> 成本 </n-button>
                <n-button size="tiny" type="success" @click="showFenshi(result['股票代码'],result['股票名称'])"> 分时 </n-button>
                <n-button size="tiny" type="error" @click="showK(result['股票代码'],result['股票名称'])"> 日K </n-button>
                 <n-button size="tiny" type="warning" @click="search(result['股票代码'],result['股票名称'])"> 详情 </n-button>

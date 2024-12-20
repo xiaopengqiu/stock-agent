@@ -3,6 +3,16 @@
 ![Wails and NaiveUI](./build/appicon.png)
 
 
+## Snapshot
+![img_1.png](build/screenshot/img_1.png)
+### 成本仓位设置
+![img.png](build/screenshot/img.png)
+### 日K
+![img_2.png](build/screenshot/img_2.png)
+### 分时
+![img_3.png](build/screenshot/img_3.png)
+
+
 ## About
 
 A China stock data viewer build by  [Wails](https://wails.io/) with [NavieUI](https://www.naiveui.com/).
