@@ -1,11 +1,13 @@
 <script setup>
 import stockInfo from './components/stock.vue'
 import {ref} from "vue";
+import { darkTheme } from 'naive-ui'
 
 const content = ref('数据来源于网络,仅供参考\n投资有风险,入市需谨慎')
 </script>
 
 <template>
+  <n-config-provider :theme="darkTheme">
   <n-watermark
       :content="content"
       cross
@@ -27,6 +29,7 @@ const content = ref('数据来源于网络,仅供参考\n投资有风险,入市�
     </n-message-provider>
   </n-flex>
   </n-watermark>
+  </n-config-provider>
 </template>
 <style>
 
