@@ -35,10 +35,9 @@ func main() {
 	db.Dao.AutoMigrate(&data.FollowedStock{})
 
 	if stocksBin != nil && len(stocksBin) > 0 {
-		initStockData()
+		go initStockData()
 	}
-
-	data.NewStockDataApi().GetStockBaseInfo()
+	go data.NewStockDataApi().GetStockBaseInfo()
 
 	// Create an instance of the app structure
 	app := NewApp()
@@ -51,7 +50,6 @@ func main() {
 			runtime.WindowSetTitle(app.ctx, "go-stock "+time.Now().Format("2006-01-02 15:04:05"))
 		}
 	}()
-
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:             "go-stock",
