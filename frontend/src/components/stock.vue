@@ -229,14 +229,14 @@ function fullscreen(){
 <template>
     <n-grid :x-gap="8" :cols="3"  :y-gap="8">
       <n-gi v-for="result in results" >
-         <n-card size="medium" style="min-height: 270px" :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"  :content-style="'font-size: 18px;'" closable @close="removeMonitor(result['股票代码'],result['股票名称'])">
+         <n-card size="small" style="min-height: 240px" :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"   closable @close="removeMonitor(result['股票代码'],result['股票名称'])">
            <n-grid :cols="1" :y-gap="6">
              <n-gi>
                <n-text :type="result.type" >{{result["当前价格"]}}</n-text><n-text style="padding-left: 10px;" :type="result.type">{{ result.s}}</n-text>&nbsp;
                <n-text  size="small" v-if="result.profitAmountToday>0" :type="result.type">{{result.profitAmountToday}}</n-text>
              </n-gi>
            </n-grid>
-             <n-grid :cols="2" :y-gap="4" :x-gap="4" :item-style="'font-size: 14px;'" >
+             <n-grid :cols="2" :y-gap="4" :x-gap="4"  >
                <n-gi>
                  <n-text :type="'info'">{{"最高 "+result["今日最高价"]+" "+result.highRate }}</n-text>
                </n-gi>
