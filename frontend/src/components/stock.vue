@@ -1,7 +1,9 @@
 <script setup>
-import {h, onBeforeMount, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
+import {onBeforeMount, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import {Greet, Follow, UnFollow, GetFollowList, GetStockList, SetCostPriceAndVolume} from '../../wailsjs/go/main/App'
-import {NButton, NFlex, NForm, NFormItem, NInput, NInputNumber, NText, useMessage, useModal} from 'naive-ui'
+import {NButton, NFlex, NForm, NFormItem, NInputNumber, NText, useMessage, useModal} from 'naive-ui'
+import { WindowFullscreen,WindowUnfullscreen } from '../../wailsjs/runtime'
+
 
 const message = useMessage()
 const modal = useModal()
@@ -28,6 +30,7 @@ const data = reactive({
   fenshiURL:"",
   kURL:"",
   resultText: "Please enter your name below 👇",
+  fullscreen: false,
 })
 
 
@@ -212,6 +215,15 @@ function updateCostPriceAndVolumeNew(code,price,volume){
     })
   })
 }
+
+function fullscreen(){
+  if(data.fullscreen){
+    WindowUnfullscreen()
+  }else{
+    WindowFullscreen()
+  }
+  data.fullscreen=!data.fullscreen
+}
 </script>
 
 <template>
@@ -267,6 +279,7 @@ function updateCostPriceAndVolumeNew(code,price,volume){
                            placeholder="股票名称或者代码"
                            clearable class="input" @input="getStockList" :on-select="onSelect"/>
           <n-button type="info" @click="AddStock"> 添加 </n-button>
+          <n-button type="warning" @click="fullscreen"> {{data.fullscreen?'退出全屏':'全屏'}} </n-button>
 
       <n-modal transform-origin="center" size="small" v-model:show="modalShow" :title="formModel.name" style="width: 400px" :preset="'card'">
             <n-form :model="formModel" :rules="{ costPrice: { required: true, message: '请输入成本'}, volume: { required: true, message: '请输入数量'} }" label-placement="left" label-width="80px">
