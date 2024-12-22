@@ -162,7 +162,7 @@ func NewStockDataApi() *StockDataApi {
 }
 func (receiver StockDataApi) GetStockBaseInfo() {
 	res := &TushareStockBasicResponse{}
-	_, err := receiver.client.R().
+	resp, err := receiver.client.R().
 		SetHeader("content-type", "application/json").
 		SetBody(&TushareRequest{
 			ApiName: "stock_basic",
@@ -174,7 +174,7 @@ func (receiver StockDataApi) GetStockBaseInfo() {
 		Post(tushare_api_url)
 	//logger.SugaredLogger.Infof("GetStockBaseInfo %s", string(resp.Body()))
 	//resp.Body()写入文件
-	//ioutil.WriteFile("stock_basic.json", resp.Body(), 0666)
+	ioutil.WriteFile("stock_basic.json", resp.Body(), 0666)
 	//logger.SugaredLogger.Infof("GetStockBaseInfo %+v", res)
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
