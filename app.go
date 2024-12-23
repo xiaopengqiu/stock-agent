@@ -5,7 +5,6 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"go-stock/backend/data"
 	"go-stock/backend/logger"
-	"time"
 )
 
 // App struct
@@ -27,14 +26,14 @@ func (a *App) startup(ctx context.Context) {
 // domReady is called after front-end resources have been loaded
 func (a *App) domReady(ctx context.Context) {
 	// Add your action here
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-	//定时更新数据
-	go func() {
-		for range ticker.C {
-			runtime.WindowSetTitle(ctx, "go-stock "+time.Now().Format("2006-01-02 15:04:05"))
-		}
-	}()
+	//ticker := time.NewTicker(time.Second)
+	//defer ticker.Stop()
+	////定时更新数据
+	//go func() {
+	//	for range ticker.C {
+	//		runtime.WindowSetTitle(ctx, "go-stock "+time.Now().Format("2006-01-02 15:04:05"))
+	//	}
+	//}()
 }
 
 // beforeClose is called when the application is about to quit,
