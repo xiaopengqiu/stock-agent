@@ -64,7 +64,7 @@ onMounted(() => {
       if(isTradingTime()){
         monitor()
       }
-    }, 1500)
+    }, 3000)
 
 })
 
@@ -227,9 +227,9 @@ function fullscreen(){
 </script>
 
 <template>
-  <n-grid :x-gap="8" :cols="3"  :y-gap="8" ref="containerRef">
+  <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
       <n-gi v-for="result in results" >
-         <n-card size="small"  :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"   closable @close="removeMonitor(result['股票代码'],result['股票名称'])">
+         <n-card    :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"   :closable="true" @close="removeMonitor(result['股票代码'],result['股票名称'])">
            <n-grid :cols="1" :y-gap="6">
              <n-gi>
                <n-text :type="result.type" >{{result["当前价格"]}}</n-text><n-text style="padding-left: 10px;" :type="result.type">{{ result.s}}</n-text>&nbsp;
@@ -265,27 +265,28 @@ function fullscreen(){
                <n-button size="tiny" type="info" @click="setStock(result['股票代码'],result['股票名称'])"> 成本 </n-button>
                <n-button size="tiny" type="success" @click="showFenshi(result['股票代码'],result['股票名称'])"> 分时 </n-button>
                <n-button size="tiny" type="error" @click="showK(result['股票代码'],result['股票名称'])"> 日K </n-button>
-                <n-button size="tiny" type="warning" @click="search(result['股票代码'],result['股票名称'])"> 详情 </n-button>
+               <n-button size="tiny" type="warning" @click="search(result['股票代码'],result['股票名称'])"> 详情 </n-button>
+
              </n-flex>
            </template>
          </n-card >
       </n-gi>
-    <n-gi>
-      <n-card size="small">
-          <n-button-group>
-            <n-auto-complete v-model:value="data.name" type="text"
-                             :input-props="{
+    </n-grid>
+
+    <n-card :bordered="false"  :closable="false">
+      <n-button-group>
+        <n-auto-complete v-model:value="data.name" type="text"
+                         :input-props="{
                                 autocomplete: 'disabled',
                               }"
-                             :options="options"
-                             placeholder="输入股票名称或者代码"
-                             clearable class="input" @input="getStockList" :on-select="onSelect"/>
-            <n-button type="info" @click="AddStock">添加 </n-button>&nbsp;&nbsp;
-            <n-button type="warning" @click="fullscreen"> {{data.fullscreen?'退出全屏':'全屏'}} </n-button>
-          </n-button-group>
-      </n-card>
-    </n-gi>
-    </n-grid>
+                         :options="options"
+                         placeholder="输入股票名称或者代码"
+                         clearable class="input" @input="getStockList" :on-select="onSelect"/>
+        <n-button type="info" @click="AddStock">添加 </n-button>&nbsp;&nbsp;
+        <n-button type="warning" @click="fullscreen"> {{data.fullscreen?'退出全屏':'全屏'}} </n-button>
+      </n-button-group>
+    </n-card>
+
       <n-modal transform-origin="center" size="small" v-model:show="modalShow" :title="formModel.name" style="width: 400px" :preset="'card'">
             <n-form :model="formModel" :rules="{ costPrice: { required: true, message: '请输入成本'}, volume: { required: true, message: '请输入数量'} }" label-placement="left" label-width="80px">
               <n-form-item label="成本(元)" path="costPrice">
