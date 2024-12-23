@@ -39,15 +39,6 @@ func main() {
 
 	// Create an instance of the app structure
 	app := NewApp()
-
-	//ticker := time.NewTicker(time.Second)
-	//defer ticker.Stop()
-	////定时更新数据
-	//go func() {
-	//	for range ticker.C {
-	//		runtime.WindowSetTitle(app.ctx, "go-stock "+time.Now().Format("2006-01-02 15:04:05"))
-	//	}
-	//}()
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:             "go-stock",
