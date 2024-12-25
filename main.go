@@ -6,13 +6,17 @@ import (
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/logger"
+	"github.com/wailsapp/wails/v2/pkg/menu"
+	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/mac"
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"go-stock/backend/data"
 	"go-stock/backend/db"
 	"log"
 	"os"
+	"time"
 )
 
 //go:embed frontend/dist
@@ -40,6 +44,31 @@ func main() {
 	// Create an instance of the app structure
 	app := NewApp()
 	// Create application with options
+
+	AppMenu := menu.NewMenu()
+	FileMenu := AppMenu.AddSubmenu("设置")
+	FileMenu.AddText("显示搜索框", keys.CmdOrCtrl("s"), func(callbackData *menu.CallbackData) {
+		runtime.EventsEmit(app.ctx, "showSearch", 1)
+	})
+	FileMenu.AddText("隐藏搜索框", keys.CmdOrCtrl("d"), func(callbackData *menu.CallbackData) {
+		runtime.EventsEmit(app.ctx, "showSearch", 0)
+	})
+	FileMenu.AddText("刷新数据", keys.CmdOrCtrl("r"), func(callbackData *menu.CallbackData) {
+		//runtime.EventsEmit(app.ctx, "refresh", "setting-"+time.Now().Format("2006-01-02 15:04:05"))
+		runtime.EventsEmit(app.ctx, "refreshFollowList", "refresh-"+time.Now().Format("2006-01-02 15:04:05"))
+	})
+	FileMenu.AddSeparator()
+	FileMenu.AddText("窗口全屏", keys.CmdOrCtrl("f"), func(callback *menu.CallbackData) {
+		runtime.WindowFullscreen(app.ctx)
+		callback.MenuItem.Hide()
+	})
+	FileMenu.AddText("窗口还原", keys.Key("Esc"), func(callback *menu.CallbackData) {
+		runtime.WindowUnfullscreen(app.ctx)
+	})
+	FileMenu.AddText("退出", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
+		runtime.Quit(app.ctx)
+	})
+
 	err := wails.Run(&options.App{
 		Title:             "go-stock",
 		Width:             1366,
@@ -55,7 +84,7 @@ func main() {
 		HideWindowOnClose: false,
 		BackgroundColour:  &options.RGBA{R: 255, G: 255, B: 255, A: 255},
 		Assets:            assets,
-		Menu:              nil,
+		Menu:              AppMenu,
 		Logger:            nil,
 		LogLevel:          logger.DEBUG,
 		OnStartup:         app.startup,

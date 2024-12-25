@@ -2,8 +2,8 @@
 import {onBeforeMount, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import {Greet, Follow, UnFollow, GetFollowList, GetStockList, SetCostPriceAndVolume} from '../../wailsjs/go/main/App'
 import {NButton, NFlex, NForm, NFormItem, NInputNumber, NText, useMessage, useModal} from 'naive-ui'
-import { WindowFullscreen,WindowUnfullscreen } from '../../wailsjs/runtime'
-
+import { WindowFullscreen,WindowUnfullscreen,EventsOn } from '../../wailsjs/runtime'
+import {Add, StarOutline} from '@vicons/ionicons5'
 
 const message = useMessage()
 const modal = useModal()
@@ -17,6 +17,7 @@ const options=ref([])
 const modalShow = ref(false)
 const modalShow2 = ref(false)
 const modalShow3 = ref(false)
+const addBTN = ref(true)
 const formModel = ref({
   name: "",
   code: "",
@@ -73,6 +74,28 @@ onBeforeUnmount(() => {
   clearInterval(ticker.value)
 })
 
+EventsOn("refresh",(data)=>{
+  message.success(data)
+})
+
+EventsOn("showSearch",(data)=>{
+  addBTN.value = data === 1;
+})
+
+
+EventsOn("refreshFollowList",(data)=>{
+ message.loading("refresh...")
+  GetFollowList().then(result => {
+    followList.value = result
+    for (const followedStock of result) {
+      if (!stocks.value.includes(followedStock.StockCode)) {
+        stocks.value.push(followedStock.StockCode)
+      }
+    }
+    monitor()
+    message.destroyAll
+  })
+})
 
 //判断是否是A股交易时间
 function isTradingTime() {
@@ -272,21 +295,25 @@ function fullscreen(){
          </n-card >
       </n-gi>
     </n-grid>
+  <n-affix :trigger-bottom="60" v-if="addBTN">
+<!--    <n-card :bordered="false">-->
+      <n-input-group>
 
-    <n-card :bordered="false"  :closable="false">
-      <n-button-group>
-        <n-auto-complete v-model:value="data.name" type="text"
+        <n-button type="info" @click="addBTN=false" >隐藏</n-button>
+        <n-auto-complete v-model:value="data.name"
                          :input-props="{
                                 autocomplete: 'disabled',
                               }"
                          :options="options"
-                         placeholder="输入股票名称或者代码"
-                         clearable class="input" @input="getStockList" :on-select="onSelect"/>
-        <n-button type="info" @click="AddStock">添加 </n-button>&nbsp;&nbsp;
-        <n-button type="warning" @click="fullscreen"> {{data.fullscreen?'退出全屏':'全屏'}} </n-button>
-      </n-button-group>
-    </n-card>
+                         placeholder="请输入股票名称或者代码"
+                         clearable @input="getStockList" :on-select="onSelect"/>
+        <n-button type="primary" @click="AddStock">
+          <n-icon :component="Add"/> &nbsp;关注该股票
+        </n-button>
+      </n-input-group>
+<!--    </n-card>-->
 
+  </n-affix>
       <n-modal transform-origin="center" size="small" v-model:show="modalShow" :title="formModel.name" style="width: 400px" :preset="'card'">
             <n-form :model="formModel" :rules="{ costPrice: { required: true, message: '请输入成本'}, volume: { required: true, message: '请输入数量'} }" label-placement="left" label-width="80px">
               <n-form-item label="成本(元)" path="costPrice">
