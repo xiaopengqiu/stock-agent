@@ -11,6 +11,7 @@ export namespace data {
 	    // Go type: time
 	    Time: any;
 	    Sort: number;
+	    IsDel: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new FollowedStock(source);
@@ -27,6 +28,7 @@ export namespace data {
 	        this.ChangePercent = source["ChangePercent"];
 	        this.Time = this.convertValues(source["Time"], null);
 	        this.Sort = source["Sort"];
+	        this.IsDel = source["IsDel"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

@@ -43,8 +43,6 @@ func main() {
 
 	// Create an instance of the app structure
 	app := NewApp()
-	// Create application with options
-
 	AppMenu := menu.NewMenu()
 	FileMenu := AppMenu.AddSubmenu("设置")
 	FileMenu.AddText("显示搜索框", keys.CmdOrCtrl("s"), func(callbackData *menu.CallbackData) {
@@ -68,7 +66,7 @@ func main() {
 	FileMenu.AddText("退出", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
 		runtime.Quit(app.ctx)
 	})
-
+	// Create application with options
 	err := wails.Run(&options.App{
 		Title:             "go-stock",
 		Width:             1366,

@@ -16,6 +16,7 @@ import (
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"gorm.io/gorm"
+	"gorm.io/plugin/soft_delete"
 	"io/ioutil"
 	"strings"
 	"time"
@@ -134,6 +135,7 @@ type FollowedStock struct {
 	ChangePercent float64
 	Time          time.Time
 	Sort          int64
+	IsDel         soft_delete.DeletedAt `gorm:"softDelete:flag"`
 }
 
 func (receiver FollowedStock) TableName() string {
