@@ -233,6 +233,7 @@ func (receiver StockDataApi) GetStockCodeRealTimeData(StockCode string) (*StockI
 }
 
 func (receiver StockDataApi) Follow(stockCode string) string {
+	logger.SugaredLogger.Infof("Follow %s", stockCode)
 	stockInfo, err := receiver.GetStockCodeRealTimeData(stockCode)
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())

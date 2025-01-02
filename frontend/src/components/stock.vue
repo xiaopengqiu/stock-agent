@@ -64,6 +64,7 @@ onMounted(() => {
     ticker.value=setInterval(() => {
       if(isTradingTime()){
         monitor()
+        data.fenshiURL='http://image.sinajs.cn/newchart/min/n/'+data.code+'.gif'+"?t="+Date.now()
       }
     }, 3000)
 
@@ -138,15 +139,19 @@ function removeMonitor(code,name) {
   })
 }
 
-function getStockList(){
+function getStockList(value){
+  console.log("getStockList",value)
   let result;
   result=stockList.value.filter(item => item.name.includes(data.name)||item.ts_code.includes(data.name))
   options.value=result.map(item => {
     return {
-      label: item.name+" "+item.ts_code,
+      label: item.name+" - "+item.ts_code,
       value: item.ts_code
     }
   })
+  if(value.indexOf("-")<=0){
+    data.code=value
+  }
 }
 
 async function monitor() {
@@ -189,7 +194,15 @@ async function monitor() {
   }
 }
 function onSelect(item) {
-  data.code=item.split(".")[1].toLowerCase()+item.split(".")[0]
+  console.log("onSelect",item)
+
+  if(item.indexOf("-")>0){
+    item=item.split("-")[1].toLowerCase()
+  }
+  if(item.indexOf(".")>0){
+    data.code=item.split(".")[1].toLowerCase()+item.split(".")[0]
+  }
+
 }
 
 function search(code,name){
@@ -306,7 +319,7 @@ function fullscreen(){
                               }"
                          :options="options"
                          placeholder="请输入股票名称或者代码"
-                         clearable @input="getStockList" :on-select="onSelect"/>
+                         clearable @update-value="getStockList" :on-select="onSelect"/>
         <n-button type="primary" @click="AddStock">
           <n-icon :component="Add"/> &nbsp;关注该股票
         </n-button>
