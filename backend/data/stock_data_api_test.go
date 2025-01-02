@@ -77,3 +77,9 @@ func TestFollowedList(t *testing.T) {
 	t.Log(stockDataApi.GetFollowList())
 
 }
+
+func TestStockDataApi_GetIndexBasic(t *testing.T) {
+	db.Init("../../data/stock.db")
+	stockDataApi := NewStockDataApi()
+	stockDataApi.GetIndexBasic()
+}
