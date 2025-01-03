@@ -136,7 +136,7 @@ func onReady(a *App) {
 	logger.SugaredLogger.Infof("onReady")
 	systray.SetIcon(icon2)
 	systray.SetTitle("go-stock")
-	systray.SetTooltip("这是一个简单的系统托盘示例")
+	systray.SetTooltip("go-stock 股票行情实时获取")
 	// 创建菜单项
 	mQuitOrig := systray.AddMenuItem("退出", "退出应用程序")
 	show := systray.AddMenuItem("显示", "显示应用程序")
@@ -149,7 +149,7 @@ func onReady(a *App) {
 			case <-mQuitOrig.ClickedCh:
 				logger.SugaredLogger.Infof("退出应用程序")
 				runtime.Quit(a.ctx)
-				systray.Quit()
+				//systray.Quit()
 			case <-show.ClickedCh:
 				logger.SugaredLogger.Infof("显示应用程序")
 				runtime.Show(a.ctx)
