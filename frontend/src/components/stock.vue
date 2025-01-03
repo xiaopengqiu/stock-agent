@@ -388,7 +388,7 @@ function SendMessage(result){
                 </n-input-number>
               </n-form-item>
               <n-form-item label="股票数量" path="volume">
-                <n-input-number v-model:value="formModel.volume"  min="0" placeholder="请输入股票数量" >
+                <n-input-number v-model:value="formModel.volume"  min="0" step="100" placeholder="请输入股票数量" >
                   <template #suffix>
                     股
                   </template>
