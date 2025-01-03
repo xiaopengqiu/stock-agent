@@ -40,7 +40,7 @@ onBeforeMount(()=>{
     stockList.value = result
     options.value=result.map(item => {
       return {
-        label: item.name+" "+item.ts_code,
+        label: item.name+" - "+item.ts_code,
         value: item.ts_code
       }
     })
@@ -66,7 +66,7 @@ onMounted(() => {
         monitor()
         data.fenshiURL='http://image.sinajs.cn/newchart/min/n/'+data.code+'.gif'+"?t="+Date.now()
       }
-    }, 3000)
+    }, 1000)
 
 })
 
@@ -158,6 +158,10 @@ async function monitor() {
   for (let code of stocks.value) {
    // console.log(code)
     Greet(code).then(result => {
+      if(result["当前价格"]<=0){
+        result["当前价格"]=result["卖一报价"]
+      }
+
       let s=(result["当前价格"]-result["昨日收盘价"])*100/result["昨日收盘价"]
       let roundedNum = s.toFixed(2);  // 将数字转换为保留两位小数的字符串形式
       result.s=roundedNum+"%"

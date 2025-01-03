@@ -203,7 +203,7 @@ func (receiver StockDataApi) GetIndexBasic() {
 		if err != nil {
 			continue
 		}
-		db.Dao.Model(&IndexBasic{}).FirstOrCreate(index, &IndexBasic{TsCode: index.TsCode}).Updates(index)
+		db.Dao.Model(&IndexBasic{}).FirstOrCreate(index, &IndexBasic{TsCode: index.TsCode}).Where("ts_code = ?", index.TsCode).Updates(index)
 	}
 
 }
@@ -251,7 +251,7 @@ func (receiver StockDataApi) GetStockBaseInfo() {
 		if err != nil {
 			continue
 		}
-		db.Dao.Model(&StockBasic{}).FirstOrCreate(stock, &StockBasic{TsCode: stock.TsCode}).Updates(stock)
+		db.Dao.Model(&StockBasic{}).FirstOrCreate(stock, &StockBasic{TsCode: stock.TsCode}).Where("ts_code = ?", stock.TsCode).Updates(stock)
 	}
 
 }
