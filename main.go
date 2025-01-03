@@ -25,6 +25,9 @@ var assets embed.FS
 //go:embed build/appicon.png
 var icon []byte
 
+//go:embed build/app.ico
+var icon2 []byte
+
 //go:embed build/stock_basic.json
 var stocksBin []byte
 
@@ -65,9 +68,13 @@ func main() {
 	FileMenu.AddText("窗口还原", keys.Key("Esc"), func(callback *menu.CallbackData) {
 		runtime.WindowUnfullscreen(app.ctx)
 	})
+	FileMenu.AddText("隐藏到托盘区", keys.CmdOrCtrl("h"), func(_ *menu.CallbackData) {
+		runtime.Hide(app.ctx)
+	})
 	FileMenu.AddText("退出", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
 		runtime.Quit(app.ctx)
 	})
+
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:             "go-stock",
