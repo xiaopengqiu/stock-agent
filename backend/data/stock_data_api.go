@@ -168,7 +168,7 @@ func NewStockDataApi() *StockDataApi {
 func (receiver StockDataApi) GetIndexBasic() {
 	res := &TushareStockBasicResponse{}
 	fields := "ts_code,name,market,publisher,category,base_date,base_point,list_date,fullname,index_type,weight_rule,desc"
-	resp, err := receiver.client.R().
+	_, err := receiver.client.R().
 		SetHeader("content-type", "application/json").
 		SetBody(&TushareRequest{
 			ApiName: "index_basic",
@@ -185,12 +185,11 @@ func (receiver StockDataApi) GetIndexBasic() {
 		logger.SugaredLogger.Error(res.Msg)
 		return
 	}
-	ioutil.WriteFile("index_basic.json", resp.Body(), 0666)
+	//ioutil.WriteFile("index_basic.json", resp.Body(), 0666)
 
 	for _, item := range res.Data.Items {
 		data := map[string]any{}
 		for _, field := range strings.Split(fields, ",") {
-			logger.SugaredLogger.Infof("field: %s", field)
 			idx := slice.IndexOf(res.Data.Fields, field)
 			if idx == -1 {
 				continue
@@ -213,7 +212,7 @@ func (receiver StockDataApi) GetIndexBasic() {
 func (receiver StockDataApi) GetStockBaseInfo() {
 	res := &TushareStockBasicResponse{}
 	fields := "ts_code,symbol,name,area,industry,cnspell,market,list_date,act_name,act_ent_type,fullname,exchange,list_status,curr_type,enname,delist_date,is_hs"
-	resp, err := receiver.client.R().
+	_, err := receiver.client.R().
 		SetHeader("content-type", "application/json").
 		SetBody(&TushareRequest{
 			ApiName: "stock_basic",
@@ -225,7 +224,7 @@ func (receiver StockDataApi) GetStockBaseInfo() {
 		Post(tushare_api_url)
 	//logger.SugaredLogger.Infof("GetStockBaseInfo %s", string(resp.Body()))
 	//resp.Body()写入文件
-	ioutil.WriteFile("stock_basic.json", resp.Body(), 0666)
+	//ioutil.WriteFile("stock_basic.json", resp.Body(), 0666)
 	//logger.SugaredLogger.Infof("GetStockBaseInfo %+v", res)
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
