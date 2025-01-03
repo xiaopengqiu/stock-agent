@@ -325,7 +325,7 @@ function fullscreen(){
                                 autocomplete: 'disabled',
                               }"
                          :options="options"
-                         placeholder="请输入股票名称或者代码"
+                         placeholder="请输入股票/指数名称或者代码"
                          clearable @update-value="getStockList" :on-select="onSelect"/>
         <n-button type="primary" @click="AddStock">
           <n-icon :component="Add"/> &nbsp;关注该股票
