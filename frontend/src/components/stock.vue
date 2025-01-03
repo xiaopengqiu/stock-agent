@@ -379,15 +379,27 @@ function SendMessage(result){
 
   </n-affix>
       <n-modal transform-origin="center" size="small" v-model:show="modalShow" :title="formModel.name" style="width: 400px" :preset="'card'">
-            <n-form :model="formModel" :rules="{ costPrice: { required: true, message: '请输入成本'}, volume: { required: true, message: '请输入数量'} }" label-placement="left" label-width="80px">
-              <n-form-item label="成本(元)" path="costPrice">
-                <n-input-number v-model:value="formModel.costPrice" min="0"  placeholder="请输入股票成本" />
+            <n-form :model="formModel" :rules="{ costPrice: { required: true, message: '请输入成本'}, volume: { required: true, message: '请输入数量'},alarm:{required: true, message: '涨跌报警值'} }" label-placement="left" label-width="80px">
+              <n-form-item label="股票成本" path="costPrice">
+                <n-input-number v-model:value="formModel.costPrice" min="0"  placeholder="请输入股票成本" >
+                  <template #suffix>
+                    元
+                  </template>
+                </n-input-number>
               </n-form-item>
-              <n-form-item label="数量(股)" path="volume">
-                <n-input-number v-model:value="formModel.volume"  min="0" placeholder="请输入股票数量" />
+              <n-form-item label="股票数量" path="volume">
+                <n-input-number v-model:value="formModel.volume"  min="0" placeholder="请输入股票数量" >
+                  <template #suffix>
+                    股
+                  </template>
+                </n-input-number>
               </n-form-item>
-              <n-form-item label="涨跌报警值(%)" path="alarm">
-              <n-input-number v-model:value="formModel.alarm"  min="0" placeholder="请输入涨跌报警值(%)" />
+              <n-form-item label="涨跌提醒" path="alarm">
+              <n-input-number v-model:value="formModel.alarm"  min="0" placeholder="请输入涨跌报警值(%)" >
+                <template #suffix>
+                  %
+                </template>
+              </n-input-number>
               </n-form-item>
             </n-form>
             <template #footer>
