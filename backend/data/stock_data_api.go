@@ -319,7 +319,7 @@ func (receiver StockDataApi) GetStockList(key string) []StockBasic {
 	var result []StockBasic
 	db.Dao.Model(&StockBasic{}).Where("name like ? or ts_code like ?", "%"+key+"%", "%"+key+"%").Find(&result)
 	var result2 []IndexBasic
-	db.Dao.Model(&IndexBasic{}).Where("market = ?", "SSE").Where("name like ? or ts_code like ?", "%"+key+"%", "%"+key+"%").Find(&result2)
+	db.Dao.Model(&IndexBasic{}).Where("market in ?", []string{"SSE", "SZSE"}).Where("name like ? or ts_code like ?", "%"+key+"%", "%"+key+"%").Find(&result2)
 
 	for _, item := range result2 {
 		result = append(result, StockBasic{
