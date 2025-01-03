@@ -1,6 +1,14 @@
 <script setup>
 import {onBeforeMount, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
-import {Greet, Follow, UnFollow, GetFollowList, GetStockList, SetCostPriceAndVolume} from '../../wailsjs/go/main/App'
+import {
+  Greet,
+  Follow,
+  UnFollow,
+  GetFollowList,
+  GetStockList,
+  SetCostPriceAndVolume,
+  SendDingDingMessage, SetAlarmChangePercent
+} from '../../wailsjs/go/main/App'
 import {NButton, NFlex, NForm, NFormItem, NInputNumber, NText, useMessage, useModal} from 'naive-ui'
 import { WindowFullscreen,WindowUnfullscreen,EventsOn } from '../../wailsjs/runtime'
 import {Add, StarOutline} from '@vicons/ionicons5'
@@ -22,7 +30,8 @@ const formModel = ref({
   name: "",
   code: "",
   costPrice: 0.000,
-  volume: 0
+  volume: 0,
+  alarm: 0,
 })
 
 const data = reactive({
@@ -171,7 +180,6 @@ async function monitor() {
       result.highRate=((result["今日最高价"]-result["今日开盘价"])*100/result["今日开盘价"]).toFixed(2)+"%"
       result.lowRate=((result["今日最低价"]-result["今日开盘价"])*100/result["今日开盘价"]).toFixed(2)+"%"
 
-
       if (roundedNum>0) {
         result.type="error"
         result.color="#E88080"
@@ -194,6 +202,9 @@ async function monitor() {
           result.profitType="error"
         }else if(result.profitAmount<0){
           result.profitType="success"
+        }
+        if(Math.abs(res[0].AlarmChangePercent)>0&&roundedNum>res[0].AlarmChangePercent){
+          SendMessage(result)
         }
       }
       results.value[result["股票名称"]]=result
@@ -224,6 +235,7 @@ function setStock(code,name){
     formModel.value.code=code
     formModel.value.volume=res[0].Volume
     formModel.value.costPrice=res[0].CostPrice
+    formModel.value.alarm=res[0].AlarmChangePercent
     modalShow.value=true
 }
 
@@ -241,8 +253,13 @@ function showK(code,name){
 }
 
 
-function updateCostPriceAndVolumeNew(code,price,volume){
+function updateCostPriceAndVolumeNew(code,price,volume,alarm){
   console.log(code,price,volume)
+  if(alarm){
+    SetAlarmChangePercent(alarm,code).then(result => {
+      //message.success(result)
+    })
+  }
   SetCostPriceAndVolume(code,price,volume).then(result => {
     modalShow.value=false
     message.success(result)
@@ -267,6 +284,33 @@ function fullscreen(){
   }
   data.fullscreen=!data.fullscreen
 }
+
+function SendMessage(result){
+  let img='http://image.sinajs.cn/newchart/min/n/'+result["股票代码"]+'.gif'+"?t="+Date.now()
+  let markdown="### go-stock市场行情\n\n"+
+      "### "+result["股票名称"]+"("+result["股票代码"]+")\n" +
+      "- 当前价格: "+result["当前价格"]+"  "+result.s+"\n" +
+      "- 最高价: "+result["今日最高价"]+"  "+result.highRate+"\n" +
+      "- 最低价: "+result["今日最低价"]+"  "+result.lowRate+"\n" +
+      "- 昨收价: "+result["昨日收盘价"]+"\n" +
+      "- 今开价: "+result["今日开盘价"]+"\n" +
+      "- 成本价: "+result.costPrice+"  "+result.profit+"%  "+result.profitAmount+" ¥\n" +
+      "- 成本数量: "+result.volume+"股\n" +
+      "- 日期: "+result["日期"]+"  "+result["时间"]+"\n\n"+
+      "![image]("+img+")\n"
+  let msg='{' +
+      '     "msgtype": "markdown",' +
+      '     "markdown": {' +
+      '         "title":"'+result["股票名称"]+"("+result["股票代码"]+") "+result["当前价格"]+" "+result.s+'",' +
+      '         "text": "'+markdown+'"' +
+      '     },' +
+      '      "at": {' +
+      '          "isAtAll": true' +
+      '      }' +
+      ' }'
+    SendDingDingMessage(msg,result["股票代码"])
+}
+
 </script>
 
 <template>
@@ -309,7 +353,7 @@ function fullscreen(){
                <n-button size="tiny" type="success" @click="showFenshi(result['股票代码'],result['股票名称'])"> 分时 </n-button>
                <n-button size="tiny" type="error" @click="showK(result['股票代码'],result['股票名称'])"> 日K </n-button>
                <n-button size="tiny" type="warning" @click="search(result['股票代码'],result['股票名称'])"> 详情 </n-button>
-
+<!--               <n-button size="tiny" type="info" @click="SendMessage(result)"> 钉钉 </n-button>-->
              </n-flex>
            </template>
          </n-card >
@@ -342,9 +386,12 @@ function fullscreen(){
               <n-form-item label="数量(股)" path="volume">
                 <n-input-number v-model:value="formModel.volume"  min="0" placeholder="请输入股票数量" />
               </n-form-item>
+              <n-form-item label="涨跌报警值(%)" path="alarm">
+              <n-input-number v-model:value="formModel.alarm"  min="0" placeholder="请输入涨跌报警值(%)" />
+              </n-form-item>
             </n-form>
             <template #footer>
-              <n-button type="primary" @click="updateCostPriceAndVolumeNew(formModel.code,formModel.costPrice,formModel.volume)">保存</n-button>
+              <n-button type="primary" @click="updateCostPriceAndVolumeNew(formModel.code,formModel.costPrice,formModel.volume,formModel.alarm)">保存</n-button>
             </template>
       </n-modal>
 

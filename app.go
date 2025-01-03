@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/coocood/freecache"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"go-stock/backend/data"
 	"go-stock/backend/logger"
@@ -9,12 +10,17 @@ import (
 
 // App struct
 type App struct {
-	ctx context.Context
+	ctx   context.Context
+	cache *freecache.Cache
 }
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{}
+	cacheSize := 512 * 1024
+	cache := freecache.NewCache(cacheSize)
+	return &App{
+		cache: cache,
+	}
 }
 
 // startup is called at application startup
@@ -89,4 +95,22 @@ func (a *App) GetStockList(key string) []data.StockBasic {
 
 func (a *App) SetCostPriceAndVolume(stockCode string, price float64, volume int64) string {
 	return data.NewStockDataApi().SetCostPriceAndVolume(price, volume, stockCode)
+}
+
+func (a *App) SetAlarmChangePercent(val float64, stockCode string) string {
+	return data.NewStockDataApi().SetAlarmChangePercent(val, stockCode)
+}
+
+func (a *App) SendDingDingMessage(message string, stockCode string) string {
+	ttl, _ := a.cache.TTL([]byte(stockCode))
+	logger.SugaredLogger.Infof("stockCode %s ttl:%d", stockCode, ttl)
+	if ttl > 0 {
+		return ""
+	}
+	err := a.cache.Set([]byte(stockCode), []byte("1"), 60*5)
+	if err != nil {
+		logger.SugaredLogger.Errorf("set cache error:%s", err.Error())
+		return ""
+	}
+	return data.NewDingDingAPI().SendDingDingMessage(message)
 }
