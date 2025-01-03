@@ -318,6 +318,20 @@ func (receiver StockDataApi) GetFollowList() []FollowedStock {
 func (receiver StockDataApi) GetStockList(key string) []StockBasic {
 	var result []StockBasic
 	db.Dao.Model(&StockBasic{}).Where("name like ? or ts_code like ?", "%"+key+"%", "%"+key+"%").Find(&result)
+	var result2 []IndexBasic
+	db.Dao.Model(&IndexBasic{}).Where("market = ?", "SSE").Where("name like ? or ts_code like ?", "%"+key+"%", "%"+key+"%").Find(&result2)
+
+	for _, item := range result2 {
+		result = append(result, StockBasic{
+			TsCode:   item.TsCode,
+			Name:     item.Name,
+			Fullname: item.FullName,
+			Symbol:   item.Symbol,
+			Market:   item.Market,
+			ListDate: item.ListDate,
+		})
+	}
+
 	return result
 }
 

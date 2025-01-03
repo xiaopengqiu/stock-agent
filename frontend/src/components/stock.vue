@@ -66,7 +66,7 @@ onMounted(() => {
         monitor()
         data.fenshiURL='http://image.sinajs.cn/newchart/min/n/'+data.code+'.gif'+"?t="+Date.now()
       }
-    }, 1000)
+    }, 3500)
 
 })
 
@@ -124,8 +124,10 @@ function AddStock(){
       Follow(data.code).then(result => {
         message.success(result)
       })
+    monitor()
+  }else{
+    message.error("已经关注了")
   }
-  monitor()
 }
 
 
@@ -149,7 +151,7 @@ function getStockList(value){
       value: item.ts_code
     }
   })
-  if(value.indexOf("-")<=0){
+  if(value&&value.indexOf("-")<=0){
     data.code=value
   }
 }
@@ -182,6 +184,7 @@ async function monitor() {
       }
       let res= followList.value.filter(item => item.StockCode===code)
       if (res.length>0) {
+        result.Sort=res[0].Sort
         result.costPrice=res[0].CostPrice
         result.volume=res[0].Volume
         result.profit=((result["当前价格"]-result.costPrice)*100/result.costPrice).toFixed(3)
