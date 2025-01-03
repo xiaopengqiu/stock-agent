@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/duke-git/lancet/v2/convertor"
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/go-resty/resty/v2"
 	"go-stock/backend/db"
@@ -126,16 +127,17 @@ type StockBasic struct {
 }
 
 type FollowedStock struct {
-	StockCode     string
-	Name          string
-	Volume        int64
-	CostPrice     float64
-	Price         float64
-	PriceChange   float64
-	ChangePercent float64
-	Time          time.Time
-	Sort          int64
-	IsDel         soft_delete.DeletedAt `gorm:"softDelete:flag"`
+	StockCode          string
+	Name               string
+	Volume             int64
+	CostPrice          float64
+	Price              float64
+	PriceChange        float64
+	ChangePercent      float64
+	AlarmChangePercent float64
+	Time               time.Time
+	Sort               int64
+	IsDel              soft_delete.DeletedAt `gorm:"softDelete:flag"`
 }
 
 func (receiver FollowedStock) TableName() string {
@@ -162,21 +164,68 @@ func NewStockDataApi() *StockDataApi {
 		client: resty.New(),
 	}
 }
+
+// GetIndexBasic 获取指数信息
+func (receiver StockDataApi) GetIndexBasic() {
+	res := &TushareStockBasicResponse{}
+	fields := "ts_code,name,market,publisher,category,base_date,base_point,list_date,fullname,index_type,weight_rule,desc"
+	_, err := receiver.client.R().
+		SetHeader("content-type", "application/json").
+		SetBody(&TushareRequest{
+			ApiName: "index_basic",
+			Token:   TushareToken,
+			Params:  nil,
+			Fields:  fields}).
+		SetResult(res).
+		Post(tushare_api_url)
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+		return
+	}
+	if res.Code != 0 {
+		logger.SugaredLogger.Error(res.Msg)
+		return
+	}
+	//ioutil.WriteFile("index_basic.json", resp.Body(), 0666)
+
+	for _, item := range res.Data.Items {
+		data := map[string]any{}
+		for _, field := range strings.Split(fields, ",") {
+			idx := slice.IndexOf(res.Data.Fields, field)
+			if idx == -1 {
+				continue
+			}
+			data[field] = item[idx]
+		}
+		index := &IndexBasic{}
+		jsonData, _ := json.Marshal(data)
+		err := json.Unmarshal(jsonData, index)
+		if err != nil {
+			continue
+		}
+		db.Dao.Model(&IndexBasic{}).FirstOrCreate(index, &IndexBasic{TsCode: index.TsCode}).Where("ts_code = ?", index.TsCode).Updates(index)
+	}
+
+}
+
+// map转换为结构体
+
 func (receiver StockDataApi) GetStockBaseInfo() {
 	res := &TushareStockBasicResponse{}
-	resp, err := receiver.client.R().
+	fields := "ts_code,symbol,name,area,industry,cnspell,market,list_date,act_name,act_ent_type,fullname,exchange,list_status,curr_type,enname,delist_date,is_hs"
+	_, err := receiver.client.R().
 		SetHeader("content-type", "application/json").
 		SetBody(&TushareRequest{
 			ApiName: "stock_basic",
 			Token:   TushareToken,
 			Params:  nil,
-			Fields:  "*",
+			Fields:  fields,
 		}).
 		SetResult(res).
 		Post(tushare_api_url)
 	//logger.SugaredLogger.Infof("GetStockBaseInfo %s", string(resp.Body()))
 	//resp.Body()写入文件
-	ioutil.WriteFile("stock_basic.json", resp.Body(), 0666)
+	//ioutil.WriteFile("stock_basic.json", resp.Body(), 0666)
 	//logger.SugaredLogger.Infof("GetStockBaseInfo %+v", res)
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
@@ -187,26 +236,22 @@ func (receiver StockDataApi) GetStockBaseInfo() {
 		return
 	}
 	for _, item := range res.Data.Items {
-		ID, _ := convertor.ToInt(item[6])
 		stock := &StockBasic{}
-		stock.Exchange = convertor.ToString(item[0])
-		stock.IsHs = convertor.ToString(item[1])
-		stock.Name = convertor.ToString(item[2])
-		stock.Industry = convertor.ToString(item[3])
-		stock.ListStatus = convertor.ToString(item[4])
-		stock.ActName = convertor.ToString(item[5])
-		stock.ID = uint(ID)
-		stock.CurrType = convertor.ToString(item[7])
-		stock.Area = convertor.ToString(item[8])
-		stock.ListDate = convertor.ToString(item[9])
-		stock.DelistDate = convertor.ToString(item[10])
-		stock.ActEntType = convertor.ToString(item[11])
-		stock.TsCode = convertor.ToString(item[12])
-		stock.Symbol = convertor.ToString(item[13])
-		stock.Cnspell = convertor.ToString(item[14])
-		stock.Fullname = convertor.ToString(item[20])
-		stock.Ename = convertor.ToString(item[21])
-		db.Dao.Model(&StockBasic{}).FirstOrCreate(stock, &StockBasic{TsCode: stock.TsCode}).Updates(stock)
+		data := map[string]any{}
+		for _, field := range strings.Split(fields, ",") {
+			logger.SugaredLogger.Infof("field: %s", field)
+			idx := slice.IndexOf(res.Data.Fields, field)
+			if idx == -1 {
+				continue
+			}
+			data[field] = item[idx]
+		}
+		jsonData, _ := json.Marshal(data)
+		err := json.Unmarshal(jsonData, stock)
+		if err != nil {
+			continue
+		}
+		db.Dao.Model(&StockBasic{}).FirstOrCreate(stock, &StockBasic{TsCode: stock.TsCode}).Where("ts_code = ?", stock.TsCode).Updates(stock)
 	}
 
 }
@@ -233,6 +278,7 @@ func (receiver StockDataApi) GetStockCodeRealTimeData(StockCode string) (*StockI
 }
 
 func (receiver StockDataApi) Follow(stockCode string) string {
+	logger.SugaredLogger.Infof("Follow %s", stockCode)
 	stockInfo, err := receiver.GetStockCodeRealTimeData(stockCode)
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
@@ -264,6 +310,15 @@ func (receiver StockDataApi) SetCostPriceAndVolume(price float64, volume int64, 
 	return "设置成功"
 }
 
+func (receiver StockDataApi) SetAlarmChangePercent(val float64, stockCode string) string {
+	err := db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", stockCode).Update("alarm_change_percent", val).Error
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+		return "设置失败"
+	}
+	return "设置成功"
+}
+
 func (receiver StockDataApi) GetFollowList() []FollowedStock {
 	var result []FollowedStock
 	db.Dao.Model(&FollowedStock{}).Order("sort asc,time desc").Find(&result)
@@ -273,6 +328,20 @@ func (receiver StockDataApi) GetFollowList() []FollowedStock {
 func (receiver StockDataApi) GetStockList(key string) []StockBasic {
 	var result []StockBasic
 	db.Dao.Model(&StockBasic{}).Where("name like ? or ts_code like ?", "%"+key+"%", "%"+key+"%").Find(&result)
+	var result2 []IndexBasic
+	db.Dao.Model(&IndexBasic{}).Where("market in ?", []string{"SSE", "SZSE"}).Where("name like ? or ts_code like ?", "%"+key+"%", "%"+key+"%").Find(&result2)
+
+	for _, item := range result2 {
+		result = append(result, StockBasic{
+			TsCode:   item.TsCode,
+			Name:     item.Name,
+			Fullname: item.FullName,
+			Symbol:   item.Symbol,
+			Market:   item.Market,
+			ListDate: item.ListDate,
+		})
+	}
+
 	return result
 }
 
@@ -370,4 +439,25 @@ func ParseFullSingleStockData(data string) (*StockInfo, error) {
 	//logger.SugaredLogger.Infof("股票数据解析完成stockInfo: %+v", stockInfo)
 
 	return stockInfo, nil
+}
+
+type IndexBasic struct {
+	gorm.Model
+	TsCode        string  `json:"ts_code" gorm:"index"`
+	Symbol        string  `json:"symbol" gorm:"index"`
+	Name          string  `json:"name" gorm:"index"`
+	FullName      string  `json:"fullname"`
+	IndexType     string  `json:"index_type"`
+	IndexCategory string  `json:"category"`
+	Market        string  `json:"market"`
+	ListDate      string  `json:"list_date"`
+	BaseDate      string  `json:"base_date"`
+	BasePoint     float64 `json:"base_point"`
+	Publisher     string  `json:"publisher"`
+	WeightRule    string  `json:"weight_rule"`
+	DESC          string  `json:"desc"`
+}
+
+func (IndexBasic) TableName() string {
+	return "tushare_index_basic"
 }
