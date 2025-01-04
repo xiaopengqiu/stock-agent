@@ -203,7 +203,7 @@ async function monitor() {
         }else if(result.profitAmount<0){
           result.profitType="success"
         }
-        if(Math.abs(res[0].AlarmChangePercent)>0&&roundedNum>res[0].AlarmChangePercent){
+        if(res[0].AlarmChangePercent>0&&Math.abs(roundedNum)>res[0].AlarmChangePercent){
           SendMessage(result)
         }
       }
