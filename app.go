@@ -137,10 +137,11 @@ func onReady(a *App) {
 	systray.SetIcon(icon2)
 	systray.SetTitle("go-stock")
 	systray.SetTooltip("go-stock 股票行情实时获取")
+
 	// 创建菜单项
 	mQuitOrig := systray.AddMenuItem("退出", "退出应用程序")
 	show := systray.AddMenuItem("显示", "显示应用程序")
-	hide := systray.AddMenuItem("隐藏应用程序", "隐藏应用程序")
+	hide := systray.AddMenuItem("隐藏", "隐藏应用程序")
 
 	// 监听菜单项点击事件
 	go func() {
