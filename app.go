@@ -107,8 +107,8 @@ func (a *App) SetCostPriceAndVolume(stockCode string, price float64, volume int6
 	return data.NewStockDataApi().SetCostPriceAndVolume(price, volume, stockCode)
 }
 
-func (a *App) SetAlarmChangePercent(val float64, stockCode string) string {
-	return data.NewStockDataApi().SetAlarmChangePercent(val, stockCode)
+func (a *App) SetAlarmChangePercent(val, alarmPrice float64, stockCode string) string {
+	return data.NewStockDataApi().SetAlarmChangePercent(val, alarmPrice, stockCode)
 }
 
 func (a *App) SendDingDingMessage(message string, stockCode string) string {

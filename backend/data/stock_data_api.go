@@ -135,6 +135,7 @@ type FollowedStock struct {
 	PriceChange        float64
 	ChangePercent      float64
 	AlarmChangePercent float64
+	AlarmPrice         float64
 	Time               time.Time
 	Sort               int64
 	IsDel              soft_delete.DeletedAt `gorm:"softDelete:flag"`
@@ -310,8 +311,11 @@ func (receiver StockDataApi) SetCostPriceAndVolume(price float64, volume int64, 
 	return "设置成功"
 }
 
-func (receiver StockDataApi) SetAlarmChangePercent(val float64, stockCode string) string {
-	err := db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", stockCode).Update("alarm_change_percent", val).Error
+func (receiver StockDataApi) SetAlarmChangePercent(val, alarmPrice float64, stockCode string) string {
+	err := db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", stockCode).Updates(&map[string]any{
+		"alarm_change_percent": val,
+		"alarm_price":          alarmPrice,
+	}).Error
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
 		return "设置失败"

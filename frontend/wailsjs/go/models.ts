@@ -9,6 +9,7 @@ export namespace data {
 	    PriceChange: number;
 	    ChangePercent: number;
 	    AlarmChangePercent: number;
+	    AlarmPrice: number;
 	    // Go type: time
 	    Time: any;
 	    Sort: number;
@@ -28,6 +29,7 @@ export namespace data {
 	        this.PriceChange = source["PriceChange"];
 	        this.ChangePercent = source["ChangePercent"];
 	        this.AlarmChangePercent = source["AlarmChangePercent"];
+	        this.AlarmPrice = source["AlarmPrice"];
 	        this.Time = this.convertValues(source["Time"], null);
 	        this.Sort = source["Sort"];
 	        this.IsDel = source["IsDel"];

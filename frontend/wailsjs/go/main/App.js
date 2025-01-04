@@ -22,8 +22,8 @@ export function SendDingDingMessage(arg1, arg2) {
   return window['go']['main']['App']['SendDingDingMessage'](arg1, arg2);
 }
 
-export function SetAlarmChangePercent(arg1, arg2) {
-  return window['go']['main']['App']['SetAlarmChangePercent'](arg1, arg2);
+export function SetAlarmChangePercent(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SetAlarmChangePercent'](arg1, arg2, arg3);
 }
 
 export function SetCostPriceAndVolume(arg1, arg2, arg3) {

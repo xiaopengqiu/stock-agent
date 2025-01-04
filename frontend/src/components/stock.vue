@@ -32,6 +32,7 @@ const formModel = ref({
   costPrice: 0.000,
   volume: 0,
   alarm: 0,
+  alarmPrice:0,
 })
 
 const data = reactive({
@@ -203,7 +204,7 @@ async function monitor() {
         }else if(result.profitAmount<0){
           result.profitType="success"
         }
-        if(res[0].AlarmChangePercent>0&&Math.abs(roundedNum)>res[0].AlarmChangePercent){
+        if((res[0].AlarmChangePercent>0&&Math.abs(roundedNum)>res[0].AlarmChangePercent)||(res[0].AlarmPrice>0&&result["当前价格"]>res[0].AlarmPrice)){
           SendMessage(result)
         }
       }
@@ -236,6 +237,7 @@ function setStock(code,name){
     formModel.value.volume=res[0].Volume
     formModel.value.costPrice=res[0].CostPrice
     formModel.value.alarm=res[0].AlarmChangePercent
+    formModel.value.alarmPrice=res[0].AlarmPrice
     modalShow.value=true
 }
 
@@ -253,10 +255,9 @@ function showK(code,name){
 }
 
 
-function updateCostPriceAndVolumeNew(code,price,volume,alarm){
-  console.log(code,price,volume)
-  if(alarm){
-    SetAlarmChangePercent(alarm,code).then(result => {
+function updateCostPriceAndVolumeNew(code,price,volume,alarm,formModel){
+  if(alarm||formModel.alarmPrice){
+    SetAlarmChangePercent(alarm,formModel.alarmPrice,code).then(result => {
       //message.success(result)
     })
   }
@@ -383,7 +384,7 @@ function SendMessage(result){
               <n-form-item label="股票成本" path="costPrice">
                 <n-input-number v-model:value="formModel.costPrice" min="0"  placeholder="请输入股票成本" >
                   <template #suffix>
-                    元
+                    ¥
                   </template>
                 </n-input-number>
               </n-form-item>
@@ -401,9 +402,17 @@ function SendMessage(result){
                 </template>
               </n-input-number>
               </n-form-item>
+              <n-form-item label="股价提醒" path="alarmPrice">
+                <n-input-number v-model:value="formModel.alarmPrice"  min="0" placeholder="请输入股价报警值(¥)" >
+                  <template #suffix>
+                    ¥
+                  </template>
+                </n-input-number>
+              </n-form-item>
+
             </n-form>
             <template #footer>
-              <n-button type="primary" @click="updateCostPriceAndVolumeNew(formModel.code,formModel.costPrice,formModel.volume,formModel.alarm)">保存</n-button>
+              <n-button type="primary" @click="updateCostPriceAndVolumeNew(formModel.code,formModel.costPrice,formModel.volume,formModel.alarm,formModel)">保存</n-button>
             </template>
       </n-modal>
 
