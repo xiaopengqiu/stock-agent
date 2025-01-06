@@ -1,11 +1,11 @@
-//go:build windows
+//go:build linux
+// +build linux
 
 package main
 
 import (
 	"context"
 	"github.com/coocood/freecache"
-	"github.com/getlantern/systray"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"go-stock/backend/data"
 	"go-stock/backend/logger"
@@ -30,17 +30,6 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	// Perform your setup here
 	a.ctx = ctx
-
-	//判断是否是windows操作系统
-	platform := runtime.Environment(ctx).Platform
-	if platform == "windows" {
-		// 创建系统托盘
-		go systray.Run(func() {
-			onReady(a)
-		}, func() {
-			onExit(a)
-		})
-	}
 
 }
 
@@ -84,7 +73,6 @@ func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 // shutdown is called at application termination
 func (a *App) shutdown(ctx context.Context) {
 	// Perform your teardown here
-	//systray.Quit()
 }
 
 // Greet returns a greeting for the given name
@@ -129,45 +117,4 @@ func (a *App) SendDingDingMessage(message string, stockCode string) string {
 		return ""
 	}
 	return data.NewDingDingAPI().SendDingDingMessage(message)
-}
-
-func onExit(a *App) {
-	// 清理操作
-	logger.SugaredLogger.Infof("onExit")
-	runtime.Quit(a.ctx)
-}
-
-func onReady(a *App) {
-
-	// 初始化操作
-	logger.SugaredLogger.Infof("onReady")
-	systray.SetIcon(icon2)
-	systray.SetTitle("go-stock")
-	systray.SetTooltip("go-stock 股票行情实时获取")
-
-	// 创建菜单项
-	show := systray.AddMenuItem("显示", "显示应用程序")
-	hide := systray.AddMenuItem("隐藏", "隐藏应用程序")
-	systray.AddSeparator()
-	mQuitOrig := systray.AddMenuItem("退出", "退出应用程序")
-
-	// 监听菜单项点击事件
-	go func() {
-		for {
-			select {
-			case <-mQuitOrig.ClickedCh:
-				logger.SugaredLogger.Infof("退出应用程序")
-				runtime.Quit(a.ctx)
-				//systray.Quit()
-			case <-show.ClickedCh:
-				logger.SugaredLogger.Infof("显示应用程序")
-				runtime.Show(a.ctx)
-				//runtime.WindowShow(a.ctx)
-			case <-hide.ClickedCh:
-				logger.SugaredLogger.Infof("隐藏应用程序")
-				runtime.Hide(a.ctx)
-
-			}
-		}
-	}()
 }
