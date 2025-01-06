@@ -1,5 +1,4 @@
-# README
-
+#  Go fuck chinese stock market !!!
 ![Wails and NaiveUI](./build/appicon.png)
 
 
