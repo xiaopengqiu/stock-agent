@@ -6,11 +6,13 @@
 ## Snapshot
 ![img_1.png](build/screenshot/img_1.png)
 ### 成本仓位设置
-![img.png](build/screenshot/img.png)
+![img.png](build/screenshot/img_4.png)
 ### 日K
 ![img_2.png](build/screenshot/img_2.png)
 ### 分时
 ![img_3.png](build/screenshot/img_3.png)
+### 钉钉报警通知
+![img_4.png](build/screenshot/img_5.png)
 
 
 ## About
