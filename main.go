@@ -71,9 +71,9 @@ func main() {
 	FileMenu.AddText("隐藏到托盘区", keys.CmdOrCtrl("h"), func(_ *menu.CallbackData) {
 		runtime.Hide(app.ctx)
 	})
-	FileMenu.AddText("退出", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
-		runtime.Quit(app.ctx)
-	})
+	//FileMenu.AddText("退出", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
+	//	runtime.Quit(app.ctx)
+	//})
 
 	// Create application with options
 	err := wails.Run(&options.App{

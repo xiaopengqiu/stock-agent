@@ -78,7 +78,7 @@ func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 // shutdown is called at application termination
 func (a *App) shutdown(ctx context.Context) {
 	// Perform your teardown here
-	systray.Quit()
+	//systray.Quit()
 }
 
 // Greet returns a greeting for the given name
