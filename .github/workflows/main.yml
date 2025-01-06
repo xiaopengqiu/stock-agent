@@ -17,10 +17,10 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - name: 'go-stock-${{ matrix.build.platform }}.exe'
+          - name: 'go-stock-windows-amd64.exe'
             platform:  'windows/amd64'
             os: 'windows-latest'
-          - name: 'go-stock-${{ matrix.build.platform }}'
+          - name: 'go-stock-linux-amd64'
             platform: 'linux/amd64'
             os: 'ubuntu-latest'
 
