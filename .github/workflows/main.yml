@@ -20,6 +20,9 @@ jobs:
           - name: 'go-stock.exe'
             platform:  'windows/amd64'
             os: 'windows-latest'
+          - name: 'go-stock'
+            platform: 'linux/amd64'
+            os: 'ubuntu-latest'
 
     runs-on: ${{ matrix.build.os }}
     steps:

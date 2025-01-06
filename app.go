@@ -29,12 +29,16 @@ func (a *App) startup(ctx context.Context) {
 	// Perform your setup here
 	a.ctx = ctx
 
-	// 创建系统托盘
-	go systray.Run(func() {
-		onReady(a)
-	}, func() {
-		onExit(a)
-	})
+	//判断是否是windows操作系统
+	platform := runtime.Environment(ctx).Platform
+	if platform == "windows" {
+		// 创建系统托盘
+		go systray.Run(func() {
+			onReady(a)
+		}, func() {
+			onExit(a)
+		})
+	}
 
 }
 
@@ -132,6 +136,7 @@ func onExit(a *App) {
 }
 
 func onReady(a *App) {
+
 	// 初始化操作
 	logger.SugaredLogger.Infof("onReady")
 	systray.SetIcon(icon2)
