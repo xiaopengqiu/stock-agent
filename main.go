@@ -16,6 +16,7 @@ import (
 	"go-stock/backend/db"
 	"log"
 	"os"
+	goruntime "runtime"
 	"time"
 )
 
@@ -68,9 +69,13 @@ func main() {
 	FileMenu.AddText("窗口还原", keys.Key("Esc"), func(callback *menu.CallbackData) {
 		runtime.WindowUnfullscreen(app.ctx)
 	})
-	FileMenu.AddText("隐藏到托盘区", keys.CmdOrCtrl("h"), func(_ *menu.CallbackData) {
-		runtime.Hide(app.ctx)
-	})
+
+	if goruntime.GOOS == "windows" {
+		FileMenu.AddText("隐藏到托盘区", keys.CmdOrCtrl("h"), func(_ *menu.CallbackData) {
+			runtime.Hide(app.ctx)
+		})
+	}
+
 	//FileMenu.AddText("退出", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
 	//	runtime.Quit(app.ctx)
 	//})

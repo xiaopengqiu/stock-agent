@@ -31,16 +31,12 @@ func (a *App) startup(ctx context.Context) {
 	// Perform your setup here
 	a.ctx = ctx
 
-	//判断是否是windows操作系统
-	platform := runtime.Environment(ctx).Platform
-	if platform == "windows" {
-		// 创建系统托盘
-		go systray.Run(func() {
-			onReady(a)
-		}, func() {
-			onExit(a)
-		})
-	}
+	// 创建系统托盘
+	go systray.Run(func() {
+		onReady(a)
+	}, func() {
+		onExit(a)
+	})
 
 }
 
