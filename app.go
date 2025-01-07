@@ -68,6 +68,7 @@ func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 	})
 
 	if err != nil {
+		logger.SugaredLogger.Errorf("dialog error:%s", err.Error())
 		return false
 	}
 	logger.SugaredLogger.Debugf("dialog:%s", dialog)
@@ -80,7 +81,8 @@ func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 // shutdown is called at application termination
 func (a *App) shutdown(ctx context.Context) {
 	// Perform your teardown here
-	//systray.Quit()
+	systray.Quit()
+	runtime.Quit(ctx)
 }
 
 // Greet returns a greeting for the given name
@@ -143,7 +145,7 @@ func onReady(a *App) {
 
 	// 创建菜单项
 	show := systray.AddMenuItem("显示", "显示应用程序")
-	hide := systray.AddMenuItem("隐藏", "隐藏应用程序")
+	//hide := systray.AddMenuItem("隐藏", "隐藏应用程序")
 	systray.AddSeparator()
 	mQuitOrig := systray.AddMenuItem("退出", "退出应用程序")
 
@@ -159,9 +161,9 @@ func onReady(a *App) {
 				logger.SugaredLogger.Infof("显示应用程序")
 				runtime.Show(a.ctx)
 				//runtime.WindowShow(a.ctx)
-			case <-hide.ClickedCh:
-				logger.SugaredLogger.Infof("隐藏应用程序")
-				runtime.Hide(a.ctx)
+				//case <-hide.ClickedCh:
+				//	logger.SugaredLogger.Infof("隐藏应用程序")
+				//	runtime.Hide(a.ctx)
 
 			}
 		}

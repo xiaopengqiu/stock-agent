@@ -204,8 +204,10 @@ async function monitor() {
         }else if(result.profitAmount<0){
           result.profitType="success"
         }
-        if((res[0].AlarmChangePercent>0&&Math.abs(roundedNum)>res[0].AlarmChangePercent)||(res[0].AlarmPrice>0&&result["当前价格"]>res[0].AlarmPrice)){
-          SendMessage(result)
+        if(result["当前价格"]){
+          if((res[0].AlarmChangePercent>0&&Math.abs(roundedNum)>res[0].AlarmChangePercent)||(res[0].AlarmPrice>0&&result["当前价格"]>res[0].AlarmPrice)){
+            SendMessage(result)
+          }
         }
       }
       results.value[result["股票名称"]]=result
