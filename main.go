@@ -64,7 +64,6 @@ func main() {
 	FileMenu.AddSeparator()
 	FileMenu.AddText("窗口全屏", keys.CmdOrCtrl("f"), func(callback *menu.CallbackData) {
 		runtime.WindowFullscreen(app.ctx)
-		callback.MenuItem.Hide()
 	})
 	FileMenu.AddText("窗口还原", keys.Key("Esc"), func(callback *menu.CallbackData) {
 		runtime.WindowUnfullscreen(app.ctx)
@@ -72,7 +71,7 @@ func main() {
 
 	if goruntime.GOOS == "windows" {
 		FileMenu.AddText("隐藏到托盘区", keys.CmdOrCtrl("h"), func(_ *menu.CallbackData) {
-			runtime.Hide(app.ctx)
+			runtime.WindowHide(app.ctx)
 		})
 	}
 

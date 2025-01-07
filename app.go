@@ -82,7 +82,6 @@ func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 func (a *App) shutdown(ctx context.Context) {
 	// Perform your teardown here
 	systray.Quit()
-	runtime.Quit(ctx)
 }
 
 // Greet returns a greeting for the given name
@@ -159,7 +158,7 @@ func onReady(a *App) {
 				//systray.Quit()
 			case <-show.ClickedCh:
 				logger.SugaredLogger.Infof("显示应用程序")
-				runtime.Show(a.ctx)
+				runtime.WindowShow(a.ctx)
 				//runtime.WindowShow(a.ctx)
 				//case <-hide.ClickedCh:
 				//	logger.SugaredLogger.Infof("隐藏应用程序")
