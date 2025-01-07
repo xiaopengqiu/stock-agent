@@ -287,12 +287,15 @@ func (receiver StockDataApi) Follow(stockCode string) string {
 	}
 	price, _ := convertor.ToFloat(stockInfo.Price)
 	db.Dao.Model(&FollowedStock{}).FirstOrCreate(&FollowedStock{
-		StockCode:     stockCode,
-		Name:          stockInfo.Name,
-		Price:         price,
-		Time:          time.Now(),
-		ChangePercent: 0,
-		PriceChange:   0,
+		StockCode:          stockCode,
+		Name:               stockInfo.Name,
+		Price:              price,
+		Time:               time.Now(),
+		ChangePercent:      0,
+		PriceChange:        0,
+		Sort:               0,
+		AlarmChangePercent: 3,
+		AlarmPrice:         price + 1,
 	}, &FollowedStock{StockCode: stockCode})
 	return "关注成功"
 }
@@ -321,6 +324,10 @@ func (receiver StockDataApi) SetAlarmChangePercent(val, alarmPrice float64, stoc
 		return "设置失败"
 	}
 	return "设置成功"
+}
+
+func (receiver StockDataApi) SetStockSort(sort int64, stockCode string) {
+	db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", stockCode).Update("sort", sort)
 }
 
 func (receiver StockDataApi) GetFollowList() []FollowedStock {

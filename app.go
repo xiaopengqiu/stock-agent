@@ -113,7 +113,9 @@ func (a *App) SetCostPriceAndVolume(stockCode string, price float64, volume int6
 func (a *App) SetAlarmChangePercent(val, alarmPrice float64, stockCode string) string {
 	return data.NewStockDataApi().SetAlarmChangePercent(val, alarmPrice, stockCode)
 }
-
+func (a *App) SetStockSort(sort int64, stockCode string) {
+	data.NewStockDataApi().SetStockSort(sort, stockCode)
+}
 func (a *App) SendDingDingMessage(message string, stockCode string) string {
 	ttl, _ := a.cache.TTL([]byte(stockCode))
 	logger.SugaredLogger.Infof("stockCode %s ttl:%d", stockCode, ttl)

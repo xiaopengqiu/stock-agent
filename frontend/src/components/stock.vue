@@ -1,5 +1,5 @@
 <script setup>
-import {onBeforeMount, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
+import {computed, onBeforeMount, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import {
   Follow,
   GetFollowList,
@@ -7,11 +7,11 @@ import {
   Greet,
   SendDingDingMessage,
   SetAlarmChangePercent,
-  SetCostPriceAndVolume,
+  SetCostPriceAndVolume, SetStockSort,
   UnFollow
 } from '../../wailsjs/go/main/App'
 import {NButton, NFlex, NForm, NFormItem, NInputNumber, NText, useMessage, useModal} from 'naive-ui'
-import {EventsOn, WindowFullscreen, WindowUnfullscreen} from '../../wailsjs/runtime'
+import {EventsOn, WindowFullscreen, WindowReload, WindowUnfullscreen} from '../../wailsjs/runtime'
 import {Add, Search} from '@vicons/ionicons5'
 
 const message = useMessage()
@@ -34,6 +34,7 @@ const formModel = ref({
   volume: 0,
   alarm: 0,
   alarmPrice:0,
+  sort:999,
 })
 
 const data = reactive({
@@ -45,6 +46,15 @@ const data = reactive({
   fullscreen: false,
 })
 
+const sortedResults = computed(() => {
+  console.log("computed",sortedResults.value)
+  const sortedKeys =Object.keys(results.value).sort();
+  const sortedObject = {};
+  sortedKeys.forEach(key => {
+    sortedObject[key] = results.value[key];
+  });
+  return sortedObject
+});
 
 onBeforeMount(()=>{
   GetStockList("").then(result => {
@@ -95,17 +105,19 @@ EventsOn("showSearch",(data)=>{
 
 
 EventsOn("refreshFollowList",(data)=>{
- message.loading("refresh...")
-  GetFollowList().then(result => {
-    followList.value = result
-    for (const followedStock of result) {
-      if (!stocks.value.includes(followedStock.StockCode)) {
-        stocks.value.push(followedStock.StockCode)
-      }
-    }
-    monitor()
-    message.destroyAll
-  })
+
+  WindowReload()
+ // message.loading("refresh...")
+ //  GetFollowList().then(result => {
+ //    followList.value = result
+ //    for (const followedStock of result) {
+ //      if (!stocks.value.includes(followedStock.StockCode)) {
+ //        stocks.value.push(followedStock.StockCode)
+ //      }
+ //    }
+ //    monitor()
+ //    message.destroyAll
+ //  })
 })
 
 //判断是否是A股交易时间
@@ -142,10 +154,15 @@ function AddStock(){
 
 
 
-function removeMonitor(code,name) {
- // console.log("removeMonitor",name,code)
+function removeMonitor(code,name,key) {
+  console.log("removeMonitor",name,code,key)
   stocks.value.splice(stocks.value.indexOf(code),1)
-  delete results.value[name]
+  console.log("removeMonitor-key",key)
+  console.log("removeMonitor-v",results.value[key])
+
+  delete results.value[key]
+  console.log("removeMonitor-v",results.value[key])
+
   UnFollow(code).then(result => {
     message.success(result)
   })
@@ -205,15 +222,35 @@ async function monitor() {
           result.profitType="success"
         }
         if(result["当前价格"]){
-          if((res[0].AlarmChangePercent>0&&Math.abs(roundedNum)>res[0].AlarmChangePercent)||(res[0].AlarmPrice>0&&result["当前价格"]>res[0].AlarmPrice)){
-            SendMessage(result)
+          if(res[0].AlarmChangePercent>0&&Math.abs(roundedNum)>=res[0].AlarmChangePercent){
+            SendMessage(result,1)
+          }
+
+          if(res[0].AlarmPrice>0&&result["当前价格"]>=res[0].AlarmPrice){
+            SendMessage(result,2)
+          }
+
+          if(res[0].CostPrice>0&&result["当前价格"]>=res[0].CostPrice){
+            SendMessage(result,3)
           }
         }
       }
-      results.value[result["股票名称"]]=result
+      result.key=GetSortKey(result.Sort,result["股票代码"])
+      results.value[GetSortKey(result.Sort,result["股票代码"])]=result
+
     })
   }
 }
+
+//数字长度不够前面补0
+function padZero(num, length) {
+  return (Array(length).join('0') + num).slice(-length);
+}
+
+function GetSortKey(sort,code){
+  return padZero(sort,6)+"_"+code
+}
+
 function onSelect(item) {
   //console.log("onSelect",item)
 
@@ -240,6 +277,7 @@ function setStock(code,name){
     formModel.value.costPrice=res[0].CostPrice
     formModel.value.alarm=res[0].AlarmChangePercent
     formModel.value.alarmPrice=res[0].AlarmPrice
+    formModel.value.sort=res[0].Sort
     modalShow.value=true
 }
 
@@ -258,6 +296,13 @@ function showK(code,name){
 
 
 function updateCostPriceAndVolumeNew(code,price,volume,alarm,formModel){
+
+  if(formModel.sort){
+    SetStockSort(formModel.sort,code).then(result => {
+      //message.success(result)
+    })
+  }
+
   if(alarm||formModel.alarmPrice){
     SetAlarmChangePercent(alarm,formModel.alarmPrice,code).then(result => {
       //message.success(result)
@@ -288,9 +333,12 @@ function fullscreen(){
   data.fullscreen=!data.fullscreen
 }
 
-function SendMessage(result){
+
+//type 报警类型: 1 涨跌报警;2 股价报警 3 成本价报警
+function SendMessage(result,type){
+  let typeName=getTypeName(type)
   let img='http://image.sinajs.cn/newchart/min/n/'+result["股票代码"]+'.gif'+"?t="+Date.now()
-  let markdown="### go-stock市场行情\n\n"+
+  let markdown="### go-stock ["+typeName+"]\n\n"+
       "### "+result["股票名称"]+"("+result["股票代码"]+")\n" +
       "- 当前价格: "+result["当前价格"]+"  "+result.s+"\n" +
       "- 最高价: "+result["今日最高价"]+"  "+result.highRate+"\n" +
@@ -301,10 +349,12 @@ function SendMessage(result){
       "- 成本数量: "+result.volume+"股\n" +
       "- 日期: "+result["日期"]+"  "+result["时间"]+"\n\n"+
       "![image]("+img+")\n"
+  let title=result["股票名称"]+"("+result["股票代码"]+") "+result["当前价格"]+" "+result.s
+
   let msg='{' +
       '     "msgtype": "markdown",' +
       '     "markdown": {' +
-      '         "title":"'+result["股票名称"]+"("+result["股票代码"]+") "+result["当前价格"]+" "+result.s+'",' +
+      '         "title":"['+typeName+"]"+title+'",' +
       '         "text": "'+markdown+'"' +
       '     },' +
       '      "at": {' +
@@ -314,6 +364,19 @@ function SendMessage(result){
     SendDingDingMessage(msg,result["股票代码"])
 }
 
+function getTypeName(type){
+  switch (type)
+  {
+    case 1:
+      return "涨跌报警"
+    case 2:
+      return "股价报警"
+    case 3:
+      return "成本价报警"
+    default:
+      return ""
+  }
+}
 
 //获取高度
 function getHeight() {
@@ -323,8 +386,8 @@ function getHeight() {
 
 <template>
   <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
-      <n-gi v-for="result in results" >
-         <n-card    :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"   :closable="true" @close="removeMonitor(result['股票代码'],result['股票名称'])">
+      <n-gi v-for="result in sortedResults" >
+         <n-card    :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"   :closable="true" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
            <n-grid :cols="1" :y-gap="6">
              <n-gi>
                <n-text :type="result.type" >{{result["当前价格"]}}</n-text><n-text style="padding-left: 10px;" :type="result.type">{{ result.s}}</n-text>&nbsp;
@@ -387,7 +450,13 @@ function getHeight() {
 
   </n-affix>
       <n-modal transform-origin="center" size="small" v-model:show="modalShow" :title="formModel.name" style="width: 400px" :preset="'card'">
-            <n-form :model="formModel" :rules="{ costPrice: { required: true, message: '请输入成本'}, volume: { required: true, message: '请输入数量'},alarm:{required: true, message: '涨跌报警值'} }" label-placement="left" label-width="80px">
+            <n-form :model="formModel" :rules="{
+              costPrice: { required: true, message: '请输入成本'},
+              volume: { required: true, message: '请输入数量'},
+              alarm:{required: true, message: '涨跌报警值'} ,
+              alarmPrice: { required: true, message: '请输入报警价格'},
+              sort: { required: true, message: '请输入排序值'},
+            }" label-placement="left" label-width="80px">
               <n-form-item label="股票成本" path="costPrice">
                 <n-input-number v-model:value="formModel.costPrice" min="0"  placeholder="请输入股票成本" >
                   <template #suffix>
@@ -416,7 +485,10 @@ function getHeight() {
                   </template>
                 </n-input-number>
               </n-form-item>
-
+              <n-form-item label="股票排序" path="sort">
+                <n-input-number v-model:value="formModel.sort"  min="0" placeholder="请输入股价排序值" >
+                </n-input-number>
+              </n-form-item>
             </n-form>
             <template #footer>
               <n-button type="primary" @click="updateCostPriceAndVolumeNew(formModel.code,formModel.costPrice,formModel.volume,formModel.alarm,formModel)">保存</n-button>
