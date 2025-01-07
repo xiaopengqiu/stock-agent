@@ -1,17 +1,18 @@
 <script setup>
 import {onBeforeMount, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import {
-  Greet,
   Follow,
-  UnFollow,
   GetFollowList,
   GetStockList,
+  Greet,
+  SendDingDingMessage,
+  SetAlarmChangePercent,
   SetCostPriceAndVolume,
-  SendDingDingMessage, SetAlarmChangePercent
+  UnFollow
 } from '../../wailsjs/go/main/App'
 import {NButton, NFlex, NForm, NFormItem, NInputNumber, NText, useMessage, useModal} from 'naive-ui'
-import { WindowFullscreen,WindowUnfullscreen,EventsOn } from '../../wailsjs/runtime'
-import {Add, StarOutline} from '@vicons/ionicons5'
+import {EventsOn, WindowFullscreen, WindowUnfullscreen} from '../../wailsjs/runtime'
+import {Add, Search} from '@vicons/ionicons5'
 
 const message = useMessage()
 const modal = useModal()
@@ -69,7 +70,7 @@ onBeforeMount(()=>{
 
 onMounted(() => {
   message.loading("Loading...")
-  console.log(`the component is now mounted.`)
+ // console.log(`the component is now mounted.`)
 
     ticker.value=setInterval(() => {
       if(isTradingTime()){
@@ -77,11 +78,10 @@ onMounted(() => {
         data.fenshiURL='http://image.sinajs.cn/newchart/min/n/'+data.code+'.gif'+"?t="+Date.now()
       }
     }, 3500)
-
 })
 
 onBeforeUnmount(() => {
-  console.log(`the component is now unmounted.`)
+ // console.log(`the component is now unmounted.`)
   clearInterval(ticker.value)
 })
 
@@ -143,7 +143,7 @@ function AddStock(){
 
 
 function removeMonitor(code,name) {
-  console.log("removeMonitor",name,code)
+ // console.log("removeMonitor",name,code)
   stocks.value.splice(stocks.value.indexOf(code),1)
   delete results.value[name]
   UnFollow(code).then(result => {
@@ -152,9 +152,9 @@ function removeMonitor(code,name) {
 }
 
 function getStockList(value){
-  console.log("getStockList",value)
+ // console.log("getStockList",value)
   let result;
-  result=stockList.value.filter(item => item.name.includes(data.name)||item.ts_code.includes(data.name))
+  result=stockList.value.filter(item => item.name.includes(value)||item.ts_code.includes(value))
   options.value=result.map(item => {
     return {
       label: item.name+" - "+item.ts_code,
@@ -215,7 +215,7 @@ async function monitor() {
   }
 }
 function onSelect(item) {
-  console.log("onSelect",item)
+  //console.log("onSelect",item)
 
   if(item.indexOf("-")>0){
     item=item.split("-")[1].toLowerCase()
@@ -233,7 +233,7 @@ function search(code,name){
 }
 function setStock(code,name){
     let res=followList.value.filter(item => item.StockCode===code)
-    console.log("res:",res)
+    //console.log("res:",res)
     formModel.value.name=name
     formModel.value.code=code
     formModel.value.volume=res[0].Volume
@@ -314,6 +314,11 @@ function SendMessage(result){
     SendDingDingMessage(msg,result["股票代码"])
 }
 
+
+//获取高度
+function getHeight() {
+  return document.documentElement.clientHeight
+}
 </script>
 
 <template>
@@ -362,19 +367,19 @@ function SendMessage(result){
          </n-card >
       </n-gi>
     </n-grid>
-  <n-affix :trigger-bottom="60" v-if="addBTN">
+  <n-affix :trigger-bottom="getHeight()/2-10" style="left:0">
 <!--    <n-card :bordered="false">-->
       <n-input-group>
 
-        <n-button type="info" @click="addBTN=false" >隐藏</n-button>
-        <n-auto-complete v-model:value="data.name"
+        <n-button  type="error" @click="addBTN=!addBTN" > <n-icon :component="Search"/>&nbsp;<n-text  v-if="addBTN">隐藏</n-text></n-button>
+        <n-auto-complete v-model:value="data.name"  v-if="addBTN"
                          :input-props="{
                                 autocomplete: 'disabled',
                               }"
                          :options="options"
                          placeholder="请输入股票/指数名称或者代码"
                          clearable @update-value="getStockList" :on-select="onSelect"/>
-        <n-button type="primary" @click="AddStock">
+        <n-button type="primary" @click="AddStock"  v-if="addBTN">
           <n-icon :component="Add"/> &nbsp;关注该股票
         </n-button>
       </n-input-group>
