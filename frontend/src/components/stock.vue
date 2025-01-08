@@ -84,7 +84,7 @@ onMounted(() => {
 
     ticker.value=setInterval(() => {
       if(isTradingTime()){
-        monitor()
+        //monitor()
         data.fenshiURL='http://image.sinajs.cn/newchart/min/n/'+data.code+'.gif'+"?t="+Date.now()
       }
     }, 3500)
@@ -103,6 +103,10 @@ EventsOn("showSearch",(data)=>{
   addBTN.value = data === 1;
 })
 
+EventsOn("stock_price",(data)=>{
+  console.log("stock_price",data['股票代码'])
+  updateData(data)
+})
 
 EventsOn("refreshFollowList",(data)=>{
 
@@ -182,6 +186,60 @@ function getStockList(value){
     data.code=value
   }
 }
+
+async function updateData(result) {
+  if(result["当前价格"]<=0){
+    result["当前价格"]=result["卖一报价"]
+  }
+
+  let s=(result["当前价格"]-result["昨日收盘价"])*100/result["昨日收盘价"]
+  let roundedNum = s.toFixed(2);  // 将数字转换为保留两位小数的字符串形式
+  result.s=roundedNum+"%"
+
+  result.highRate=((result["今日最高价"]-result["今日开盘价"])*100/result["今日开盘价"]).toFixed(2)+"%"
+  result.lowRate=((result["今日最低价"]-result["今日开盘价"])*100/result["今日开盘价"]).toFixed(2)+"%"
+
+  if (roundedNum>0) {
+    result.type="error"
+    result.color="#E88080"
+  }else if (roundedNum<0) {
+    result.type="success"
+    result.color="#63E2B7"
+  }else {
+    result.type="default"
+    result.color="#FFFFFF"
+  }
+  let res= followList.value.filter(item => item.StockCode===result['股票代码'])
+  if (res.length>0) {
+    result.Sort=res[0].Sort
+    result.costPrice=res[0].CostPrice
+    result.volume=res[0].Volume
+    result.profit=((result["当前价格"]-result.costPrice)*100/result.costPrice).toFixed(3)
+    result.profitAmountToday=(result.volume*(result["当前价格"]-result["昨日收盘价"])).toFixed(2)
+    result.profitAmount=(result.volume*(result["当前价格"]-result.costPrice)).toFixed(2)
+    if(result.profitAmount>0){
+      result.profitType="error"
+    }else if(result.profitAmount<0){
+      result.profitType="success"
+    }
+    if(result["当前价格"]){
+      if(res[0].AlarmChangePercent>0&&Math.abs(roundedNum)>=res[0].AlarmChangePercent){
+        SendMessage(result,1)
+      }
+
+      if(res[0].AlarmPrice>0&&result["当前价格"]>=res[0].AlarmPrice){
+        SendMessage(result,2)
+      }
+
+      if(res[0].CostPrice>0&&result["当前价格"]>=res[0].CostPrice){
+        SendMessage(result,3)
+      }
+    }
+  }
+  result.key=GetSortKey(result.Sort,result["股票代码"])
+  results.value[GetSortKey(result.Sort,result["股票代码"])]=result
+}
+
 
 async function monitor() {
   for (let code of stocks.value) {

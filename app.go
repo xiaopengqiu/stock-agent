@@ -12,6 +12,7 @@ import (
 	"go-stock/backend/data"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
+	"time"
 )
 
 // App struct
@@ -46,14 +47,51 @@ func (a *App) startup(ctx context.Context) {
 // domReady is called after front-end resources have been loaded
 func (a *App) domReady(ctx context.Context) {
 	// Add your action here
-	//ticker := time.NewTicker(time.Second)
-	//defer ticker.Stop()
-	////定时更新数据
-	//go func() {
-	//	for range ticker.C {
-	//		runtime.WindowSetTitle(ctx, "go-stock "+time.Now().Format("2006-01-02 15:04:05"))
-	//	}
-	//}()
+
+	//定时更新数据
+	go func() {
+		ticker := time.NewTicker(time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
+			runtime.WindowSetTitle(ctx, "go-stock "+time.Now().Format("2006-01-02 15:04:05"))
+		}
+	}()
+
+	//定时更新数据
+	go func() {
+		ticker := time.NewTicker(time.Second * 2)
+		defer ticker.Stop()
+		for range ticker.C {
+			MonitorStockPrices(a)
+		}
+	}()
+}
+func MonitorStockPrices(a *App) {
+	dest := &[]data.FollowedStock{}
+	db.Dao.Model(&data.FollowedStock{}).Find(dest)
+	for _, item := range *dest {
+		follow := item
+		stockCode := follow.StockCode
+		go func() {
+			stockData, err := data.NewStockDataApi().GetStockCodeRealTimeData(stockCode)
+			if err != nil {
+				logger.SugaredLogger.Errorf("get stock code real time data error:%s", err.Error())
+				return
+			}
+
+			price, err := convertor.ToFloat(stockData.Price)
+			if err != nil {
+				return
+			}
+			if follow.Price != price {
+				runtime.EventsEmit(a.ctx, "stock_price", stockData)
+				go db.Dao.Model(follow).Where("stock_code = ?", stockCode).Updates(map[string]interface{}{
+					"price": stockData.Price,
+				})
+			}
+
+		}()
+	}
 }
 
 // beforeClose is called when the application is about to quit,
