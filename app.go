@@ -53,7 +53,7 @@ func (a *App) domReady(ctx context.Context) {
 		ticker := time.NewTicker(time.Second)
 		defer ticker.Stop()
 		for range ticker.C {
-			runtime.WindowSetTitle(ctx, "go-stock "+time.Now().Format("2006-01-02 15:04:05"))
+			runtime.WindowSetTitle(ctx, "go-stock "+time.Now().Format("2006-01-02 15:04"))
 		}
 	}()
 
@@ -62,10 +62,46 @@ func (a *App) domReady(ctx context.Context) {
 		ticker := time.NewTicker(time.Second * 2)
 		defer ticker.Stop()
 		for range ticker.C {
-			MonitorStockPrices(a)
+			if isTradingTime(time.Now()) {
+				MonitorStockPrices(a)
+			}
 		}
 	}()
 }
+
+// isTradingDay 判断是否是交易日
+func isTradingDay(date time.Time) bool {
+	weekday := date.Weekday()
+	// 判断是否是周末
+	if weekday == time.Saturday || weekday == time.Sunday {
+		return false
+	}
+	// 这里可以添加具体的节假日判断逻辑
+	// 例如：判断是否是春节、国庆节等
+	return true
+}
+
+// isTradingTime 判断是否是交易时间
+func isTradingTime(date time.Time) bool {
+	if !isTradingDay(date) {
+		return false
+	}
+
+	hour, minute, _ := date.Clock()
+
+	// 判断是否在9:15到11:30之间
+	if (hour == 9 && minute >= 15) || (hour == 10) || (hour == 11 && minute <= 30) {
+		return true
+	}
+
+	// 判断是否在13:00到15:00之间
+	if (hour == 13) || (hour == 14) || (hour == 15 && minute <= 0) {
+		return true
+	}
+
+	return false
+}
+
 func MonitorStockPrices(a *App) {
 	dest := &[]data.FollowedStock{}
 	db.Dao.Model(&data.FollowedStock{}).Find(dest)
@@ -78,18 +114,17 @@ func MonitorStockPrices(a *App) {
 				logger.SugaredLogger.Errorf("get stock code real time data error:%s", err.Error())
 				return
 			}
-
 			price, err := convertor.ToFloat(stockData.Price)
 			if err != nil {
 				return
 			}
+			stockData.PrePrice = follow.Price
 			if follow.Price != price {
 				runtime.EventsEmit(a.ctx, "stock_price", stockData)
 				go db.Dao.Model(follow).Where("stock_code = ?", stockCode).Updates(map[string]interface{}{
 					"price": stockData.Price,
 				})
 			}
-
 		}()
 	}
 }

@@ -33,39 +33,40 @@ type StockDataApi struct {
 }
 type StockInfo struct {
 	gorm.Model
-	Date     string `json:"日期" gorm:"index"`
-	Time     string `json:"时间" gorm:"index"`
-	Code     string `json:"股票代码" gorm:"index"`
-	Name     string `json:"股票名称" gorm:"index"`
-	Price    string `json:"当前价格"`
-	Volume   string `json:"成交的股票数"`
-	Amount   string `json:"成交金额"`
-	Open     string `json:"今日开盘价"`
-	PreClose string `json:"昨日收盘价"`
-	High     string `json:"今日最低价"`
-	Low      string `json:"今日最高价"`
-	Bid      string `json:"竞买价"`
-	Ask      string `json:"竞卖价"`
-	B1P      string `json:"买一报价"`
-	B1V      string `json:"买一申报"`
-	B2P      string `json:"买二报价"`
-	B2V      string `json:"买二申报"`
-	B3P      string `json:"买三报价"`
-	B3V      string `json:"买三申报"`
-	B4P      string `json:"买四报价"`
-	B4V      string `json:"买四申报"`
-	B5P      string `json:"买五报价"`
-	B5V      string `json:"买五申报"`
-	A1P      string `json:"卖一报价"`
-	A1V      string `json:"卖一申报"`
-	A2P      string `json:"卖二报价"`
-	A2V      string `json:"卖二申报"`
-	A3P      string `json:"卖三报价"`
-	A3V      string `json:"卖三申报"`
-	A4P      string `json:"卖四报价"`
-	A4V      string `json:"卖四申报"`
-	A5P      string `json:"卖五报价"`
-	A5V      string `json:"卖五申报"`
+	Date     string  `json:"日期" gorm:"index"`
+	Time     string  `json:"时间" gorm:"index"`
+	Code     string  `json:"股票代码" gorm:"index"`
+	Name     string  `json:"股票名称" gorm:"index"`
+	PrePrice float64 `json:"上次当前价格"`
+	Price    string  `json:"当前价格"`
+	Volume   string  `json:"成交的股票数"`
+	Amount   string  `json:"成交金额"`
+	Open     string  `json:"今日开盘价"`
+	PreClose string  `json:"昨日收盘价"`
+	High     string  `json:"今日最低价"`
+	Low      string  `json:"今日最高价"`
+	Bid      string  `json:"竞买价"`
+	Ask      string  `json:"竞卖价"`
+	B1P      string  `json:"买一报价"`
+	B1V      string  `json:"买一申报"`
+	B2P      string  `json:"买二报价"`
+	B2V      string  `json:"买二申报"`
+	B3P      string  `json:"买三报价"`
+	B3V      string  `json:"买三申报"`
+	B4P      string  `json:"买四报价"`
+	B4V      string  `json:"买四申报"`
+	B5P      string  `json:"买五报价"`
+	B5V      string  `json:"买五申报"`
+	A1P      string  `json:"卖一报价"`
+	A1V      string  `json:"卖一申报"`
+	A2P      string  `json:"卖二报价"`
+	A2V      string  `json:"卖二申报"`
+	A3P      string  `json:"卖三报价"`
+	A3V      string  `json:"卖三申报"`
+	A4P      string  `json:"卖四报价"`
+	A4V      string  `json:"卖四申报"`
+	A5P      string  `json:"卖五报价"`
+	A5V      string  `json:"卖五申报"`
 }
 
 func (receiver StockInfo) TableName() string {

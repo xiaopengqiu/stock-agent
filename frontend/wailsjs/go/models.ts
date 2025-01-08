@@ -138,6 +138,7 @@ export namespace data {
 	    "时间": string;
 	    "股票代码": string;
 	    "股票名称": string;
+	    "上次当前价格": number;
 	    "当前价格": string;
 	    "成交的股票数": string;
 	    "成交金额": string;
@@ -182,6 +183,7 @@ export namespace data {
 	        this["时间"] = source["时间"];
 	        this["股票代码"] = source["股票代码"];
 	        this["股票名称"] = source["股票名称"];
+	        this["上次当前价格"] = source["上次当前价格"];
 	        this["当前价格"] = source["当前价格"];
 	        this["成交的股票数"] = source["成交的股票数"];
 	        this["成交金额"] = source["成交金额"];

@@ -44,7 +44,7 @@ func main() {
 	if stocksBin != nil && len(stocksBin) > 0 {
 		go initStockData()
 	}
-	//updateBasicInfo()
+	updateBasicInfo()
 
 	// Create an instance of the app structure
 	app := NewApp()

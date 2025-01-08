@@ -194,6 +194,12 @@ async function updateData(result) {
 
   let s=(result["当前价格"]-result["昨日收盘价"])*100/result["昨日收盘价"]
   let roundedNum = s.toFixed(2);  // 将数字转换为保留两位小数的字符串形式
+
+  // let s2=(result["上次当前价格"]-result["昨日收盘价"])*100/result["昨日收盘价"]
+  // let roundedNum2 = s2.toFixed(2);  // 将数字转换为保留两位小数的字符串形式
+
+  result.rf=roundedNum
+  // result.rf2=roundedNum2
   result.s=roundedNum+"%"
 
   result.highRate=((result["今日最高价"]-result["今日开盘价"])*100/result["今日开盘价"]).toFixed(2)+"%"
@@ -252,7 +258,7 @@ async function monitor() {
       let s=(result["当前价格"]-result["昨日收盘价"])*100/result["昨日收盘价"]
       let roundedNum = s.toFixed(2);  // 将数字转换为保留两位小数的字符串形式
       result.s=roundedNum+"%"
-
+      result.rf=roundedNum
       result.highRate=((result["今日最高价"]-result["今日开盘价"])*100/result["今日开盘价"]).toFixed(2)+"%"
       result.lowRate=((result["今日最低价"]-result["今日开盘价"])*100/result["今日开盘价"]).toFixed(2)+"%"
 
@@ -449,7 +455,12 @@ function getHeight() {
          <n-card    :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"   :closable="true" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
            <n-grid :cols="1" :y-gap="6">
              <n-gi>
-               <n-text :type="result.type" >{{result["当前价格"]}}</n-text><n-text style="padding-left: 10px;" :type="result.type">{{ result.s}}</n-text>&nbsp;
+               <n-text :type="result.type" >
+                 <n-number-animation  :precision="2" :from="result['上次当前价格']" :to="Number(result['当前价格'])" />
+               </n-text>
+               <n-text style="padding-left: 10px;" :type="result.type">
+                 <n-number-animation  :precision="2" :from="0" :to="result.rf" />%
+               </n-text>&nbsp;
                <n-text  size="small" v-if="result.profitAmountToday>0" :type="result.type">{{result.profitAmountToday}}</n-text>
              </n-gi>
            </n-grid>
