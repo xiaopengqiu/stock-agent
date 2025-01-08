@@ -22,6 +22,10 @@ export function SendDingDingMessage(arg1, arg2) {
   return window['go']['main']['App']['SendDingDingMessage'](arg1, arg2);
 }
 
+export function SendDingDingMessageByType(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SendDingDingMessageByType'](arg1, arg2, arg3);
+}
+
 export function SetAlarmChangePercent(arg1, arg2, arg3) {
   return window['go']['main']['App']['SetAlarmChangePercent'](arg1, arg2, arg3);
 }

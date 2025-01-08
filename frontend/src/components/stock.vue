@@ -5,7 +5,7 @@ import {
   GetFollowList,
   GetStockList,
   Greet,
-  SendDingDingMessage,
+  SendDingDingMessage, SendDingDingMessageByType,
   SetAlarmChangePercent,
   SetCostPriceAndVolume, SetStockSort,
   UnFollow
@@ -361,7 +361,8 @@ function SendMessage(result,type){
       '          "isAtAll": true' +
       '      }' +
       ' }'
-    SendDingDingMessage(msg,result["股票代码"])
+   // SendDingDingMessage(msg,result["股票代码"])
+    SendDingDingMessageByType(msg,result["股票代码"],type)
 }
 
 function getTypeName(type){
