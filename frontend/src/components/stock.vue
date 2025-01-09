@@ -222,8 +222,8 @@ async function updateData(result) {
       }
     }
 
-  result.key=GetSortKey(result.Sort,result["股票代码"])
-  results.value[GetSortKey(result.Sort,result["股票代码"])]=result
+  result.key=GetSortKey(result.sort,result["股票代码"])
+  results.value[GetSortKey(result.sort,result["股票代码"])]=result
 }
 
 
