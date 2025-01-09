@@ -144,8 +144,8 @@ export namespace data {
 	    "成交金额": string;
 	    "今日开盘价": string;
 	    "昨日收盘价": string;
-	    "今日最低价": string;
 	    "今日最高价": string;
+	    "今日最低价": string;
 	    "竞买价": string;
 	    "竞卖价": string;
 	    "买一报价": string;
@@ -168,6 +168,18 @@ export namespace data {
 	    "卖四申报": string;
 	    "卖五报价": string;
 	    "卖五申报": string;
+	    changePercent: number;
+	    changePrice: number;
+	    highRate: number;
+	    lowRate: number;
+	    costPrice: number;
+	    costVolume: number;
+	    profit: number;
+	    profitAmount: number;
+	    profitAmountToday: number;
+	    sort: number;
+	    alarmChangePercent: number;
+	    alarmPrice: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new StockInfo(source);
@@ -189,8 +201,8 @@ export namespace data {
 	        this["成交金额"] = source["成交金额"];
 	        this["今日开盘价"] = source["今日开盘价"];
 	        this["昨日收盘价"] = source["昨日收盘价"];
-	        this["今日最低价"] = source["今日最低价"];
 	        this["今日最高价"] = source["今日最高价"];
+	        this["今日最低价"] = source["今日最低价"];
 	        this["竞买价"] = source["竞买价"];
 	        this["竞卖价"] = source["竞卖价"];
 	        this["买一报价"] = source["买一报价"];
@@ -213,6 +225,18 @@ export namespace data {
 	        this["卖四申报"] = source["卖四申报"];
 	        this["卖五报价"] = source["卖五报价"];
 	        this["卖五申报"] = source["卖五申报"];
+	        this.changePercent = source["changePercent"];
+	        this.changePrice = source["changePrice"];
+	        this.highRate = source["highRate"];
+	        this.lowRate = source["lowRate"];
+	        this.costPrice = source["costPrice"];
+	        this.costVolume = source["costVolume"];
+	        this.profit = source["profit"];
+	        this.profitAmount = source["profitAmount"];
+	        this.profitAmountToday = source["profitAmountToday"];
+	        this.sort = source["sort"];
+	        this.alarmChangePercent = source["alarmChangePercent"];
+	        this.alarmPrice = source["alarmPrice"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

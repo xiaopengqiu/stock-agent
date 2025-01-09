@@ -192,56 +192,36 @@ async function updateData(result) {
     result["当前价格"]=result["卖一报价"]
   }
 
-  let s=(result["当前价格"]-result["昨日收盘价"])*100/result["昨日收盘价"]
-  let roundedNum = s.toFixed(2);  // 将数字转换为保留两位小数的字符串形式
-
-  // let s2=(result["上次当前价格"]-result["昨日收盘价"])*100/result["昨日收盘价"]
-  // let roundedNum2 = s2.toFixed(2);  // 将数字转换为保留两位小数的字符串形式
-
-  result.rf=roundedNum
-  // result.rf2=roundedNum2
-  result.s=roundedNum+"%"
-
-  result.highRate=((result["今日最高价"]-result["今日开盘价"])*100/result["今日开盘价"]).toFixed(2)+"%"
-  result.lowRate=((result["今日最低价"]-result["今日开盘价"])*100/result["今日开盘价"]).toFixed(2)+"%"
-
-  if (roundedNum>0) {
+  if (result.changePercent>0) {
     result.type="error"
     result.color="#E88080"
-  }else if (roundedNum<0) {
+  }else if (result.changePercent<0) {
     result.type="success"
     result.color="#63E2B7"
   }else {
     result.type="default"
     result.color="#FFFFFF"
   }
-  let res= followList.value.filter(item => item.StockCode===result['股票代码'])
-  if (res.length>0) {
-    result.Sort=res[0].Sort
-    result.costPrice=res[0].CostPrice
-    result.volume=res[0].Volume
-    result.profit=((result["当前价格"]-result.costPrice)*100/result.costPrice).toFixed(3)
-    result.profitAmountToday=(result.volume*(result["当前价格"]-result["昨日收盘价"])).toFixed(2)
-    result.profitAmount=(result.volume*(result["当前价格"]-result.costPrice)).toFixed(2)
+
     if(result.profitAmount>0){
       result.profitType="error"
     }else if(result.profitAmount<0){
       result.profitType="success"
     }
     if(result["当前价格"]){
-      if(res[0].AlarmChangePercent>0&&Math.abs(roundedNum)>=res[0].AlarmChangePercent){
+      if(result.alarmChangePercent>0&&Math.abs(result.changePercent)>=result.alarmChangePercent){
         SendMessage(result,1)
       }
 
-      if(res[0].AlarmPrice>0&&result["当前价格"]>=res[0].AlarmPrice){
+      if(result.alarmPrice>0&&result["当前价格"]>=result.alarmPrice){
         SendMessage(result,2)
       }
 
-      if(res[0].CostPrice>0&&result["当前价格"]>=res[0].CostPrice){
+      if(result.costPrice>0&&result["当前价格"]>=result.costPrice){
         SendMessage(result,3)
       }
     }
-  }
+
   result.key=GetSortKey(result.Sort,result["股票代码"])
   results.value[GetSortKey(result.Sort,result["股票代码"])]=result
 }
@@ -251,57 +231,7 @@ async function monitor() {
   for (let code of stocks.value) {
    // console.log(code)
     Greet(code).then(result => {
-      if(result["当前价格"]<=0){
-        result["当前价格"]=result["卖一报价"]
-      }
-
-      let s=(result["当前价格"]-result["昨日收盘价"])*100/result["昨日收盘价"]
-      let roundedNum = s.toFixed(2);  // 将数字转换为保留两位小数的字符串形式
-      result.s=roundedNum+"%"
-      result.rf=roundedNum
-      result.highRate=((result["今日最高价"]-result["今日开盘价"])*100/result["今日开盘价"]).toFixed(2)+"%"
-      result.lowRate=((result["今日最低价"]-result["今日开盘价"])*100/result["今日开盘价"]).toFixed(2)+"%"
-
-      if (roundedNum>0) {
-        result.type="error"
-        result.color="#E88080"
-      }else if (roundedNum<0) {
-        result.type="success"
-        result.color="#63E2B7"
-      }else {
-        result.type="default"
-        result.color="#FFFFFF"
-      }
-      let res= followList.value.filter(item => item.StockCode===code)
-      if (res.length>0) {
-        result.Sort=res[0].Sort
-        result.costPrice=res[0].CostPrice
-        result.volume=res[0].Volume
-        result.profit=((result["当前价格"]-result.costPrice)*100/result.costPrice).toFixed(3)
-        result.profitAmountToday=(result.volume*(result["当前价格"]-result["昨日收盘价"])).toFixed(2)
-        result.profitAmount=(result.volume*(result["当前价格"]-result.costPrice)).toFixed(2)
-        if(result.profitAmount>0){
-          result.profitType="error"
-        }else if(result.profitAmount<0){
-          result.profitType="success"
-        }
-        if(result["当前价格"]){
-          if(res[0].AlarmChangePercent>0&&Math.abs(roundedNum)>=res[0].AlarmChangePercent){
-            SendMessage(result,1)
-          }
-
-          if(res[0].AlarmPrice>0&&result["当前价格"]>=res[0].AlarmPrice){
-            SendMessage(result,2)
-          }
-
-          if(res[0].CostPrice>0&&result["当前价格"]>=res[0].CostPrice){
-            SendMessage(result,3)
-          }
-        }
-      }
-      result.key=GetSortKey(result.Sort,result["股票代码"])
-      results.value[GetSortKey(result.Sort,result["股票代码"])]=result
-
+      updateData(result)
     })
   }
 }
@@ -456,20 +386,22 @@ function getHeight() {
            <n-grid :cols="1" :y-gap="6">
              <n-gi>
                <n-text :type="result.type" >
-                 <n-number-animation  :precision="2" :from="result['上次当前价格']" :to="Number(result['当前价格'])" />
+                 <n-number-animation :duration="1000" :precision="2" :from="result['上次当前价格']" :to="Number(result['当前价格'])" />
                </n-text>
                <n-text style="padding-left: 10px;" :type="result.type">
-                 <n-number-animation  :precision="2" :from="0" :to="result.rf" />%
+                 <n-number-animation :duration="1000" :precision="3" :from="0" :to="result.changePercent" />%
                </n-text>&nbsp;
-               <n-text  size="small" v-if="result.profitAmountToday>0" :type="result.type">{{result.profitAmountToday}}</n-text>
+               <n-text size="small" v-if="result.costVolume>0" :type="result.type">
+                 <n-number-animation  :duration="1000" :precision="2" :from="0" :to="result.profitAmountToday" />
+               </n-text>
              </n-gi>
            </n-grid>
              <n-grid :cols="2" :y-gap="4" :x-gap="4"  >
                <n-gi>
-                 <n-text :type="'info'">{{"最高 "+result["今日最高价"]+" "+result.highRate }}</n-text>
+                 <n-text :type="'info'">{{"最高 "+result["今日最高价"]+" "+result.highRate }}%</n-text>
                </n-gi>
                <n-gi>
-                 <n-text :type="'info'">{{"最低 "+result["今日最低价"]+" "+result.lowRate }}</n-text>
+                 <n-text :type="'info'">{{"最低 "+result["今日最低价"]+" "+result.lowRate }}%</n-text>
                </n-gi>
                <n-gi>
                  <n-text :type="'info'">{{"昨收 "+result["昨日收盘价"]}}</n-text>
@@ -484,7 +416,7 @@ function getHeight() {
            <template #footer>
              <n-flex justify="center">
                <n-tag size="small" v-if="result.volume>0" :type="result.profitType">{{result.volume+"股"}}</n-tag>
-              <n-tag size="small" v-if="result.costPrice>0" :type="result.profitType">{{"成本:"+result.costPrice+"  "+result.profit+"%"+" ( "+result.profitAmount+" ¥ )"}}</n-tag>
+              <n-tag size="small" v-if="result.costPrice>0" :type="result.profitType">{{"成本:"+result.costPrice+"*"+result.costVolume+" "+result.profit+"%"+" ( "+result.profitAmount+" ¥ )"}}</n-tag>
              </n-flex>
            </template>
            <template #action>

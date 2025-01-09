@@ -43,8 +43,8 @@ type StockInfo struct {
 	Amount   string  `json:"成交金额"`
 	Open     string  `json:"今日开盘价"`
 	PreClose string  `json:"昨日收盘价"`
-	High     string  `json:"今日最低价"`
-	Low      string  `json:"今日最高价"`
+	High     string  `json:"今日最高价"`
+	Low      string  `json:"今日最低价"`
 	Bid      string  `json:"竞买价"`
 	Ask      string  `json:"竞卖价"`
 	B1P      string  `json:"买一报价"`
@@ -67,6 +67,21 @@ type StockInfo struct {
 	A4V      string  `json:"卖四申报"`
 	A5P      string  `json:"卖五报价"`
 	A5V      string  `json:"卖五申报"`
+
+	//以下是字段值需二次计算
+	ChangePercent     float64 `json:"changePercent"`     //涨跌幅
+	ChangePrice       float64 `json:"changePrice"`       //涨跌额
+	HighRate          float64 `json:"highRate"`          //最高涨跌
+	LowRate           float64 `json:"lowRate"`           //最低涨跌
+	CostPrice         float64 `json:"costPrice"`         //成本价
+	CostVolume        int64   `json:"costVolume"`        //持仓数量
+	Profit            float64 `json:"profit"`            //总盈亏率
+	ProfitAmount      float64 `json:"profitAmount"`      //总盈亏金额
+	ProfitAmountToday float64 `json:"profitAmountToday"` //今日盈亏金额
+
+	Sort               int64   `json:"sort"` //排序
+	AlarmChangePercent float64 `json:"alarmChangePercent"`
+	AlarmPrice         float64 `json:"alarmPrice"`
 }
 
 func (receiver StockInfo) TableName() string {

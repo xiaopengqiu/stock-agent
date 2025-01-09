@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/coocood/freecache"
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/mathutil"
@@ -47,16 +48,6 @@ func (a *App) startup(ctx context.Context) {
 // domReady is called after front-end resources have been loaded
 func (a *App) domReady(ctx context.Context) {
 	// Add your action here
-
-	//定时更新数据
-	go func() {
-		ticker := time.NewTicker(time.Second)
-		defer ticker.Stop()
-		for range ticker.C {
-			runtime.WindowSetTitle(ctx, "go-stock "+time.Now().Format("2006-01-02 15:04"))
-		}
-	}()
-
 	//定时更新数据
 	go func() {
 		ticker := time.NewTicker(time.Second * 2)
@@ -105,28 +96,79 @@ func isTradingTime(date time.Time) bool {
 func MonitorStockPrices(a *App) {
 	dest := &[]data.FollowedStock{}
 	db.Dao.Model(&data.FollowedStock{}).Find(dest)
-	for _, item := range *dest {
-		follow := item
-		stockCode := follow.StockCode
-		go func() {
-			stockData, err := data.NewStockDataApi().GetStockCodeRealTimeData(stockCode)
-			if err != nil {
-				logger.SugaredLogger.Errorf("get stock code real time data error:%s", err.Error())
-				return
-			}
-			price, err := convertor.ToFloat(stockData.Price)
-			if err != nil {
-				return
-			}
-			stockData.PrePrice = follow.Price
-			if follow.Price != price {
-				runtime.EventsEmit(a.ctx, "stock_price", stockData)
-				go db.Dao.Model(follow).Where("stock_code = ?", stockCode).Updates(map[string]interface{}{
-					"price": stockData.Price,
-				})
-			}
-		}()
+	total := float64(0)
+	for _, follow := range *dest {
+		stockData := getStockInfo(follow)
+		total += stockData.ProfitAmountToday
+		price, _ := convertor.ToFloat(stockData.Price)
+		if stockData.PrePrice != price {
+			go runtime.EventsEmit(a.ctx, "stock_price", stockData)
+		}
 	}
+	title := "go-stock " + time.Now().Format(time.DateTime) + fmt.Sprintf("  %.2f¥", total)
+	runtime.WindowSetTitle(a.ctx, title)
+	systray.SetTooltip(title)
+
+}
+func getStockInfo(follow data.FollowedStock) *data.StockInfo {
+	stockCode := follow.StockCode
+	stockData, err := data.NewStockDataApi().GetStockCodeRealTimeData(stockCode)
+	if err != nil {
+		logger.SugaredLogger.Errorf("get stock code real time data error:%s", err.Error())
+		return nil
+	}
+	stockData.PrePrice = follow.Price //上次当前价格
+	stockData.Sort = follow.Sort
+	stockData.CostPrice = follow.CostPrice //成本价
+	stockData.CostVolume = follow.Volume   //成本量
+	stockData.AlarmChangePercent = follow.AlarmChangePercent
+	stockData.AlarmPrice = follow.AlarmPrice
+
+	//当前价格
+	price, _ := convertor.ToFloat(stockData.Price)
+	//当前价格为0 时 使用卖一价格作为当前价格
+	if price == 0 {
+		price, _ = convertor.ToFloat(stockData.A1P)
+	}
+	//当前价格依然为0 时 使用买一报价作为当前价格
+	if price == 0 {
+		price, _ = convertor.ToFloat(stockData.B1P)
+	}
+
+	//昨日收盘价
+	preClosePrice, _ := convertor.ToFloat(stockData.PreClose)
+
+	//今日最高价
+	highPrice, _ := convertor.ToFloat(stockData.High)
+	if highPrice == 0 {
+		highPrice, _ = convertor.ToFloat(stockData.Open)
+	}
+
+	//今日最低价
+	lowPrice, _ := convertor.ToFloat(stockData.Low)
+	if lowPrice == 0 {
+		lowPrice, _ = convertor.ToFloat(stockData.Open)
+	}
+	//开盘价
+	//openPrice, _ := convertor.ToFloat(stockData.Open)
+
+	stockData.ChangePrice = mathutil.RoundToFloat(price-preClosePrice, 2)
+	stockData.ChangePercent = mathutil.RoundToFloat(mathutil.Div(price-preClosePrice, preClosePrice)*100, 3)
+	stockData.HighRate = mathutil.RoundToFloat(mathutil.Div(highPrice-preClosePrice, preClosePrice)*100, 3)
+	stockData.LowRate = mathutil.RoundToFloat(mathutil.Div(lowPrice-preClosePrice, preClosePrice)*100, 3)
+	if follow.CostPrice > 0 && follow.Volume > 0 {
+		stockData.Profit = mathutil.RoundToFloat(mathutil.Div(price-follow.CostPrice, follow.CostPrice)*100, 3)
+		stockData.ProfitAmount = mathutil.RoundToFloat((price-follow.CostPrice)*float64(follow.Volume), 2)
+		stockData.ProfitAmountToday = mathutil.RoundToFloat((price-preClosePrice)*float64(follow.Volume), 2)
+	}
+
+	//logger.SugaredLogger.Debugf("stockData:%+v", stockData)
+	if follow.Price != price {
+		go db.Dao.Model(follow).Where("stock_code = ?", stockCode).Updates(map[string]interface{}{
+			"price": stockData.Price,
+		})
+	}
+	return stockData
 }
 
 // beforeClose is called when the application is about to quit,
@@ -161,8 +203,14 @@ func (a *App) shutdown(ctx context.Context) {
 }
 
 // Greet returns a greeting for the given name
-func (a *App) Greet(name string) *data.StockInfo {
-	stockInfo, _ := data.NewStockDataApi().GetStockCodeRealTimeData(name)
+func (a *App) Greet(stockCode string) *data.StockInfo {
+	//stockInfo, _ := data.NewStockDataApi().GetStockCodeRealTimeData(stockCode)
+
+	follow := &data.FollowedStock{
+		StockCode: stockCode,
+	}
+	db.Dao.Model(follow).Where("stock_code = ?", stockCode).First(follow)
+	stockInfo := getStockInfo(*follow)
 	return stockInfo
 }
 
