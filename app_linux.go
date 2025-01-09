@@ -6,8 +6,12 @@ package main
 import (
 	"context"
 	"github.com/coocood/freecache"
+	"github.com/duke-git/lancet/v2/convertor"
+	"github.com/duke-git/lancet/v2/mathutil"
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"go-stock/backend/data"
+	"go-stock/backend/db"
 	"go-stock/backend/logger"
 )
 
