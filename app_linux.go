@@ -77,8 +77,9 @@ func (a *App) shutdown(ctx context.Context) {
 
 // Greet returns a greeting for the given name
 func (a *App) Greet(name string) *data.StockInfo {
-	stockInfo, _ := data.NewStockDataApi().GetStockCodeRealTimeData(name)
-	return stockInfo
+	stockDatas, _ := data.NewStockDataApi().GetStockCodeRealTimeData(name)
+	stockData := (*stockDatas)[0]
+	return &stockData
 }
 
 func (a *App) Follow(stockCode string) string {
@@ -117,4 +118,67 @@ func (a *App) SendDingDingMessage(message string, stockCode string) string {
 		return ""
 	}
 	return data.NewDingDingAPI().SendDingDingMessage(message)
+}
+
+func (a *App) SetStockSort(sort int64, stockCode string) {
+	data.NewStockDataApi().SetStockSort(sort, stockCode)
+}
+
+// SendDingDingMessageByType msgType 报警类型: 1 涨跌报警;2 股价报警 3 成本价报警
+func (a *App) SendDingDingMessageByType(message string, stockCode string, msgType int) string {
+	ttl, _ := a.cache.TTL([]byte(stockCode))
+	logger.SugaredLogger.Infof("stockCode %s ttl:%d", stockCode, ttl)
+	if ttl > 0 {
+		return ""
+	}
+	err := a.cache.Set([]byte(stockCode), []byte("1"), getMsgTypeTTL(msgType))
+	if err != nil {
+		logger.SugaredLogger.Errorf("set cache error:%s", err.Error())
+		return ""
+	}
+	return data.NewDingDingAPI().SendDingDingMessage(message)
+}
+
+func GenNotificationMsg(stockInfo *data.StockInfo) string {
+	Price, err := convertor.ToFloat(stockInfo.Price)
+	if err != nil {
+		Price = 0
+	}
+	PreClose, err := convertor.ToFloat(stockInfo.PreClose)
+	if err != nil {
+		PreClose = 0
+	}
+	var RF float64
+	if PreClose > 0 {
+		RF = mathutil.RoundToFloat(((Price-PreClose)/PreClose)*100, 2)
+	}
+
+	return "[" + stockInfo.Name + "] " + stockInfo.Price + " " + convertor.ToString(RF) + "% " + stockInfo.Date + " " + stockInfo.Time
+}
+
+// msgType : 1 涨跌报警(5分钟);2 股价报警(30分钟) 3 成本价报警(30分钟)
+func getMsgTypeTTL(msgType int) int {
+	switch msgType {
+	case 1:
+		return 60 * 5
+	case 2:
+		return 60 * 30
+	case 3:
+		return 60 * 30
+	default:
+		return 60 * 5
+	}
+}
+
+func getMsgTypeName(msgType int) string {
+	switch msgType {
+	case 1:
+		return "涨跌报警"
+	case 2:
+		return "股价报警"
+	case 3:
+		return "成本价报警"
+	default:
+		return "未知类型"
+	}
 }
