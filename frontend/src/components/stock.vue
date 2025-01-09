@@ -47,7 +47,7 @@ const data = reactive({
 })
 
 const sortedResults = computed(() => {
-  console.log("computed",sortedResults.value)
+  //console.log("computed",sortedResults.value)
   const sortedKeys =Object.keys(results.value).sort();
   const sortedObject = {};
   sortedKeys.forEach(key => {
@@ -104,7 +104,7 @@ EventsOn("showSearch",(data)=>{
 })
 
 EventsOn("stock_price",(data)=>{
-  console.log("stock_price",data['股票代码'])
+  //console.log("stock_price",data['股票代码'])
   updateData(data)
 })
 

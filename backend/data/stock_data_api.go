@@ -273,17 +273,29 @@ func (receiver StockDataApi) GetStockBaseInfo() {
 
 }
 
-func (receiver StockDataApi) GetStockCodeRealTimeData(StockCode string) (*StockInfo, error) {
+func (receiver StockDataApi) GetStockCodeRealTimeData(StockCodes ...string) (*[]StockInfo, error) {
 	resp, err := receiver.client.R().
 		SetHeader("Host", "hq.sinajs.cn").
 		SetHeader("Referer", "https://finance.sina.com.cn/").
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0").
-		Get(fmt.Sprintf(sina_stook_url, time.Now().Unix(), StockCode))
+		Get(fmt.Sprintf(sina_stook_url, time.Now().Unix(), slice.Join(StockCodes, ",")))
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
-		return &StockInfo{}, nil
+		return &[]StockInfo{}, nil
 	}
-	stockData, err := ParseFullSingleStockData(GB18030ToUTF8(resp.Body()))
+
+	stockInfos := make([]StockInfo, 0)
+	str := GB18030ToUTF8(resp.Body())
+	dataStr := strutil.SplitEx(str, "\n", true)
+	for _, data := range dataStr {
+		//logger.SugaredLogger.Info(data)
+		stockData, err := ParseFullSingleStockData(data)
+		if err != nil {
+			logger.SugaredLogger.Error(err.Error())
+			continue
+		}
+		stockInfos = append(stockInfos, *stockData)
+	}
 	//var count int64
 	//db.Dao.Model(&StockInfo{}).Where("code = ?", StockCode).Count(&count)
 	//if count == 0 {
@@ -291,16 +303,17 @@ func (receiver StockDataApi) GetStockCodeRealTimeData(StockCode string) (*StockI
 	//} else {
 	//	go db.Dao.Model(&StockInfo{}).Where("code = ?", StockCode).Updates(stockData)
 	//}
-	return stockData, err
+	return &stockInfos, err
 }
 
 func (receiver StockDataApi) Follow(stockCode string) string {
 	logger.SugaredLogger.Infof("Follow %s", stockCode)
-	stockInfo, err := receiver.GetStockCodeRealTimeData(stockCode)
+	stockInfos, err := receiver.GetStockCodeRealTimeData(stockCode)
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
 		return "关注失败"
 	}
+	stockInfo := (*stockInfos)[0]
 	price, _ := convertor.ToFloat(stockInfo.Price)
 	db.Dao.Model(&FollowedStock{}).FirstOrCreate(&FollowedStock{
 		StockCode:          stockCode,

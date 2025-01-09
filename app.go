@@ -8,6 +8,7 @@ import (
 	"github.com/coocood/freecache"
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/mathutil"
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/getlantern/systray"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"go-stock/backend/data"
@@ -50,7 +51,7 @@ func (a *App) domReady(ctx context.Context) {
 	// Add your action here
 	//定时更新数据
 	go func() {
-		ticker := time.NewTicker(time.Second * 2)
+		ticker := time.NewTicker(time.Second * 1)
 		defer ticker.Stop()
 		for range ticker.C {
 			if isTradingTime(time.Now()) {
@@ -97,26 +98,64 @@ func MonitorStockPrices(a *App) {
 	dest := &[]data.FollowedStock{}
 	db.Dao.Model(&data.FollowedStock{}).Find(dest)
 	total := float64(0)
-	for _, follow := range *dest {
-		stockData := getStockInfo(follow)
-		total += stockData.ProfitAmountToday
-		price, _ := convertor.ToFloat(stockData.Price)
-		if stockData.PrePrice != price {
-			go runtime.EventsEmit(a.ctx, "stock_price", stockData)
+	//for _, follow := range *dest {
+	//	stockData := getStockInfo(follow)
+	//	total += stockData.ProfitAmountToday
+	//	price, _ := convertor.ToFloat(stockData.Price)
+	//	if stockData.PrePrice != price {
+	//		go runtime.EventsEmit(a.ctx, "stock_price", stockData)
+	//	}
+	//}
+
+	stockInfos := GetStockInfos(*dest...)
+	for _, stockInfo := range *stockInfos {
+		total += stockInfo.ProfitAmountToday
+		price, _ := convertor.ToFloat(stockInfo.Price)
+		if stockInfo.PrePrice != price {
+			go runtime.EventsEmit(a.ctx, "stock_price", stockInfo)
 		}
 	}
+
 	title := "go-stock " + time.Now().Format(time.DateTime) + fmt.Sprintf("  %.2f¥", total)
 	runtime.WindowSetTitle(a.ctx, title)
 	systray.SetTooltip(title)
 
 }
-func getStockInfo(follow data.FollowedStock) *data.StockInfo {
-	stockCode := follow.StockCode
-	stockData, err := data.NewStockDataApi().GetStockCodeRealTimeData(stockCode)
+func GetStockInfos(follows ...data.FollowedStock) *[]data.StockInfo {
+	stockCodes := make([]string, 0)
+	for _, follow := range follows {
+		stockCodes = append(stockCodes, follow.StockCode)
+	}
+	stockData, err := data.NewStockDataApi().GetStockCodeRealTimeData(stockCodes...)
 	if err != nil {
 		logger.SugaredLogger.Errorf("get stock code real time data error:%s", err.Error())
 		return nil
 	}
+	stockInfos := make([]data.StockInfo, 0)
+	for _, info := range *stockData {
+		v, ok := slice.FindBy(follows, func(idx int, follow data.FollowedStock) bool {
+			return follow.StockCode == info.Code
+		})
+		if ok {
+			addStockFollowData(v, &info)
+			stockInfos = append(stockInfos, info)
+		}
+	}
+	return &stockInfos
+}
+func getStockInfo(follow data.FollowedStock) *data.StockInfo {
+	stockCode := follow.StockCode
+	stockDatas, err := data.NewStockDataApi().GetStockCodeRealTimeData(stockCode)
+	if err != nil {
+		logger.SugaredLogger.Errorf("get stock code real time data error:%s", err.Error())
+		return nil
+	}
+	stockData := (*stockDatas)[0]
+	addStockFollowData(follow, &stockData)
+	return &stockData
+}
+
+func addStockFollowData(follow data.FollowedStock, stockData *data.StockInfo) {
 	stockData.PrePrice = follow.Price //上次当前价格
 	stockData.Sort = follow.Sort
 	stockData.CostPrice = follow.CostPrice //成本价
@@ -164,11 +203,10 @@ func getStockInfo(follow data.FollowedStock) *data.StockInfo {
 
 	//logger.SugaredLogger.Debugf("stockData:%+v", stockData)
 	if follow.Price != price {
-		go db.Dao.Model(follow).Where("stock_code = ?", stockCode).Updates(map[string]interface{}{
+		go db.Dao.Model(follow).Where("stock_code = ?", follow.StockCode).Updates(map[string]interface{}{
 			"price": stockData.Price,
 		})
 	}
-	return stockData
 }
 
 // beforeClose is called when the application is about to quit,
