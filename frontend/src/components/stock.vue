@@ -12,7 +12,7 @@ import {
 } from '../../wailsjs/go/main/App'
 import {NButton, NFlex, NForm, NFormItem, NInputNumber, NText, useMessage, useModal} from 'naive-ui'
 import {EventsOn, WindowFullscreen, WindowReload, WindowUnfullscreen} from '../../wailsjs/runtime'
-import {Add, Search} from '@vicons/ionicons5'
+import {Add, Search,StarOutline} from '@vicons/ionicons5'
 
 const message = useMessage()
 const modal = useModal()
@@ -382,7 +382,7 @@ function getHeight() {
 <template>
   <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
       <n-gi v-for="result in sortedResults" >
-         <n-card    :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"   :closable="true" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
+         <n-card    :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
            <n-grid :cols="1" :y-gap="6">
              <n-gi>
                <n-text :type="result.type" >
@@ -411,7 +411,9 @@ function getHeight() {
                </n-gi>
              </n-grid>
            <template #header-extra>
-<!--             <n-tag size="small" v-if="result.volume>0" :type="result.profitType">{{result.volume+"股"}}</n-tag>-->
+             <n-button size="tiny" secondary type="primary" @click="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
+               取消关注
+             </n-button>
            </template>
            <template #footer>
              <n-flex justify="center">
