@@ -295,14 +295,19 @@ func (receiver StockDataApi) GetStockCodeRealTimeData(StockCodes ...string) (*[]
 			continue
 		}
 		stockInfos = append(stockInfos, *stockData)
+
+		go func() {
+			var count int64
+			db.Dao.Model(&StockInfo{}).Where("code = ?", stockData.Code).Count(&count)
+			if count == 0 {
+				db.Dao.Model(&StockInfo{}).Create(stockData)
+			} else {
+				db.Dao.Model(&StockInfo{}).Where("code = ?", stockData.Code).Updates(stockData)
+			}
+		}()
+
 	}
-	//var count int64
-	//db.Dao.Model(&StockInfo{}).Where("code = ?", StockCode).Count(&count)
-	//if count == 0 {
-	//	go db.Dao.Model(&StockInfo{}).Create(stockData)
-	//} else {
-	//	go db.Dao.Model(&StockInfo{}).Where("code = ?", StockCode).Updates(stockData)
-	//}
+
 	return &stockInfos, err
 }
 

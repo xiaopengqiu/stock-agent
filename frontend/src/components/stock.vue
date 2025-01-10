@@ -334,13 +334,13 @@ function SendMessage(result,type){
   let img='http://image.sinajs.cn/newchart/min/n/'+result["股票代码"]+'.gif'+"?t="+Date.now()
   let markdown="### go-stock ["+typeName+"]\n\n"+
       "### "+result["股票名称"]+"("+result["股票代码"]+")\n" +
-      "- 当前价格: "+result["当前价格"]+"  "+result.s+"\n" +
+      "- 当前价格: "+result["当前价格"]+"  "+result.changePercent+"%\n" +
       "- 最高价: "+result["今日最高价"]+"  "+result.highRate+"\n" +
       "- 最低价: "+result["今日最低价"]+"  "+result.lowRate+"\n" +
       "- 昨收价: "+result["昨日收盘价"]+"\n" +
       "- 今开价: "+result["今日开盘价"]+"\n" +
       "- 成本价: "+result.costPrice+"  "+result.profit+"%  "+result.profitAmount+" ¥\n" +
-      "- 成本数量: "+result.volume+"股\n" +
+      "- 成本数量: "+result.costVolume+"股\n" +
       "- 日期: "+result["日期"]+"  "+result["时间"]+"\n\n"+
       "![image]("+img+")\n"
   let title=result["股票名称"]+"("+result["股票代码"]+") "+result["当前价格"]+" "+result.s
@@ -432,7 +432,7 @@ function getHeight() {
          </n-card >
       </n-gi>
     </n-grid>
-  <n-affix :trigger-bottom="getHeight()/2-10" style="left:0">
+  <n-affix :trigger-bottom="15" style="right:0;z-index: 99990;">
 <!--    <n-card :bordered="false">-->
       <n-input-group>
 
@@ -506,25 +506,5 @@ function getHeight() {
 </template>
 
 <style scoped>
-.result {
-  height: 20px;
-  line-height: 20px;
-  margin: 1.5rem auto;
-}
-.input-box {
-  text-align: center;
-}
-.input {
-  width: 200px;
-  margin-right: 10px;
-}
 
-.light-green {
-  height: 108px;
-  background-color: rgba(0, 128, 0, 0.12);
-}
-.green {
-  height: 108px;
-  background-color: rgba(0, 128, 0, 0.24);
-}
 </style>

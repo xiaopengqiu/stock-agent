@@ -177,6 +177,11 @@ func addStockFollowData(follow data.FollowedStock, stockData *data.StockInfo) {
 	//昨日收盘价
 	preClosePrice, _ := convertor.ToFloat(stockData.PreClose)
 
+	//当前价格依然为0 时 使用昨日收盘价为当前价格
+	if price == 0 {
+		price = preClosePrice
+	}
+
 	//今日最高价
 	highPrice, _ := convertor.ToFloat(stockData.High)
 	if highPrice == 0 {
@@ -191,20 +196,34 @@ func addStockFollowData(follow data.FollowedStock, stockData *data.StockInfo) {
 	//开盘价
 	//openPrice, _ := convertor.ToFloat(stockData.Open)
 
-	stockData.ChangePrice = mathutil.RoundToFloat(price-preClosePrice, 2)
-	stockData.ChangePercent = mathutil.RoundToFloat(mathutil.Div(price-preClosePrice, preClosePrice)*100, 3)
-	stockData.HighRate = mathutil.RoundToFloat(mathutil.Div(highPrice-preClosePrice, preClosePrice)*100, 3)
-	stockData.LowRate = mathutil.RoundToFloat(mathutil.Div(lowPrice-preClosePrice, preClosePrice)*100, 3)
+	if price > 0 {
+		stockData.ChangePrice = mathutil.RoundToFloat(price-preClosePrice, 2)
+		stockData.ChangePercent = mathutil.RoundToFloat(mathutil.Div(price-preClosePrice, preClosePrice)*100, 3)
+	}
+	if highPrice > 0 {
+		stockData.HighRate = mathutil.RoundToFloat(mathutil.Div(highPrice-preClosePrice, preClosePrice)*100, 3)
+	}
+	if lowPrice > 0 {
+		stockData.LowRate = mathutil.RoundToFloat(mathutil.Div(lowPrice-preClosePrice, preClosePrice)*100, 3)
+	}
 	if follow.CostPrice > 0 && follow.Volume > 0 {
-		stockData.Profit = mathutil.RoundToFloat(mathutil.Div(price-follow.CostPrice, follow.CostPrice)*100, 3)
-		stockData.ProfitAmount = mathutil.RoundToFloat((price-follow.CostPrice)*float64(follow.Volume), 2)
-		stockData.ProfitAmountToday = mathutil.RoundToFloat((price-preClosePrice)*float64(follow.Volume), 2)
+		if price > 0 {
+			stockData.Profit = mathutil.RoundToFloat(mathutil.Div(price-follow.CostPrice, follow.CostPrice)*100, 3)
+			stockData.ProfitAmount = mathutil.RoundToFloat((price-follow.CostPrice)*float64(follow.Volume), 2)
+			stockData.ProfitAmountToday = mathutil.RoundToFloat((price-preClosePrice)*float64(follow.Volume), 2)
+		} else {
+			//未开盘时当前价格为昨日收盘价
+			stockData.Profit = mathutil.RoundToFloat(mathutil.Div(preClosePrice-follow.CostPrice, follow.CostPrice)*100, 3)
+			stockData.ProfitAmount = mathutil.RoundToFloat((preClosePrice-follow.CostPrice)*float64(follow.Volume), 2)
+			stockData.ProfitAmountToday = mathutil.RoundToFloat((preClosePrice-preClosePrice)*float64(follow.Volume), 2)
+		}
+
 	}
 
 	//logger.SugaredLogger.Debugf("stockData:%+v", stockData)
-	if follow.Price != price {
+	if follow.Price != price && price > 0 {
 		go db.Dao.Model(follow).Where("stock_code = ?", follow.StockCode).Updates(map[string]interface{}{
-			"price": stockData.Price,
+			"price": price,
 		})
 	}
 }
@@ -306,10 +325,8 @@ func (a *App) SendDingDingMessageByType(message string, stockCode string, msgTyp
 	}
 	stockInfo := &data.StockInfo{}
 	db.Dao.Model(stockInfo).Where("code = ?", stockCode).First(stockInfo)
-	if !data.NewAlertWindowsApi("go-stock消息通知", getMsgTypeName(msgType), GenNotificationMsg(stockInfo), "").SendNotification() {
-		return data.NewDingDingAPI().SendDingDingMessage(message)
-	}
-	return "发送系统消息成功"
+	go data.NewAlertWindowsApi("go-stock消息通知", getMsgTypeName(msgType), GenNotificationMsg(stockInfo), "").SendNotification()
+	return data.NewDingDingAPI().SendDingDingMessage(message)
 }
 
 func GenNotificationMsg(stockInfo *data.StockInfo) string {
