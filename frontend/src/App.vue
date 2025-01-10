@@ -8,12 +8,13 @@ import {
   WindowUnfullscreen
 } from '../wailsjs/runtime'
 import {h, ref} from "vue";
+import { RouterLink } from 'vue-router'
 import {darkTheme, NIcon} from 'naive-ui'
 import {
   SettingsOutline,
   ReorderTwoOutline,
   ExpandOutline,
-  RefreshOutline, PowerOutline,
+  RefreshOutline, PowerOutline, BarChartOutline,
 } from '@vicons/ionicons5'
 
 const content = ref('数据来源于网络,仅供参考\n投资有风险,入市需谨慎')
@@ -22,28 +23,38 @@ const activeKey = ref('stock')
 const containerRef= ref({})
 const menuOptions = ref([
   {
-    label: '设置',
+    label: () =>
+        h(
+            RouterLink,
+            {
+              to: {
+                name: 'stock',
+                params: {
+                  id: 'zh-CN'
+                }
+              }
+            },
+            { default: () => '我的自选' }
+        ),
+    key: 'stock',
+    icon: renderIcon(BarChartOutline)
+  },
+  {
+    label: () =>
+        h(
+            RouterLink,
+            {
+              to: {
+                name: 'settings',
+                params: {
+                  id: 'zh-CN'
+                }
+              }
+            },
+            { default: () => '设置' }
+        ),
     key: 'settings',
     icon: renderIcon(SettingsOutline),
-    children: [
-      {
-        type: 'group',
-        label: '开发中',
-        key: 'setting',
-        children: [
-          // {
-          //   label: '叙事者',
-          //   key: 'narrator',
-          //   icon: renderIcon(PersonIcon)
-          // },
-          // {
-          //   label: '羊男',
-          //   key: 'sheep-man',
-          //   icon: renderIcon(PersonIcon)
-          // }
-        ]
-      },
-    ]
   },
   {
     label: ()=> h("a", {
@@ -61,19 +72,6 @@ const menuOptions = ref([
     key: 'hide',
     icon: renderIcon(ReorderTwoOutline),
 
-  },
-  {
-    label: () =>
-        h(
-            'a',
-            {
-              href: '/',
-              target: '_self'
-            },
-            { default: () => '刷新' }
-        ),
-    key: 'stock',
-    icon: renderIcon(RefreshOutline)
   },
   {
     label: ()=> h("a", {
@@ -119,14 +117,12 @@ function toggleFullscreen(e) {
       :rotate="-15"
       style="height: 100%"
   >
-
   <n-flex justify="center">
     <n-message-provider >
       <n-modal-provider>
         <n-grid x-gap="12" :cols="1">
-
           <n-gi>
-            <stockInfo/>
+            <RouterView />
           </n-gi>
           <n-gi style="position: sticky;bottom:0;z-index: 9999;">
                   <n-card size="small">
