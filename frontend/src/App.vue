@@ -121,10 +121,10 @@ function toggleFullscreen(e) {
     <n-message-provider >
       <n-modal-provider>
         <n-grid x-gap="12" :cols="1">
-          <n-gi>
+          <n-gi style="padding-bottom: 70px">
             <RouterView />
           </n-gi>
-          <n-gi style="position: sticky;bottom:0;z-index: 9999;">
+          <n-gi style="position: fixed;bottom:0;z-index: 9999;width: 100%">
                   <n-card size="small">
                   <n-menu style="font-size: 18px;"
                           v-model:value="activeKey"
