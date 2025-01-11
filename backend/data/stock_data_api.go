@@ -281,7 +281,7 @@ func (receiver StockDataApi) GetStockCodeRealTimeData(StockCodes ...string) (*[]
 		Get(fmt.Sprintf(sina_stook_url, time.Now().Unix(), slice.Join(StockCodes, ",")))
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
-		return &[]StockInfo{}, nil
+		return &[]StockInfo{}, err
 	}
 
 	stockInfos := make([]StockInfo, 0)

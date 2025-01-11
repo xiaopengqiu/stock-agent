@@ -147,7 +147,6 @@ func getStockInfo(follow data.FollowedStock) *data.StockInfo {
 	stockCode := follow.StockCode
 	stockDatas, err := data.NewStockDataApi().GetStockCodeRealTimeData(stockCode)
 	if err != nil || len(*stockDatas) == 0 {
-		logger.SugaredLogger.Errorf("get stock code real time data error:%s", err.Error())
 		return &data.StockInfo{}
 	}
 	stockData := (*stockDatas)[0]

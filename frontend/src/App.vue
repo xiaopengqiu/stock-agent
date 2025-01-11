@@ -2,9 +2,9 @@
 import stockInfo from './components/stock.vue'
 import {
   Quit,
-  WindowFullscreen,
+  WindowFullscreen, WindowGetPosition,
   WindowHide,
-  WindowIsFullscreen,
+  WindowIsFullscreen, WindowSetPosition,
   WindowUnfullscreen
 } from '../wailsjs/runtime'
 import {h, ref} from "vue";
@@ -14,7 +14,7 @@ import {
   SettingsOutline,
   ReorderTwoOutline,
   ExpandOutline,
-  RefreshOutline, PowerOutline, BarChartOutline,
+  RefreshOutline, PowerOutline, BarChartOutline, MoveOutline,
 } from '@vicons/ionicons5'
 
 const content = ref('数据来源于网络,仅供参考\n投资有风险,入市需谨慎')
@@ -71,7 +71,15 @@ const menuOptions = ref([
     }, { default: () => '隐藏到托盘区' }),
     key: 'hide',
     icon: renderIcon(ReorderTwoOutline),
-
+  },
+  {
+    label: ()=> h("a", {
+      href: 'javascript:void(0)',
+      style: 'cursor: move;',
+      onClick: toggleStartMoveWindow,
+    }, { default: () => '移动' }),
+    key: 'move',
+    icon: renderIcon(MoveOutline),
   },
   {
     label: ()=> h("a", {
@@ -87,18 +95,31 @@ function renderIcon(icon) {
 }
 function toggleFullscreen(e) {
   console.log(e)
-  WindowIsFullscreen().then((isFull) => {
-    isFullscreen.value = isFull
-    if (isFull) {
+  isFullscreen.value=!isFullscreen.value
+    if (isFullscreen.value) {
       WindowUnfullscreen()
       e.target.innerHTML = '全屏'
     } else {
       WindowFullscreen()
       e.target.innerHTML = '取消全屏'
     }
-  })
 }
-
+const drag = ref(false)
+const lastPos= ref({x:0,y:0})
+function toggleStartMoveWindow(e) {
+  drag.value=!drag.value
+  lastPos.value={x:e.clientX,y:e.clientY}
+}
+function dragstart(e) {
+  if (drag.value) {
+    let x=e.clientX-lastPos.value.x
+    let y=e.clientY-lastPos.value.y
+    WindowGetPosition().then((pos) => {
+      WindowSetPosition(pos.x+x,pos.y+y)
+    })
+  }
+}
+window.addEventListener('mousemove', dragstart)
 </script>
 <template>
 
