@@ -343,7 +343,7 @@ function SendMessage(result,type){
       "- 成本数量: "+result.costVolume+"股\n" +
       "- 日期: "+result["日期"]+"  "+result["时间"]+"\n\n"+
       "![image]("+img+")\n"
-  let title=result["股票名称"]+"("+result["股票代码"]+") "+result["当前价格"]+" "+result.s
+  let title=result["股票名称"]+"("+result["股票代码"]+") "+result["当前价格"]+" "+result.changePercent
 
   let msg='{' +
       '     "msgtype": "markdown",' +

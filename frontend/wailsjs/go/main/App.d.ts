@@ -4,6 +4,8 @@ import {data} from '../models';
 
 export function Follow(arg1:string):Promise<string>;
 
+export function GetConfig():Promise<data.Settings>;
+
 export function GetFollowList():Promise<Array<data.FollowedStock>>;
 
 export function GetStockList(arg1:string):Promise<Array<data.StockBasic>>;
@@ -21,3 +23,5 @@ export function SetCostPriceAndVolume(arg1:string,arg2:number,arg3:number):Promi
 export function SetStockSort(arg1:number,arg2:string):Promise<void>;
 
 export function UnFollow(arg1:string):Promise<string>;
+
+export function UpdateConfig(arg1:data.Settings):Promise<string>;

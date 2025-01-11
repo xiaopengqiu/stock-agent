@@ -108,10 +108,10 @@ function toggleFullscreen(e) {
       :content="content"
       cross
       selectable
-      :font-size="12"
-      :line-height="12"
+      :font-size="18"
+      :line-height="18"
       :height="400"
-      :width="200"
+      :width="600"
       :x-offset="50"
       :y-offset="50"
       :rotate="-15"

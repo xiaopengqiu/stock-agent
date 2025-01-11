@@ -6,6 +6,10 @@ export function Follow(arg1) {
   return window['go']['main']['App']['Follow'](arg1);
 }
 
+export function GetConfig() {
+  return window['go']['main']['App']['GetConfig']();
+}
+
 export function GetFollowList() {
   return window['go']['main']['App']['GetFollowList']();
 }
@@ -40,4 +44,8 @@ export function SetStockSort(arg1, arg2) {
 
 export function UnFollow(arg1) {
   return window['go']['main']['App']['UnFollow'](arg1);
+}
+
+export function UpdateConfig(arg1) {
+  return window['go']['main']['App']['UpdateConfig'](arg1);
 }

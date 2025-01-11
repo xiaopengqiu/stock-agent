@@ -10,8 +10,6 @@ import (
 // @Desc
 //-----------------------------------------------------------------------------------
 
-const dingding_robot_url = "https://oapi.dingtalk.com/robot/send?access_token=0237527b404598f37ae5d83ef36e936860c7ba5d3892cd43f64c4159d3ed7cb1"
-
 type DingDingAPI struct {
 	client *resty.Client
 }
@@ -23,17 +21,27 @@ func NewDingDingAPI() *DingDingAPI {
 }
 
 func (DingDingAPI) SendDingDingMessage(message string) string {
+	if getConfig().DingPushEnable == false {
+		logger.SugaredLogger.Info("钉钉推送未开启")
+		return "钉钉推送未开启"
+	}
 	// 发送钉钉消息
 	resp, err := resty.New().R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(message).
-		Post(dingding_robot_url)
+		Post(getApiURL())
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
 		return "发送钉钉消息失败"
 	}
 	logger.SugaredLogger.Infof("send dingding message: %s", resp.String())
 	return "发送钉钉消息成功"
+}
+func getConfig() *Settings {
+	return NewSettingsApi(&Settings{}).GetConfig()
+}
+func getApiURL() string {
+	return getConfig().DingRobot
 }
 
 func (DingDingAPI) SendToDingDing(title, message string) string {
@@ -50,7 +58,7 @@ func (DingDingAPI) SendToDingDing(title, message string) string {
 				IsAtAll: true,
 			},
 		}).
-		Post(dingding_robot_url)
+		Post(getApiURL())
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
 		return "发送钉钉消息失败"

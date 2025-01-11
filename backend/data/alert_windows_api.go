@@ -11,7 +11,7 @@ import (
 // @Date 2025/1/8 9:40
 // @Desc
 // -----------------------------------------------------------------------------------
-type alertWindowsApi struct {
+type AlertWindowsApi struct {
 	AppID string
 	// 窗口标题
 	Title string
@@ -21,8 +21,8 @@ type alertWindowsApi struct {
 	Icon string
 }
 
-func NewAlertWindowsApi(AppID string, Title string, Content string, Icon string) *alertWindowsApi {
-	return &alertWindowsApi{
+func NewAlertWindowsApi(AppID string, Title string, Content string, Icon string) *AlertWindowsApi {
+	return &AlertWindowsApi{
 		AppID:   AppID,
 		Title:   Title,
 		Content: Content,
@@ -30,7 +30,12 @@ func NewAlertWindowsApi(AppID string, Title string, Content string, Icon string)
 	}
 }
 
-func (a alertWindowsApi) SendNotification() bool {
+func (a AlertWindowsApi) SendNotification() bool {
+	if getConfig().LocalPushEnable == false {
+		logger.SugaredLogger.Error("本地推送未开启")
+		return false
+	}
+
 	notification := toast.Notification{
 		AppID:    a.AppID,
 		Title:    a.Title,

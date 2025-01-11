@@ -146,9 +146,9 @@ func GetStockInfos(follows ...data.FollowedStock) *[]data.StockInfo {
 func getStockInfo(follow data.FollowedStock) *data.StockInfo {
 	stockCode := follow.StockCode
 	stockDatas, err := data.NewStockDataApi().GetStockCodeRealTimeData(stockCode)
-	if err != nil {
+	if err != nil || len(*stockDatas) == 0 {
 		logger.SugaredLogger.Errorf("get stock code real time data error:%s", err.Error())
-		return nil
+		return &data.StockInfo{}
 	}
 	stockData := (*stockDatas)[0]
 	addStockFollowData(follow, &stockData)
@@ -412,4 +412,13 @@ func onReady(a *App) {
 			}
 		}
 	}()
+}
+
+func (a *App) UpdateConfig(settings *data.Settings) string {
+	logger.SugaredLogger.Infof("UpdateConfig:%+v", settings)
+	return data.NewSettingsApi(settings).UpdateConfig()
+}
+
+func (a *App) GetConfig() *data.Settings {
+	return data.NewSettingsApi(&data.Settings{}).GetConfig()
 }

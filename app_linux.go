@@ -184,3 +184,10 @@ func getMsgTypeName(msgType int) string {
 		return "未知类型"
 	}
 }
+func (a *App) UpdateConfig(settings *data.Settings) string {
+	return data.NewSettingsApi(settings).UpdateConfig()
+}
+
+func (a *App) GetConfig() *data.Settings {
+	return data.NewSettingsApi(&data.Settings{}).GetConfig()
+}

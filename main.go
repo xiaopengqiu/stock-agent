@@ -40,11 +40,12 @@ func main() {
 	db.Dao.AutoMigrate(&data.StockBasic{})
 	db.Dao.AutoMigrate(&data.FollowedStock{})
 	db.Dao.AutoMigrate(&data.IndexBasic{})
+	db.Dao.AutoMigrate(&data.Settings{})
 
 	if stocksBin != nil && len(stocksBin) > 0 {
 		go initStockData()
 	}
-	updateBasicInfo()
+	//updateBasicInfo()
 
 	// Create an instance of the app structure
 	app := NewApp()
