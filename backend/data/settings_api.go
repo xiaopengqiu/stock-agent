@@ -2,6 +2,7 @@ package data
 
 import (
 	"go-stock/backend/db"
+	"go-stock/backend/logger"
 	"gorm.io/gorm"
 )
 
@@ -27,13 +28,21 @@ func NewSettingsApi(settings *Settings) *SettingsApi {
 }
 
 func (s SettingsApi) UpdateConfig() string {
-	err := db.Dao.Model(s.Config).Updates(map[string]any{
-		"local_push_enable": s.Config.LocalPushEnable,
-		"ding_push_enable":  s.Config.DingPushEnable,
-		"ding_robot":        s.Config.DingRobot,
-	}).Error
-	if err != nil {
-		return err.Error()
+	count := int64(0)
+	db.Dao.Model(s.Config).Count(&count)
+	if count > 0 {
+		db.Dao.Model(s.Config).Where("id=?", s.Config.ID).Updates(map[string]any{
+			"local_push_enable": s.Config.LocalPushEnable,
+			"ding_push_enable":  s.Config.DingPushEnable,
+			"ding_robot":        s.Config.DingRobot,
+		})
+	} else {
+		logger.SugaredLogger.Infof("未找到配置，创建默认配置:%+v", s.Config)
+		db.Dao.Model(s.Config).Create(&Settings{
+			LocalPushEnable: s.Config.LocalPushEnable,
+			DingPushEnable:  s.Config.DingPushEnable,
+			DingRobot:       s.Config.DingRobot,
+		})
 	}
 	return "保存成功！"
 }
