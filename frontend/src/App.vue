@@ -9,7 +9,7 @@ import {
 } from '../wailsjs/runtime'
 import {h, ref} from "vue";
 import { RouterLink } from 'vue-router'
-import {darkTheme, NIcon} from 'naive-ui'
+import {darkTheme, NIcon, NText} from 'naive-ui'
 import {
   SettingsOutline,
   ReorderTwoOutline,
@@ -31,10 +31,10 @@ const menuOptions = ref([
                 name: 'stock',
                 params: {
                   id: 'zh-CN'
-                }
+                },
               }
             },
-            { default: () => '我的自选' }
+            { default: () => '我的自选',}
         ),
     key: 'stock',
     icon: renderIcon(BarChartOutline)
@@ -59,8 +59,9 @@ const menuOptions = ref([
   {
     label: ()=> h("a", {
       href: '#',
-      onClick: toggleFullscreen
-    }, { default: () => '全屏' }),
+      onClick: toggleFullscreen,
+      title: '全屏 Ctrl+F 退出全屏 Esc',
+    }, { default: () => isFullscreen.value?'取消全屏':'全屏' }),
     key: 'full',
     icon: renderIcon(ExpandOutline),
   },
@@ -68,6 +69,7 @@ const menuOptions = ref([
     label: ()=> h("a", {
       href: '#',
       onClick: WindowHide,
+      title: '隐藏到托盘区 Ctrl+H',
     }, { default: () => '隐藏到托盘区' }),
     key: 'hide',
     icon: renderIcon(ReorderTwoOutline),
@@ -94,15 +96,15 @@ function renderIcon(icon) {
   return () => h(NIcon, null, { default: () => h(icon) })
 }
 function toggleFullscreen(e) {
-  console.log(e)
-  isFullscreen.value=!isFullscreen.value
+  //console.log(e)
     if (isFullscreen.value) {
       WindowUnfullscreen()
-      e.target.innerHTML = '全屏'
+      //e.target.innerHTML = '全屏'
     } else {
       WindowFullscreen()
-      e.target.innerHTML = '取消全屏'
+     // e.target.innerHTML = '取消全屏'
     }
+  isFullscreen.value=!isFullscreen.value
 }
 const drag = ref(false)
 const lastPos= ref({x:0,y:0})
