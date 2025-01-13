@@ -1,5 +1,10 @@
 #  Go fuck chinese stock market !!!
+### 去他妈的A股！！！
 ![Wails and NaiveUI](./build/appicon.png)
+
+## 简介
+- 本项目基于Wails和NaiveUI，纯属无聊，仅供娱乐，不喜勿喷。
+- 开发环境主要基于Windows10+，其他平台未测试或功能受限。
 
 
 ## Snapshot
@@ -18,7 +23,7 @@
 
 ## About
 
-A China stock data viewer build by  [Wails](https://wails.io/) with [NavieUI](https://www.naiveui.com/).
+### A China stock data viewer build by  [Wails](https://wails.io/) with [NavieUI](https://www.naiveui.com/).
 A股数据可视化工具，基于Wails和NaiveUI。
 
 ## Prerequisites
