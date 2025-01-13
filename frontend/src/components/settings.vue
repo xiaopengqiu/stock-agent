@@ -88,7 +88,11 @@ function sendTestNotice(){
           <n-switch v-model:value="formValue.updateBasicInfoOnStart" />
         </n-form-item-gi>
         <n-form-item-gi  :span="6" label="数据刷新间隔(重启生效)：" path="refreshInterval" >
-          <n-input-number v-model:value="formValue.refreshInterval" />
+          <n-input-number v-model:value="formValue.refreshInterval" placeholder="请输入数据刷新间隔(秒)">
+            <template #suffix>
+              秒
+            </template>
+          </n-input-number>
         </n-form-item-gi>
       </n-grid>
 

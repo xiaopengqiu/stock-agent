@@ -147,7 +147,7 @@ window.addEventListener('mousemove', dragstart)
           <n-gi style="padding-bottom: 70px">
             <RouterView />
           </n-gi>
-          <n-gi style="position: fixed;bottom:0;z-index: 9999;width: 100%">
+          <n-gi style="position: fixed;bottom:0;z-index: 9;width: 100%">
                   <n-card size="small">
                   <n-menu style="font-size: 18px;"
                           v-model:value="activeKey"

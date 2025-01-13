@@ -434,11 +434,10 @@ function getHeight() {
          </n-card >
       </n-gi>
     </n-grid>
-  <n-affix :trigger-bottom="15" style="right:0;z-index: 99990;">
+  <div style="position: fixed;bottom: 18px;right:0;z-index: 10;width: 350px">
 <!--    <n-card :bordered="false">-->
       <n-input-group>
-
-        <n-button  type="error" @click="addBTN=!addBTN" > <n-icon :component="Search"/>&nbsp;<n-text  v-if="addBTN">隐藏</n-text></n-button>
+<!--        <n-button  type="error" @click="addBTN=!addBTN" > <n-icon :component="Search"/>&nbsp;<n-text  v-if="addBTN">隐藏</n-text></n-button>-->
         <n-auto-complete v-model:value="data.name"  v-if="addBTN"
                          :input-props="{
                                 autocomplete: 'disabled',
@@ -451,8 +450,7 @@ function getHeight() {
         </n-button>
       </n-input-group>
 <!--    </n-card>-->
-
-  </n-affix>
+  </div>
       <n-modal transform-origin="center" size="small" v-model:show="modalShow" :title="formModel.name" style="width: 400px" :preset="'card'">
             <n-form :model="formModel" :rules="{
               costPrice: { required: true, message: '请输入成本'},
