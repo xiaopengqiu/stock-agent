@@ -45,7 +45,7 @@ func main() {
 	if stocksBin != nil && len(stocksBin) > 0 {
 		go initStockData()
 	}
-	//updateBasicInfo()
+	updateBasicInfo()
 
 	// Create an instance of the app structure
 	app := NewApp()
@@ -142,9 +142,12 @@ func main() {
 }
 
 func updateBasicInfo() {
-	//更新基本信息
-	go data.NewStockDataApi().GetStockBaseInfo()
-	go data.NewStockDataApi().GetIndexBasic()
+	config := data.NewSettingsApi(&data.Settings{}).GetConfig()
+	if config.UpdateBasicInfoOnStart {
+		//更新基本信息
+		go data.NewStockDataApi().GetStockBaseInfo()
+		go data.NewStockDataApi().GetIndexBasic()
+	}
 }
 
 func initStockData() {

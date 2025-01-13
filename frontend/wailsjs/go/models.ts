@@ -64,6 +64,8 @@ export namespace data {
 	    localPushEnable: boolean;
 	    dingPushEnable: boolean;
 	    dingRobot: string;
+	    updateBasicInfoOnStart: boolean;
+	    refreshInterval: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -78,6 +80,8 @@ export namespace data {
 	        this.localPushEnable = source["localPushEnable"];
 	        this.dingPushEnable = source["dingPushEnable"];
 	        this.dingRobot = source["dingRobot"];
+	        this.updateBasicInfoOnStart = source["updateBasicInfoOnStart"];
+	        this.refreshInterval = source["refreshInterval"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

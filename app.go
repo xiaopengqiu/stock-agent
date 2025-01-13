@@ -51,7 +51,12 @@ func (a *App) domReady(ctx context.Context) {
 	// Add your action here
 	//定时更新数据
 	go func() {
-		ticker := time.NewTicker(time.Second * 1)
+		config := data.NewSettingsApi(&data.Settings{}).GetConfig()
+		interval := config.RefreshInterval
+		if interval <= 0 {
+			interval = 1
+		}
+		ticker := time.NewTicker(time.Second * time.Duration(interval))
 		defer ticker.Stop()
 		for range ticker.C {
 			if isTradingTime(time.Now()) {
