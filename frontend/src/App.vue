@@ -1,6 +1,7 @@
 <script setup>
 import stockInfo from './components/stock.vue'
 import {
+  EventsOn,
   Quit,
   WindowFullscreen, WindowGetPosition,
   WindowHide,
@@ -9,18 +10,19 @@ import {
 } from '../wailsjs/runtime'
 import {h, ref} from "vue";
 import { RouterLink } from 'vue-router'
-import {darkTheme, NIcon, NText} from 'naive-ui'
+import {darkTheme, NIcon, NText,} from 'naive-ui'
 import {
   SettingsOutline,
   ReorderTwoOutline,
   ExpandOutline,
-  RefreshOutline, PowerOutline, BarChartOutline, MoveOutline,
+  RefreshOutline, PowerOutline, BarChartOutline, MoveOutline, WalletOutline,
 } from '@vicons/ionicons5'
 
 const content = ref('数据来源于网络,仅供参考\n投资有风险,入市需谨慎')
 const isFullscreen = ref(false)
 const activeKey = ref('stock')
 const containerRef= ref({})
+const realtimeProfit= ref("")
 const menuOptions = ref([
   {
     label: () =>
@@ -37,7 +39,15 @@ const menuOptions = ref([
             { default: () => '我的自选',}
         ),
     key: 'stock',
-    icon: renderIcon(BarChartOutline)
+    icon: renderIcon(BarChartOutline),
+    children:[
+      {
+        label: ()=> h(NText, {type:realtimeProfit.value>0?'error':'success'},{ default: () => '当日盈亏 '+realtimeProfit.value+"¥"}),
+        key: 'realtimeProfit',
+        show: realtimeProfit.value,
+        icon: renderIcon(WalletOutline),
+      },
+    ]
   },
   {
     label: () =>
@@ -122,11 +132,18 @@ function dragstart(e) {
   }
 }
 window.addEventListener('mousemove', dragstart)
+
+EventsOn("realtime_profit",(data)=>{
+  realtimeProfit.value=data
+})
 </script>
 <template>
 
 
   <n-config-provider :theme="darkTheme" ref="containerRef">
+    <n-message-provider >
+      <n-notification-provider>
+      <n-modal-provider>
   <n-watermark
       :content="content"
       cross
@@ -141,8 +158,7 @@ window.addEventListener('mousemove', dragstart)
       style="height: 100%"
   >
   <n-flex justify="center">
-    <n-message-provider >
-      <n-modal-provider>
+
         <n-grid x-gap="12" :cols="1">
           <n-gi style="padding-bottom: 70px">
             <RouterView />
@@ -158,10 +174,12 @@ window.addEventListener('mousemove', dragstart)
                 </n-card>
           </n-gi>
         </n-grid>
-      </n-modal-provider>
-    </n-message-provider>
+
   </n-flex>
   </n-watermark>
+      </n-modal-provider>
+      </n-notification-provider>
+    </n-message-provider>
   </n-config-provider>
 </template>
 <style>

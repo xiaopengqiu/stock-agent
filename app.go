@@ -36,14 +36,6 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	// Perform your setup here
 	a.ctx = ctx
-
-	// 创建系统托盘
-	go systray.Run(func() {
-		onReady(a)
-	}, func() {
-		onExit(a)
-	})
-
 }
 
 // domReady is called after front-end resources have been loaded
@@ -121,9 +113,10 @@ func MonitorStockPrices(a *App) {
 		}
 	}
 
-	title := "go-stock " + time.Now().Format(time.DateTime) + fmt.Sprintf("  %.2f¥", total)
-	runtime.WindowSetTitle(a.ctx, title)
-	systray.SetTooltip(title)
+	//title := "go-stock " + time.Now().Format(time.DateTime) + fmt.Sprintf("  %.2f¥", total)
+	go runtime.EventsEmit(a.ctx, "realtime_profit", fmt.Sprintf("  %.2f", total))
+	//runtime.WindowSetTitle(a.ctx, title)
+	//systray.SetTooltip(title)
 
 }
 func GetStockInfos(follows ...data.FollowedStock) *[]data.StockInfo {

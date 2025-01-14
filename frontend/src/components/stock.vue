@@ -10,12 +10,13 @@ import {
   SetCostPriceAndVolume, SetStockSort,
   UnFollow
 } from '../../wailsjs/go/main/App'
-import {NButton, NFlex, NForm, NFormItem, NInputNumber, NText, useMessage, useModal} from 'naive-ui'
+import {NButton, NFlex, NForm, NFormItem, NInputNumber, NText, useMessage, useModal,useNotification} from 'naive-ui'
 import {EventsOn, WindowFullscreen, WindowReload, WindowUnfullscreen} from '../../wailsjs/runtime'
 import {Add, Search,StarOutline} from '@vicons/ionicons5'
 
 const message = useMessage()
 const modal = useModal()
+const notify = useNotification()
 
 const stocks=ref([])
 const results=ref({})
@@ -123,6 +124,8 @@ EventsOn("refreshFollowList",(data)=>{
  //    message.destroyAll
  //  })
 })
+
+
 
 //判断是否是A股交易时间
 function isTradingTime() {

@@ -4,6 +4,7 @@ import (
 	"embed"
 	"encoding/json"
 	"github.com/duke-git/lancet/v2/convertor"
+	"github.com/getlantern/systray"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/menu"
@@ -73,11 +74,22 @@ func main() {
 		FileMenu.AddText("隐藏到托盘区", keys.CmdOrCtrl("h"), func(_ *menu.CallbackData) {
 			runtime.WindowHide(app.ctx)
 		})
+
+		FileMenu.AddText("显示", keys.CmdOrCtrl("v"), func(_ *menu.CallbackData) {
+			runtime.WindowShow(app.ctx)
+		})
 	}
 
 	//FileMenu.AddText("退出", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
 	//	runtime.Quit(app.ctx)
 	//})
+
+	// 创建系统托盘
+	go systray.Run(func() {
+		onReady(app)
+	}, func() {
+		onExit(app)
+	})
 
 	// Create application with options
 	err := wails.Run(&options.App{
