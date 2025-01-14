@@ -80,6 +80,7 @@ func (a *App) domReady(ctx context.Context) {
 
 	}()
 	go runtime.EventsEmit(a.ctx, "telegraph", refreshTelegraphList())
+	go MonitorStockPrices(a)
 }
 
 func refreshTelegraphList() *[]string {

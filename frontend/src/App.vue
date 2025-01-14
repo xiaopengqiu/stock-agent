@@ -18,7 +18,7 @@ import {
   RefreshOutline, PowerOutline, BarChartOutline, MoveOutline, WalletOutline, StarOutline,
 } from '@vicons/ionicons5'
 
-const content = ref('数据来源于网络,仅供参考\n投资有风险,入市需谨慎')
+const content = ref('数据来源于网络,仅供参考;投资有风险,入市需谨慎')
 const isFullscreen = ref(false)
 const activeKey = ref('stock')
 const containerRef= ref({})
@@ -152,19 +152,18 @@ EventsOn("telegraph",(data)=>{
       :content="content"
       cross
       selectable
-      :font-size="18"
-      :line-height="18"
+      :font-size="16"
+      :line-height="16"
+      :width="500"
       :height="400"
-      :width="600"
       :x-offset="50"
-      :y-offset="50"
+      :y-offset="150"
       :rotate="-15"
-      style="height: 100%"
   >
   <n-flex justify="center">
         <n-grid x-gap="12" :cols="1">
           <n-gi style="position: relative;top:1px;z-index: 19;width: 100%" v-if="telegraph.length>0">
-            <n-marquee :speed="60" >
+            <n-marquee :speed="120" >
               <n-tag type="warning" v-for="item in telegraph" style="margin-right: 10px">
                 {{item}}
               </n-tag>
