@@ -4,7 +4,6 @@ import (
 	"embed"
 	"encoding/json"
 	"github.com/duke-git/lancet/v2/convertor"
-	"github.com/getlantern/systray"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/menu"
@@ -84,37 +83,31 @@ func main() {
 	//	runtime.Quit(app.ctx)
 	//})
 
-	// 创建系统托盘
-	go systray.Run(func() {
-		onReady(app)
-	}, func() {
-		onExit(app)
-	})
-
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:             "go-stock",
-		Width:             1366,
-		Height:            920,
-		MinWidth:          1024,
-		MinHeight:         768,
-		MaxWidth:          1280,
-		MaxHeight:         960,
-		DisableResize:     false,
-		Fullscreen:        false,
-		Frameless:         true,
-		StartHidden:       false,
-		HideWindowOnClose: false,
-		BackgroundColour:  &options.RGBA{R: 255, G: 255, B: 255, A: 255},
-		Assets:            assets,
-		Menu:              AppMenu,
-		Logger:            nil,
-		LogLevel:          logger.DEBUG,
-		OnStartup:         app.startup,
-		OnDomReady:        app.domReady,
-		OnBeforeClose:     app.beforeClose,
-		OnShutdown:        app.shutdown,
-		WindowStartState:  options.Normal,
+		Title:              "go-stock",
+		Width:              1366,
+		Height:             920,
+		MinWidth:           1024,
+		MinHeight:          768,
+		MaxWidth:           1280,
+		MaxHeight:          960,
+		DisableResize:      false,
+		Fullscreen:         false,
+		Frameless:          true,
+		StartHidden:        false,
+		HideWindowOnClose:  false,
+		BackgroundColour:   &options.RGBA{R: 255, G: 255, B: 255, A: 255},
+		Assets:             assets,
+		Menu:               AppMenu,
+		Logger:             nil,
+		LogLevel:           logger.DEBUG,
+		LogLevelProduction: logger.ERROR,
+		OnStartup:          app.startup,
+		OnDomReady:         app.domReady,
+		OnBeforeClose:      app.beforeClose,
+		OnShutdown:         app.shutdown,
+		WindowStartState:   options.Normal,
 		Bind: []interface{}{
 			app,
 		},

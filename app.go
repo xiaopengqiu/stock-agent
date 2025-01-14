@@ -39,6 +39,14 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	// Perform your setup here
 	a.ctx = ctx
+
+	// 创建系统托盘
+	go systray.Run(func() {
+		onReady(a)
+	}, func() {
+		onExit(a)
+	})
+
 }
 
 // domReady is called after front-end resources have been loaded
