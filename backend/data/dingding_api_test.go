@@ -11,6 +11,7 @@ import (
 //-----------------------------------------------------------------------------------
 
 func TestRobot(t *testing.T) {
+	dingdingRobotUrl := "XXX"
 	resp, err := resty.New().R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(`{
@@ -23,7 +24,7 @@ func TestRobot(t *testing.T) {
 			"isAtAll": true
 		  }
 		}`).
-		Post(dingding_robot_url)
+		Post(dingdingRobotUrl)
 	if err != nil {
 		t.Error(err)
 	}

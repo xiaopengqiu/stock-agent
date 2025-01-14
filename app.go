@@ -5,15 +5,18 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/coocood/freecache"
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/mathutil"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/getlantern/systray"
+	"github.com/go-resty/resty/v2"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"go-stock/backend/data"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
+	"strings"
 	"time"
 )
 
@@ -56,6 +59,41 @@ func (a *App) domReady(ctx context.Context) {
 			}
 		}
 	}()
+
+	go func() {
+		ticker := time.NewTicker(time.Second * time.Duration(60))
+		defer ticker.Stop()
+		for range ticker.C {
+			telegraph := refreshTelegraphList()
+			if telegraph != nil {
+				go runtime.EventsEmit(a.ctx, "telegraph", telegraph)
+			}
+		}
+
+	}()
+	go runtime.EventsEmit(a.ctx, "telegraph", refreshTelegraphList())
+}
+
+func refreshTelegraphList() *[]string {
+	url := "https://www.cls.cn/telegraph"
+	response, err := resty.New().R().
+		SetHeader("Referer", "https://www.cls.cn/").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").
+		Get(fmt.Sprintf(url))
+	if err != nil {
+		return &[]string{}
+	}
+	//logger.SugaredLogger.Info(string(response.Body()))
+	document, err := goquery.NewDocumentFromReader(strings.NewReader(string(response.Body())))
+	if err != nil {
+		return &[]string{}
+	}
+	var telegraph []string
+	document.Find("div.telegraph-content-box").Each(func(i int, selection *goquery.Selection) {
+		//logger.SugaredLogger.Info(selection.Text())
+		telegraph = append(telegraph, selection.Text())
+	})
+	return &telegraph
 }
 
 // isTradingDay 判断是否是交易日

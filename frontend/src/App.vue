@@ -15,14 +15,15 @@ import {
   SettingsOutline,
   ReorderTwoOutline,
   ExpandOutline,
-  RefreshOutline, PowerOutline, BarChartOutline, MoveOutline, WalletOutline,
+  RefreshOutline, PowerOutline, BarChartOutline, MoveOutline, WalletOutline, StarOutline,
 } from '@vicons/ionicons5'
 
 const content = ref('数据来源于网络,仅供参考\n投资有风险,入市需谨慎')
 const isFullscreen = ref(false)
 const activeKey = ref('stock')
 const containerRef= ref({})
-const realtimeProfit= ref("")
+const realtimeProfit= ref(0)
+const telegraph= ref([])
 const menuOptions = ref([
   {
     label: () =>
@@ -39,7 +40,7 @@ const menuOptions = ref([
             { default: () => '我的自选',}
         ),
     key: 'stock',
-    icon: renderIcon(BarChartOutline),
+    icon: renderIcon(StarOutline),
     children:[
       {
         label: ()=> h(NText, {type:realtimeProfit.value>0?'error':'success'},{ default: () => '当日盈亏 '+realtimeProfit.value+"¥"}),
@@ -136,6 +137,9 @@ window.addEventListener('mousemove', dragstart)
 EventsOn("realtime_profit",(data)=>{
   realtimeProfit.value=data
 })
+EventsOn("telegraph",(data)=>{
+  telegraph.value=data
+})
 </script>
 <template>
 
@@ -158,9 +162,16 @@ EventsOn("realtime_profit",(data)=>{
       style="height: 100%"
   >
   <n-flex justify="center">
-
         <n-grid x-gap="12" :cols="1">
-          <n-gi style="padding-bottom: 70px">
+          <n-gi style="position: relative;top:1px;z-index: 19;width: 100%" v-if="telegraph.length>0">
+            <n-marquee :speed="60" >
+              <n-tag type="warning" v-for="item in telegraph" style="margin-right: 10px">
+                {{item}}
+              </n-tag>
+<!--              <n-text type="warning"> {{telegraph[0]}}</n-text>-->
+            </n-marquee>
+          </n-gi>
+          <n-gi style="padding-bottom: 70px;padding-top: 5px">
             <RouterView />
           </n-gi>
           <n-gi style="position: fixed;bottom:0;z-index: 9;width: 100%">
