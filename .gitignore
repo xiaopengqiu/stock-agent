@@ -110,3 +110,4 @@ data/*.db
 ./build/*.exe
 ./build/bin/go-stock-dev.exe
 ./build/bin/go-stock.exe
+frontend/package.json.md5
