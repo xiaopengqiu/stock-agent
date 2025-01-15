@@ -106,7 +106,7 @@ dist
 .DS_Store
 
 .idea/
-data/*.db
-./build/*.exe
-./build/bin/*
+/data/*.db
+/build/*.exe
+/build/bin/*
 frontend/package.json.md5
