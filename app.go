@@ -41,7 +41,7 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 
 	// 创建系统托盘
-	go systray.Run(func() {
+	systray.Run(func() {
 		onReady(a)
 	}, func() {
 		onExit(a)
@@ -430,7 +430,6 @@ func onReady(a *App) {
 	systray.SetIcon(icon2)
 	systray.SetTitle("go-stock")
 	systray.SetTooltip("go-stock 股票行情实时获取")
-
 	// 创建菜单项
 	show := systray.AddMenuItem("显示", "显示应用程序")
 	//hide := systray.AddMenuItem("隐藏", "隐藏应用程序")
