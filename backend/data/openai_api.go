@@ -2,7 +2,6 @@ package data
 
 import (
 	"github.com/go-resty/resty/v2"
-	"go-stock/backend/logger"
 )
 
 // @Author spark
@@ -95,7 +94,7 @@ func (o OpenAi) NewChat(stock string) string {
 				},
 				{
 					"role":    "user",
-					"content": "点评一下" + stock + ",以Markdown输出",
+					"content": "点评一下" + stock,
 				},
 			},
 		}).
@@ -103,6 +102,6 @@ func (o OpenAi) NewChat(stock string) string {
 	if err != nil {
 		return ""
 	}
-	logger.SugaredLogger.Infof("%v", res.Choices[0].Message.Content)
+	//logger.SugaredLogger.Infof("%v", res.Choices[0].Message.Content)
 	return res.Choices[0].Message.Content
 }

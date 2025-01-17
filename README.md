@@ -2,6 +2,9 @@
 ### 去他妈的A股！！！
 ![Wails and NaiveUI](./build/appicon.png)
 
+## BIG NEWS !!! 重大更新！！！
+- 2025.01.17 新增AI大模型分析股票功能
+
 ## 简介
 - 本项目基于Wails和NaiveUI，纯属无聊，仅供娱乐，不喜勿喷。
 - 开发环境主要基于Windows10+，其他平台未测试或功能受限。
@@ -19,7 +22,8 @@
 ![img_3.png](build/screenshot/img_9.png)
 ### 钉钉报警通知
 ![img_4.png](build/screenshot/img_5.png)
-
+### AI分析股票
+![img_5.png](build/screenshot/img_10.png)
 
 ## About
 
