@@ -95,7 +95,7 @@ func (o OpenAi) NewChat(stock string) string {
 				},
 				{
 					"role":    "user",
-					"content": "点评一下" + stock + "",
+					"content": "点评一下" + stock + ",以Markdown输出",
 				},
 			},
 		}).
