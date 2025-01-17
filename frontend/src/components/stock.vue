@@ -4,7 +4,7 @@ import {
   Follow,
   GetFollowList,
   GetStockList,
-  Greet,
+  Greet, NewChat,
   SendDingDingMessage, SendDingDingMessageByType,
   SetAlarmChangePercent,
   SetCostPriceAndVolume, SetStockSort,
@@ -13,6 +13,9 @@ import {
 import {NButton, NFlex, NForm, NFormItem, NInputNumber, NText, useMessage, useModal,useNotification} from 'naive-ui'
 import {EventsOn, WindowFullscreen, WindowReload, WindowUnfullscreen} from '../../wailsjs/runtime'
 import {Add, Search,StarOutline} from '@vicons/ionicons5'
+import { MdPreview } from 'md-editor-v3';
+// preview.css相比style.css少了编辑器那部分样式
+import 'md-editor-v3/lib/preview.css';
 
 const message = useMessage()
 const modal = useModal()
@@ -27,6 +30,7 @@ const options=ref([])
 const modalShow = ref(false)
 const modalShow2 = ref(false)
 const modalShow3 = ref(false)
+const modalShow4 = ref(false)
 const addBTN = ref(true)
 const formModel = ref({
   name: "",
@@ -45,6 +49,7 @@ const data = reactive({
   kURL:"",
   resultText: "Please enter your name below 👇",
   fullscreen: false,
+  airesult: "",
 })
 
 const sortedResults = computed(() => {
@@ -362,6 +367,15 @@ function SendMessage(result,type){
     SendDingDingMessageByType(msg,result["股票代码"],type)
 }
 
+function aiCheckStock(stock){
+  message.loading("ai检测中...")
+  NewChat(stock).then(result => {
+    data.name=stock
+    data.airesult=(result)
+    modalShow4.value=true
+  })
+}
+
 function getTypeName(type){
   switch (type)
   {
@@ -416,7 +430,9 @@ function getHeight() {
            <template #header-extra>
              <n-button size="tiny" secondary type="primary" @click="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
                取消关注
-             </n-button>
+             </n-button>&nbsp;
+             <n-button size="tiny" secondary type="warning" @click="aiCheckStock(result['股票名称'])"> AI分析 </n-button>
+
            </template>
            <template #footer>
              <n-flex justify="center">
@@ -431,7 +447,6 @@ function getHeight() {
                <n-button size="tiny" type="success" @click="showFenshi(result['股票代码'],result['股票名称'])"> 分时 </n-button>
                <n-button size="tiny" type="error" @click="showK(result['股票代码'],result['股票名称'])"> 日K </n-button>
                <n-button size="tiny" type="warning" @click="search(result['股票代码'],result['股票名称'])"> 详情 </n-button>
-<!--               <n-button size="tiny" type="info" @click="SendMessage(result)"> 钉钉 </n-button>-->
              </n-flex>
            </template>
          </n-card >
@@ -505,6 +520,10 @@ function getHeight() {
   </n-modal>
   <n-modal v-model:show="modalShow3" :title="data.name" style="width: 600px" :preset="'card'">
     <n-image :src="data.kURL" />
+  </n-modal>
+
+  <n-modal transform-origin="center" v-model:show="modalShow4"  preset="card" style="width: 800px;height: 400px" :title="'['+data.name+']AI分析结果'" >
+    <MdPreview :modelValue="data.airesult" :previewTheme="'dark'"/>
   </n-modal>
 </template>
 

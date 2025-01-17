@@ -66,6 +66,12 @@ export namespace data {
 	    dingRobot: string;
 	    updateBasicInfoOnStart: boolean;
 	    refreshInterval: number;
+	    openAiEnable: boolean;
+	    openAiBaseUrl: string;
+	    openAiApiKey: string;
+	    openAiModelName: string;
+	    openAiMaxTokens: number;
+	    openAiTemperature: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -82,6 +88,12 @@ export namespace data {
 	        this.dingRobot = source["dingRobot"];
 	        this.updateBasicInfoOnStart = source["updateBasicInfoOnStart"];
 	        this.refreshInterval = source["refreshInterval"];
+	        this.openAiEnable = source["openAiEnable"];
+	        this.openAiBaseUrl = source["openAiBaseUrl"];
+	        this.openAiApiKey = source["openAiApiKey"];
+	        this.openAiModelName = source["openAiModelName"];
+	        this.openAiMaxTokens = source["openAiMaxTokens"];
+	        this.openAiTemperature = source["openAiTemperature"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

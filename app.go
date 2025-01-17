@@ -373,6 +373,10 @@ func (a *App) SendDingDingMessageByType(message string, stockCode string, msgTyp
 	return data.NewDingDingAPI().SendDingDingMessage(message)
 }
 
+func (a *App) NewChat(stock string) string {
+	return data.NewDeepSeekOpenAi().NewChat(stock)
+}
+
 func GenNotificationMsg(stockInfo *data.StockInfo) string {
 	Price, err := convertor.ToFloat(stockInfo.Price)
 	if err != nil {

@@ -13,6 +13,13 @@ type Settings struct {
 	DingRobot              string `json:"dingRobot"`
 	UpdateBasicInfoOnStart bool   `json:"updateBasicInfoOnStart"`
 	RefreshInterval        int64  `json:"refreshInterval"`
+
+	OpenAiEnable      bool    `json:"openAiEnable"`
+	OpenAiBaseUrl     string  `json:"openAiBaseUrl"`
+	OpenAiApiKey      string  `json:"openAiApiKey"`
+	OpenAiModelName   string  `json:"openAiModelName"`
+	OpenAiMaxTokens   int     `json:"openAiMaxTokens"`
+	OpenAiTemperature float64 `json:"openAiTemperature"`
 }
 
 func (receiver Settings) TableName() string {
@@ -39,6 +46,12 @@ func (s SettingsApi) UpdateConfig() string {
 			"ding_robot":                 s.Config.DingRobot,
 			"update_basic_info_on_start": s.Config.UpdateBasicInfoOnStart,
 			"refresh_interval":           s.Config.RefreshInterval,
+			"open_ai_enable":             s.Config.OpenAiEnable,
+			"open_ai_base_url":           s.Config.OpenAiBaseUrl,
+			"open_ai_api_key":            s.Config.OpenAiApiKey,
+			"open_ai_model_name":         s.Config.OpenAiModelName,
+			"open_ai_max_tokens":         s.Config.OpenAiMaxTokens,
+			"open_ai_temperature":        s.Config.OpenAiTemperature,
 		})
 	} else {
 		logger.SugaredLogger.Infof("未找到配置，创建默认配置:%+v", s.Config)
@@ -48,6 +61,12 @@ func (s SettingsApi) UpdateConfig() string {
 			DingRobot:              s.Config.DingRobot,
 			UpdateBasicInfoOnStart: s.Config.UpdateBasicInfoOnStart,
 			RefreshInterval:        s.Config.RefreshInterval,
+			OpenAiEnable:           s.Config.OpenAiEnable,
+			OpenAiBaseUrl:          s.Config.OpenAiBaseUrl,
+			OpenAiApiKey:           s.Config.OpenAiApiKey,
+			OpenAiModelName:        s.Config.OpenAiModelName,
+			OpenAiMaxTokens:        s.Config.OpenAiMaxTokens,
+			OpenAiTemperature:      s.Config.OpenAiTemperature,
 		})
 	}
 	return "保存成功！"
