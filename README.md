@@ -4,6 +4,7 @@
 
 ## BIG NEWS !!! 重大更新！！！
 - 2025.01.17 新增AI大模型分析股票功能
+  ![img_5.png](build/screenshot/img_10.png)
 
 ## 简介
 - 本项目基于Wails和NaiveUI，纯属无聊，仅供娱乐，不喜勿喷。
