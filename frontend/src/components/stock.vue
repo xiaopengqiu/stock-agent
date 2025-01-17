@@ -522,8 +522,8 @@ function getHeight() {
     <n-image :src="data.kURL" />
   </n-modal>
 
-  <n-modal transform-origin="center" v-model:show="modalShow4"  preset="card" style="width: 800px;height: 400px" :title="'['+data.name+']AI分析结果'" >
-    <MdPreview :modelValue="data.airesult" :previewTheme="'dark'"/>
+  <n-modal transform-origin="center" v-model:show="modalShow4"  preset="card" style="width: 800px;height: 480px" :title="'['+data.name+']AI分析结果'" >
+    <MdPreview style="height: 380px" :modelValue="data.airesult" :theme="'dark'"/>
   </n-modal>
 </template>
 
