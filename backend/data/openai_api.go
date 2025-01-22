@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/go-resty/resty/v2"
 	"strings"
+	"sync"
 )
 
 // @Author spark
@@ -108,7 +109,7 @@ func (o OpenAi) NewChat(stock string) string {
 	//logger.SugaredLogger.Infof("%v", res.Choices[0].Message.Content)
 	return res.Choices[0].Message.Content
 }
-func (o OpenAi) NewChatStream(stock string) <-chan string {
+func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 	ch := make(chan string)
 	go func() {
 		defer close(ch)
@@ -124,21 +125,42 @@ func (o OpenAi) NewChatStream(stock string) <-chan string {
 			},
 		}
 
-		messages := SearchStockInfo(stock, "depth")
-		for _, message := range *messages {
-			msg = append(msg, map[string]interface{}{
-				"role":    "assistant",
-				"content": message,
-			})
-		}
+		wg := &sync.WaitGroup{}
 
-		messages = SearchStockInfo(stock, "telegram")
-		for _, message := range *messages {
+		wg.Add(3)
+		go func() {
+			defer wg.Done()
+			messages := SearchStockPriceInfo(stockCode)
+			price := ""
+			for _, message := range *messages {
+				price += message + ";"
+			}
 			msg = append(msg, map[string]interface{}{
 				"role":    "assistant",
-				"content": message,
+				"content": stock + "当前价格：" + price,
 			})
-		}
+		}()
+		go func() {
+			defer wg.Done()
+			messages := SearchStockInfo(stock, "depth")
+			for _, message := range *messages {
+				msg = append(msg, map[string]interface{}{
+					"role":    "assistant",
+					"content": message,
+				})
+			}
+		}()
+		go func() {
+			defer wg.Done()
+			messages := SearchStockInfo(stock, "telegram")
+			for _, message := range *messages {
+				msg = append(msg, map[string]interface{}{
+					"role":    "assistant",
+					"content": message,
+				})
+			}
+		}()
+		wg.Wait()
 
 		msg = append(msg, map[string]interface{}{
 			"role":    "user",
@@ -157,6 +179,7 @@ func (o OpenAi) NewChatStream(stock string) <-chan string {
 			Post("/chat/completions")
 
 		if err != nil {
+			ch <- err.Error()
 			return
 		}
 		defer resp.RawBody().Close()
@@ -164,6 +187,7 @@ func (o OpenAi) NewChatStream(stock string) <-chan string {
 		scanner := bufio.NewScanner(resp.RawBody())
 		for scanner.Scan() {
 			line := scanner.Text()
+			//logger.SugaredLogger.Infof("Received data: %s", line)
 			if strings.HasPrefix(line, "data: ") {
 				data := strings.TrimPrefix(line, "data: ")
 				if data == "[DONE]" {

@@ -8,7 +8,7 @@ import (
 func TestNewDeepSeekOpenAiConfig(t *testing.T) {
 	db.Init("../../data/stock.db")
 	ai := NewDeepSeekOpenAi()
-	res := ai.NewChatStream("闻泰科技")
+	res := ai.NewChatStream("闻泰科技", "sh600745")
 	for {
 		select {
 		case msg := <-res:

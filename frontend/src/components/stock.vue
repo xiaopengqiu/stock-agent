@@ -378,12 +378,13 @@ function SendMessage(result,type){
     SendDingDingMessageByType(msg,result["股票代码"],type)
 }
 
-function aiCheckStock(stock){
+function aiCheckStock(stock,stockCode){
   data.airesult=""
   data.name=stock
+  data.code=stockCode
   modalShow4.value=true
   message.loading("ai检测中...")
-  NewChatStream(stock)
+  NewChatStream(stock,stockCode)
 }
 
 function getTypeName(type){
@@ -443,7 +444,7 @@ function getHeight() {
              <n-button size="tiny" secondary type="primary" @click="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
                取消关注
              </n-button>&nbsp;
-             <n-button size="tiny" v-if="data.openAiEnable" secondary type="warning" @click="aiCheckStock(result['股票名称'])"> AI分析 </n-button>
+             <n-button size="tiny" v-if="data.openAiEnable" secondary type="warning" @click="aiCheckStock(result['股票名称'],result['股票代码'])"> AI分析 </n-button>
 
            </template>
            <template #footer>

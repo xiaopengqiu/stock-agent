@@ -26,8 +26,8 @@ export function NewChat(arg1) {
   return window['go']['main']['App']['NewChat'](arg1);
 }
 
-export function NewChatStream(arg1) {
-  return window['go']['main']['App']['NewChatStream'](arg1);
+export function NewChatStream(arg1, arg2) {
+  return window['go']['main']['App']['NewChatStream'](arg1, arg2);
 }
 
 export function SendDingDingMessage(arg1, arg2) {

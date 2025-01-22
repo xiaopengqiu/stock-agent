@@ -377,8 +377,8 @@ func (a *App) NewChat(stock string) string {
 	return data.NewDeepSeekOpenAi().NewChat(stock)
 }
 
-func (a *App) NewChatStream(stock string) {
-	msgs := data.NewDeepSeekOpenAi().NewChatStream(stock)
+func (a *App) NewChatStream(stock, stockCode string) {
+	msgs := data.NewDeepSeekOpenAi().NewChatStream(stock, stockCode)
 	for msg := range msgs {
 		runtime.EventsEmit(a.ctx, "newChatStream", msg)
 	}

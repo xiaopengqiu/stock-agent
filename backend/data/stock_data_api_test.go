@@ -49,6 +49,11 @@ func TestGetTelegraphSearch(t *testing.T) {
 		logger.SugaredLogger.Info(message)
 	}
 
+	//https://www.cls.cn/stock?code=sh600745
+}
+func TestGetTelegraphSearch2(t *testing.T) {
+	SearchStockPriceInfo("sh600745")
+
 }
 
 func TestParseFullSingleStockData(t *testing.T) {

@@ -510,6 +510,38 @@ func (IndexBasic) TableName() string {
 	return "tushare_index_basic"
 }
 
+func SearchStockPriceInfo(stockCode string) *[]string {
+	url := "https://www.cls.cn/stock?code=" + stockCode
+	// 创建一个 chromedp 上下文
+	ctx, cancel := chromedp.NewContext(
+		context.Background(),
+	)
+	defer cancel()
+	var htmlContent string
+	err := chromedp.Run(ctx,
+		chromedp.Navigate(url),
+		// 等待页面加载完成，可以根据需要调整等待时间
+		chromedp.Sleep(3*time.Second),
+		chromedp.OuterHTML("html", &htmlContent, chromedp.ByQuery),
+	)
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+		return &[]string{}
+	}
+	document, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+		return &[]string{}
+	}
+	var messages []string
+	document.Find("div.quote-text-border,span.quote-price").Each(func(i int, selection *goquery.Selection) {
+		text := strutil.RemoveNonPrintable(selection.Text())
+		logger.SugaredLogger.Info(text)
+		messages = append(messages, text)
+
+	})
+	return &messages
+}
 func SearchStockInfo(stock, msgType string) *[]string {
 	// 创建一个 chromedp 上下文
 	ctx, cancel := chromedp.NewContext(
