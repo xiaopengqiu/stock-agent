@@ -1,7 +1,10 @@
 package data
 
 import (
+	"bufio"
+	"encoding/json"
 	"github.com/go-resty/resty/v2"
+	"strings"
 )
 
 // @Author spark
@@ -104,4 +107,90 @@ func (o OpenAi) NewChat(stock string) string {
 	}
 	//logger.SugaredLogger.Infof("%v", res.Choices[0].Message.Content)
 	return res.Choices[0].Message.Content
+}
+func (o OpenAi) NewChatStream(stock string) <-chan string {
+	ch := make(chan string)
+	go func() {
+		defer close(ch)
+		client := resty.New()
+		client.SetBaseURL(o.BaseUrl)
+		client.SetHeader("Authorization", "Bearer "+o.ApiKey)
+		client.SetHeader("Content-Type", "application/json")
+
+		resp, err := client.R().
+			SetDoNotParseResponse(true).
+			SetBody(map[string]interface{}{
+				"model":       o.Model,
+				"max_tokens":  o.MaxTokens,
+				"temperature": o.Temperature,
+				"stream":      true,
+				"messages": []map[string]interface{}{
+					{
+						"role": "system",
+						"content": "作为一位专业的A股市场分析师和投资顾问,请你根据以下信息提供详细的技术分析和投资策略建议:" +
+							"1. 市场背景:\n" +
+							"- 当前A股市场整体走势(如:牛市、熊市、震荡市)\n " +
+							"- 近期影响市场的主要宏观经济因素\n " +
+							"- 市场情绪指标(如:融资融券余额、成交量变化)  " +
+							"2. 技术指标分析: " +
+							"- 当前股价水平" +
+							"- 所在boll区间" +
+							"- 上证指数的MA(移动平均线)、MACD、KDJ指标分析\n " +
+							"- 行业板块轮动情况\n " +
+							"- 近期市场热点和龙头股票的技术形态  " +
+							"3. 风险评估:\n " +
+							"- 当前市场主要风险因素\n " +
+							"- 如何设置止损和止盈位\n " +
+							"- 资金管理建议(如:仓位控制)  " +
+							"4. 投资策略:\n " +
+							"- 短期(1-2周)、中期(1-3月)和长期(3-6月)的市场预期\n " +
+							"- 不同风险偏好投资者的策略建议\n " +
+							"- 值得关注的行业板块和个股推荐(请给出2-3个具体例子,包括股票代码和名称)  " +
+							"5. 技术面和基本面结合:\n " +
+							"- 如何将技术分析与公司基本面分析相结合\n " +
+							"- 识别高质量股票的关键指标  " +
+							"请提供详细的分析和具体的操作建议,包括入场时机、持仓周期和退出策略。同时,请强调风险控制的重要性,并提醒投资者需要根据自身情况做出决策。  " +
+							"你的分析和建议应当客观、全面,并基于当前可获得的市场数据。如果某些信息无法确定,请明确指出并解释原因。",
+					},
+					{
+						"role":    "user",
+						"content": "点评一下" + stock,
+					},
+				},
+			}).
+			Post("/chat/completions")
+
+		if err != nil {
+			return
+		}
+		defer resp.RawBody().Close()
+
+		scanner := bufio.NewScanner(resp.RawBody())
+		for scanner.Scan() {
+			line := scanner.Text()
+			if strings.HasPrefix(line, "data: ") {
+				data := strings.TrimPrefix(line, "data: ")
+				if data == "[DONE]" {
+					return
+				}
+
+				var streamResponse struct {
+					Choices []struct {
+						Delta struct {
+							Content string `json:"content"`
+						} `json:"delta"`
+					} `json:"choices"`
+				}
+
+				if err := json.Unmarshal([]byte(data), &streamResponse); err == nil {
+					for _, choice := range streamResponse.Choices {
+						if content := choice.Delta.Content; content != "" {
+							ch <- content
+						}
+					}
+				}
+			}
+		}
+	}()
+	return ch
 }

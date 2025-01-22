@@ -1,11 +1,21 @@
 package data
 
 import (
+	"go-stock/backend/db"
 	"testing"
 )
 
 func TestNewDeepSeekOpenAiConfig(t *testing.T) {
+	db.Init("../../data/stock.db")
 	ai := NewDeepSeekOpenAi()
-	ai.NewChat("闻泰科技")
-
+	res := ai.NewChatStream("闻泰科技")
+	for {
+		select {
+		case msg := <-res:
+			if msg == "" {
+				return
+			}
+			t.Log(msg)
+		}
+	}
 }

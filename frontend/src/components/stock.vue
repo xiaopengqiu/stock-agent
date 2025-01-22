@@ -4,7 +4,7 @@ import {
   Follow,
   GetFollowList,
   GetStockList,
-  Greet, NewChat,
+  Greet, NewChat, NewChatStream,
   SendDingDingMessage, SendDingDingMessageByType,
   SetAlarmChangePercent,
   SetCostPriceAndVolume, SetStockSort,
@@ -16,7 +16,7 @@ import {Add, Search,StarOutline} from '@vicons/ionicons5'
 import { MdPreview } from 'md-editor-v3';
 // preview.css相比style.css少了编辑器那部分样式
 import 'md-editor-v3/lib/preview.css';
-
+const mdPreviewRef = ref(null)
 const message = useMessage()
 const modal = useModal()
 const notify = useNotification()
@@ -128,6 +128,11 @@ EventsOn("refreshFollowList",(data)=>{
  //    monitor()
  //    message.destroyAll
  //  })
+})
+
+EventsOn("newChatStream",(msg)=>{
+    //console.log("newChatStream:->",data.airesult)
+    data.airesult=data.airesult+msg
 })
 
 
@@ -368,12 +373,11 @@ function SendMessage(result,type){
 }
 
 function aiCheckStock(stock){
+  data.airesult=""
+  data.name=stock
+  modalShow4.value=true
   message.loading("ai检测中...")
-  NewChat(stock).then(result => {
-    data.name=stock
-    data.airesult=(result)
-    modalShow4.value=true
-  })
+  NewChatStream(stock)
 }
 
 function getTypeName(type){
@@ -394,6 +398,8 @@ function getTypeName(type){
 function getHeight() {
   return document.documentElement.clientHeight
 }
+
+
 </script>
 
 <template>
@@ -523,7 +529,7 @@ function getHeight() {
   </n-modal>
 
   <n-modal transform-origin="center" v-model:show="modalShow4"  preset="card" style="width: 800px;height: 480px" :title="'['+data.name+']AI分析结果'" >
-    <MdPreview style="height: 380px" :modelValue="data.airesult" :theme="'dark'"/>
+    <MdPreview  ref="mdPreviewRef" style="height: 380px" :modelValue="data.airesult" :theme="'dark'"/>
   </n-modal>
 </template>
 

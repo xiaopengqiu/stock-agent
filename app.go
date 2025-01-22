@@ -377,6 +377,13 @@ func (a *App) NewChat(stock string) string {
 	return data.NewDeepSeekOpenAi().NewChat(stock)
 }
 
+func (a *App) NewChatStream(stock string) {
+	msgs := data.NewDeepSeekOpenAi().NewChatStream(stock)
+	for msg := range msgs {
+		runtime.EventsEmit(a.ctx, "newChatStream", msg)
+	}
+}
+
 func GenNotificationMsg(stockInfo *data.StockInfo) string {
 	Price, err := convertor.ToFloat(stockInfo.Price)
 	if err != nil {

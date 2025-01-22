@@ -14,6 +14,8 @@ export function Greet(arg1:string):Promise<data.StockInfo>;
 
 export function NewChat(arg1:string):Promise<string>;
 
+export function NewChatStream(arg1:string):Promise<void>;
+
 export function SendDingDingMessage(arg1:string,arg2:string):Promise<string>;
 
 export function SendDingDingMessageByType(arg1:string,arg2:string,arg3:number):Promise<string>;
