@@ -6,8 +6,11 @@ package data
 //-----------------------------------------------------------------------------------
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/PuerkitoBio/goquery"
+	"github.com/chromedp/chromedp"
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/duke-git/lancet/v2/strutil"
@@ -505,4 +508,38 @@ type IndexBasic struct {
 
 func (IndexBasic) TableName() string {
 	return "tushare_index_basic"
+}
+
+func SearchStockInfo(stock, msgType string) *[]string {
+	// 创建一个 chromedp 上下文
+	ctx, cancel := chromedp.NewContext(
+		context.Background(),
+	)
+	defer cancel()
+	var htmlContent string
+	url := fmt.Sprintf("https://www.cls.cn/searchPage?keyword=%s&type=%s", stock, msgType)
+	err := chromedp.Run(ctx,
+		chromedp.Navigate(url),
+		// 等待页面加载完成，可以根据需要调整等待时间
+		chromedp.Sleep(3*time.Second),
+		chromedp.OuterHTML("html", &htmlContent, chromedp.ByQuery),
+	)
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+		return &[]string{}
+	}
+	document, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+		return &[]string{}
+	}
+	var messages []string
+	document.Find("div.search-telegraph-list,a.search-content").Each(func(i int, selection *goquery.Selection) {
+		text := strutil.RemoveNonPrintable(selection.Text())
+		if strings.Contains(text, stock) {
+			messages = append(messages, text)
+			logger.SugaredLogger.Infof("搜索到消息: %s", text)
+		}
+	})
+	return &messages
 }

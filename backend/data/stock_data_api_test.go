@@ -35,8 +35,19 @@ func TestGetTelegraph(t *testing.T) {
 		return
 	}
 	document.Find("div.telegraph-content-box").Each(func(i int, selection *goquery.Selection) {
-		logger.SugaredLogger.Info(selection.Text())
+		text := selection.Text()
+		if strings.Contains(text, "【公告】") {
+			logger.SugaredLogger.Info(text)
+		}
 	})
+}
+
+func TestGetTelegraphSearch(t *testing.T) {
+	//url := "https://www.cls.cn/searchPage?keyword=%E9%97%BB%E6%B3%B0%E7%A7%91%E6%8A%80&type=telegram"
+	messages := SearchStockInfo("闻泰科技", "depth")
+	for _, message := range *messages {
+		logger.SugaredLogger.Info(message)
+	}
 
 }
 
