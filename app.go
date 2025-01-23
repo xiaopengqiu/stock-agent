@@ -159,11 +159,13 @@ func MonitorStockPrices(a *App) {
 			go runtime.EventsEmit(a.ctx, "stock_price", stockInfo)
 		}
 	}
+	if total != 0 {
+		title := "go-stock " + time.Now().Format(time.DateTime) + fmt.Sprintf("  %.2f¥", total)
+		systray.SetTooltip(title)
+	}
 
-	//title := "go-stock " + time.Now().Format(time.DateTime) + fmt.Sprintf("  %.2f¥", total)
 	go runtime.EventsEmit(a.ctx, "realtime_profit", fmt.Sprintf("  %.2f", total))
 	//runtime.WindowSetTitle(a.ctx, title)
-	//systray.SetTooltip(title)
 
 }
 func GetStockInfos(follows ...data.FollowedStock) *[]data.StockInfo {
@@ -443,7 +445,7 @@ func onReady(a *App) {
 	systray.SetTooltip("go-stock 股票行情实时获取")
 	// 创建菜单项
 	show := systray.AddMenuItem("显示", "显示应用程序")
-	//hide := systray.AddMenuItem("隐藏", "隐藏应用程序")
+	hide := systray.AddMenuItem("隐藏", "隐藏应用程序")
 	systray.AddSeparator()
 	mQuitOrig := systray.AddMenuItem("退出", "退出应用程序")
 
@@ -458,10 +460,10 @@ func onReady(a *App) {
 			case <-show.ClickedCh:
 				logger.SugaredLogger.Infof("显示应用程序")
 				runtime.WindowShow(a.ctx)
-				//runtime.WindowShow(a.ctx)
-				//case <-hide.ClickedCh:
-				//	logger.SugaredLogger.Infof("隐藏应用程序")
-				//	runtime.Hide(a.ctx)
+			//runtime.WindowShow(a.ctx)
+			case <-hide.ClickedCh:
+				logger.SugaredLogger.Infof("隐藏应用程序")
+				runtime.WindowHide(a.ctx)
 
 			}
 		}

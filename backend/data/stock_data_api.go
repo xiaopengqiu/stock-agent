@@ -21,14 +21,13 @@ import (
 	"golang.org/x/text/transform"
 	"gorm.io/gorm"
 	"gorm.io/plugin/soft_delete"
-	"io/ioutil"
+	"io"
 	"strings"
 	"time"
 )
 
-// http://hq.sinajs.cn/rn=1730966120830&list=sh600000,sh600859
-const sina_stook_url = "http://hq.sinajs.cn/rn=%d&list=%s"
-const tushare_api_url = "http://api.tushare.pro"
+const sinaStockUrl = "http://hq.sinajs.cn/rn=%d&list=%s"
+const tushareApiUrl = "http://api.tushare.pro"
 const TushareToken = "9125ec636217a99a3218a64fc63507e95205f2666590792923cbaedf"
 
 type StockDataApi struct {
@@ -197,7 +196,7 @@ func (receiver StockDataApi) GetIndexBasic() {
 			Params:  nil,
 			Fields:  fields}).
 		SetResult(res).
-		Post(tushare_api_url)
+		Post(tushareApiUrl)
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
 		return
@@ -242,7 +241,7 @@ func (receiver StockDataApi) GetStockBaseInfo() {
 			Fields:  fields,
 		}).
 		SetResult(res).
-		Post(tushare_api_url)
+		Post(tushareApiUrl)
 	//logger.SugaredLogger.Infof("GetStockBaseInfo %s", string(resp.Body()))
 	//resp.Body()写入文件
 	//ioutil.WriteFile("stock_basic.json", resp.Body(), 0666)
@@ -281,7 +280,7 @@ func (receiver StockDataApi) GetStockCodeRealTimeData(StockCodes ...string) (*[]
 		SetHeader("Host", "hq.sinajs.cn").
 		SetHeader("Referer", "https://finance.sina.com.cn/").
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0").
-		Get(fmt.Sprintf(sina_stook_url, time.Now().Unix(), slice.Join(StockCodes, ",")))
+		Get(fmt.Sprintf(sinaStockUrl, time.Now().Unix(), slice.Join(StockCodes, ",")))
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
 		return &[]StockInfo{}, err
@@ -393,10 +392,10 @@ func (receiver StockDataApi) GetStockList(key string) []StockBasic {
 	return result
 }
 
-// GB18030 转换为 UTF8
+// GB18030ToUTF8 GB18030 转换为 UTF8
 func GB18030ToUTF8(bs []byte) string {
 	reader := transform.NewReader(bytes.NewReader(bs), simplifiedchinese.GB18030.NewDecoder())
-	d, err := ioutil.ReadAll(reader)
+	d, err := io.ReadAll(reader)
 	if err != nil {
 		panic(err)
 	}

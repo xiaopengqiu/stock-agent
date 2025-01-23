@@ -61,7 +61,7 @@ func TestParseFullSingleStockData(t *testing.T) {
 		SetHeader("Host", "hq.sinajs.cn").
 		SetHeader("Referer", "https://finance.sina.com.cn/").
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0").
-		Get(fmt.Sprintf(sina_stook_url, time.Now().Unix(), "sh600859,sh600745"))
+		Get(fmt.Sprintf(sinaStockUrl, time.Now().Unix(), "sh600859,sh600745"))
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
 	}
