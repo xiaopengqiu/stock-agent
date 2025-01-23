@@ -3,6 +3,8 @@ package data
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/go-resty/resty/v2"
 	"go-stock/backend/logger"
 	"strings"
@@ -136,7 +138,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 
 		wg := &sync.WaitGroup{}
 
-		wg.Add(3)
+		wg.Add(4)
 		go func() {
 			defer wg.Done()
 			messages := SearchStockPriceInfo(stockCode)
@@ -149,6 +151,18 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 				"content": stock + "当前价格：" + price,
 			})
 		}()
+
+		go func() {
+			defer wg.Done()
+			messages := GetTelegraphList()
+			for _, message := range *messages {
+				msg = append(msg, map[string]interface{}{
+					"role":    "assistant",
+					"content": message,
+				})
+			}
+		}()
+
 		go func() {
 			defer wg.Done()
 			messages := SearchStockInfo(stock, "depth")
@@ -331,4 +345,26 @@ func (o OpenAi) NewCommonChatStream(stock, stockCode, apiURL, apiKey, Model stri
 		}
 	}()
 	return ch
+}
+
+func GetTelegraphList() *[]string {
+	url := "https://www.cls.cn/telegraph"
+	response, err := resty.New().R().
+		SetHeader("Referer", "https://www.cls.cn/").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").
+		Get(fmt.Sprintf(url))
+	if err != nil {
+		return &[]string{}
+	}
+	//logger.SugaredLogger.Info(string(response.Body()))
+	document, err := goquery.NewDocumentFromReader(strings.NewReader(string(response.Body())))
+	if err != nil {
+		return &[]string{}
+	}
+	var telegraph []string
+	document.Find("div.telegraph-content-box").Each(func(i int, selection *goquery.Selection) {
+		//logger.SugaredLogger.Info(selection.Text())
+		telegraph = append(telegraph, selection.Text())
+	})
+	return &telegraph
 }
