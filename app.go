@@ -42,9 +42,9 @@ func (a *App) startup(ctx context.Context) {
 
 	// 创建系统托盘
 	systray.Run(func() {
-		onReady(a)
+		go onReady(a)
 	}, func() {
-		onExit(a)
+		go onExit(a)
 	})
 
 }

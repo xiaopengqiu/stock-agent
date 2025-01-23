@@ -278,7 +278,12 @@ function onSelect(item) {
 
 function search(code,name){
   setTimeout(() => {
-    window.open("https://xueqiu.com/S/"+code)
+    //window.open("https://xueqiu.com/S/"+code)
+    //window.open("https://www.cls.cn/stock?code="+code)
+    //window.open("https://quote.eastmoney.com/"+code+".html")
+    //window.open("https://finance.sina.com.cn/realstock/company/"+code+"/nc.shtml")
+    window.open("https://www.iwencai.com/unifiedwap/result?w="+code)
+    //window.open("https://www.iwencai.com/chat/?question="+code)
   }, 500)
 }
 function setStock(code,name){
