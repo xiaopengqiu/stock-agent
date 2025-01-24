@@ -1,6 +1,6 @@
 ![Wails and NaiveUI](./build/appicon.png)
 ## A China stock data viewer build by  [Wails](https://wails.io/) with [NavieUI](https://www.naiveui.com/).
-A股数据可视化工具，基于Wails和NaiveUI。
+A股数据自选股行情实时监控，基于Wails和NaiveUI构建的AI赋能股票分析工具
 
 ## BIG NEWS !!! 重大更新！！！
 - 2025.01.17 新增AI大模型分析股票功能
