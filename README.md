@@ -1,5 +1,3 @@
-#  Go fuck chinese stock market !!!
-### 去他妈的A股！！！
 ![Wails and NaiveUI](./build/appicon.png)
 
 ## BIG NEWS !!! 重大更新！！！
