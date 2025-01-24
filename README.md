@@ -1,5 +1,5 @@
 ![Wails and NaiveUI](./build/appicon.png)
-## A股数据自选股行情实时监控，基于Wails和NaiveUI构建的AI赋能股票分析工具
+## 自选股行情实时监控，基于Wails和NaiveUI构建的AI赋能股票分析工具
 
 ## BIG NEWS !!! 重大更新！！！
 - 2025.01.17 新增AI大模型分析股票功能
