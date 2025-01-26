@@ -9,6 +9,7 @@ const message = useMessage()
 const formRef = ref(null)
 const formValue = ref({
   ID:1,
+  tushareToken:'',
   dingPush:{
     enable:false,
     dingRobot: ''
@@ -31,6 +32,7 @@ const formValue = ref({
 onMounted(()=>{
   GetConfig().then(res=>{
     formValue.value.ID = res.ID
+    formValue.value.tushareToken = res.tushareToken
     formValue.value.dingPush = {
       enable:res.dingPushEnable,
       dingRobot:res.dingRobot
@@ -68,6 +70,7 @@ function saveConfig(){
     openAiModelName:formValue.value.openAI.model,
     openAiMaxTokens:formValue.value.openAI.maxTokens,
     openAiTemperature:formValue.value.openAI.temperature,
+    tushareToken:formValue.value.tushareToken
   })
 
  //console.log("Settings",config)
@@ -106,6 +109,9 @@ function sendTestNotice(){
         <n-gi :span="24">
           <n-text type="default" style="font-size: 25px;font-weight: bold">基础设置</n-text>
         </n-gi>
+        <n-form-item-gi  :span="10" label="Tushare api token：" path="tushareToken" >
+          <n-input  type="text" placeholder="Tushare api token"  v-model:value="formValue.tushareToken" clearable />
+        </n-form-item-gi>
         <n-form-item-gi  :span="6" label="启动时更新A股/指数信息：" path="updateBasicInfoOnStart" >
           <n-switch v-model:value="formValue.updateBasicInfoOnStart" />
         </n-form-item-gi>

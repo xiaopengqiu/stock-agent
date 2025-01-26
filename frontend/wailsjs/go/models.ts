@@ -61,6 +61,7 @@ export namespace data {
 	    UpdatedAt: any;
 	    // Go type: gorm
 	    DeletedAt: any;
+	    tushareToken: string;
 	    localPushEnable: boolean;
 	    dingPushEnable: boolean;
 	    dingRobot: string;
@@ -83,6 +84,7 @@ export namespace data {
 	        this.CreatedAt = this.convertValues(source["CreatedAt"], null);
 	        this.UpdatedAt = this.convertValues(source["UpdatedAt"], null);
 	        this.DeletedAt = this.convertValues(source["DeletedAt"], null);
+	        this.tushareToken = source["tushareToken"];
 	        this.localPushEnable = source["localPushEnable"];
 	        this.dingPushEnable = source["dingPushEnable"];
 	        this.dingRobot = source["dingRobot"];

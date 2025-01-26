@@ -28,10 +28,10 @@ import (
 
 const sinaStockUrl = "http://hq.sinajs.cn/rn=%d&list=%s"
 const tushareApiUrl = "http://api.tushare.pro"
-const TushareToken = "9125ec636217a99a3218a64fc63507e95205f2666590792923cbaedf"
 
 type StockDataApi struct {
 	client *resty.Client
+	config *Settings
 }
 type StockInfo struct {
 	gorm.Model
@@ -181,6 +181,7 @@ func (receiver StockBasic) TableName() string {
 func NewStockDataApi() *StockDataApi {
 	return &StockDataApi{
 		client: resty.New(),
+		config: getConfig(),
 	}
 }
 
@@ -192,7 +193,7 @@ func (receiver StockDataApi) GetIndexBasic() {
 		SetHeader("content-type", "application/json").
 		SetBody(&TushareRequest{
 			ApiName: "index_basic",
-			Token:   TushareToken,
+			Token:   receiver.config.TushareToken,
 			Params:  nil,
 			Fields:  fields}).
 		SetResult(res).
@@ -236,7 +237,7 @@ func (receiver StockDataApi) GetStockBaseInfo() {
 		SetHeader("content-type", "application/json").
 		SetBody(&TushareRequest{
 			ApiName: "stock_basic",
-			Token:   TushareToken,
+			Token:   receiver.config.TushareToken,
 			Params:  nil,
 			Fields:  fields,
 		}).

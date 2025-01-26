@@ -8,6 +8,7 @@ import (
 
 type Settings struct {
 	gorm.Model
+	TushareToken           string `json:"tushareToken"`
 	LocalPushEnable        bool   `json:"localPushEnable"`
 	DingPushEnable         bool   `json:"dingPushEnable"`
 	DingRobot              string `json:"dingRobot"`
@@ -52,6 +53,7 @@ func (s SettingsApi) UpdateConfig() string {
 			"open_ai_model_name":         s.Config.OpenAiModelName,
 			"open_ai_max_tokens":         s.Config.OpenAiMaxTokens,
 			"open_ai_temperature":        s.Config.OpenAiTemperature,
+			"tushare_token":              s.Config.TushareToken,
 		})
 	} else {
 		logger.SugaredLogger.Infof("未找到配置，创建默认配置:%+v", s.Config)
@@ -67,6 +69,7 @@ func (s SettingsApi) UpdateConfig() string {
 			OpenAiModelName:        s.Config.OpenAiModelName,
 			OpenAiMaxTokens:        s.Config.OpenAiMaxTokens,
 			OpenAiTemperature:      s.Config.OpenAiTemperature,
+			TushareToken:           s.Config.TushareToken,
 		})
 	}
 	return "保存成功！"
