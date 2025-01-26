@@ -142,13 +142,13 @@ function sendTestNotice(){
         <n-switch v-model:value="formValue.openAI.enable" />
       </n-form-item-gi>
       <n-form-item-gi :span="24"  v-if="formValue.openAI.enable" label="openAI接口地址：" path="openAI.baseUrl">
-        <n-input  placeholder="AI接口地址"  v-model:value="formValue.openAI.baseUrl"/>
+        <n-input  type="text"  placeholder="AI接口地址"  v-model:value="formValue.openAI.baseUrl" clearable />
       </n-form-item-gi>
       <n-form-item-gi  :span="12" v-if="formValue.openAI.enable" label="apiKey："  path="openAI.apiKey">
-        <n-input  placeholder="apiKey"  v-model:value="formValue.openAI.apiKey"/>
+        <n-input  type="text" placeholder="apiKey"  v-model:value="formValue.openAI.apiKey" clearable />
       </n-form-item-gi>
       <n-form-item-gi :span="12"  v-if="formValue.openAI.enable" label="AI模型：" path="openAI.model">
-        <n-input  placeholder="AI模型"  v-model:value="formValue.openAI.model"/>
+        <n-input  type="text" placeholder="AI模型"  v-model:value="formValue.openAI.model" clearable />
       </n-form-item-gi>
       <n-form-item-gi :span="12"  v-if="formValue.openAI.enable" label="temperature：" path="openAI.temperature" >
         <n-input-number  placeholder="temperature"  v-model:value="formValue.openAI.temperature"/>
