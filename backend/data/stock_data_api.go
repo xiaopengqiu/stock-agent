@@ -518,12 +518,26 @@ func SearchStockPriceInfo(stockCode string) *[]string {
 	)
 	defer cancel()
 	var htmlContent string
-	err := chromedp.Run(ctx,
-		chromedp.Navigate(url),
-		// 等待页面加载完成，可以根据需要调整等待时间
-		chromedp.Sleep(3*time.Second),
-		chromedp.OuterHTML("html", &htmlContent, chromedp.ByQuery),
-	)
+
+	var tasks chromedp.Tasks
+	tasks = append(tasks, chromedp.Navigate(url))
+	tasks = append(tasks, chromedp.WaitVisible("div.quote-change-box", chromedp.ByQuery))
+	tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
+		chromedp.WaitVisible("span.quote-price", chromedp.ByQuery)
+		price := ""
+		for {
+			chromedp.Text("span.quote-price", &price, chromedp.BySearch).Do(ctx)
+			logger.SugaredLogger.Infof("price:%s", price)
+			if price != "" {
+				break
+			}
+		}
+
+		return nil
+	}))
+	tasks = append(tasks, chromedp.OuterHTML("html", &htmlContent, chromedp.ByQuery))
+
+	err := chromedp.Run(ctx, tasks)
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
 		return &[]string{}
@@ -553,7 +567,8 @@ func SearchStockInfo(stock, msgType string) *[]string {
 	err := chromedp.Run(ctx,
 		chromedp.Navigate(url),
 		// 等待页面加载完成，可以根据需要调整等待时间
-		chromedp.Sleep(3*time.Second),
+		//chromedp.Sleep(3*time.Second),
+		chromedp.WaitVisible("div.search-content,a.search-content", chromedp.ByQuery),
 		chromedp.OuterHTML("html", &htmlContent, chromedp.ByQuery),
 	)
 	if err != nil {
