@@ -394,6 +394,7 @@ function aiCheckStock(stock,stockCode){
   data.airesult=""
   data.name=stock
   data.code=stockCode
+  data.loading=true
   modalShow4.value=true
   message.loading("ai检测中...",{
     duration: 0,
