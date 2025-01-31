@@ -384,6 +384,7 @@ func (a *App) NewChatStream(stock, stockCode string) {
 	for msg := range msgs {
 		runtime.EventsEmit(a.ctx, "newChatStream", msg)
 	}
+	runtime.EventsEmit(a.ctx, "newChatStream", "DONE")
 }
 
 func GenNotificationMsg(stockInfo *data.StockInfo) string {

@@ -36,9 +36,8 @@ func TestGetTelegraph(t *testing.T) {
 	}
 	document.Find("div.telegraph-content-box").Each(func(i int, selection *goquery.Selection) {
 		text := selection.Text()
-		if strings.Contains(text, "【公告】") {
-			logger.SugaredLogger.Info(text)
-		}
+		logger.SugaredLogger.Info(text)
+
 	})
 }
 

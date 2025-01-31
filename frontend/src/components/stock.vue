@@ -51,6 +51,7 @@ const data = reactive({
   fullscreen: false,
   airesult: "",
   openAiEnable: false,
+  loading: true,
 })
 
 const sortedResults = computed(() => {
@@ -81,7 +82,7 @@ onBeforeMount(()=>{
       }
     }
     monitor()
-    message.destroyAll
+    message.destroyAll()
   })
   GetConfig().then(result => {
     if (result.openAiEnable) {
@@ -136,9 +137,15 @@ EventsOn("refreshFollowList",(data)=>{
  //  })
 })
 
-EventsOn("newChatStream",(msg)=>{
-    //console.log("newChatStream:->",data.airesult)
-    data.airesult=data.airesult+msg
+EventsOn("newChatStream",async (msg) => {
+  //console.log("newChatStream:->",data.airesult)
+  data.loading = false
+  if (msg === "DONE") {
+    message.info("AI分析完成！")
+    message.destroyAll()
+  } else {
+    data.airesult = data.airesult + msg
+  }
 })
 
 
@@ -337,7 +344,7 @@ function updateCostPriceAndVolumeNew(code,price,volume,alarm,formModel){
         }
       }
       monitor()
-      message.destroyAll
+      message.destroyAll()
     })
   })
 }
@@ -388,7 +395,9 @@ function aiCheckStock(stock,stockCode){
   data.name=stock
   data.code=stockCode
   modalShow4.value=true
-  message.loading("ai检测中...")
+  message.loading("ai检测中...",{
+    duration: 0,
+  })
   NewChatStream(stock,stockCode)
 }
 
@@ -541,7 +550,9 @@ function getHeight() {
   </n-modal>
 
   <n-modal transform-origin="center" v-model:show="modalShow4"  preset="card" style="width: 800px;height: 480px" :title="'['+data.name+']AI分析结果'" >
-    <MdPreview  ref="mdPreviewRef" style="height: 380px" :modelValue="data.airesult" :theme="'dark'"/>
+    <n-spin size="small" :show="data.loading">
+      <MdPreview  ref="mdPreviewRef" style="height: 380px" :modelValue="data.airesult" :theme="'dark'"/>
+    </n-spin>
   </n-modal>
 </template>
 
