@@ -14,6 +14,7 @@ import (
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/duke-git/lancet/v2/strutil"
+	"github.com/duke-git/lancet/v2/validator"
 	"github.com/go-resty/resty/v2"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
@@ -528,7 +529,7 @@ func SearchStockPriceInfo(stockCode string) *[]string {
 		for {
 			chromedp.Text("span.quote-price", &price, chromedp.BySearch).Do(ctx)
 			logger.SugaredLogger.Infof("price:%s", price)
-			if price != "" {
+			if price != "" && validator.IsNumberStr(price) {
 				break
 			}
 		}

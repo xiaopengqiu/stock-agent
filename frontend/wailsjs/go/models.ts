@@ -73,6 +73,7 @@ export namespace data {
 	    openAiModelName: string;
 	    openAiMaxTokens: number;
 	    openAiTemperature: number;
+	    prompt: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -96,6 +97,7 @@ export namespace data {
 	        this.openAiModelName = source["openAiModelName"];
 	        this.openAiMaxTokens = source["openAiMaxTokens"];
 	        this.openAiTemperature = source["openAiTemperature"];
+	        this.prompt = source["prompt"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

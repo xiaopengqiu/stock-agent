@@ -26,6 +26,7 @@ const formValue = ref({
     model: 'deepseek-chat',
     temperature: 0.1,
     maxTokens: 1024,
+    prompt:"",
   },
 })
 
@@ -49,6 +50,7 @@ onMounted(()=>{
       model:res.openAiModelName,
       temperature:res.openAiTemperature,
       maxTokens:res.openAiMaxTokens,
+      prompt:res.prompt,
     }
     console.log(res)
   })
@@ -70,7 +72,8 @@ function saveConfig(){
     openAiModelName:formValue.value.openAI.model,
     openAiMaxTokens:formValue.value.openAI.maxTokens,
     openAiTemperature:formValue.value.openAI.temperature,
-    tushareToken:formValue.value.tushareToken
+    tushareToken:formValue.value.tushareToken,
+    prompt:formValue.value.openAI.prompt
   })
 
  //console.log("Settings",config)
@@ -134,23 +137,23 @@ function sendTestNotice(){
           <n-form-item-gi  :span="6" label="是否启用本地推送：" path="localPush.enable" >
             <n-switch v-model:value="formValue.localPush.enable" />
           </n-form-item-gi>
-          <n-form-item-gi :span="24"  v-if="formValue.dingPush.enable" label="钉钉机器人接口地址：" path="dingPush.dingRobot" >
+          <n-form-item-gi :span="22"  v-if="formValue.dingPush.enable" label="钉钉机器人接口地址：" path="dingPush.dingRobot" >
             <n-input  placeholder="请输入钉钉机器人接口地址"  v-model:value="formValue.dingPush.dingRobot"/>
             <n-button type="primary" @click="sendTestNotice">发送测试通知</n-button>
           </n-form-item-gi>
         </n-grid>
 
-    <n-grid :cols="24" :x-gap="24" style="text-align: left">
+    <n-grid :cols="24" :x-gap="24" style="text-align: left;">
       <n-gi :span="24">
         <n-text type="default" style="font-size: 25px;font-weight: bold">OpenAI设置</n-text>
       </n-gi>
       <n-form-item-gi  :span="6" label="是否启用AI诊股：" path="openAI.enable" >
         <n-switch v-model:value="formValue.openAI.enable" />
       </n-form-item-gi>
-      <n-form-item-gi :span="24"  v-if="formValue.openAI.enable" label="openAI接口地址：" path="openAI.baseUrl">
+      <n-form-item-gi :span="22"  v-if="formValue.openAI.enable" label="openAI 接口地址：" path="openAI.baseUrl">
         <n-input  type="text"  placeholder="AI接口地址"  v-model:value="formValue.openAI.baseUrl" clearable />
       </n-form-item-gi>
-      <n-form-item-gi  :span="12" v-if="formValue.openAI.enable" label="apiKey："  path="openAI.apiKey">
+      <n-form-item-gi  :span="10" v-if="formValue.openAI.enable" label="openAI apiKey："  path="openAI.apiKey">
         <n-input  type="text" placeholder="apiKey"  v-model:value="formValue.openAI.apiKey" clearable />
       </n-form-item-gi>
       <n-form-item-gi :span="12"  v-if="formValue.openAI.enable" label="AI模型：" path="openAI.model">
@@ -159,8 +162,19 @@ function sendTestNotice(){
       <n-form-item-gi :span="12"  v-if="formValue.openAI.enable" label="temperature：" path="openAI.temperature" >
         <n-input-number  placeholder="temperature"  v-model:value="formValue.openAI.temperature"/>
       </n-form-item-gi>
-      <n-form-item-gi :span="12"  v-if="formValue.openAI.enable" label="maxTokens："  path="openAI.maxTokens">
+      <n-form-item-gi :span="10"  v-if="formValue.openAI.enable" label="maxTokens："  path="openAI.maxTokens">
         <n-input-number  placeholder="maxTokens"  v-model:value="formValue.openAI.maxTokens"/>
+      </n-form-item-gi>
+      <n-form-item-gi :span="22"  v-if="formValue.openAI.enable" label="自定义Prompt："  path="openAI.prompt">
+        <n-input v-model:value="formValue.openAI.prompt"
+            type="textarea"
+            :show-count="true"
+            placeholder="请输入prompt"
+            :autosize="{
+              minRows: 5,
+              maxRows: 8
+            }"
+        />
       </n-form-item-gi>
     </n-grid>
 
