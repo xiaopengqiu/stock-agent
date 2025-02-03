@@ -165,11 +165,11 @@ function sendTestNotice(){
       <n-form-item-gi :span="10"  v-if="formValue.openAI.enable" label="maxTokens："  path="openAI.maxTokens">
         <n-input-number  placeholder="maxTokens"  v-model:value="formValue.openAI.maxTokens"/>
       </n-form-item-gi>
-      <n-form-item-gi :span="22"  v-if="formValue.openAI.enable" label="自定义Prompt："  path="openAI.prompt">
+      <n-form-item-gi :span="22"  v-if="formValue.openAI.enable" label="自定义系统Prompt："  path="openAI.prompt">
         <n-input v-model:value="formValue.openAI.prompt"
             type="textarea"
             :show-count="true"
-            placeholder="请输入prompt"
+            placeholder="请输入系统prompt"
             :autosize="{
               minRows: 5,
               maxRows: 8
