@@ -9,6 +9,7 @@ import (
 	"go-stock/backend/logger"
 	"strings"
 	"sync"
+	"time"
 )
 
 // @Author spark
@@ -128,6 +129,8 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		client.SetBaseURL(o.BaseUrl)
 		client.SetHeader("Authorization", "Bearer "+o.ApiKey)
 		client.SetHeader("Content-Type", "application/json")
+		client.SetRetryCount(3)
+		client.SetTimeout(time.Second * 30)
 
 		msg := []map[string]interface{}{
 			{
@@ -139,8 +142,8 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		}
 
 		wg := &sync.WaitGroup{}
-
 		wg.Add(4)
+
 		go func() {
 			defer wg.Done()
 			messages := SearchStockPriceInfo(stockCode)
@@ -212,8 +215,8 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		scanner := bufio.NewScanner(resp.RawBody())
 		for scanner.Scan() {
 			line := scanner.Text()
-			//logger.SugaredLogger.Infof("Received data: %s", line)
-			if strings.HasPrefix(line, "data: ") {
+			logger.SugaredLogger.Infof("Received data: %s", line)
+			if strings.HasPrefix(line, "chat data: ") {
 				data := strings.TrimPrefix(line, "data: ")
 				if data == "[DONE]" {
 					return
@@ -247,6 +250,7 @@ func (o OpenAi) NewCommonChatStream(stock, stockCode, apiURL, apiKey, Model stri
 		client := resty.New()
 		client.SetHeader("Authorization", "Bearer "+apiKey)
 		client.SetHeader("Content-Type", "application/json")
+		client.SetRetryCount(3)
 
 		msg := []map[string]interface{}{
 			{

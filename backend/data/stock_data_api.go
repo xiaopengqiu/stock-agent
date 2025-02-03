@@ -561,6 +561,8 @@ func SearchStockInfo(stock, msgType string) *[]string {
 	// 创建一个 chromedp 上下文
 	ctx, cancel := chromedp.NewContext(
 		context.Background(),
+		chromedp.WithLogf(logger.SugaredLogger.Infof),
+		chromedp.WithErrorf(logger.SugaredLogger.Errorf),
 	)
 	defer cancel()
 	var htmlContent string
