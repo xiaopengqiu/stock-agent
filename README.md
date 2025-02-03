@@ -13,7 +13,7 @@
 ## Snapshot
 ![img_1.png](build/screenshot/img_6.png)
 ### 设置
-![img.png](build/screenshot/img_11.png)
+![img_12.png](build/screenshot/img_12.png)
 ### 成本设置
 ![img.png](build/screenshot/img_7.png)
 ### 日K
