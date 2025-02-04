@@ -130,7 +130,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		client.SetHeader("Authorization", "Bearer "+o.ApiKey)
 		client.SetHeader("Content-Type", "application/json")
 		client.SetRetryCount(3)
-		client.SetTimeout(time.Second * 30)
+		client.SetTimeout(time.Second * 60)
 
 		msg := []map[string]interface{}{
 			{
@@ -216,7 +216,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		for scanner.Scan() {
 			line := scanner.Text()
 			logger.SugaredLogger.Infof("Received data: %s", line)
-			if strings.HasPrefix(line, "chat data: ") {
+			if strings.HasPrefix(line, "data: ") {
 				data := strings.TrimPrefix(line, "data: ")
 				if data == "[DONE]" {
 					return
@@ -225,17 +225,27 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 				var streamResponse struct {
 					Choices []struct {
 						Delta struct {
-							Content string `json:"content"`
+							Content          string `json:"content"`
+							ReasoningContent string `json:"reasoning_content"`
 						} `json:"delta"`
 					} `json:"choices"`
 				}
 
 				if err := json.Unmarshal([]byte(data), &streamResponse); err == nil {
 					for _, choice := range streamResponse.Choices {
+						txt := ""
 						if content := choice.Delta.Content; content != "" {
-							ch <- content
+							txt = content
+							logger.SugaredLogger.Infof("Content data: %s", txt)
 						}
+						if reasoningContent := choice.Delta.ReasoningContent; reasoningContent != "" {
+							txt = reasoningContent
+							logger.SugaredLogger.Infof("ReasoningContent data: %s", txt)
+						}
+						ch <- txt
 					}
+				} else {
+					logger.SugaredLogger.Infof("Stream data error : %s", err.Error())
 				}
 			}
 		}
