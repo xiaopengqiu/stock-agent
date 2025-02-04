@@ -204,12 +204,12 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			}).
 			Post("/chat/completions")
 
+		defer resp.RawBody().Close()
 		if err != nil {
 			logger.SugaredLogger.Infof("Stream error : %s", err.Error())
 			ch <- err.Error()
 			return
 		}
-		defer resp.RawBody().Close()
 
 		scanner := bufio.NewScanner(resp.RawBody())
 		for scanner.Scan() {
