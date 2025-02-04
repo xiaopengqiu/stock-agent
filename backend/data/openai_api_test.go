@@ -13,7 +13,7 @@ func TestNewDeepSeekOpenAiConfig(t *testing.T) {
 		select {
 		case msg := <-res:
 			if msg == "" {
-				return
+				continue
 			}
 			t.Log(msg)
 		}

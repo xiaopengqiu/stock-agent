@@ -524,16 +524,8 @@ func SearchStockPriceInfo(stockCode string) *[]string {
 	tasks = append(tasks, chromedp.Navigate(url))
 	tasks = append(tasks, chromedp.WaitVisible("div.quote-change-box", chromedp.ByQuery))
 	tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
-		chromedp.WaitVisible("span.quote-price", chromedp.ByQuery)
-		price := ""
-		for {
-			chromedp.Text("span.quote-price", &price, chromedp.BySearch).Do(ctx)
-			logger.SugaredLogger.Infof("price:%s", price)
-			if price != "" && validator.IsNumberStr(price) {
-				break
-			}
-		}
-
+		price, _ := FetchPrice(ctx)
+		logger.SugaredLogger.Infof("price:%s", price)
 		return nil
 	}))
 	tasks = append(tasks, chromedp.OuterHTML("html", &htmlContent, chromedp.ByQuery))
@@ -557,6 +549,29 @@ func SearchStockPriceInfo(stockCode string) *[]string {
 	})
 	return &messages
 }
+func FetchPrice(ctx context.Context) (string, error) {
+	var price string
+	timeout := time.After(10 * time.Second)   // 设置超时时间为10秒
+	ticker := time.NewTicker(1 * time.Second) // 每秒尝试一次
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-timeout:
+			return "", fmt.Errorf("timeout reached while fetching price")
+		case <-ticker.C:
+			err := chromedp.Run(ctx, chromedp.Text("span.quote-price", &price, chromedp.BySearch))
+			if err != nil {
+				logger.SugaredLogger.Errorf("failed to fetch price: %v", err)
+				continue
+			}
+			logger.SugaredLogger.Infof("price:%s", price)
+			if price != "" && validator.IsNumberStr(price) {
+				return price, nil
+			}
+		}
+	}
+}
 func SearchStockInfo(stock, msgType string) *[]string {
 	// 创建一个 chromedp 上下文
 	ctx, cancel := chromedp.NewContext(
@@ -570,8 +585,8 @@ func SearchStockInfo(stock, msgType string) *[]string {
 	err := chromedp.Run(ctx,
 		chromedp.Navigate(url),
 		// 等待页面加载完成，可以根据需要调整等待时间
-		//chromedp.Sleep(3*time.Second),
-		chromedp.WaitVisible("div.search-content,a.search-content", chromedp.ByQuery),
+		chromedp.Sleep(3*time.Second),
+		//chromedp.WaitVisible("a.search-content", chromedp.ByQuery),
 		chromedp.OuterHTML("html", &htmlContent, chromedp.ByQuery),
 	)
 	if err != nil {
@@ -584,7 +599,46 @@ func SearchStockInfo(stock, msgType string) *[]string {
 		return &[]string{}
 	}
 	var messages []string
-	document.Find("div.search-telegraph-list,a.search-content").Each(func(i int, selection *goquery.Selection) {
+	document.Find("a.search-content").Each(func(i int, selection *goquery.Selection) {
+		text := strutil.RemoveNonPrintable(selection.Text())
+		if strings.Contains(text, stock) {
+			messages = append(messages, text)
+			logger.SugaredLogger.Infof("搜索到消息: %s", text)
+		}
+	})
+	return &messages
+}
+
+func SearchStockInfoByCode(stock string) *[]string {
+	// 创建一个 chromedp 上下文
+	ctx, cancel := chromedp.NewContext(
+		context.Background(),
+		chromedp.WithLogf(logger.SugaredLogger.Infof),
+		chromedp.WithErrorf(logger.SugaredLogger.Errorf),
+	)
+	defer cancel()
+	var htmlContent string
+	stock = strings.ReplaceAll(stock, "sh", "")
+	stock = strings.ReplaceAll(stock, "sz", "")
+	url := fmt.Sprintf("https://gushitong.baidu.com/stock/ab-%s", stock)
+	err := chromedp.Run(ctx,
+		chromedp.Navigate(url),
+		// 等待页面加载完成，可以根据需要调整等待时间
+		//chromedp.Sleep(3*time.Second),
+		chromedp.WaitVisible("a.news-item-link", chromedp.ByQuery),
+		chromedp.OuterHTML("html", &htmlContent, chromedp.ByQuery),
+	)
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+		return &[]string{}
+	}
+	document, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+		return &[]string{}
+	}
+	var messages []string
+	document.Find("a.news-item-link").Each(func(i int, selection *goquery.Selection) {
 		text := strutil.RemoveNonPrintable(selection.Text())
 		if strings.Contains(text, stock) {
 			messages = append(messages, text)

@@ -50,6 +50,10 @@ func TestGetTelegraphSearch(t *testing.T) {
 
 	//https://www.cls.cn/stock?code=sh600745
 }
+func TestSearchStockInfoByCode(t *testing.T) {
+	SearchStockInfoByCode("sh600745")
+}
+
 func TestSearchStockPriceInfo(t *testing.T) {
 	SearchStockPriceInfo("sh600745")
 }

@@ -142,7 +142,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		}
 
 		wg := &sync.WaitGroup{}
-		wg.Add(4)
+		wg.Add(2)
 
 		go func() {
 			defer wg.Done()
@@ -168,26 +168,26 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			}
 		}()
 
-		go func() {
-			defer wg.Done()
-			messages := SearchStockInfo(stock, "depth")
-			for _, message := range *messages {
-				msg = append(msg, map[string]interface{}{
-					"role":    "assistant",
-					"content": message,
-				})
-			}
-		}()
-		go func() {
-			defer wg.Done()
-			messages := SearchStockInfo(stock, "telegram")
-			for _, message := range *messages {
-				msg = append(msg, map[string]interface{}{
-					"role":    "assistant",
-					"content": message,
-				})
-			}
-		}()
+		//go func() {
+		//	defer wg.Done()
+		//	messages := SearchStockInfo(stock, "depth")
+		//	for _, message := range *messages {
+		//		msg = append(msg, map[string]interface{}{
+		//			"role":    "assistant",
+		//			"content": message,
+		//		})
+		//	}
+		//}()
+		//go func() {
+		//	defer wg.Done()
+		//	messages := SearchStockInfo(stock, "telegram")
+		//	for _, message := range *messages {
+		//		msg = append(msg, map[string]interface{}{
+		//			"role":    "assistant",
+		//			"content": message,
+		//		})
+		//	}
+		//}()
 		wg.Wait()
 
 		msg = append(msg, map[string]interface{}{
