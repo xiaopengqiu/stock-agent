@@ -585,8 +585,8 @@ func SearchStockInfo(stock, msgType string) *[]string {
 	err := chromedp.Run(ctx,
 		chromedp.Navigate(url),
 		// 等待页面加载完成，可以根据需要调整等待时间
-		chromedp.Sleep(3*time.Second),
-		//chromedp.WaitVisible("a.search-content", chromedp.ByQuery),
+		//chromedp.Sleep(3*time.Second),
+		chromedp.WaitVisible(".search-content", chromedp.ByQuery),
 		chromedp.OuterHTML("html", &htmlContent, chromedp.ByQuery),
 	)
 	if err != nil {
@@ -599,11 +599,11 @@ func SearchStockInfo(stock, msgType string) *[]string {
 		return &[]string{}
 	}
 	var messages []string
-	document.Find("a.search-content").Each(func(i int, selection *goquery.Selection) {
+	document.Find(".search-content").Each(func(i int, selection *goquery.Selection) {
 		text := strutil.RemoveNonPrintable(selection.Text())
 		if strings.Contains(text, stock) {
 			messages = append(messages, text)
-			logger.SugaredLogger.Infof("搜索到消息: %s", text)
+			logger.SugaredLogger.Infof("搜索到消息-%s: %s", msgType, text)
 		}
 	})
 	return &messages

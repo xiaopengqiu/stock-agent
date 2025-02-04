@@ -3,7 +3,6 @@ package data
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/go-resty/resty/v2"
@@ -21,29 +20,12 @@ import (
 //-----------------------------------------------------------------------------------
 
 func TestGetTelegraph(t *testing.T) {
-	url := "https://www.cls.cn/telegraph"
-	response, err := resty.New().R().
-		SetHeader("Referer", "https://www.cls.cn/").
-		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").
-		Get(fmt.Sprintf(url))
-	if err != nil {
-		return
-	}
-	logger.SugaredLogger.Info(string(response.Body()))
-	document, err := goquery.NewDocumentFromReader(strings.NewReader(string(response.Body())))
-	if err != nil {
-		return
-	}
-	document.Find("div.telegraph-content-box").Each(func(i int, selection *goquery.Selection) {
-		text := selection.Text()
-		logger.SugaredLogger.Info(text)
-
-	})
+	GetTelegraphList()
 }
 
 func TestGetTelegraphSearch(t *testing.T) {
 	//url := "https://www.cls.cn/searchPage?keyword=%E9%97%BB%E6%B3%B0%E7%A7%91%E6%8A%80&type=telegram"
-	messages := SearchStockInfo("闻泰科技", "depth")
+	messages := SearchStockInfo("闻泰科技", "telegram")
 	for _, message := range *messages {
 		logger.SugaredLogger.Info(message)
 	}

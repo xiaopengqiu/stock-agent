@@ -125,13 +125,6 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 	ch := make(chan string)
 	go func() {
 		defer close(ch)
-		client := resty.New()
-		client.SetBaseURL(o.BaseUrl)
-		client.SetHeader("Authorization", "Bearer "+o.ApiKey)
-		client.SetHeader("Content-Type", "application/json")
-		client.SetRetryCount(3)
-		client.SetTimeout(time.Second * 60)
-
 		msg := []map[string]interface{}{
 			{
 				"role": "system",
@@ -142,7 +135,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		}
 
 		wg := &sync.WaitGroup{}
-		wg.Add(2)
+		wg.Add(4)
 
 		go func() {
 			defer wg.Done()
@@ -168,33 +161,38 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			}
 		}()
 
-		//go func() {
-		//	defer wg.Done()
-		//	messages := SearchStockInfo(stock, "depth")
-		//	for _, message := range *messages {
-		//		msg = append(msg, map[string]interface{}{
-		//			"role":    "assistant",
-		//			"content": message,
-		//		})
-		//	}
-		//}()
-		//go func() {
-		//	defer wg.Done()
-		//	messages := SearchStockInfo(stock, "telegram")
-		//	for _, message := range *messages {
-		//		msg = append(msg, map[string]interface{}{
-		//			"role":    "assistant",
-		//			"content": message,
-		//		})
-		//	}
-		//}()
+		go func() {
+			defer wg.Done()
+			messages := SearchStockInfo(stock, "depth")
+			for _, message := range *messages {
+				msg = append(msg, map[string]interface{}{
+					"role":    "assistant",
+					"content": message,
+				})
+			}
+		}()
+		go func() {
+			defer wg.Done()
+			messages := SearchStockInfo(stock, "telegram")
+			for _, message := range *messages {
+				msg = append(msg, map[string]interface{}{
+					"role":    "assistant",
+					"content": message,
+				})
+			}
+		}()
 		wg.Wait()
 
 		msg = append(msg, map[string]interface{}{
 			"role":    "user",
 			"content": stock + "分析和总结",
 		})
-
+		client := resty.New()
+		client.SetBaseURL(o.BaseUrl)
+		client.SetHeader("Authorization", "Bearer "+o.ApiKey)
+		client.SetHeader("Content-Type", "application/json")
+		client.SetRetryCount(3)
+		client.SetTimeout(1 * time.Minute)
 		resp, err := client.R().
 			SetDoNotParseResponse(true).
 			SetBody(map[string]interface{}{
@@ -207,6 +205,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			Post("/chat/completions")
 
 		if err != nil {
+			logger.SugaredLogger.Infof("Stream error : %s", err.Error())
 			ch <- err.Error()
 			return
 		}
@@ -228,26 +227,32 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 							Content          string `json:"content"`
 							ReasoningContent string `json:"reasoning_content"`
 						} `json:"delta"`
+						FinishReason string `json:"finish_reason"`
 					} `json:"choices"`
 				}
 
 				if err := json.Unmarshal([]byte(data), &streamResponse); err == nil {
 					for _, choice := range streamResponse.Choices {
-						txt := ""
 						if content := choice.Delta.Content; content != "" {
-							txt = content
-							logger.SugaredLogger.Infof("Content data: %s", txt)
+							ch <- content
+							logger.SugaredLogger.Infof("Content data: %s", content)
 						}
 						if reasoningContent := choice.Delta.ReasoningContent; reasoningContent != "" {
-							txt = reasoningContent
-							logger.SugaredLogger.Infof("ReasoningContent data: %s", txt)
+							ch <- reasoningContent
+							logger.SugaredLogger.Infof("ReasoningContent data: %s", reasoningContent)
 						}
-						ch <- txt
+						if choice.FinishReason == "stop" {
+							return
+						}
 					}
 				} else {
 					logger.SugaredLogger.Infof("Stream data error : %s", err.Error())
+					ch <- err.Error()
 				}
+			} else {
+				ch <- line
 			}
+
 		}
 	}()
 	return ch
@@ -379,7 +384,7 @@ func GetTelegraphList() *[]string {
 	}
 	var telegraph []string
 	document.Find("div.telegraph-content-box").Each(func(i int, selection *goquery.Selection) {
-		//logger.SugaredLogger.Info(selection.Text())
+		logger.SugaredLogger.Info(selection.Text())
 		telegraph = append(telegraph, selection.Text())
 	})
 	return &telegraph
