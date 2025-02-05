@@ -2,9 +2,12 @@ package data
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/chromedp/chromedp"
+	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/go-resty/resty/v2"
 	"go-stock/backend/logger"
 	"strings"
@@ -122,7 +125,7 @@ func (o OpenAi) NewChat(stock string) string {
 	return res.Choices[0].Message.Content
 }
 func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
-	ch := make(chan string)
+	ch := make(chan string, 512)
 	go func() {
 		defer close(ch)
 		msg := []map[string]interface{}{
@@ -135,7 +138,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		}
 
 		wg := &sync.WaitGroup{}
-		wg.Add(4)
+		wg.Add(5)
 
 		go func() {
 			defer wg.Done()
@@ -148,6 +151,17 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 				"role":    "assistant",
 				"content": stock + "当前价格：" + price,
 			})
+		}()
+
+		go func() {
+			defer wg.Done()
+			messages := GetFinancialReports(stockCode)
+			for _, message := range *messages {
+				msg = append(msg, map[string]interface{}{
+					"role":    "assistant",
+					"content": stock + message,
+				})
+			}
 		}()
 
 		go func() {
@@ -256,6 +270,47 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		}
 	}()
 	return ch
+}
+
+func GetFinancialReports(stockCode string) *[]string {
+	// 创建一个 chromedp 上下文
+	ctx, cancel := chromedp.NewContext(
+		context.Background(),
+		chromedp.WithLogf(logger.SugaredLogger.Infof),
+		chromedp.WithErrorf(logger.SugaredLogger.Errorf),
+	)
+	defer cancel()
+	var htmlContent string
+	url := fmt.Sprintf("https://xueqiu.com/snowman/S/%s/detail#/ZYCWZB", stockCode)
+	err := chromedp.Run(ctx,
+		chromedp.Navigate(url),
+		// 等待页面加载完成，可以根据需要调整等待时间
+		chromedp.WaitVisible("table.table", chromedp.ByQuery),
+		chromedp.OuterHTML("html", &htmlContent, chromedp.ByQuery),
+	)
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+	}
+	document, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+		return &[]string{}
+	}
+	var messages []string
+	document.Find("table tr").Each(func(i int, selection *goquery.Selection) {
+		tr := ""
+		selection.Find("th,td").Each(func(i int, selection *goquery.Selection) {
+			ret := selection.Find("p").First().Text()
+			if ret == "" {
+				ret = selection.Text()
+			}
+			text := strutil.RemoveNonPrintable(ret)
+			tr += text + " "
+		})
+		logger.SugaredLogger.Infof("%s", tr+" \n")
+		messages = append(messages, tr+" \n")
+	})
+	return &messages
 }
 
 func (o OpenAi) NewCommonChatStream(stock, stockCode, apiURL, apiKey, Model string) <-chan string {
