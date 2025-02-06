@@ -16,6 +16,7 @@ import (
 	"go-stock/backend/data"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
+	"go-stock/backend/models"
 	"strings"
 	"time"
 )
@@ -48,18 +49,21 @@ func (a *App) startup(ctx context.Context) {
 		go onExit(a)
 	})
 
-	//检查新版本
-	go func() {
-		config := data.NewSettingsApi(&data.Settings{}).GetConfig()
-		if config.CheckUpdate {
-			checkUpdate(a)
-		}
-	}()
-
 }
 
 func checkUpdate(a *App) {
-
+	releaseVersion := &models.GitHubReleaseVersion{}
+	_, err := resty.New().R().
+		SetResult(releaseVersion).
+		Get("https://api.github.com/repos/ArvinLovegood/go-stock/releases/latest")
+	if err != nil {
+		logger.SugaredLogger.Errorf("get github release version error:%s", err.Error())
+		return
+	}
+	logger.SugaredLogger.Infof("releaseVersion:%+v", releaseVersion.TagName)
+	if releaseVersion.TagName != Version {
+		go runtime.EventsEmit(a.ctx, "updateVersion", releaseVersion)
+	}
 }
 
 // domReady is called after front-end resources have been loaded
@@ -94,6 +98,11 @@ func (a *App) domReady(ctx context.Context) {
 	}()
 	go runtime.EventsEmit(a.ctx, "telegraph", refreshTelegraphList())
 	go MonitorStockPrices(a)
+
+	//检查新版本
+	go func() {
+		checkUpdate(a)
+	}()
 }
 
 func refreshTelegraphList() *[]string {

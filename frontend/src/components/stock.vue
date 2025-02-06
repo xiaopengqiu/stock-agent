@@ -1,5 +1,5 @@
 <script setup>
-import {computed, onBeforeMount, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
+import {computed, h, onBeforeMount, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import {
   Follow, GetConfig,
   GetFollowList,
@@ -10,7 +10,18 @@ import {
   SetCostPriceAndVolume, SetStockSort,
   UnFollow
 } from '../../wailsjs/go/main/App'
-import {NButton, NFlex, NForm, NFormItem, NInputNumber, NText, useMessage, useModal,useNotification} from 'naive-ui'
+import {
+  NAvatar,
+  NButton,
+  NFlex,
+  NForm,
+  NFormItem,
+  NInputNumber,
+  NText,
+  useMessage,
+  useModal,
+  useNotification
+} from 'naive-ui'
 import {EventsOn, WindowFullscreen, WindowReload, WindowUnfullscreen} from '../../wailsjs/runtime'
 import {Add, Search,StarOutline} from '@vicons/ionicons5'
 import { MdPreview } from 'md-editor-v3';
@@ -148,6 +159,29 @@ EventsOn("newChatStream",async (msg) => {
   }
 })
 
+EventsOn("updateVersion",async (msg) => {
+  notify.info({
+    avatar: () =>
+        h(NAvatar, {
+          size: 'small',
+          round: false,
+          src: 'https://github.com/ArvinLovegood/go-stock/raw/master/build/appicon.png'
+        }),
+    title: '发现新版本',
+    content: '请前往发布页下载更新',
+    duration: 0,
+    meta: msg.name,
+    action: () => {
+      return h(NButton, {
+        type: 'primary',
+        size: 'small',
+        onClick: () => {
+          window.open(msg.html_url)
+        }
+      }, { default: () => '查看' })
+    }
+  })
+})
 
 
 //判断是否是A股交易时间
