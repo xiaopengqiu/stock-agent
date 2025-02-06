@@ -37,6 +37,7 @@ func NewApp() *App {
 
 // startup is called at application startup
 func (a *App) startup(ctx context.Context) {
+	logger.SugaredLogger.Infof("Version:%s", Version)
 	// Perform your setup here
 	a.ctx = ctx
 
@@ -46,6 +47,18 @@ func (a *App) startup(ctx context.Context) {
 	}, func() {
 		go onExit(a)
 	})
+
+	//检查新版本
+	go func() {
+		config := data.NewSettingsApi(&data.Settings{}).GetConfig()
+		if config.CheckUpdate {
+			checkUpdate(a)
+		}
+	}()
+
+}
+
+func checkUpdate(a *App) {
 
 }
 

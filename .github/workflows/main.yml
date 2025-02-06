@@ -32,7 +32,7 @@ jobs:
           submodules: recursive
 
       - name: Build wails
-        uses: ArvinLovegood/wails-build-action@v2.3
+        uses: ArvinLovegood/wails-build-action@v2.4
         id: build
         with:
           build-name: ${{ matrix.build.name }}

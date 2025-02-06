@@ -22,6 +22,7 @@ type Settings struct {
 	OpenAiMaxTokens   int     `json:"openAiMaxTokens"`
 	OpenAiTemperature float64 `json:"openAiTemperature"`
 	Prompt            string  `json:"prompt"`
+	CheckUpdate       bool    `json:"checkUpdate"`
 }
 
 func (receiver Settings) TableName() string {

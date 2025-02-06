@@ -33,6 +33,9 @@ var icon2 []byte
 var stocksBin []byte
 
 //go:generate cp -R ./data ./build/bin
+
+var Version string
+
 func main() {
 	checkDir("data")
 	db.Init("")
@@ -82,7 +85,7 @@ func main() {
 	//FileMenu.AddText("退出", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
 	//	runtime.Quit(app.ctx)
 	//})
-
+	logger.NewDefaultLogger().Info("version: " + Version)
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:                    "go-stock",
