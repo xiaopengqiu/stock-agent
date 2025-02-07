@@ -62,6 +62,21 @@ func checkUpdate(a *App) {
 	}
 	logger.SugaredLogger.Infof("releaseVersion:%+v", releaseVersion.TagName)
 	if releaseVersion.TagName != Version {
+		tag := &models.Tag{}
+		_, err = resty.New().R().
+			SetResult(tag).
+			Get("https://api.github.com/repos/ArvinLovegood/go-stock/git/ref/tags/" + releaseVersion.TagName)
+		if err == nil {
+			releaseVersion.Tag = *tag
+		}
+		commit := &models.Commit{}
+		_, err = resty.New().R().
+			SetResult(commit).
+			Get(tag.Object.Url)
+		if err == nil {
+			releaseVersion.Commit = *commit
+		}
+
 		go runtime.EventsEmit(a.ctx, "updateVersion", releaseVersion)
 	}
 }

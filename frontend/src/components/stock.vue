@@ -160,6 +160,25 @@ EventsOn("newChatStream",async (msg) => {
 })
 
 EventsOn("updateVersion",async (msg) => {
+  const githubTimeStr = msg.published_at;
+  // 创建一个 Date 对象
+  const utcDate = new Date(githubTimeStr);
+
+// 获取本地时间
+  const date = new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60 * 1000);
+
+  const year = date.getFullYear();
+// getMonth 返回值是 0 - 11，所以要加 1
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+
+  console.log("GitHub UTC 时间:", utcDate);
+  console.log("转换后的本地时间:", formattedDate);
   notify.info({
     avatar: () =>
         h(NAvatar, {
@@ -167,10 +186,18 @@ EventsOn("updateVersion",async (msg) => {
           round: false,
           src: 'https://github.com/ArvinLovegood/go-stock/raw/master/build/appicon.png'
         }),
-    title: '发现新版本',
-    content: '请前往发布页下载更新',
+    title: '发现新版本: ' + msg.tag_name,
+    content: () => {
+      //return h(MdPreview, {theme:'dark',modelValue:msg.commit?.message}, null)
+      return h('div', {
+        style: {
+          'text-align': 'left',
+          'font-size': '14px',
+        }
+      }, { default: () => msg.commit?.message })
+    },
     duration: 0,
-    meta: msg.name,
+    meta: "发布时间:"+formattedDate,
     action: () => {
       return h(NButton, {
         type: 'primary',
@@ -460,8 +487,8 @@ function getHeight() {
 
 <template>
   <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
-      <n-gi v-for="result in sortedResults" >
-         <n-card    :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
+      <n-gi v-for="result in sortedResults" style="margin-left: 2px" onmouseover="this.style.border='1px solid  #3498db' " onmouseout="this.style.border='0px'">
+         <n-card   :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
            <n-grid :cols="1" :y-gap="6">
              <n-gi>
                <n-text :type="result.type" >

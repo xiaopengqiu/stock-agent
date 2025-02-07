@@ -80,4 +80,51 @@ type GitHubReleaseVersion struct {
 	TarballUrl string `json:"tarball_url"`
 	ZipballUrl string `json:"zipball_url"`
 	Body       string `json:"body"`
+	Tag        Tag    `json:"tag"`
+	Commit     Commit `json:"commit"`
+}
+
+type Tag struct {
+	Ref    string `json:"ref"`
+	NodeId string `json:"node_id"`
+	Url    string `json:"url"`
+	Object struct {
+		Sha  string `json:"sha"`
+		Type string `json:"type"`
+		Url  string `json:"url"`
+	} `json:"object"`
+}
+
+type Commit struct {
+	Sha     string `json:"sha"`
+	NodeId  string `json:"node_id"`
+	Url     string `json:"url"`
+	HtmlUrl string `json:"html_url"`
+	Author  struct {
+		Name  string    `json:"name"`
+		Email string    `json:"email"`
+		Date  time.Time `json:"date"`
+	} `json:"author"`
+	Committer struct {
+		Name  string    `json:"name"`
+		Email string    `json:"email"`
+		Date  time.Time `json:"date"`
+	} `json:"committer"`
+	Tree struct {
+		Sha string `json:"sha"`
+		Url string `json:"url"`
+	} `json:"tree"`
+	Message string `json:"message"`
+	Parents []struct {
+		Sha     string `json:"sha"`
+		Url     string `json:"url"`
+		HtmlUrl string `json:"html_url"`
+	} `json:"parents"`
+	Verification struct {
+		Verified   bool        `json:"verified"`
+		Reason     string      `json:"reason"`
+		Signature  interface{} `json:"signature"`
+		Payload    interface{} `json:"payload"`
+		VerifiedAt interface{} `json:"verified_at"`
+	} `json:"verification"`
 }
