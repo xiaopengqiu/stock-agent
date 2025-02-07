@@ -24,7 +24,8 @@
 ![img_4.png](build/screenshot/img_5.png)
 ### AI分析股票
 ![img_5.png](build/screenshot/img_10.png)
-
+### 版本信息提示
+![img_11.png](build/screenshot/img_11.png)
 ## About
 
 ### A China stock data viewer build by  [Wails](https://wails.io/) with [NavieUI](https://www.naiveui.com/).
