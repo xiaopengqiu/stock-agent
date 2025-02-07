@@ -163,10 +163,8 @@ EventsOn("updateVersion",async (msg) => {
   const githubTimeStr = msg.published_at;
   // 创建一个 Date 对象
   const utcDate = new Date(githubTimeStr);
-
 // 获取本地时间
-  const date = new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60 * 1000);
-
+  const date = new Date(utcDate.getTime());
   const year = date.getFullYear();
 // getMonth 返回值是 0 - 11，所以要加 1
   const month = String(date.getMonth() + 1).padStart(2, '0');
