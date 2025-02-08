@@ -13,6 +13,8 @@ export function GetFollowList():Promise<Array<data.FollowedStock>>;
 
 export function GetStockList(arg1:string):Promise<Array<data.StockBasic>>;
 
+export function GetVersionInfo():Promise<models.VersionInfo>;
+
 export function Greet(arg1:string):Promise<data.StockInfo>;
 
 export function NewChat(arg1:string):Promise<string>;

@@ -22,6 +22,10 @@ export function GetStockList(arg1) {
   return window['go']['main']['App']['GetStockList'](arg1);
 }
 
+export function GetVersionInfo() {
+  return window['go']['main']['App']['GetVersionInfo']();
+}
+
 export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }

@@ -36,6 +36,7 @@ var stocksBin []byte
 //go:generate cp -R ./data ./build/bin
 
 var Version string
+var VersionCommit string
 
 func main() {
 	checkDir("data")
@@ -88,6 +89,7 @@ func main() {
 	//	runtime.Quit(app.ctx)
 	//})
 	logger.NewDefaultLogger().Info("version: " + Version)
+	logger.NewDefaultLogger().Info("commit: " + VersionCommit)
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:                    "go-stock",

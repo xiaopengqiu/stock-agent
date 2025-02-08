@@ -1,28 +1,87 @@
 <script setup>
+import { MdPreview } from 'md-editor-v3';
+// preview.css相比style.css少了编辑器那部分样式
+import 'md-editor-v3/lib/preview.css';
+import {onMounted, ref} from 'vue';
+import {GetVersionInfo} from "../../wailsjs/go/main/App";
+const updateLog = ref(`
+feat(frontend): 添加关于软件页面
 
+- 在 App.vue 中添加关于软件的菜单项
+- 在 router.js 中添加关于软件的路由- 新增 about.vue 组件，包含软件介绍和作者信息
+`)
+const versionInfo = ref('');
+const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
+onMounted(() => {
+  document.title = '关于软件';
+  GetVersionInfo().then((res) => {
+    updateLog.value = res.content;
+    versionInfo.value = res.version;
+    icon.value = res.icon;
+  });
+})
 </script>
 
 <template>
+  <n-config-provider>
+    <n-layout>
+      <n-space vertical size="large">
+        <!-- 软件描述 -->
+        <n-card size="large">
+          <n-space vertical>
+            <n-image width="100" :src="icon" />
+            <h1>go-stock <n-tag  size="small" round>{{versionInfo}}</n-tag></h1>
+            <p>自选股行情实时监控，基于Wails和NaiveUI构建的AI赋能股票分析工具</p>
+            <p>
+              欢迎点赞GitHub：<a href="https://github.com/ArvinLovegood/go-stock" target="_blank">go-stock</a>
+            </p>
+          </n-space>
+        </n-card>
 
-  <n-flex justify="center" style="margin-top: 12px;padding-left: 12px;height: 100%">
-    <n-card size="large">
-      <h1>go-stock</h1>
-      <n-image size="large" src="https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png" />
-      <p>自选股行情实时监控，基于Wails和NaiveUI构建的AI赋能股票分析工具</p>
-      <p>
-        欢迎点赞GitHub：<a href="https://github.com/ArvinLovegood/go-stock" target="_blank">go-stock</a>
-      </p>
-    </n-card>
-    <n-card size="large">
-      <h1>关于作者</h1>
-      <n-image size="large" src="https://avatars.githubusercontent.com/u/7401917?v=4" />
-      <h1><a href="https://github.com/ArvinLovegood" target="_blank">@ArvinLovegood</a></h1>
-      <p>一个热爱编程的小白，欢迎关注我的Github</p>
-    </n-card>
-  </n-flex>
+        <!-- 更新说明 -->
+        <n-card size="large">
+          <n-flex justify="center">
+              <h1>更新说明</h1>
+              <MdPreview style="text-align: left" :modelValue="updateLog" :theme="'dark'"/>
+          </n-flex>
 
+        </n-card>
+        <!-- 关于作者 -->
+        <n-card size="large">
+          <n-space vertical>
+            <h1>关于作者</h1>
+            <n-avatar width="100" src="https://avatars.githubusercontent.com/u/7401917?v=4" />
+            <h2><a href="https://github.com/ArvinLovegood" target="_blank">@ArvinLovegood</a></h2>
+            <p>一个热爱编程的小白，欢迎关注我的Github</p>
+          </n-space>
+        </n-card>
+      </n-space>
+    </n-layout>
+  </n-config-provider>
 </template>
 
 <style scoped>
+/* 可以在这里添加一些样式 */
+h1, h2 {
+  margin: 0;
+  padding: 6px 0;
+}
 
+p {
+  margin: 2px 0;
+}
+
+ul {
+  list-style-type: disc;
+  padding-left: 20px;
+}
+
+a {
+  color: #18a058;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
 </style>

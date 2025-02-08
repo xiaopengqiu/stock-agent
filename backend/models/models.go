@@ -144,3 +144,16 @@ type AIResponseResult struct {
 func (receiver AIResponseResult) TableName() string {
 	return "ai_response_result"
 }
+
+type VersionInfo struct {
+	gorm.Model
+	Version        string                `json:"version"`
+	Content        string                `json:"content"`
+	Icon           string                `json:"icon"`
+	BuildTimeStamp int64                 `json:"buildTimeStamp"`
+	IsDel          soft_delete.DeletedAt `gorm:"softDelete:flag"`
+}
+
+func (receiver VersionInfo) TableName() string {
+	return "version_info"
+}

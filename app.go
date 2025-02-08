@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/coocood/freecache"
@@ -429,6 +430,18 @@ func (a *App) SaveAIResponseResult(stockCode, stockName, result string) {
 }
 func (a *App) GetAIResponseResult(stock string) *models.AIResponseResult {
 	return data.NewDeepSeekOpenAi().GetAIResponseResult(stock)
+}
+
+func (a *App) GetVersionInfo() *models.VersionInfo {
+	return &models.VersionInfo{
+		Version: Version,
+		Icon:    GetImageBase(icon),
+		Content: VersionCommit,
+	}
+}
+
+func GetImageBase(bytes []byte) string {
+	return "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(bytes)
 }
 
 func GenNotificationMsg(stockInfo *data.StockInfo) string {
