@@ -37,7 +37,7 @@ jobs:
           echo "Commit message: $commit_message"
 
       - name: Build wails
-        uses: ArvinLovegood/wails-build-action@v2.5
+        uses: ArvinLovegood/wails-build-action@v2.6
         id: build
         with:
           build-name: ${{ matrix.build.name }}
