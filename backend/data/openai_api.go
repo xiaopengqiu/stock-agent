@@ -86,10 +86,10 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 				"content": o.Prompt,
 			},
 		}
+		logger.SugaredLogger.Infof("Prompt：%s", o.Prompt)
 
 		wg := &sync.WaitGroup{}
 		wg.Add(5)
-
 		go func() {
 			defer wg.Done()
 			messages := SearchStockPriceInfo(stockCode)
