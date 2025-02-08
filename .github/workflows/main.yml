@@ -38,7 +38,7 @@ jobs:
           echo "::set-output name=commit_message::$commit_message"
 
       - name: Build wails
-        uses: ArvinLovegood/wails-build-action@v2.7
+        uses: ArvinLovegood/wails-build-action@v2.8
         id: build
         with:
           build-name: ${{ matrix.build.name }}
