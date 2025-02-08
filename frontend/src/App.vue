@@ -102,6 +102,23 @@ const menuOptions = ref([
     key: 'exit',
     icon: renderIcon(PowerOutline),
   },
+  {
+    label: () =>
+        h(
+            RouterLink,
+            {
+              to: {
+                name: 'about',
+                params: {
+                  id: 'zh-CN'
+                }
+              }
+            },
+            { default: () => '关于软件' }
+        ),
+    key: 'about',
+    icon: renderIcon(StarOutline),
+  },
 ])
 function renderIcon(icon) {
   return () => h(NIcon, null, { default: () => h(icon) })
