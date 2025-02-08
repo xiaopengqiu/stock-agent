@@ -15,7 +15,7 @@ import {
   SettingsOutline,
   ReorderTwoOutline,
   ExpandOutline,
-  RefreshOutline, PowerOutline, BarChartOutline, MoveOutline, WalletOutline, StarOutline,
+  RefreshOutline, PowerOutline, LogoGithub, MoveOutline, WalletOutline, StarOutline,
 } from '@vicons/ionicons5'
 
 const content = ref('数据来源于网络,仅供参考;投资有风险,入市需谨慎')
@@ -68,6 +68,23 @@ const menuOptions = ref([
     icon: renderIcon(SettingsOutline),
   },
   {
+    label: () =>
+        h(
+            RouterLink,
+            {
+              to: {
+                name: 'about',
+                params: {
+                  id: 'zh-CN'
+                }
+              }
+            },
+            { default: () => '关于' }
+        ),
+    key: 'about',
+    icon: renderIcon(LogoGithub),
+  },
+  {
     label: ()=> h("a", {
       href: '#',
       onClick: toggleFullscreen,
@@ -101,23 +118,6 @@ const menuOptions = ref([
     }, { default: () => '退出程序' }),
     key: 'exit',
     icon: renderIcon(PowerOutline),
-  },
-  {
-    label: () =>
-        h(
-            RouterLink,
-            {
-              to: {
-                name: 'about',
-                params: {
-                  id: 'zh-CN'
-                }
-              }
-            },
-            { default: () => '关于软件' }
-        ),
-    key: 'about',
-    icon: renderIcon(StarOutline),
   },
 ])
 function renderIcon(icon) {

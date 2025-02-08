@@ -17,8 +17,6 @@ export function GetVersionInfo():Promise<models.VersionInfo>;
 
 export function Greet(arg1:string):Promise<data.StockInfo>;
 
-export function NewChat(arg1:string):Promise<string>;
-
 export function NewChatStream(arg1:string,arg2:string):Promise<void>;
 
 export function SaveAIResponseResult(arg1:string,arg2:string,arg3:string):Promise<void>;
