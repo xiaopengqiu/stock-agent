@@ -34,7 +34,7 @@ jobs:
       - name: Get commit message
         id: get_commit_message
         run: |
-          $commit_message = & git log -1 --pretty=format:"# [%an  %ad] # %s %b"
+          $commit_message = & git log -1 --pretty=format:"%s"
           echo "::set-output name=commit_message::$commit_message"
 
       - name: Build wails
