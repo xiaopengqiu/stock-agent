@@ -4,7 +4,7 @@
 - 欢迎大家提出宝贵的建议，欢迎提issue,PR。当然更欢迎[赞助我](#都划到这了如果我的项目对您有帮助请赞助我吧)，谢谢。
 ## BIG NEWS !!! 重大更新！！！
 - 2025.01.17 新增AI大模型分析股票功能
-  ![img_5.png](build/screenshot/img_10.png)
+  ![img_5.png](build/screenshot/img.png)
 
 ## 简介
 - 本项目基于Wails和NaiveUI，纯属无聊，仅供娱乐，不喜勿喷。
@@ -24,7 +24,7 @@
 ### 钉钉报警通知
 ![img_4.png](build/screenshot/img_5.png)
 ### AI分析股票
-![img_5.png](build/screenshot/img_10.png)
+![img_5.png](build/screenshot/img.png)
 ### 版本信息提示
 ![img_11.png](build/screenshot/img_11.png)
 ## About
