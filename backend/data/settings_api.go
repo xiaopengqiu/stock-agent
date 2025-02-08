@@ -21,6 +21,7 @@ type Settings struct {
 	OpenAiModelName   string  `json:"openAiModelName"`
 	OpenAiMaxTokens   int     `json:"openAiMaxTokens"`
 	OpenAiTemperature float64 `json:"openAiTemperature"`
+	OpenAiApiTimeOut  int     `json:"openAiApiTimeOut"`
 	Prompt            string  `json:"prompt"`
 	CheckUpdate       bool    `json:"checkUpdate"`
 }
@@ -57,6 +58,8 @@ func (s SettingsApi) UpdateConfig() string {
 			"open_ai_temperature":        s.Config.OpenAiTemperature,
 			"tushare_token":              s.Config.TushareToken,
 			"prompt":                     s.Config.Prompt,
+			"check_update":               s.Config.CheckUpdate,
+			"open_ai_api_time_out":       s.Config.OpenAiApiTimeOut,
 		})
 	} else {
 		logger.SugaredLogger.Infof("未找到配置，创建默认配置:%+v", s.Config)
@@ -74,6 +77,8 @@ func (s SettingsApi) UpdateConfig() string {
 			OpenAiTemperature:      s.Config.OpenAiTemperature,
 			TushareToken:           s.Config.TushareToken,
 			Prompt:                 s.Config.Prompt,
+			CheckUpdate:            s.Config.CheckUpdate,
+			OpenAiApiTimeOut:       s.Config.OpenAiApiTimeOut,
 		})
 	}
 	return "保存成功！"

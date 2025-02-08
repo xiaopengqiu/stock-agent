@@ -73,6 +73,7 @@ export namespace data {
 	    openAiModelName: string;
 	    openAiMaxTokens: number;
 	    openAiTemperature: number;
+	    openAiApiTimeOut: number;
 	    prompt: string;
 	    checkUpdate: boolean;
 	
@@ -98,6 +99,7 @@ export namespace data {
 	        this.openAiModelName = source["openAiModelName"];
 	        this.openAiMaxTokens = source["openAiMaxTokens"];
 	        this.openAiTemperature = source["openAiTemperature"];
+	        this.openAiApiTimeOut = source["openAiApiTimeOut"];
 	        this.prompt = source["prompt"];
 	        this.checkUpdate = source["checkUpdate"];
 	    }

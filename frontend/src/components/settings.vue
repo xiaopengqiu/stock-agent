@@ -27,6 +27,7 @@ const formValue = ref({
     temperature: 0.1,
     maxTokens: 1024,
     prompt:"",
+    timeout: 5
   },
 })
 
@@ -51,6 +52,7 @@ onMounted(()=>{
       temperature:res.openAiTemperature,
       maxTokens:res.openAiMaxTokens,
       prompt:res.prompt,
+      timeout:res.openAiApiTimeOut
     }
     console.log(res)
   })
@@ -73,7 +75,8 @@ function saveConfig(){
     openAiMaxTokens:formValue.value.openAI.maxTokens,
     openAiTemperature:formValue.value.openAI.temperature,
     tushareToken:formValue.value.tushareToken,
-    prompt:formValue.value.openAI.prompt
+    prompt:formValue.value.openAI.prompt,
+    openAiApiTimeOut:formValue.value.openAI.timeout
   })
 
  //console.log("Settings",config)
@@ -150,22 +153,25 @@ function sendTestNotice(){
       <n-form-item-gi  :span="6" label="是否启用AI诊股：" path="openAI.enable" >
         <n-switch v-model:value="formValue.openAI.enable" />
       </n-form-item-gi>
-      <n-form-item-gi :span="22"  v-if="formValue.openAI.enable" label="openAI 接口地址：" path="openAI.baseUrl">
+      <n-form-item-gi :span="11"  v-if="formValue.openAI.enable" label="openAI 接口地址：" path="openAI.baseUrl">
         <n-input  type="text"  placeholder="AI接口地址"  v-model:value="formValue.openAI.baseUrl" clearable />
       </n-form-item-gi>
-      <n-form-item-gi  :span="10" v-if="formValue.openAI.enable" label="openAI apiKey："  path="openAI.apiKey">
+      <n-form-item-gi  :span="5" v-if="formValue.openAI.enable" label="请求超时时间(秒)："  path="openAI.timeout">
+        <n-input-number min="1" step="1" placeholder="请求超时时间(秒)"  v-model:value="formValue.openAI.timeout" />
+      </n-form-item-gi>
+      <n-form-item-gi  :span="12" v-if="formValue.openAI.enable" label="openAI 令牌(apiKey)："  path="openAI.apiKey">
         <n-input  type="text" placeholder="apiKey"  v-model:value="formValue.openAI.apiKey" clearable />
       </n-form-item-gi>
-      <n-form-item-gi :span="12"  v-if="formValue.openAI.enable" label="AI模型：" path="openAI.model">
-        <n-input  type="text" placeholder="AI模型"  v-model:value="formValue.openAI.model" clearable />
+      <n-form-item-gi :span="10"  v-if="formValue.openAI.enable" label="AI模型名称：" path="openAI.model">
+        <n-input  type="text" placeholder="AI模型名称"  v-model:value="formValue.openAI.model" clearable />
       </n-form-item-gi>
-      <n-form-item-gi :span="12"  v-if="formValue.openAI.enable" label="temperature：" path="openAI.temperature" >
+      <n-form-item-gi :span="12"  v-if="formValue.openAI.enable" label="openAI temperature：" path="openAI.temperature" >
         <n-input-number  placeholder="temperature"  v-model:value="formValue.openAI.temperature"/>
       </n-form-item-gi>
-      <n-form-item-gi :span="10"  v-if="formValue.openAI.enable" label="maxTokens："  path="openAI.maxTokens">
+      <n-form-item-gi :span="10"  v-if="formValue.openAI.enable" label="openAI maxTokens："  path="openAI.maxTokens">
         <n-input-number  placeholder="maxTokens"  v-model:value="formValue.openAI.maxTokens"/>
       </n-form-item-gi>
-      <n-form-item-gi :span="22"  v-if="formValue.openAI.enable" label="自定义系统Prompt："  path="openAI.prompt">
+      <n-form-item-gi :span="22"  v-if="formValue.openAI.enable" label="模型系统 Prompt："  path="openAI.prompt">
         <n-input v-model:value="formValue.openAI.prompt"
             type="textarea"
             :show-count="true"

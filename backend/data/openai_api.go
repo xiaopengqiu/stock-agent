@@ -26,6 +26,7 @@ type OpenAi struct {
 	MaxTokens   int     `json:"max_tokens"`
 	Temperature float64 `json:"temperature"`
 	Prompt      string  `json:"prompt"`
+	TimeOut     int     `json:"time_out"`
 }
 
 func NewDeepSeekOpenAi() *OpenAi {
@@ -37,6 +38,7 @@ func NewDeepSeekOpenAi() *OpenAi {
 		MaxTokens:   config.OpenAiMaxTokens,
 		Temperature: config.OpenAiTemperature,
 		Prompt:      config.Prompt,
+		TimeOut:     config.OpenAiApiTimeOut,
 	}
 }
 
@@ -206,7 +208,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		client.SetHeader("Authorization", "Bearer "+o.ApiKey)
 		client.SetHeader("Content-Type", "application/json")
 		client.SetRetryCount(3)
-		client.SetTimeout(1 * time.Minute)
+		client.SetTimeout(time.Duration(o.TimeOut) * time.Second)
 		resp, err := client.R().
 			SetDoNotParseResponse(true).
 			SetBody(map[string]interface{}{

@@ -611,11 +611,16 @@ function getHeight() {
 
   <n-modal transform-origin="center" v-model:show="modalShow4"  preset="card" style="width: 800px;height: 480px" :title="'['+data.name+']AI分析结果'" >
     <n-spin size="small" :show="data.loading">
-      <MdPreview  ref="mdPreviewRef" style="height: 380px" :modelValue="data.airesult" :theme="'dark'"/>
+      <MdPreview  ref="mdPreviewRef" style="height: 380px;text-align: left" :modelValue="data.airesult" :theme="'dark'"/>
     </n-spin>
   </n-modal>
 </template>
 
 <style scoped>
-
+  h3 {
+    text-align: center;
+  }
+  #总结 {
+    text-align: center;
+  }
 </style>
