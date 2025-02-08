@@ -1,6 +1,7 @@
 ![Wails and NaiveUI](./build/appicon.png)
 ## 自选股行情实时监控，基于Wails和NaiveUI构建的AI赋能股票分析工具
 - 经测试目前硅基流动(siliconflow)提供的deepSeek api 服务比较稳定，注册即送2000万Tokens，[注册链接](https://cloud.siliconflow.cn/i/foufCerk)
+- 软件快速迭代开发中,请大家优先测试和使用最新发布的版本。
 - 欢迎大家提出宝贵的建议，欢迎提issue,PR。当然更欢迎[赞助我](#都划到这了如果我的项目对您有帮助请赞助我吧)，谢谢。
 ## BIG NEWS !!! 重大更新！！！
 - 2025.01.17 新增AI大模型分析股票功能
