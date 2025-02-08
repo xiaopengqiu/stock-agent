@@ -424,6 +424,13 @@ func (a *App) NewChatStream(stock, stockCode string) {
 	runtime.EventsEmit(a.ctx, "newChatStream", "DONE")
 }
 
+func (a *App) SaveAIResponseResult(stockCode, stockName, result string) {
+	data.NewDeepSeekOpenAi().SaveAIResponseResult(stockCode, stockName, result)
+}
+func (a *App) GetAIResponseResult(stock string) *models.AIResponseResult {
+	return data.NewDeepSeekOpenAi().GetAIResponseResult(stock)
+}
+
 func GenNotificationMsg(stockInfo *data.StockInfo) string {
 	Price, err := convertor.ToFloat(stockInfo.Price)
 	if err != nil {

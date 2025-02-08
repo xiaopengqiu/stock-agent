@@ -9,7 +9,9 @@ import (
 	"github.com/chromedp/chromedp"
 	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/go-resty/resty/v2"
+	"go-stock/backend/db"
 	"go-stock/backend/logger"
+	"go-stock/backend/models"
 	"strings"
 	"sync"
 	"time"
@@ -208,6 +210,9 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		client.SetHeader("Authorization", "Bearer "+o.ApiKey)
 		client.SetHeader("Content-Type", "application/json")
 		client.SetRetryCount(3)
+		if o.TimeOut <= 0 {
+			o.TimeOut = 300
+		}
 		client.SetTimeout(time.Duration(o.TimeOut) * time.Second)
 		resp, err := client.R().
 			SetDoNotParseResponse(true).
@@ -445,4 +450,18 @@ func GetTelegraphList() *[]string {
 		telegraph = append(telegraph, selection.Text())
 	})
 	return &telegraph
+}
+
+func (o OpenAi) SaveAIResponseResult(stockCode, stockName, result string) {
+	db.Dao.Create(&models.AIResponseResult{
+		StockCode: stockCode,
+		StockName: stockName,
+		Content:   result,
+	})
+}
+
+func (o OpenAi) GetAIResponseResult(stock string) *models.AIResponseResult {
+	var result models.AIResponseResult
+	db.Dao.Where("stock_code = ?", stock).Order("id desc").First(&result)
+	return &result
 }

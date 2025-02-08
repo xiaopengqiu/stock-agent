@@ -14,6 +14,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"go-stock/backend/data"
 	"go-stock/backend/db"
+	"go-stock/backend/models"
 	"log"
 	"os"
 	goruntime "runtime"
@@ -44,6 +45,7 @@ func main() {
 	db.Dao.AutoMigrate(&data.FollowedStock{})
 	db.Dao.AutoMigrate(&data.IndexBasic{})
 	db.Dao.AutoMigrate(&data.Settings{})
+	db.Dao.AutoMigrate(&models.AIResponseResult{})
 
 	if stocksBin != nil && len(stocksBin) > 0 {
 		go initStockData()

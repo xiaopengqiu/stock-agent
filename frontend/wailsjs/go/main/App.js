@@ -6,6 +6,10 @@ export function Follow(arg1) {
   return window['go']['main']['App']['Follow'](arg1);
 }
 
+export function GetAIResponseResult(arg1) {
+  return window['go']['main']['App']['GetAIResponseResult'](arg1);
+}
+
 export function GetConfig() {
   return window['go']['main']['App']['GetConfig']();
 }
@@ -28,6 +32,10 @@ export function NewChat(arg1) {
 
 export function NewChatStream(arg1, arg2) {
   return window['go']['main']['App']['NewChatStream'](arg1, arg2);
+}
+
+export function SaveAIResponseResult(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SaveAIResponseResult'](arg1, arg2, arg3);
 }
 
 export function SendDingDingMessage(arg1, arg2) {

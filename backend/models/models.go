@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"gorm.io/gorm"
+	"gorm.io/plugin/soft_delete"
+	"time"
+)
 
 // @Author spark
 // @Date 2025/2/6 15:25
@@ -127,4 +131,16 @@ type Commit struct {
 		Payload    interface{} `json:"payload"`
 		VerifiedAt interface{} `json:"verified_at"`
 	} `json:"verification"`
+}
+
+type AIResponseResult struct {
+	gorm.Model
+	StockCode string                `json:"stockCode"`
+	StockName string                `json:"stockName"`
+	Content   string                `json:"content"`
+	IsDel     soft_delete.DeletedAt `gorm:"softDelete:flag"`
+}
+
+func (receiver AIResponseResult) TableName() string {
+	return "ai_response_result"
 }

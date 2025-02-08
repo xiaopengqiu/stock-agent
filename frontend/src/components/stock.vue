@@ -4,11 +4,11 @@ import {
   Follow, GetConfig,
   GetFollowList,
   GetStockList,
-  Greet, NewChat, NewChatStream,
+  Greet, SaveAIResponseResult, NewChatStream,
   SendDingDingMessage, SendDingDingMessageByType,
   SetAlarmChangePercent,
   SetCostPriceAndVolume, SetStockSort,
-  UnFollow
+  UnFollow, GetAIResponseResult
 } from '../../wailsjs/go/main/App'
 import {
   NAvatar,
@@ -152,6 +152,7 @@ EventsOn("newChatStream",async (msg) => {
   //console.log("newChatStream:->",data.airesult)
   data.loading = false
   if (msg === "DONE") {
+    SaveAIResponseResult(data.code, data.name, data.airesult)
     message.info("AI分析完成！")
     message.destroyAll()
   } else {
@@ -448,9 +449,9 @@ function SendMessage(result,type){
    // SendDingDingMessage(msg,result["股票代码"])
     SendDingDingMessageByType(msg,result["股票代码"],type)
 }
-
-function aiCheckStock(stock,stockCode){
+function aiReCheckStock(stock,stockCode) {
   data.airesult=""
+  data.time=""
   data.name=stock
   data.code=stockCode
   data.loading=true
@@ -459,6 +460,38 @@ function aiCheckStock(stock,stockCode){
     duration: 0,
   })
   NewChatStream(stock,stockCode)
+}
+
+function aiCheckStock(stock,stockCode){
+  GetAIResponseResult(stockCode).then(result => {
+    if(result.content){
+      data.name=stock
+      data.code=stockCode
+      data.loading=false
+      modalShow4.value=true
+      data.airesult=result.content
+      const date = new Date(result.CreatedAt);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      data.time=formattedDate
+    }else{
+      data.airesult=""
+      data.time=""
+      data.name=stock
+      data.code=stockCode
+      data.loading=true
+      modalShow4.value=true
+      message.loading("ai检测中...",{
+        duration: 0,
+      })
+      NewChatStream(stock,stockCode)
+    }
+  })
 }
 
 function getTypeName(type){
@@ -518,7 +551,9 @@ function getHeight() {
              <n-button size="tiny" secondary type="primary" @click="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
                取消关注
              </n-button>&nbsp;
-             <n-button size="tiny" v-if="data.openAiEnable" secondary type="warning" @click="aiCheckStock(result['股票名称'],result['股票代码'])"> AI分析 </n-button>
+             <n-button size="tiny" v-if="data.openAiEnable" secondary type="warning" @click="aiCheckStock(result['股票名称'],result['股票代码'])">
+               AI分析
+             </n-button>
 
            </template>
            <template #footer>
@@ -609,18 +644,28 @@ function getHeight() {
     <n-image :src="data.kURL" />
   </n-modal>
 
-  <n-modal transform-origin="center" v-model:show="modalShow4"  preset="card" style="width: 800px;height: 480px" :title="'['+data.name+']AI分析结果'" >
+  <n-modal transform-origin="center" v-model:show="modalShow4"  preset="card" style="width: 800px;height: 500px" :title="'['+data.name+']AI分析结果'" >
     <n-spin size="small" :show="data.loading">
       <MdPreview  ref="mdPreviewRef" style="height: 380px;text-align: left" :modelValue="data.airesult" :theme="'dark'"/>
     </n-spin>
+    <template #header-extra>
+
+    </template>
+    <template #footer>
+      <n-flex justify="space-between">
+        <n-text type="error" v-if="data.time" >分析时间:{{data.time}}</n-text>
+        <n-button size="tiny"  type="warning" @click="aiReCheckStock(data.name,data.code)">再次分析</n-button>
+      </n-flex>
+    </template>
   </n-modal>
 </template>
 
 <style scoped>
-  h3 {
-    text-align: center;
-  }
-  #总结 {
-    text-align: center;
-  }
+ .md-editor-preview h3{
+  text-align: center !important;
+}
+
+ .md-editor-preview p{
+   text-align: left !important;
+ }
 </style>
