@@ -520,8 +520,11 @@ func SearchStockPriceInfo(stockCode string) *[]string {
 	// 创建一个 chromedp 上下文
 	ctx, cancel := chromedp.NewContext(
 		context.Background(),
+		chromedp.WithLogf(logger.SugaredLogger.Infof),
+		chromedp.WithErrorf(logger.SugaredLogger.Errorf),
 	)
 	defer cancel()
+
 	defer func(ctx context.Context) {
 		err := chromedp.Cancel(ctx)
 		if err != nil {

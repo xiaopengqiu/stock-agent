@@ -93,6 +93,10 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		go func() {
 			defer wg.Done()
 			messages := SearchStockPriceInfo(stockCode)
+			if messages == nil || len(*messages) == 0 {
+				logger.SugaredLogger.Error("获取股票价格失败")
+				return
+			}
 			price := ""
 			for _, message := range *messages {
 				price += message + ";"
@@ -106,6 +110,10 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		go func() {
 			defer wg.Done()
 			messages := GetFinancialReports(stockCode)
+			if messages == nil || len(*messages) == 0 {
+				logger.SugaredLogger.Error("获取股票财报失败")
+				return
+			}
 			for _, message := range *messages {
 				msg = append(msg, map[string]interface{}{
 					"role":    "assistant",
@@ -117,6 +125,10 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		go func() {
 			defer wg.Done()
 			messages := GetTelegraphList()
+			if messages == nil || len(*messages) == 0 {
+				logger.SugaredLogger.Error("获取市场资讯失败")
+				return
+			}
 			for _, message := range *messages {
 				msg = append(msg, map[string]interface{}{
 					"role":    "assistant",
@@ -128,6 +140,10 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		go func() {
 			defer wg.Done()
 			messages := SearchStockInfo(stock, "depth")
+			if messages == nil || len(*messages) == 0 {
+				logger.SugaredLogger.Error("获取股票资讯失败")
+				return
+			}
 			for _, message := range *messages {
 				msg = append(msg, map[string]interface{}{
 					"role":    "assistant",
@@ -138,6 +154,10 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		go func() {
 			defer wg.Done()
 			messages := SearchStockInfo(stock, "telegram")
+			if messages == nil || len(*messages) == 0 {
+				logger.SugaredLogger.Error("获取股票电报资讯失败")
+				return
+			}
 			for _, message := range *messages {
 				msg = append(msg, map[string]interface{}{
 					"role":    "assistant",
@@ -146,7 +166,6 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			}
 		}()
 		wg.Wait()
-
 		msg = append(msg, map[string]interface{}{
 			"role":    "user",
 			"content": stock + "分析和总结",
@@ -233,6 +252,7 @@ func GetFinancialReports(stockCode string) *[]string {
 		chromedp.WithErrorf(logger.SugaredLogger.Errorf),
 	)
 	defer cancel()
+
 	defer func(ctx context.Context) {
 		err := chromedp.Cancel(ctx)
 		if err != nil {
