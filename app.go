@@ -207,16 +207,12 @@ func MonitorStockPrices(a *App) {
 
 }
 func GetStockInfos(follows ...data.FollowedStock) *[]data.StockInfo {
+	stockInfos := make([]data.StockInfo, 0)
 	stockCodes := make([]string, 0)
 	for _, follow := range follows {
 		stockCodes = append(stockCodes, follow.StockCode)
 	}
-	stockData, err := data.NewStockDataApi().GetStockCodeRealTimeData(stockCodes...)
-	if err != nil {
-		logger.SugaredLogger.Errorf("get stock code real time data error:%s", err.Error())
-		return nil
-	}
-	stockInfos := make([]data.StockInfo, 0)
+	stockData, _ := data.NewStockDataApi().GetStockCodeRealTimeData(stockCodes...)
 	for _, info := range *stockData {
 		v, ok := slice.FindBy(follows, func(idx int, follow data.FollowedStock) bool {
 			return follow.StockCode == info.Code
