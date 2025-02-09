@@ -8,7 +8,7 @@ import {
   SendDingDingMessage, SendDingDingMessageByType,
   SetAlarmChangePercent,
   SetCostPriceAndVolume, SetStockSort,
-  UnFollow, GetAIResponseResult
+  UnFollow, GetAIResponseResult, GetVersionInfo
 } from '../../wailsjs/go/main/App'
 import {
   NAvatar,
@@ -64,6 +64,7 @@ const data = reactive({
   openAiEnable: false,
   loading: true,
 })
+const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
 
 const sortedResults = computed(() => {
   //console.log("computed",sortedResults.value)
@@ -112,6 +113,11 @@ onMounted(() => {
         data.fenshiURL='http://image.sinajs.cn/newchart/min/n/'+data.code+'.gif'+"?t="+Date.now()
       }
     }, 3500)
+
+  GetVersionInfo().then((res) => {
+    icon.value = res.icon;
+  });
+
 })
 
 onBeforeUnmount(() => {
@@ -183,7 +189,7 @@ EventsOn("updateVersion",async (msg) => {
         h(NAvatar, {
           size: 'small',
           round: false,
-          src: 'https://github.com/ArvinLovegood/go-stock/raw/master/build/appicon.png'
+          src: icon.value
         }),
     title: '发现新版本: ' + msg.tag_name,
     content: () => {
