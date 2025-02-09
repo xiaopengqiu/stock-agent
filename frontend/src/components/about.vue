@@ -64,6 +64,7 @@ onMounted(() => {
               <a href="https://github.com/gnim2600" target="_blank">@gnim2600</a><n-divider vertical />
               <a href="https://github.com/XXXiaohuayanGGG" target="_blank">@XXXiaohuayanGGG</a><n-divider vertical />
               <a href="https://github.com/2lovecode" target="_blank">@2lovecode</a><n-divider vertical />
+              <a href="https://github.com/JerryLookupU" target="_blank">@JerryLookupU</a><n-divider vertical />
             </p>
             <p>
               感谢以下开源项目：
