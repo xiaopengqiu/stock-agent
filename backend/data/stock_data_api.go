@@ -522,6 +522,13 @@ func SearchStockPriceInfo(stockCode string) *[]string {
 		context.Background(),
 	)
 	defer cancel()
+	defer func(ctx context.Context) {
+		err := chromedp.Cancel(ctx)
+		if err != nil {
+			logger.SugaredLogger.Error(err.Error())
+		}
+	}(ctx)
+
 	var htmlContent string
 
 	var tasks chromedp.Tasks
@@ -584,6 +591,12 @@ func SearchStockInfo(stock, msgType string) *[]string {
 		chromedp.WithErrorf(logger.SugaredLogger.Errorf),
 	)
 	defer cancel()
+	defer func(ctx context.Context) {
+		err := chromedp.Cancel(ctx)
+		if err != nil {
+			logger.SugaredLogger.Error(err.Error())
+		}
+	}(ctx)
 	var htmlContent string
 	url := fmt.Sprintf("https://www.cls.cn/searchPage?keyword=%s&type=%s", stock, msgType)
 	err := chromedp.Run(ctx,

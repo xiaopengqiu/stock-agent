@@ -233,6 +233,12 @@ func GetFinancialReports(stockCode string) *[]string {
 		chromedp.WithErrorf(logger.SugaredLogger.Errorf),
 	)
 	defer cancel()
+	defer func(ctx context.Context) {
+		err := chromedp.Cancel(ctx)
+		if err != nil {
+			logger.SugaredLogger.Error(err.Error())
+		}
+	}(ctx)
 	var htmlContent string
 	url := fmt.Sprintf("https://xueqiu.com/snowman/S/%s/detail#/ZYCWZB", stockCode)
 	err := chromedp.Run(ctx,
