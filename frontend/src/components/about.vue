@@ -23,8 +23,8 @@ onMounted(() => {
       <n-space vertical size="large">
         <!-- 软件描述 -->
         <n-card size="large">
+          <n-divider title-placement="center">关于软件</n-divider>
           <n-space vertical >
-            <h1>关于软件</h1>
             <n-image width="100" :src="icon" />
             <h1>go-stock <n-tag  size="small" round>{{versionInfo}}</n-tag></h1>
             <div style="justify-self: center;text-align: left" >
@@ -40,11 +40,9 @@ onMounted(() => {
               <p v-if="updateLog">更新说明：{{updateLog}}</p>
             </div>
           </n-space>
-        </n-card>
-        <!-- 关于作者 -->
-        <n-card size="large">
+          <n-divider title-placement="center">关于作者</n-divider>
           <n-space vertical>
-            <h1>关于作者</h1>
+<!--            <h1>关于作者</h1>-->
             <n-avatar width="100" src="https://avatars.githubusercontent.com/u/7401917?v=4" />
             <h2><a href="https://github.com/ArvinLovegood" target="_blank">@ArvinLovegood</a></h2>
             <p>一个热爱编程的小白，欢迎关注我的Github</p>
