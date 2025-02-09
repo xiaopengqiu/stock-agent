@@ -30,7 +30,12 @@ onMounted(() => {
             <div style="justify-self: center;text-align: left" >
               <p>自选股行情实时监控，基于Wails和NaiveUI构建的AI赋能股票分析工具</p>
               <p>
-                欢迎点赞GitHub：<a href="https://github.com/ArvinLovegood/go-stock" target="_blank">go-stock</a>
+              </p>
+              <p>
+                欢迎点赞GitHub：<a href="https://github.com/ArvinLovegood/go-stock" target="_blank">go-stock</a><n-divider vertical />
+                <a href="https://github.com/ArvinLovegood/go-stock" target="_blank">GitHub</a><n-divider vertical />
+                <a href="https://github.com/ArvinLovegood/go-stock/issues" target="_blank">Issues</a><n-divider vertical />
+                <a href="https://github.com/ArvinLovegood/go-stock/releases" target="_blank">Releases</a><n-divider vertical />
               </p>
               <p v-if="updateLog">更新说明：{{updateLog}}</p>
             </div>
@@ -43,8 +48,10 @@ onMounted(() => {
             <n-avatar width="100" src="https://avatars.githubusercontent.com/u/7401917?v=4" />
             <h2><a href="https://github.com/ArvinLovegood" target="_blank">@ArvinLovegood</a></h2>
             <p>一个热爱编程的小白，欢迎关注我的Github</p>
-            <p>邮箱：<a href="mailto:sparkmemory@163.com">sparkmemory@163.com</a>
-            </p>
+            <p>
+              邮箱：<a href="mailto:sparkmemory@163.com">sparkmemory@163.com</a><n-divider vertical />
+              QQ：  506808970<n-divider vertical />
+              微信：ArvinLovegood</p><n-divider vertical />
           </n-space>
         </n-card>
       </n-space>
