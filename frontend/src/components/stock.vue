@@ -231,12 +231,20 @@ function isTradingTime() {
 }
 
 function AddStock(){
+  if (!data?.code) {
+    message.error("请输入有效股票代码");
+    return;
+  }
   if (!stocks.value.includes(data.code)) {
-      stocks.value.push(data.code)
       Follow(data.code).then(result => {
-        message.success(result)
+        if(result==="关注成功"){
+          stocks.value.push(data.code)
+          message.success(result)
+          monitor();
+        }else{
+          message.error(result)
+        }
       })
-    monitor()
   }else{
     message.error("已经关注了")
   }

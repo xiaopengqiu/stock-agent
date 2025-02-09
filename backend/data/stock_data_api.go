@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/chromedp/chromedp"
@@ -291,6 +292,9 @@ func (receiver StockDataApi) GetStockCodeRealTimeData(StockCodes ...string) (*[]
 	stockInfos := make([]StockInfo, 0)
 	str := GB18030ToUTF8(resp.Body())
 	dataStr := strutil.SplitEx(str, "\n", true)
+	if len(dataStr) == 0 {
+		return &[]StockInfo{}, errors.New("获取股票信息失败,请检查股票代码是否正确")
+	}
 	for _, data := range dataStr {
 		//logger.SugaredLogger.Info(data)
 		stockData, err := ParseFullSingleStockData(data)
@@ -318,8 +322,8 @@ func (receiver StockDataApi) GetStockCodeRealTimeData(StockCodes ...string) (*[]
 func (receiver StockDataApi) Follow(stockCode string) string {
 	logger.SugaredLogger.Infof("Follow %s", stockCode)
 	stockInfos, err := receiver.GetStockCodeRealTimeData(stockCode)
-	if err != nil {
-		logger.SugaredLogger.Error(err.Error())
+	if err != nil || len(*stockInfos) == 0 {
+		logger.SugaredLogger.Error(err)
 		return "关注失败"
 	}
 	stockInfo := (*stockInfos)[0]
