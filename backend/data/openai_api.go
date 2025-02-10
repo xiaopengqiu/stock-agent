@@ -76,7 +76,19 @@ type AiResponse struct {
 
 func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 	ch := make(chan string, 512)
+
+	defer func() {
+		if err := recover(); err != nil {
+			logger.SugaredLogger.Error("NewChatStream panic", err)
+		}
+	}()
+
 	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				logger.SugaredLogger.Error("NewChatStream goroutine  panic", err)
+			}
+		}()
 		defer close(ch)
 		msg := []map[string]interface{}{
 			{
@@ -174,7 +186,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		client.SetBaseURL(o.BaseUrl)
 		client.SetHeader("Authorization", "Bearer "+o.ApiKey)
 		client.SetHeader("Content-Type", "application/json")
-		client.SetRetryCount(3)
+		//client.SetRetryCount(3)
 		if o.TimeOut <= 0 {
 			o.TimeOut = 300
 		}
@@ -190,14 +202,15 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			}).
 			Post("/chat/completions")
 
-		defer resp.RawBody().Close()
+		body := resp.RawBody()
+		defer body.Close()
 		if err != nil {
 			logger.SugaredLogger.Infof("Stream error : %s", err.Error())
 			ch <- err.Error()
 			return
 		}
 
-		scanner := bufio.NewScanner(resp.RawBody())
+		scanner := bufio.NewScanner(body)
 		for scanner.Scan() {
 			line := scanner.Text()
 			logger.SugaredLogger.Infof("Received data: %s", line)
@@ -232,8 +245,13 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 						}
 					}
 				} else {
-					logger.SugaredLogger.Infof("Stream data error : %s", err.Error())
-					ch <- err.Error()
+					if err != nil {
+						logger.SugaredLogger.Infof("Stream data error : %s", err.Error())
+						ch <- err.Error()
+					} else {
+						logger.SugaredLogger.Infof("Stream data error : %s", data)
+						ch <- data
+					}
 				}
 			} else {
 				ch <- line

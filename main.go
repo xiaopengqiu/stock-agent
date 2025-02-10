@@ -3,6 +3,7 @@ package main
 import (
 	"embed"
 	"encoding/json"
+	"fmt"
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/logger"
@@ -18,6 +19,7 @@ import (
 	"log"
 	"os"
 	goruntime "runtime"
+	"runtime/debug"
 	"time"
 )
 
@@ -204,5 +206,13 @@ func checkDir(dir string) {
 	if os.IsNotExist(err) {
 		os.Mkdir(dir, os.ModePerm)
 		logger.NewDefaultLogger().Info("create dir: " + dir)
+	}
+}
+
+// PanicHandler 捕获 panic 的包装函数
+func PanicHandler() {
+	if r := recover(); r != nil {
+		fmt.Printf("Recovered from panic: %v\n", r)
+		debug.PrintStack()
 	}
 }

@@ -1,6 +1,7 @@
 <script setup>
 import stockInfo from './components/stock.vue'
 import {
+  EventsEmit,
   EventsOn,
   Quit,
   WindowFullscreen, WindowGetPosition,
@@ -157,6 +158,18 @@ EventsOn("realtime_profit",(data)=>{
 EventsOn("telegraph",(data)=>{
   telegraph.value=data
 })
+
+window.onerror = function (message, source, lineno, colno, error) {
+  // 将错误信息发送给后端
+  EventsEmit("frontendError", {
+    message: message,
+    source: source,
+    lineno: lineno,
+    colno: colno,
+    error: error ? error.stack : null
+  });
+  return true;
+};
 </script>
 <template>
 

@@ -4,6 +4,7 @@ import {onMounted, ref, watch} from "vue";
 import {ExportConfig, GetConfig, SendDingDingMessageByType, UpdateConfig} from "../../wailsjs/go/main/App";
 import {useMessage} from "naive-ui";
 import {data} from "../../wailsjs/go/models";
+import {EventsEmit} from "../../wailsjs/runtime";
 const message = useMessage()
 
 const formRef = ref(null)
@@ -150,6 +151,19 @@ function importConfig(){
   };
   input.click();
 }
+
+
+window.onerror = function (message, source, lineno, colno, error) {
+  // 将错误信息发送给后端
+  EventsEmit("frontendError", {
+    message: message,
+    source: source,
+    lineno: lineno,
+    colno: colno,
+    error: error ? error.stack : null
+  });
+  return true;
+};
 </script>
 
 <template>

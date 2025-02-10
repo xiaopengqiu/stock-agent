@@ -22,7 +22,7 @@ import {
   useModal,
   useNotification
 } from 'naive-ui'
-import {EventsOn, WindowFullscreen, WindowReload, WindowUnfullscreen} from '../../wailsjs/runtime'
+import {EventsEmit, EventsOn, WindowFullscreen, WindowReload, WindowUnfullscreen} from '../../wailsjs/runtime'
 import {Add, Search,StarOutline} from '@vicons/ionicons5'
 import { MdPreview } from 'md-editor-v3';
 // preview.css相比style.css少了编辑器那部分样式
@@ -546,7 +546,17 @@ function getHeight() {
   return document.documentElement.clientHeight
 }
 
-
+window.onerror = function (message, source, lineno, colno, error) {
+  // 将错误信息发送给后端
+  EventsEmit("frontendError", {
+    message: message,
+    source: source,
+    lineno: lineno,
+    colno: colno,
+    error: error ? error.stack : null
+  });
+  return true;
+};
 </script>
 
 <template>

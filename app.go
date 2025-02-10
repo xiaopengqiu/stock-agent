@@ -41,6 +41,10 @@ func NewApp() *App {
 
 // startup is called at application startup
 func (a *App) startup(ctx context.Context) {
+	defer PanicHandler()
+	runtime.EventsOn(ctx, "frontendError", func(optionalData ...interface{}) {
+		logger.SugaredLogger.Errorf("Frontend error: %v\n", optionalData)
+	})
 	logger.SugaredLogger.Infof("Version:%s", Version)
 	// Perform your setup here
 	a.ctx = ctx
@@ -86,6 +90,8 @@ func checkUpdate(a *App) {
 
 // domReady is called after front-end resources have been loaded
 func (a *App) domReady(ctx context.Context) {
+	defer PanicHandler()
+
 	// Add your action here
 	//定时更新数据
 	go func() {
@@ -321,6 +327,7 @@ func addStockFollowData(follow data.FollowedStock, stockData *data.StockInfo) {
 // either by clicking the window close button or calling runtime.Quit.
 // Returning true will cause the application to continue, false will continue shutdown as normal.
 func (a *App) beforeClose(ctx context.Context) (prevent bool) {
+	defer PanicHandler()
 
 	dialog, err := runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
 		Type:         runtime.QuestionDialog,
@@ -344,6 +351,7 @@ func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 
 // shutdown is called at application termination
 func (a *App) shutdown(ctx context.Context) {
+	defer PanicHandler()
 	// Perform your teardown here
 	systray.Quit()
 }
