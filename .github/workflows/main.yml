@@ -37,7 +37,7 @@ jobs:
           $commit_message = & git log -1 --pretty=format:"%s"
           echo "::set-output name=commit_message::$commit_message"
 
-      - name: Build wails
+      - name: Build wails x go-stock
         uses: ArvinLovegood/wails-build-action@v2.8
         id: build
         with:
