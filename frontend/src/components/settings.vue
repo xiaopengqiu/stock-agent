@@ -153,15 +153,18 @@ function importConfig(){
 }
 
 
-window.onerror = function (message, source, lineno, colno, error) {
+window.onerror = function (msg, source, lineno, colno, error) {
   // 将错误信息发送给后端
   EventsEmit("frontendError", {
-    message: message,
+    page: "settings.vue",
+    message: msg,
     source: source,
     lineno: lineno,
     colno: colno,
     error: error ? error.stack : null
   });
+
+  message.error("发生错误:"+msg)
   return true;
 };
 </script>

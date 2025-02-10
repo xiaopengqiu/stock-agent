@@ -86,7 +86,9 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
-				logger.SugaredLogger.Error("NewChatStream goroutine  panic", err)
+				logger.SugaredLogger.Errorf("NewChatStream goroutine  panic :%s", err)
+				logger.SugaredLogger.Errorf("NewChatStream goroutine  panic  stock:%s stockCode:%s", stock, stockCode)
+				logger.SugaredLogger.Errorf("NewChatStream goroutine  panic  config:%v", o)
 			}
 		}()
 		defer close(ch)
