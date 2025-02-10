@@ -18,7 +18,7 @@
     "@vitejs/plugin-vue": "^5.2.1",
     "naive-ui": "^2.41.0",
     "vfonts": "^0.0.3",
-    "vite": "5.4.6"
+    "vite": "^5.4.12"
   },
   "keywords": ["AI赋能股票分析","go-stock"],
   "author": "spark"
