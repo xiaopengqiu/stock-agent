@@ -535,6 +535,7 @@ func (a *App) ExportConfig() string {
 	file, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
 		Title:                "导出配置文件",
 		CanCreateDirectories: true,
+		DefaultFilename:      "config.json",
 	})
 	if err != nil {
 		logger.SugaredLogger.Errorf("导出配置文件失败:%s", err.Error())
