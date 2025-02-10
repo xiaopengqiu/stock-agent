@@ -1,6 +1,7 @@
 package data
 
 import (
+	"encoding/json"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"gorm.io/gorm"
@@ -87,4 +88,9 @@ func (s SettingsApi) GetConfig() *Settings {
 	var settings Settings
 	db.Dao.Model(&Settings{}).First(&settings)
 	return &settings
+}
+
+func (s SettingsApi) Export() string {
+	d, _ := json.MarshalIndent(s.GetConfig(), "", "    ")
+	return string(d)
 }

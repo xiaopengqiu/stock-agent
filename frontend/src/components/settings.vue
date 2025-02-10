@@ -1,7 +1,7 @@
 <script setup>
 
 import {onMounted, ref, watch} from "vue";
-import {GetConfig, SendDingDingMessageByType, UpdateConfig} from "../../wailsjs/go/main/App";
+import {ExportConfig, GetConfig, SendDingDingMessageByType, UpdateConfig} from "../../wailsjs/go/main/App";
 import {useMessage} from "naive-ui";
 import {data} from "../../wailsjs/go/models";
 const message = useMessage()
@@ -106,6 +106,50 @@ function sendTestNotice(){
     message.info(res)
   })
 }
+
+function exportConfig(){
+  ExportConfig().then(res=>{
+    message.info(res)
+  })
+}
+
+function importConfig(){
+  let input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = (e) => {
+    let file = e.target.files[0];
+    let reader = new FileReader();
+    reader.onload = (e) => {
+      let config = JSON.parse(e.target.result);
+      console.log(config)
+      formValue.value.ID = config.ID
+      formValue.value.tushareToken = config.tushareToken
+      formValue.value.dingPush = {
+        enable:config.dingPushEnable,
+        dingRobot:config.dingRobot
+      }
+      formValue.value.localPush = {
+        enable:config.localPushEnable,
+      }
+      formValue.value.updateBasicInfoOnStart = config.updateBasicInfoOnStart
+      formValue.value.refreshInterval = config.refreshInterval
+      formValue.value.openAI = {
+        enable:config.openAiEnable,
+        baseUrl: config.openAiBaseUrl,
+        apiKey:config.openAiApiKey,
+        model:config.openAiModelName,
+        temperature:config.openAiTemperature,
+        maxTokens:config.openAiMaxTokens,
+        prompt:config.prompt,
+        timeout:config.openAiApiTimeOut
+      }
+      formRef.value.resetFields()
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
 </script>
 
 <template>
@@ -186,9 +230,17 @@ function sendTestNotice(){
 
     <n-gi :span="24">
       <div style="display: flex; justify-content: center">
+        <n-space>
         <n-button  type="primary" @click="saveConfig">
           保存
         </n-button>
+        <n-button  type="info" @click="exportConfig">
+          导出
+        </n-button>
+        <n-button  type="error" @click="importConfig">
+          导入
+        </n-button>
+        </n-space>
       </div>
     </n-gi>
   </n-form>

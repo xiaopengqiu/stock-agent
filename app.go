@@ -18,6 +18,7 @@ import (
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"go-stock/backend/models"
+	"os"
 	"strings"
 	"time"
 )
@@ -527,4 +528,22 @@ func (a *App) UpdateConfig(settings *data.Settings) string {
 
 func (a *App) GetConfig() *data.Settings {
 	return data.NewSettingsApi(&data.Settings{}).GetConfig()
+}
+
+func (a *App) ExportConfig() string {
+	config := data.NewSettingsApi(&data.Settings{}).Export()
+	file, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:                "导出配置文件",
+		CanCreateDirectories: true,
+	})
+	if err != nil {
+		logger.SugaredLogger.Errorf("导出配置文件失败:%s", err.Error())
+		return err.Error()
+	}
+	err = os.WriteFile(file, []byte(config), 0644)
+	if err != nil {
+		logger.SugaredLogger.Errorf("导出配置文件失败:%s", err.Error())
+		return err.Error()
+	}
+	return "导出成功:" + file
 }
