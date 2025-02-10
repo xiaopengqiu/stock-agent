@@ -1,4 +1,4 @@
-![Wails and NaiveUI](./build/appicon.png)
+![go-stock](./build/appicon.png)
 ## 自选股行情实时监控，基于Wails和NaiveUI构建的AI赋能股票分析工具
 ### <span style="color: #568DF4;">各位亲爱的朋友们，如果您对这个项目感兴趣，请先给我一个<i style="color: #EA2626;">star</i>，谢谢！</span>
 - 经测试目前硅基流动(siliconflow)提供的deepSeek api 服务比较稳定，注册即送2000万Tokens，[注册链接](https://cloud.siliconflow.cn/i/foufCerk)
