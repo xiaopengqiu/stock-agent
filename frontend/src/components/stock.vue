@@ -215,6 +215,25 @@ EventsOn("updateVersion",async (msg) => {
   })
 })
 
+EventsOn("warnMsg",async (msg) => {
+  notify.error({
+    avatar: () =>
+        h(NAvatar, {
+          size: 'small',
+          round: false,
+          src: icon.value
+        }),
+    title: '警告',
+    content: () => {
+      return h('div', {
+        style: {
+          'text-align': 'left',
+          'font-size': '14px',
+        }
+      }, { default: () => msg })
+    },
+  })
+})
 
 //判断是否是A股交易时间
 function isTradingTime() {

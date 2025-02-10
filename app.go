@@ -18,6 +18,7 @@ import (
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"go-stock/backend/models"
+	"golang.org/x/sys/windows/registry"
 	"os"
 	"strings"
 	"time"
@@ -119,6 +120,13 @@ func (a *App) domReady(ctx context.Context) {
 	//检查新版本
 	go func() {
 		checkUpdate(a)
+	}()
+	//检查谷歌浏览器
+	go func() {
+		f := checkChromeOnWindows()
+		if !f {
+			go runtime.EventsEmit(a.ctx, "warnMsg", "谷歌浏览器未安装,ai分析功能可能无法使用")
+		}
 	}()
 }
 
@@ -433,6 +441,21 @@ func (a *App) GetVersionInfo() *models.VersionInfo {
 	}
 }
 
+// checkChromeOnWindows 在 Windows 系统上检查谷歌浏览器是否安装
+func checkChromeOnWindows() bool {
+	key, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe`, registry.QUERY_VALUE)
+	if err != nil {
+		// 尝试在 WOW6432Node 中查找（适用于 64 位系统上的 32 位程序）
+		key, err = registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe`, registry.QUERY_VALUE)
+		if err != nil {
+			return false
+		}
+		defer key.Close()
+	}
+	defer key.Close()
+	_, _, err = key.GetValue("Path", nil)
+	return err == nil
+}
 func GetImageBase(bytes []byte) string {
 	return "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(bytes)
 }
