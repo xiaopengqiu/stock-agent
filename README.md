@@ -66,3 +66,7 @@ You can build you Application with: `wails build`
 | 支付宝 | 微信  |
 |-----|-----| 
 | ![alipay.jpg](build/screenshot/alipay.jpg)  | ![wxpay.jpg](build/screenshot/wxpay.jpg) |
+
+
+## 状态
+![Alt](https://repobeats.axiom.co/api/embed/40b07d415a42c2264a18c4fe1b6f182ff1470687.svg "Repobeats analytics image")
