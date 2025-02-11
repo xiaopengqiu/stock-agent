@@ -9,6 +9,7 @@ import (
 	"github.com/chromedp/chromedp"
 	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/go-resty/resty/v2"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"go-stock/backend/models"
@@ -22,6 +23,7 @@ import (
 // @Desc
 // -----------------------------------------------------------------------------------
 type OpenAi struct {
+	ctx         context.Context
 	BaseUrl     string  `json:"base_url"`
 	ApiKey      string  `json:"api_key"`
 	Model       string  `json:"model"`
@@ -31,9 +33,10 @@ type OpenAi struct {
 	TimeOut     int     `json:"time_out"`
 }
 
-func NewDeepSeekOpenAi() *OpenAi {
+func NewDeepSeekOpenAi(ctx context.Context) *OpenAi {
 	config := getConfig()
 	return &OpenAi{
+		ctx:         ctx,
 		BaseUrl:     config.OpenAiBaseUrl,
 		ApiKey:      config.OpenAiApiKey,
 		Model:       config.OpenAiModelName,
@@ -108,7 +111,8 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			messages := SearchStockPriceInfo(stockCode)
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股票价格失败")
-				ch <- "***获取股票价格失败,分析结果可能不准确***<hr>"
+				ch <- "***❗获取股票价格失败,分析结果可能不准确***<hr>"
+				go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取股票价格失败,分析结果可能不准确")
 				return
 			}
 			price := ""
@@ -126,7 +130,8 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			messages := GetFinancialReports(stockCode)
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股票财报失败")
-				ch <- "***获取股票财报失败,分析结果可能不准确***<hr>"
+				ch <- "***❗获取股票财报失败,分析结果可能不准确***<hr>"
+				go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取股票财报失败,分析结果可能不准确")
 				return
 			}
 			for _, message := range *messages {
@@ -142,7 +147,8 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			messages := GetTelegraphList()
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取市场资讯失败")
-				ch <- "***获取市场资讯失败,分析结果可能不准确***<hr>"
+				ch <- "***❗获取市场资讯失败,分析结果可能不准确***<hr>"
+				go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取市场资讯失败,分析结果可能不准确")
 				return
 			}
 			for _, message := range *messages {
@@ -158,7 +164,8 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			messages := SearchStockInfo(stock, "depth")
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股票资讯失败")
-				ch <- "***获取股票资讯失败,分析结果可能不准确***<hr>"
+				ch <- "***❗获取股票资讯失败,分析结果可能不准确***<hr>"
+				go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取股票资讯失败,分析结果可能不准确")
 				return
 			}
 			for _, message := range *messages {
@@ -173,8 +180,8 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			messages := SearchStockInfo(stock, "telegram")
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股票电报资讯失败")
-				ch <- "***获取股票电报资讯失败,分析结果可能不准确***<hr>"
-
+				ch <- "***❗获取股票电报资讯失败,分析结果可能不准确***<hr>"
+				go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取股票电报资讯失败,分析结果可能不准确")
 				return
 			}
 			for _, message := range *messages {

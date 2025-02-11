@@ -427,7 +427,7 @@ func (a *App) SendDingDingMessageByType(message string, stockCode string, msgTyp
 }
 
 func (a *App) NewChatStream(stock, stockCode string) {
-	msgs := data.NewDeepSeekOpenAi().NewChatStream(stock, stockCode)
+	msgs := data.NewDeepSeekOpenAi(a.ctx).NewChatStream(stock, stockCode)
 	for msg := range msgs {
 		runtime.EventsEmit(a.ctx, "newChatStream", msg)
 	}
@@ -435,10 +435,10 @@ func (a *App) NewChatStream(stock, stockCode string) {
 }
 
 func (a *App) SaveAIResponseResult(stockCode, stockName, result string) {
-	data.NewDeepSeekOpenAi().SaveAIResponseResult(stockCode, stockName, result)
+	data.NewDeepSeekOpenAi(a.ctx).SaveAIResponseResult(stockCode, stockName, result)
 }
 func (a *App) GetAIResponseResult(stock string) *models.AIResponseResult {
-	return data.NewDeepSeekOpenAi().GetAIResponseResult(stock)
+	return data.NewDeepSeekOpenAi(a.ctx).GetAIResponseResult(stock)
 }
 
 func (a *App) GetVersionInfo() *models.VersionInfo {
