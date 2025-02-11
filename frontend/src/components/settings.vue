@@ -164,9 +164,7 @@ window.onerror = function (event, source, lineno, colno, error) {
     colno: colno,
     error: error ? error.stack : null
   });
-
-
-  message.error("发生错误:"+event)
+  //message.error("发生错误:"+event)
   return true;
 };
 </script>
