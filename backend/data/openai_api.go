@@ -157,6 +157,19 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 					"content": message,
 				})
 			}
+			messages = GetTopNewsList()
+			if messages == nil || len(*messages) == 0 {
+				logger.SugaredLogger.Error("获取新闻资讯失败")
+				ch <- "***❗获取新闻资讯失败,分析结果可能不准确***<hr>"
+				go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取新闻资讯失败,分析结果可能不准确")
+				return
+			}
+			for _, message := range *messages {
+				msg = append(msg, map[string]interface{}{
+					"role":    "assistant",
+					"content": message,
+				})
+			}
 		}()
 
 		go func() {
@@ -453,6 +466,28 @@ func GetTelegraphList() *[]string {
 	}
 	var telegraph []string
 	document.Find("div.telegraph-content-box").Each(func(i int, selection *goquery.Selection) {
+		logger.SugaredLogger.Info(selection.Text())
+		telegraph = append(telegraph, selection.Text())
+	})
+	return &telegraph
+}
+
+func GetTopNewsList() *[]string {
+	url := "https://www.cls.cn"
+	response, err := resty.New().R().
+		SetHeader("Referer", "https://www.cls.cn/").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").
+		Get(fmt.Sprintf(url))
+	if err != nil {
+		return &[]string{}
+	}
+	//logger.SugaredLogger.Info(string(response.Body()))
+	document, err := goquery.NewDocumentFromReader(strings.NewReader(string(response.Body())))
+	if err != nil {
+		return &[]string{}
+	}
+	var telegraph []string
+	document.Find("div.home-article-title a,div.home-article-rec a").Each(func(i int, selection *goquery.Selection) {
 		logger.SugaredLogger.Info(selection.Text())
 		telegraph = append(telegraph, selection.Text())
 	})
