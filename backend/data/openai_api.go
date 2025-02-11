@@ -294,8 +294,16 @@ func GetFinancialReports(stockCode string) *[]string {
 	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer timeoutCtxCancel()
 
-	ctx, cancel := chromedp.NewContext(
+	edgePath := `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`
+
+	pctx, pcancel := chromedp.NewExecAllocator(
 		timeoutCtx,
+		chromedp.ExecPath(edgePath),
+		chromedp.Flag("headless", true),
+	)
+	defer pcancel()
+	ctx, cancel := chromedp.NewContext(
+		pctx,
 		chromedp.WithLogf(logger.SugaredLogger.Infof),
 		chromedp.WithErrorf(logger.SugaredLogger.Errorf),
 	)

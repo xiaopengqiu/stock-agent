@@ -127,11 +127,22 @@ func (a *App) domReady(ctx context.Context) {
 	go func() {
 		checkUpdate(a)
 	}()
+
 	//检查谷歌浏览器
+	//go func() {
+	//	f := checkChromeOnWindows()
+	//	if !f {
+	//		go runtime.EventsEmit(a.ctx, "warnMsg", "谷歌浏览器未安装,ai分析功能可能无法使用")
+	//	}
+	//}()
+
+	//检查Edge浏览器
 	go func() {
-		f := checkChromeOnWindows()
-		if !f {
-			go runtime.EventsEmit(a.ctx, "warnMsg", "谷歌浏览器未安装,ai分析功能可能无法使用")
+		path, e := checkEdgeOnWindows()
+		if !e {
+			go runtime.EventsEmit(a.ctx, "warnMsg", "Edge浏览器未安装,ai分析功能可能无法使用")
+		} else {
+			logger.SugaredLogger.Infof("Edge浏览器已安装，路径为: %s", path)
 		}
 	}()
 }
@@ -464,6 +475,26 @@ func checkChromeOnWindows() bool {
 	_, _, err = key.GetValue("Path", nil)
 	return err == nil
 }
+
+// checkEdgeOnWindows 在 Windows 系统上检查Edge浏览器是否安装，并返回安装路径
+func checkEdgeOnWindows() (string, bool) {
+	key, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe`, registry.QUERY_VALUE)
+	if err != nil {
+		// 尝试在 WOW6432Node 中查找（适用于 64 位系统上的 32 位程序）
+		key, err = registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe`, registry.QUERY_VALUE)
+		if err != nil {
+			return "", false
+		}
+		defer key.Close()
+	}
+	defer key.Close()
+	path, _, err := key.GetStringValue("Path")
+	if err != nil {
+		return "", false
+	}
+	return path, true
+}
+
 func GetImageBase(bytes []byte) string {
 	return "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(bytes)
 }

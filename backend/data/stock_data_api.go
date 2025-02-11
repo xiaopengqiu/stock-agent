@@ -522,11 +522,20 @@ func SearchStockPriceInfo(stockCode string) *[]string {
 	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer timeoutCtxCancel()
 
-	ctx, cancel := chromedp.NewContext(
+	edgePath := `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`
+
+	pctx, pcancel := chromedp.NewExecAllocator(
 		timeoutCtx,
+		chromedp.ExecPath(edgePath),
+		chromedp.Flag("headless", true),
+	)
+	defer pcancel()
+	ctx, cancel := chromedp.NewContext(
+		pctx,
 		chromedp.WithLogf(logger.SugaredLogger.Infof),
 		chromedp.WithErrorf(logger.SugaredLogger.Errorf),
 	)
+
 	defer cancel()
 
 	defer func(ctx context.Context) {
@@ -594,9 +603,16 @@ func SearchStockInfo(stock, msgType string) *[]string {
 	// 创建一个 chromedp 上下文
 	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer timeoutCtxCancel()
+	edgePath := `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`
 
-	ctx, cancel := chromedp.NewContext(
+	pctx, pcancel := chromedp.NewExecAllocator(
 		timeoutCtx,
+		chromedp.ExecPath(edgePath),
+		chromedp.Flag("headless", true),
+	)
+	defer pcancel()
+	ctx, cancel := chromedp.NewContext(
+		pctx,
 		chromedp.WithLogf(logger.SugaredLogger.Infof),
 		chromedp.WithErrorf(logger.SugaredLogger.Errorf),
 	)
