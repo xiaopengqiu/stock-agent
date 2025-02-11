@@ -567,7 +567,7 @@ window.onerror = function (msg, source, lineno, colno, error) {
   return true;
 };
 
-function saveAsImage() {
+function saveAsImage(name,code) {
   const element = document.querySelector('.md-editor-preview');
   if (element) {
     html2canvas(element,{
@@ -577,7 +577,7 @@ function saveAsImage() {
     }).then(canvas => {
       const link = document.createElement('a');
       link.href = canvas.toDataURL('image/png');
-      link.download = 'ai-analysis-result.png';
+      link.download = name+"["+code+']-ai-analysis-result.png';
       link.click();
     });
   } else {
@@ -593,6 +593,15 @@ async function copyToClipboard() {
     message.error('复制失败: ' + err);
   }
 }
+function saveAsMarkdown() {
+  const blob = new Blob([data.airesult], { type: 'text/markdown;charset=utf-8' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `${data.name}[${data.code}]-ai-analysis-result.md`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
 
 </script>
 
@@ -739,8 +748,9 @@ async function copyToClipboard() {
     <template #action>
       <n-flex justify="right">
         <n-button size="tiny"  type="warning" @click="aiReCheckStock(data.name,data.code)">再次分析</n-button>
-        <n-button size="tiny" type="info" @click="saveAsImage">保存为图片</n-button>
+        <n-button size="tiny" type="info" @click="saveAsImage(data.name,data.code)">保存为图片</n-button>
         <n-button size="tiny" type="success" @click="copyToClipboard">复制到剪切板</n-button>
+        <n-button size="tiny" type="primary" @click="saveAsMarkdown">保存为Markdown文件</n-button>
       </n-flex>
     </template>
   </n-modal>
