@@ -108,6 +108,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			messages := SearchStockPriceInfo(stockCode)
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股票价格失败")
+				ch <- "***获取股票价格失败,分析结果可能不准确***<hr>"
 				return
 			}
 			price := ""
@@ -125,6 +126,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			messages := GetFinancialReports(stockCode)
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股票财报失败")
+				ch <- "***获取股票财报失败,分析结果可能不准确***<hr>"
 				return
 			}
 			for _, message := range *messages {
@@ -140,6 +142,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			messages := GetTelegraphList()
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取市场资讯失败")
+				ch <- "***获取市场资讯失败,分析结果可能不准确***<hr>"
 				return
 			}
 			for _, message := range *messages {
@@ -155,6 +158,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			messages := SearchStockInfo(stock, "depth")
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股票资讯失败")
+				ch <- "***获取股票资讯失败,分析结果可能不准确***<hr>"
 				return
 			}
 			for _, message := range *messages {
@@ -169,6 +173,8 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			messages := SearchStockInfo(stock, "telegram")
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股票电报资讯失败")
+				ch <- "***获取股票电报资讯失败,分析结果可能不准确***<hr>"
+
 				return
 			}
 			for _, message := range *messages {
@@ -265,8 +271,11 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 
 func GetFinancialReports(stockCode string) *[]string {
 	// 创建一个 chromedp 上下文
+	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer timeoutCtxCancel()
+
 	ctx, cancel := chromedp.NewContext(
-		context.Background(),
+		timeoutCtx,
 		chromedp.WithLogf(logger.SugaredLogger.Infof),
 		chromedp.WithErrorf(logger.SugaredLogger.Errorf),
 	)

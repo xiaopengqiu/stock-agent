@@ -518,8 +518,12 @@ func (IndexBasic) TableName() string {
 func SearchStockPriceInfo(stockCode string) *[]string {
 	url := "https://www.cls.cn/stock?code=" + stockCode
 	// 创建一个 chromedp 上下文
+
+	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer timeoutCtxCancel()
+
 	ctx, cancel := chromedp.NewContext(
-		context.Background(),
+		timeoutCtx,
 		chromedp.WithLogf(logger.SugaredLogger.Infof),
 		chromedp.WithErrorf(logger.SugaredLogger.Errorf),
 	)
@@ -588,8 +592,11 @@ func FetchPrice(ctx context.Context) (string, error) {
 }
 func SearchStockInfo(stock, msgType string) *[]string {
 	// 创建一个 chromedp 上下文
+	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer timeoutCtxCancel()
+
 	ctx, cancel := chromedp.NewContext(
-		context.Background(),
+		timeoutCtx,
 		chromedp.WithLogf(logger.SugaredLogger.Infof),
 		chromedp.WithErrorf(logger.SugaredLogger.Errorf),
 	)
