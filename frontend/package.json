@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@vicons/ionicons5": "^0.13.0",
+    "html2canvas": "^1.4.1",
     "md-editor-v3": "^5.2.1",
     "vue": "^3.2.25",
     "vue-router": "^4.5.0"
@@ -20,6 +21,9 @@
     "vfonts": "^0.0.3",
     "vite": "^5.4.12"
   },
-  "keywords": ["AI赋能股票分析","go-stock"],
+  "keywords": [
+    "AI赋能股票分析",
+    "go-stock"
+  ],
   "author": "spark"
 }

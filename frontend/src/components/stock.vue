@@ -27,6 +27,7 @@ import {Add, Search,StarOutline} from '@vicons/ionicons5'
 import { MdPreview } from 'md-editor-v3';
 // preview.css相比style.css少了编辑器那部分样式
 import 'md-editor-v3/lib/preview.css';
+import html2canvas from "html2canvas";
 const mdPreviewRef = ref(null)
 const message = useMessage()
 const modal = useModal()
@@ -565,6 +566,34 @@ window.onerror = function (msg, source, lineno, colno, error) {
   message.error("发生错误:"+msg)
   return true;
 };
+
+function saveAsImage() {
+  const element = document.querySelector('.md-editor-preview');
+  if (element) {
+    html2canvas(element,{
+      useCORS: true, // 解决跨域图片问题
+      scale: 2, // 提高截图质量
+      allowTaint: true, // 允许跨域图片
+    }).then(canvas => {
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = 'ai-analysis-result.png';
+      link.click();
+    });
+  } else {
+    message.error('无法找到分析结果元素');
+  }
+}
+
+async function copyToClipboard() {
+  try {
+    await navigator.clipboard.writeText(data.airesult);
+    message.success('分析结果已复制到剪切板');
+  } catch (err) {
+    message.error('复制失败: ' + err);
+  }
+}
+
 </script>
 
 <template>
@@ -695,9 +724,9 @@ window.onerror = function (msg, source, lineno, colno, error) {
     <n-image :src="data.kURL" />
   </n-modal>
 
-  <n-modal transform-origin="center" v-model:show="modalShow4"  preset="card" style="width: 800px;height: 500px" :title="'['+data.name+']AI分析结果'" >
+  <n-modal transform-origin="center" v-model:show="modalShow4"  preset="card" style="width: 800px;" :title="'['+data.name+']AI分析结果'" >
     <n-spin size="small" :show="data.loading">
-      <MdPreview  ref="mdPreviewRef" style="height: 380px;text-align: left" :modelValue="data.airesult" :theme="'dark'"/>
+      <MdPreview  ref="mdPreviewRef" style="height: 440px;text-align: left" :modelValue="data.airesult" :theme="'dark'"/>
     </n-spin>
     <template #header-extra>
 
@@ -705,7 +734,13 @@ window.onerror = function (msg, source, lineno, colno, error) {
     <template #footer>
       <n-flex justify="space-between">
         <n-text type="error" v-if="data.time" >分析时间:{{data.time}}</n-text>
+      </n-flex>
+    </template>
+    <template #action>
+      <n-flex justify="right">
         <n-button size="tiny"  type="warning" @click="aiReCheckStock(data.name,data.code)">再次分析</n-button>
+        <n-button size="tiny" type="info" @click="saveAsImage">保存为图片</n-button>
+        <n-button size="tiny" type="success" @click="copyToClipboard">复制到剪切板</n-button>
       </n-flex>
     </template>
   </n-modal>
