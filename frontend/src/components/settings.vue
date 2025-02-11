@@ -145,7 +145,7 @@ function importConfig(){
         prompt:config.prompt,
         timeout:config.openAiApiTimeOut
       }
-      formRef.value.resetFields()
+     // formRef.value.resetFields()
     };
     reader.readAsText(file);
   };
@@ -153,25 +153,27 @@ function importConfig(){
 }
 
 
-window.onerror = function (msg, source, lineno, colno, error) {
+window.onerror = function (event, source, lineno, colno, error) {
+  console.log(event, source, lineno, colno, error)
   // 将错误信息发送给后端
   EventsEmit("frontendError", {
     page: "settings.vue",
-    message: msg,
+    message: event,
     source: source,
     lineno: lineno,
     colno: colno,
     error: error ? error.stack : null
   });
 
-  message.error("发生错误:"+msg)
+
+  message.error("发生错误:"+event)
   return true;
 };
 </script>
 
 <template>
   <n-flex justify="left" style="margin-top: 12px;padding-left: 12px">
-  <n-form ref="formRef"  :model="formValue" :label-placement="'left'" :label-align="'left'" style="width: 100%;height: 100%">
+  <n-form ref="formRef"  :label-placement="'left'" :label-align="'left'">
       <n-grid :cols="24" :x-gap="24" style="text-align: left">
         <n-gi :span="24">
           <n-text type="default" style="font-size: 25px;font-weight: bold">基础设置</n-text>
