@@ -73,5 +73,16 @@
 ## 🤖 状态
 ![Alt](https://repobeats.axiom.co/api/embed/40b07d415a42c2264a18c4fe1b6f182ff1470687.svg "Repobeats analytics image")
 
+## 🐳 关于技术支持申明
+- 本软件基于开源技术构建，使用Wails、NaiveUI、Vue、AI大模型等开源项目。 技术上如有问题，可以先向对应的开源社区请求帮助。
+- 开源不易，本人精力和时间有限，如需一对一技术支持，请先赞助。联系微信(备注 技术支持)：ArvinLovegood
+
+| 技术支持方式 | 赞助(元)  |
+|-----|-----| 
+| 邮件：sparkmemory@163.com  | 50/次 |
+| 加 QQ：506808970，微信：ArvinLovegood  |100/次 |
+| 长期不定时技术支持（不限次数）  | 1000 |
+
+
 ## License
 [Apache License 2.0](LICENSE)
