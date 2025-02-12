@@ -11,6 +11,7 @@
 | [OpenAI](https://platform.openai.com/) | ✅ | 可接入任何 OpenAI 接口格式模型                       |
 | [Ollama](https://ollama.com/) | ✅ | 本地大模型运行平台                                 |
 | [LMStudio](https://lmstudio.ai/) | ✅ | 本地大模型运行平台                                 |
+| [AnythingLLM](https://anythingllm.com/) | ✅ | 本地知识库                                     |
 | [DeepSeek](https://www.deepseek.com/) | ✅ | deepseek-reasoner模型测试有问题，可通过本地模型或聚合模型平台使用 |
 | [大模型聚合平台](https://cloud.siliconflow.cn/i/foufCerk) | ✅ | 如：硅基流动，火山方舟等                              |
 
