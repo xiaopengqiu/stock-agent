@@ -69,6 +69,7 @@ You can build you Application with: `wails build`
 |-----|-----| 
 | ![alipay.jpg](build/screenshot/alipay.jpg)  | ![wxpay.jpg](build/screenshot/wxpay.jpg) |
 
-
 ## 状态
+[![Star History Chart](https://api.star-history.com/svg?repos=ArvinLovegood/go-stock&type=Date)](https://star-history.com/#ArvinLovegood/go-stock&Date)
+
 ![Alt](https://repobeats.axiom.co/api/embed/40b07d415a42c2264a18c4fe1b6f182ff1470687.svg "Repobeats analytics image")
