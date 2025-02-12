@@ -296,6 +296,8 @@ func GetFinancialReports(stockCode string) *[]string {
 	var ctx context.Context
 	var cancel context.CancelFunc
 	path, e := checkEdgeOnWindows()
+	logger.SugaredLogger.Infof("GetFinancialReports path:%s", path)
+
 	if e {
 		pctx, pcancel := chromedp.NewExecAllocator(
 			timeoutCtx,

@@ -525,6 +525,7 @@ func SearchStockPriceInfo(stockCode string) *[]string {
 	var ctx context.Context
 	var cancel context.CancelFunc
 	path, e := checkEdgeOnWindows()
+	logger.SugaredLogger.Infof("SearchStockPriceInfo path:%s", path)
 	if e {
 		pctx, pcancel := chromedp.NewExecAllocator(
 			timeoutCtx,
@@ -614,6 +615,8 @@ func SearchStockInfo(stock, msgType string) *[]string {
 	var ctx context.Context
 	var cancel context.CancelFunc
 	path, e := checkEdgeOnWindows()
+	logger.SugaredLogger.Infof("SearchStockInfo path:%s", path)
+
 	if e {
 		pctx, pcancel := chromedp.NewExecAllocator(
 			timeoutCtx,
