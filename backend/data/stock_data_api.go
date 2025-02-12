@@ -646,11 +646,18 @@ func SearchStockInfo(stock, msgType string, crawlTimeOut int64) *[]string {
 	}(ctx)
 	var htmlContent string
 	url := fmt.Sprintf("https://www.cls.cn/searchPage?keyword=%s&type=%s", stock, msgType)
+	sel := ".subject-interest-list"
+	if msgType == "depth" {
+		sel = ".subject-interest-list"
+	}
+	if msgType == "telegram" {
+		sel = ".search-telegraph-list"
+	}
 	err := chromedp.Run(ctx,
 		chromedp.Navigate(url),
 		// 等待页面加载完成，可以根据需要调整等待时间
 		//chromedp.Sleep(3*time.Second),
-		chromedp.WaitVisible(".search-content", chromedp.ByQuery),
+		chromedp.WaitVisible(sel, chromedp.ByQuery),
 		chromedp.OuterHTML("html", &htmlContent, chromedp.ByQuery),
 	)
 	if err != nil {
@@ -663,7 +670,7 @@ func SearchStockInfo(stock, msgType string, crawlTimeOut int64) *[]string {
 		return &[]string{}
 	}
 	var messages []string
-	document.Find(".search-content").Each(func(i int, selection *goquery.Selection) {
+	document.Find(".search-telegraph-list,.subject-interest-list").Each(func(i int, selection *goquery.Selection) {
 		text := strutil.RemoveNonPrintable(selection.Text())
 		if strings.Contains(text, stock) {
 			messages = append(messages, text)

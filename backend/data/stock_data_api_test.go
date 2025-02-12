@@ -20,16 +20,16 @@ import (
 //-----------------------------------------------------------------------------------
 
 func TestGetTelegraph(t *testing.T) {
-	GetTelegraphList()
+	GetTelegraphList(30)
 }
 
 func TestGetFinancialReports(t *testing.T) {
-	GetFinancialReports("sz000802")
+	GetFinancialReports("sz000802", 30)
 }
 
 func TestGetTelegraphSearch(t *testing.T) {
 	//url := "https://www.cls.cn/searchPage?keyword=%E9%97%BB%E6%B3%B0%E7%A7%91%E6%8A%80&type=telegram"
-	messages := SearchStockInfo("闻泰科技", "telegram")
+	messages := SearchStockInfo("闻泰科技", "depth", 30)
 	for _, message := range *messages {
 		logger.SugaredLogger.Info(message)
 	}
@@ -41,7 +41,7 @@ func TestSearchStockInfoByCode(t *testing.T) {
 }
 
 func TestSearchStockPriceInfo(t *testing.T) {
-	SearchStockPriceInfo("sh600745")
+	SearchStockPriceInfo("sh600745", 30)
 }
 
 func TestParseFullSingleStockData(t *testing.T) {
