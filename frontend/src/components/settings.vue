@@ -28,8 +28,9 @@ const formValue = ref({
     temperature: 0.1,
     maxTokens: 1024,
     prompt:"",
-    timeout: 5
-  },
+    timeout: 5,
+    questionTemplate: "{{stockName}}分析和总结"
+  }
 })
 
 onMounted(()=>{
@@ -53,7 +54,8 @@ onMounted(()=>{
       temperature:res.openAiTemperature,
       maxTokens:res.openAiMaxTokens,
       prompt:res.prompt,
-      timeout:res.openAiApiTimeOut
+      timeout:res.openAiApiTimeOut,
+      questionTemplate:res.questionTemplate?res.questionTemplate:'{{stockName}}分析和总结',
     }
     console.log(res)
   })
@@ -77,7 +79,8 @@ function saveConfig(){
     openAiTemperature:formValue.value.openAI.temperature,
     tushareToken:formValue.value.tushareToken,
     prompt:formValue.value.openAI.prompt,
-    openAiApiTimeOut:formValue.value.openAI.timeout
+    openAiApiTimeOut:formValue.value.openAI.timeout,
+    questionTemplate:formValue.value.openAI.questionTemplate
   })
 
  //console.log("Settings",config)
@@ -143,7 +146,8 @@ function importConfig(){
         temperature:config.openAiTemperature,
         maxTokens:config.openAiMaxTokens,
         prompt:config.prompt,
-        timeout:config.openAiApiTimeOut
+        timeout:config.openAiApiTimeOut,
+        questionTemplate:config.questionTemplate,
       }
      // formRef.value.resetFields()
     };
@@ -243,8 +247,18 @@ window.onerror = function (event, source, lineno, colno, error) {
             }"
         />
       </n-form-item-gi>
+      <n-form-item-gi :span="22"  v-if="formValue.openAI.enable" label="模型用户 Prompt："   path="openAI.questionTemplate">
+        <n-input v-model:value="formValue.openAI.questionTemplate"
+            type="textarea"
+            :show-count="true"
+            placeholder="请输入用户prompt:例如{{stockName}}[{{stockCode}}]分析和总结"
+            :autosize="{
+              minRows: 5,
+              maxRows: 8
+            }"
+        />
+     </n-form-item-gi>
     </n-grid>
-
     <n-gi :span="24">
       <div style="display: flex; justify-content: center">
         <n-space>

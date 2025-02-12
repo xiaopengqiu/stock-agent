@@ -76,6 +76,7 @@ export namespace data {
 	    openAiApiTimeOut: number;
 	    prompt: string;
 	    checkUpdate: boolean;
+	    questionTemplate: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -102,6 +103,7 @@ export namespace data {
 	        this.openAiApiTimeOut = source["openAiApiTimeOut"];
 	        this.prompt = source["prompt"];
 	        this.checkUpdate = source["checkUpdate"];
+	        this.questionTemplate = source["questionTemplate"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

@@ -23,27 +23,29 @@ import (
 // @Desc
 // -----------------------------------------------------------------------------------
 type OpenAi struct {
-	ctx         context.Context
-	BaseUrl     string  `json:"base_url"`
-	ApiKey      string  `json:"api_key"`
-	Model       string  `json:"model"`
-	MaxTokens   int     `json:"max_tokens"`
-	Temperature float64 `json:"temperature"`
-	Prompt      string  `json:"prompt"`
-	TimeOut     int     `json:"time_out"`
+	ctx              context.Context
+	BaseUrl          string  `json:"base_url"`
+	ApiKey           string  `json:"api_key"`
+	Model            string  `json:"model"`
+	MaxTokens        int     `json:"max_tokens"`
+	Temperature      float64 `json:"temperature"`
+	Prompt           string  `json:"prompt"`
+	TimeOut          int     `json:"time_out"`
+	QuestionTemplate string  `json:"question_template"`
 }
 
 func NewDeepSeekOpenAi(ctx context.Context) *OpenAi {
 	config := getConfig()
 	return &OpenAi{
-		ctx:         ctx,
-		BaseUrl:     config.OpenAiBaseUrl,
-		ApiKey:      config.OpenAiApiKey,
-		Model:       config.OpenAiModelName,
-		MaxTokens:   config.OpenAiMaxTokens,
-		Temperature: config.OpenAiTemperature,
-		Prompt:      config.Prompt,
-		TimeOut:     config.OpenAiApiTimeOut,
+		ctx:              ctx,
+		BaseUrl:          config.OpenAiBaseUrl,
+		ApiKey:           config.OpenAiApiKey,
+		Model:            config.OpenAiModelName,
+		MaxTokens:        config.OpenAiMaxTokens,
+		Temperature:      config.OpenAiTemperature,
+		Prompt:           config.Prompt,
+		TimeOut:          config.OpenAiApiTimeOut,
+		QuestionTemplate: config.QuestionTemplate,
 	}
 }
 
@@ -102,7 +104,14 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 				"content": o.Prompt,
 			},
 		}
+		question := strutil.ReplaceWithMap(o.QuestionTemplate, map[string]string{
+			"{{stockName}}": strutil.RemoveNonPrintable(stock),
+			"{{stockCode}}": strutil.RemoveNonPrintable(stockCode),
+		})
+		logger.SugaredLogger.Infof("NewChatStream stock:%s stockCode:%s", stock, stockCode)
 		logger.SugaredLogger.Infof("Prompt：%s", o.Prompt)
+		logger.SugaredLogger.Infof("User Prompt config:%v", o.QuestionTemplate)
+		logger.SugaredLogger.Infof("User question:%s", question)
 
 		wg := &sync.WaitGroup{}
 		wg.Add(5)
@@ -207,7 +216,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		wg.Wait()
 		msg = append(msg, map[string]interface{}{
 			"role":    "user",
-			"content": stock + "分析和总结",
+			"content": question,
 		})
 		client := resty.New()
 		client.SetBaseURL(o.BaseUrl)

@@ -25,6 +25,7 @@ type Settings struct {
 	OpenAiApiTimeOut  int     `json:"openAiApiTimeOut"`
 	Prompt            string  `json:"prompt"`
 	CheckUpdate       bool    `json:"checkUpdate"`
+	QuestionTemplate  string  `json:"questionTemplate"`
 }
 
 func (receiver Settings) TableName() string {
@@ -61,6 +62,7 @@ func (s SettingsApi) UpdateConfig() string {
 			"prompt":                     s.Config.Prompt,
 			"check_update":               s.Config.CheckUpdate,
 			"open_ai_api_time_out":       s.Config.OpenAiApiTimeOut,
+			"question_template":          s.Config.QuestionTemplate,
 		})
 	} else {
 		logger.SugaredLogger.Infof("未找到配置，创建默认配置:%+v", s.Config)
@@ -80,6 +82,7 @@ func (s SettingsApi) UpdateConfig() string {
 			Prompt:                 s.Config.Prompt,
 			CheckUpdate:            s.Config.CheckUpdate,
 			OpenAiApiTimeOut:       s.Config.OpenAiApiTimeOut,
+			QuestionTemplate:       s.Config.QuestionTemplate,
 		})
 	}
 	return "保存成功！"
