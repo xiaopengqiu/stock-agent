@@ -1,5 +1,5 @@
 ![go-stock](./build/appicon.png)
-## go-stock : 自选股行情实时监控，基于Wails和NaiveUI构建的AI赋能股票分析工具
+## go-stock : 基于Wails和NaiveUI构建的AI赋能股票分析工具
 ###  ✨ 简介
 - 本项目基于Wails和NaiveUI开发，结合AI大模型构建的股票分析工具。
 - 本项目仅供娱乐，不喜勿喷，AI分析股票结果仅供学习研究，投资有风险，请谨慎使用。
