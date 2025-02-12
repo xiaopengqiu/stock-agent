@@ -7,12 +7,16 @@ import {GetVersionInfo} from "../../wailsjs/go/main/App";
 const updateLog = ref('');
 const versionInfo = ref('');
 const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
+const alipay =ref('https://github.com/ArvinLovegood/go-stock/raw/master/build/screenshot/alipay.jpg')
+const wxpay =ref('https://github.com/ArvinLovegood/go-stock/raw/master/build/screenshot/wxpay.jpg')
 onMounted(() => {
   document.title = '关于软件';
   GetVersionInfo().then((res) => {
     updateLog.value = res.content;
     versionInfo.value = res.version;
     icon.value = res.icon;
+    alipay.value=res.alipay;
+    wxpay.value=res.wxpay;
   });
 })
 </script>
@@ -50,6 +54,11 @@ onMounted(() => {
               邮箱：<a href="mailto:sparkmemory@163.com">sparkmemory@163.com</a><n-divider vertical />
               QQ：  506808970<n-divider vertical />
               微信：ArvinLovegood</p><n-divider vertical />
+              <p>开源不易，如果觉得好用，可以请作者喝杯咖啡。</p>
+            <n-flex justify="center">
+              <n-image width="200" :src="alipay" />
+              <n-image width="200" :src="wxpay" />
+            </n-flex>
           </n-space>
           <n-divider title-placement="center">鸣谢</n-divider>
           <div style="justify-self: center;text-align: left" >

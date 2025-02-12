@@ -456,6 +456,8 @@ func (a *App) GetVersionInfo() *models.VersionInfo {
 	return &models.VersionInfo{
 		Version: Version,
 		Icon:    GetImageBase(icon),
+		Alipay:  GetImageBase(alipay),
+		Wxpay:   GetImageBase(wxpay),
 		Content: VersionCommit,
 	}
 }

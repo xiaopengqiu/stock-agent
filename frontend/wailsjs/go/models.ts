@@ -389,6 +389,8 @@ export namespace models {
 	    version: string;
 	    content: string;
 	    icon: string;
+	    alipay: string;
+	    wxpay: string;
 	    buildTimeStamp: number;
 	    IsDel: number;
 	
@@ -405,6 +407,8 @@ export namespace models {
 	        this.version = source["version"];
 	        this.content = source["content"];
 	        this.icon = source["icon"];
+	        this.alipay = source["alipay"];
+	        this.wxpay = source["wxpay"];
 	        this.buildTimeStamp = source["buildTimeStamp"];
 	        this.IsDel = source["IsDel"];
 	    }

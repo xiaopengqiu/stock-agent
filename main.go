@@ -32,6 +32,12 @@ var icon []byte
 //go:embed build/app.ico
 var icon2 []byte
 
+//go:embed build/screenshot/alipay.jpg
+var alipay []byte
+
+//go:embed build/screenshot/wxpay.jpg
+var wxpay []byte
+
 //go:embed build/stock_basic.json
 var stocksBin []byte
 
