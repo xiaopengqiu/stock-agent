@@ -1,26 +1,35 @@
 ![go-stock](./build/appicon.png)
 ## 自选股行情实时监控，基于Wails和NaiveUI构建的AI赋能股票分析工具
+###  ✨ 简介
+- 本项目基于Wails和NaiveUI开发，结合AI大模型构建的股票分析工具。
+- 本项目仅供娱乐，不喜勿喷，AI分析股票结果仅供学习研究，投资有风险，请谨慎使用。
+- 开发环境主要基于Windows10+，其他平台未测试或功能受限。
+
+### 💬 大模型
+| 模型 | 状态 | 备注                                        |
+| --- | --- |-------------------------------------------|
+| [OpenAI](https://platform.openai.com/) | ✅ | 可接入任何 OpenAI 接口格式模型                       |
+| [Ollama](https://ollama.com/) | ✅ | 本地大模型运行平台                                 |
+| [LMStudio](https://lmstudio.ai/) | ✅ | 本地大模型运行平台                                 |
+| [DeepSeek](https://www.deepseek.com/) | ✅ | deepseek-reasoner模型测试有问题，可通过本地模型或聚合模型平台使用 |
+| [大模型聚合平台](https://cloud.siliconflow.cn/i/foufCerk) | ✅ | 如：硅基流动，火山方舟等                              |
+
 ### <span style="color: #568DF4;">各位亲爱的朋友们，如果您对这个项目感兴趣，请先给我一个<i style="color: #EA2626;">star</i>吧，谢谢！</span>💕
 - 经测试目前硅基流动(siliconflow)提供的deepSeek api 服务比较稳定，注册即送2000万Tokens，[注册链接](https://cloud.siliconflow.cn/i/foufCerk)
 - Tushare大数据开放社区,免费提供各类金融数据,助力行业和量化研究，[注册链接](https://tushare.pro/register?reg=701944)
 - 软件快速迭代开发中,请大家优先测试和使用最新发布的版本。
-- 欢迎大家提出宝贵的建议，欢迎提issue,PR。当然更欢迎[赞助我](#都划到这了如果我的项目对您有帮助请赞助我吧)，谢谢💕。
+- 欢迎大家提出宝贵的建议，欢迎提issue,PR。当然更欢迎[赞助我](#都划到这了如果我的项目对您有帮助请赞助我吧)。💕
 
-### 下载安装
+## 📦 立即体验
 - 安装版：[go-stock-amd64-installer.exe](https://github.com/ArvinLovegood/go-stock/releases)
 - 绿色版：[go-stock-windows-amd64.exe](https://github.com/ArvinLovegood/go-stock/releases)
 
 
-## BIG NEWS !!! 重大更新！！！
+## 🦄 重大更新
+### BIG NEWS !!! 重大更新！！！
 - 2025.01.17 新增AI大模型分析股票功能
   ![img_5.png](build/screenshot/img.png)
-
-## 简介
-- 本项目基于Wails和NaiveUI，纯属无聊，仅供娱乐，不喜勿喷。
-- 开发环境主要基于Windows10+，其他平台未测试或功能受限。
-
-
-## Snapshot
+## 📸 功能截图
 ![img_1.png](build/screenshot/img_6.png)
 ### 设置
 ![img_12.png](build/screenshot/img_4.png)
@@ -36,40 +45,25 @@
 ![img_5.png](build/screenshot/img.png)
 ### 版本信息提示
 ![img_11.png](build/screenshot/img_11.png)
-## About
 
-### A China stock data viewer build by  [Wails](https://wails.io/) with [NavieUI](https://www.naiveui.com/).
-A股数据可视化工具，基于Wails和NaiveUI。
+## 💕 感谢以下项目
+- [NaiveUI](https://www.naiveui.com/)
+- [Wails](https://wails.io/)
+- [Vue](https://vuejs.org/)
+- [Vite](https://vitejs.dev/)
+- [Tushare](https://tushare.pro/register?reg=701944)
 
-## Prerequisites
-INSTALL [GO](https://golang.org) AND [Wails](https://wails.io/)
-
-## Running the Application in Developer Mode
-The easiest way is to use the Wails CLI: `wails dev`
-
-This should hot refresh when making changes the Frontend and rebuild when making changes in the Go.
-
-## Building the Application for Production
- 
-You can build you Application with: `wails build`
-
-
-## License
-[Apache License 2.0](LICENSE)
-
-## Credits
-[NaiveUI](https://www.naiveui.com/)
-[Wails](https://wails.io/)
-[Vue](https://vuejs.org/)
-[Vite](https://vitejs.dev/)
-[Tushare](https://tushare.pro/register?reg=701944)
-
-## 都划到这了，如果我的项目对您有帮助，请赞助我吧！😊😊😊
+## 😘 赞助我
+### 都划到这了，如果我的项目对您有帮助，请赞助我吧！😊😊😊
 | 支付宝 | 微信  |
 |-----|-----| 
 | ![alipay.jpg](build/screenshot/alipay.jpg)  | ![wxpay.jpg](build/screenshot/wxpay.jpg) |
 
-## 状态
-[![Star History Chart](https://api.star-history.com/svg?repos=ArvinLovegood/go-stock&type=Date)](https://star-history.com/#ArvinLovegood/go-stock&Date)
 
+## ⭐ Star History
+[![Star History Chart](https://api.star-history.com/svg?repos=ArvinLovegood/go-stock&type=Date)](https://star-history.com/#ArvinLovegood/go-stock&Date)
+## 🤖 状态
 ![Alt](https://repobeats.axiom.co/api/embed/40b07d415a42c2264a18c4fe1b6f182ff1470687.svg "Repobeats analytics image")
+
+## License
+[Apache License 2.0](LICENSE)
