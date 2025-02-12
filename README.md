@@ -20,6 +20,12 @@
 - 软件快速迭代开发中,请大家优先测试和使用最新发布的版本。
 - 欢迎大家提出宝贵的建议，欢迎提issue,PR。当然更欢迎[赞助我](#都划到这了如果我的项目对您有帮助请赞助我吧)。💕
 
+## 🧩 计划开发
+| 模型      | 状态 | 备注           |
+|---------|--|--------------|
+| 自定义提问模板 | 🚧 | 可配置的提问       |
+| 多轮对话    | 🚧 | AI分析后可继续对话提问 |
+
 ## 📦 立即体验
 - 安装版：[go-stock-amd64-installer.exe](https://github.com/ArvinLovegood/go-stock/releases)
 - 绿色版：[go-stock-windows-amd64.exe](https://github.com/ArvinLovegood/go-stock/releases)
