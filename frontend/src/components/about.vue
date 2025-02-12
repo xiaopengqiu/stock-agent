@@ -22,8 +22,6 @@ onMounted(() => {
 </script>
 
 <template>
-  <n-config-provider>
-    <n-layout>
       <n-space vertical size="large">
         <!-- 软件描述 -->
         <n-card size="large">
@@ -80,10 +78,58 @@ onMounted(() => {
               <a href="https://github.com/tusen-ai/naive-ui" target="_blank">NaiveUI</a><n-divider vertical />
             </p>
           </div>
+          <n-divider title-placement="center">关于版权和技术支持申明</n-divider>
+          <div style="justify-self: center;text-align: left" >
+            <p>
+              本软件仅供学习研究，请勿用于非法和商业用途。
+            </p>
+            <p>
+              如需商业用途，请联系作者微信(备注 商业咨询)：ArvinLovegood
+            </p>
+            <n-divider/>
+            <p>
+              本软件基于开源技术构建，使用Wails、NaiveUI、Vue等开源项目。
+            </p>
+            <p>
+              开源不易，本人精力和时间有限，如需一对一技术支持，请先赞助。联系微信(备注 技术支持)：ArvinLovegood
+            </p>
+            <n-table>
+              <n-thead>
+                <n-tr>
+                  <n-th>技术支持方式</n-th><n-th>赞助(元)</n-th>
+                </n-tr>
+              </n-thead>
+              <n-tbody>
+                <n-tr>
+                  <n-td>
+                    邮件：sparkmemory@163.com
+                  </n-td>
+                  <n-td>
+                   50/次
+                  </n-td>
+                </n-tr>
+                <n-tr>
+                  <n-td>
+                    加 QQ：506808970，微信：ArvinLovegood
+                  </n-td>
+                  <n-td>
+                    100/次
+                  </n-td>
+                </n-tr>
+                <n-tr>
+                  <n-td>
+                    长期不定时技术支持（不限次数）
+                  </n-td>
+                  <n-td>
+                    1000
+                  </n-td>
+                </n-tr>
+              </n-tbody>
+            </n-table>
+          </div>
+
         </n-card>
       </n-space>
-    </n-layout>
-  </n-config-provider>
 </template>
 
 <style scoped>
