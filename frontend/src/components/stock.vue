@@ -743,7 +743,7 @@ function saveAsMarkdown() {
     <template #footer>
       <n-flex justify="space-between">
         <n-text type="info" v-if="data.time" >分析时间:{{data.time}}</n-text>
-        <n-text type="error" v-if="data.time" >*AI分析结果仅供参考，请以实际行情为准。投资需谨慎，风险自担。</n-text>
+        <n-text type="error" >*AI分析结果仅供参考，请以实际行情为准。投资需谨慎，风险自担。</n-text>
       </n-flex>
     </template>
     <template #action>
