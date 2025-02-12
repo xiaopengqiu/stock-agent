@@ -29,7 +29,8 @@ const formValue = ref({
     maxTokens: 1024,
     prompt:"",
     timeout: 5,
-    questionTemplate: "{{stockName}}分析和总结"
+    questionTemplate: "{{stockName}}分析和总结",
+    crawlTimeOut:30,
   }
 })
 
@@ -56,6 +57,7 @@ onMounted(()=>{
       prompt:res.prompt,
       timeout:res.openAiApiTimeOut,
       questionTemplate:res.questionTemplate?res.questionTemplate:'{{stockName}}分析和总结',
+      crawlTimeOut:res.crawlTimeOut,
     }
     console.log(res)
   })
@@ -80,7 +82,8 @@ function saveConfig(){
     tushareToken:formValue.value.tushareToken,
     prompt:formValue.value.openAI.prompt,
     openAiApiTimeOut:formValue.value.openAI.timeout,
-    questionTemplate:formValue.value.openAI.questionTemplate
+    questionTemplate:formValue.value.openAI.questionTemplate,
+    crawlTimeOut:formValue.value.openAI.crawlTimeOut,
   })
 
  //console.log("Settings",config)
@@ -148,6 +151,7 @@ function importConfig(){
         prompt:config.prompt,
         timeout:config.openAiApiTimeOut,
         questionTemplate:config.questionTemplate,
+        crawlTimeOut:config.crawlTimeOut,
       }
      // formRef.value.resetFields()
     };
@@ -215,14 +219,17 @@ window.onerror = function (event, source, lineno, colno, error) {
       <n-gi :span="24">
         <n-text type="default" style="font-size: 25px;font-weight: bold">OpenAI设置</n-text>
       </n-gi>
-      <n-form-item-gi  :span="6" label="是否启用AI诊股：" path="openAI.enable" >
+      <n-form-item-gi  :span="3" label="是否启用AI诊股：" path="openAI.enable" >
         <n-switch v-model:value="formValue.openAI.enable" />
       </n-form-item-gi>
-      <n-form-item-gi :span="11"  v-if="formValue.openAI.enable" label="openAI 接口地址：" path="openAI.baseUrl">
+      <n-form-item-gi :span="9"  v-if="formValue.openAI.enable" label="openAI 接口地址：" path="openAI.baseUrl">
         <n-input  type="text"  placeholder="AI接口地址"  v-model:value="formValue.openAI.baseUrl" clearable />
       </n-form-item-gi>
-      <n-form-item-gi  :span="5" v-if="formValue.openAI.enable" label="请求超时时间(秒)："  path="openAI.timeout">
-        <n-input-number min="1" step="1" placeholder="请求超时时间(秒)"  v-model:value="formValue.openAI.timeout" />
+      <n-form-item-gi  :span="5" v-if="formValue.openAI.enable" label="AI Timeout(秒)：" title="AI请求超时时间(秒)"  path="openAI.timeout">
+        <n-input-number min="60" step="1" placeholder="AI请求超时时间(秒)"  v-model:value="formValue.openAI.timeout" />
+      </n-form-item-gi>
+      <n-form-item-gi  :span="5" v-if="formValue.openAI.enable" label="Crawler Timeout(秒)：" title="资讯采集超时时间(秒)" path="openAI.crawlTimeOut">
+        <n-input-number min="30" step="1" placeholder="资讯采集超时时间(秒)"  v-model:value="formValue.openAI.crawlTimeOut" />
       </n-form-item-gi>
       <n-form-item-gi  :span="12" v-if="formValue.openAI.enable" label="openAI 令牌(apiKey)："  path="openAI.apiKey">
         <n-input  type="text" placeholder="apiKey"  v-model:value="formValue.openAI.apiKey" clearable />
@@ -253,15 +260,14 @@ window.onerror = function (event, source, lineno, colno, error) {
             :show-count="true"
             placeholder="请输入用户prompt:例如{{stockName}}[{{stockCode}}]分析和总结"
             :autosize="{
-              minRows: 5,
-              maxRows: 8
+              minRows: 2,
+              maxRows: 5
             }"
         />
      </n-form-item-gi>
     </n-grid>
     <n-gi :span="24">
-      <div style="display: flex; justify-content: center">
-        <n-space>
+        <n-space justify="center">
         <n-button  type="primary" @click="saveConfig">
           保存
         </n-button>
@@ -272,7 +278,6 @@ window.onerror = function (event, source, lineno, colno, error) {
           导入
         </n-button>
         </n-space>
-      </div>
     </n-gi>
   </n-form>
   </n-flex>

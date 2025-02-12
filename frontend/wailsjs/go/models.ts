@@ -77,6 +77,7 @@ export namespace data {
 	    prompt: string;
 	    checkUpdate: boolean;
 	    questionTemplate: string;
+	    crawlTimeOut: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -104,6 +105,7 @@ export namespace data {
 	        this.prompt = source["prompt"];
 	        this.checkUpdate = source["checkUpdate"];
 	        this.questionTemplate = source["questionTemplate"];
+	        this.crawlTimeOut = source["crawlTimeOut"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

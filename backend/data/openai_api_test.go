@@ -22,5 +22,5 @@ func TestNewDeepSeekOpenAiConfig(t *testing.T) {
 }
 
 func TestGetTopNewsList(t *testing.T) {
-	GetTopNewsList()
+	GetTopNewsList(30)
 }

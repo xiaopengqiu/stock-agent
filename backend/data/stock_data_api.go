@@ -516,15 +516,15 @@ func (IndexBasic) TableName() string {
 	return "tushare_index_basic"
 }
 
-func SearchStockPriceInfo(stockCode string) *[]string {
+func SearchStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 	url := "https://www.cls.cn/stock?code=" + stockCode
 
 	// 创建一个 chromedp 上下文
-	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), time.Duration(crawlTimeOut)*time.Second)
 	defer timeoutCtxCancel()
 	var ctx context.Context
 	var cancel context.CancelFunc
-	path, e := checkEdgeOnWindows()
+	path, e := checkBrowserOnWindows()
 	logger.SugaredLogger.Infof("SearchStockPriceInfo path:%s", path)
 	if e {
 		pctx, pcancel := chromedp.NewExecAllocator(
@@ -608,13 +608,13 @@ func FetchPrice(ctx context.Context) (string, error) {
 		}
 	}
 }
-func SearchStockInfo(stock, msgType string) *[]string {
+func SearchStockInfo(stock, msgType string, crawlTimeOut int64) *[]string {
 	// 创建一个 chromedp 上下文
-	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), time.Duration(crawlTimeOut)*time.Second)
 	defer timeoutCtxCancel()
 	var ctx context.Context
 	var cancel context.CancelFunc
-	path, e := checkEdgeOnWindows()
+	path, e := checkBrowserOnWindows()
 	logger.SugaredLogger.Infof("SearchStockInfo path:%s", path)
 
 	if e {
@@ -712,8 +712,32 @@ func SearchStockInfoByCode(stock string) *[]string {
 	return &messages
 }
 
-// checkEdgeOnWindows 在 Windows 系统上检查Edge浏览器是否安装，并返回安装路径
-func checkEdgeOnWindows() (string, bool) {
+// checkChromeOnWindows 在 Windows 系统上检查谷歌浏览器是否安装
+func checkChromeOnWindows() (string, bool) {
+	key, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe`, registry.QUERY_VALUE)
+	if err != nil {
+		// 尝试在 WOW6432Node 中查找（适用于 64 位系统上的 32 位程序）
+		key, err = registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe`, registry.QUERY_VALUE)
+		if err != nil {
+			return "", false
+		}
+		defer key.Close()
+	}
+	defer key.Close()
+	path, _, err := key.GetStringValue("Path")
+	logger.SugaredLogger.Infof("Chrome安装路径：%s", path)
+	if err != nil {
+		return "", false
+	}
+	return path + "\\chrome.exe", true
+}
+
+// checkBrowserOnWindows 在 Windows 系统上检查Edge浏览器是否安装，并返回安装路径
+func checkBrowserOnWindows() (string, bool) {
+	if path, ok := checkChromeOnWindows(); ok {
+		return path, true
+	}
+
 	key, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe`, registry.QUERY_VALUE)
 	if err != nil {
 		// 尝试在 WOW6432Node 中查找（适用于 64 位系统上的 32 位程序）

@@ -32,10 +32,19 @@ type OpenAi struct {
 	Prompt           string  `json:"prompt"`
 	TimeOut          int     `json:"time_out"`
 	QuestionTemplate string  `json:"question_template"`
+	CrawlTimeOut     int64   `json:"crawl_time_out"`
 }
 
 func NewDeepSeekOpenAi(ctx context.Context) *OpenAi {
 	config := getConfig()
+	if config.OpenAiEnable {
+		if config.OpenAiApiTimeOut <= 0 {
+			config.OpenAiApiTimeOut = 60 * 5
+		}
+		if config.CrawlTimeOut <= 0 {
+			config.CrawlTimeOut = 60
+		}
+	}
 	return &OpenAi{
 		ctx:              ctx,
 		BaseUrl:          config.OpenAiBaseUrl,
@@ -46,6 +55,7 @@ func NewDeepSeekOpenAi(ctx context.Context) *OpenAi {
 		Prompt:           config.Prompt,
 		TimeOut:          config.OpenAiApiTimeOut,
 		QuestionTemplate: config.QuestionTemplate,
+		CrawlTimeOut:     config.CrawlTimeOut,
 	}
 }
 
@@ -117,7 +127,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		wg.Add(5)
 		go func() {
 			defer wg.Done()
-			messages := SearchStockPriceInfo(stockCode)
+			messages := SearchStockPriceInfo(stockCode, o.CrawlTimeOut)
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股票价格失败")
 				ch <- "***❗获取股票价格失败,分析结果可能不准确***<hr>"
@@ -136,7 +146,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 
 		go func() {
 			defer wg.Done()
-			messages := GetFinancialReports(stockCode)
+			messages := GetFinancialReports(stockCode, o.CrawlTimeOut)
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股票财报失败")
 				ch <- "***❗获取股票财报失败,分析结果可能不准确***<hr>"
@@ -153,7 +163,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 
 		go func() {
 			defer wg.Done()
-			messages := GetTelegraphList()
+			messages := GetTelegraphList(o.CrawlTimeOut)
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取市场资讯失败")
 				ch <- "***❗获取市场资讯失败,分析结果可能不准确***<hr>"
@@ -166,7 +176,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 					"content": message,
 				})
 			}
-			messages = GetTopNewsList()
+			messages = GetTopNewsList(o.CrawlTimeOut)
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取新闻资讯失败")
 				ch <- "***❗获取新闻资讯失败,分析结果可能不准确***<hr>"
@@ -183,7 +193,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 
 		go func() {
 			defer wg.Done()
-			messages := SearchStockInfo(stock, "depth")
+			messages := SearchStockInfo(stock, "depth", o.CrawlTimeOut)
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股票资讯失败")
 				ch <- "***❗获取股票资讯失败,分析结果可能不准确***<hr>"
@@ -199,7 +209,7 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		}()
 		go func() {
 			defer wg.Done()
-			messages := SearchStockInfo(stock, "telegram")
+			messages := SearchStockInfo(stock, "telegram", o.CrawlTimeOut)
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股票电报资讯失败")
 				ch <- "***❗获取股票电报资讯失败,分析结果可能不准确***<hr>"
@@ -298,13 +308,13 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 	return ch
 }
 
-func GetFinancialReports(stockCode string) *[]string {
+func GetFinancialReports(stockCode string, crawlTimeOut int64) *[]string {
 	// 创建一个 chromedp 上下文
-	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), time.Duration(crawlTimeOut)*time.Second)
 	defer timeoutCtxCancel()
 	var ctx context.Context
 	var cancel context.CancelFunc
-	path, e := checkEdgeOnWindows()
+	path, e := checkBrowserOnWindows()
 	logger.SugaredLogger.Infof("GetFinancialReports path:%s", path)
 
 	if e {
@@ -388,7 +398,7 @@ func (o OpenAi) NewCommonChatStream(stock, stockCode, apiURL, apiKey, Model stri
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			messages := SearchStockPriceInfo(stockCode)
+			messages := SearchStockPriceInfo(stockCode, o.CrawlTimeOut)
 			price := ""
 			for _, message := range *messages {
 				price += message + ";"
@@ -477,9 +487,9 @@ func (o OpenAi) NewCommonChatStream(stock, stockCode, apiURL, apiKey, Model stri
 	return ch
 }
 
-func GetTelegraphList() *[]string {
+func GetTelegraphList(crawlTimeOut int64) *[]string {
 	url := "https://www.cls.cn/telegraph"
-	response, err := resty.New().R().
+	response, err := resty.New().SetTimeout(time.Duration(crawlTimeOut)*time.Second).R().
 		SetHeader("Referer", "https://www.cls.cn/").
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").
 		Get(fmt.Sprintf(url))
@@ -499,9 +509,9 @@ func GetTelegraphList() *[]string {
 	return &telegraph
 }
 
-func GetTopNewsList() *[]string {
+func GetTopNewsList(crawlTimeOut int64) *[]string {
 	url := "https://www.cls.cn"
-	response, err := resty.New().R().
+	response, err := resty.New().SetTimeout(time.Duration(crawlTimeOut)*time.Second).R().
 		SetHeader("Referer", "https://www.cls.cn/").
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").
 		Get(fmt.Sprintf(url))
