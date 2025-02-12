@@ -645,7 +645,7 @@ func SearchStockInfo(stock, msgType string, crawlTimeOut int64) *[]string {
 		}
 	}(ctx)
 	var htmlContent string
-	url := fmt.Sprintf("https://www.cls.cn/searchPage?keyword=%s&type=%s", stock, msgType)
+	url := fmt.Sprintf("https://www.cls.cn/searchPage?keyword=%s&type=%s", strutil.RemoveNonPrintable(stock), msgType)
 	sel := ".subject-interest-list"
 	if msgType == "depth" {
 		sel = ".subject-interest-list"
@@ -656,8 +656,8 @@ func SearchStockInfo(stock, msgType string, crawlTimeOut int64) *[]string {
 	err := chromedp.Run(ctx,
 		chromedp.Navigate(url),
 		// 等待页面加载完成，可以根据需要调整等待时间
-		//chromedp.Sleep(3*time.Second),
 		chromedp.WaitVisible(sel, chromedp.ByQuery),
+		chromedp.Sleep(3*time.Second),
 		chromedp.OuterHTML("html", &htmlContent, chromedp.ByQuery),
 	)
 	if err != nil {
@@ -672,10 +672,10 @@ func SearchStockInfo(stock, msgType string, crawlTimeOut int64) *[]string {
 	var messages []string
 	document.Find(".search-telegraph-list,.subject-interest-list").Each(func(i int, selection *goquery.Selection) {
 		text := strutil.RemoveNonPrintable(selection.Text())
-		if strings.Contains(text, stock) {
-			messages = append(messages, text)
-			logger.SugaredLogger.Infof("搜索到消息-%s: %s", msgType, text)
-		}
+		//if strings.Contains(text, strutil.RemoveNonPrintable(stock)) {
+		messages = append(messages, text)
+		logger.SugaredLogger.Infof("搜索到消息-%s: %s", msgType, text)
+		//}
 	})
 	return &messages
 }
