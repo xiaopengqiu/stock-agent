@@ -293,20 +293,28 @@ func GetFinancialReports(stockCode string) *[]string {
 	// 创建一个 chromedp 上下文
 	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer timeoutCtxCancel()
-
-	edgePath := `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`
-
-	pctx, pcancel := chromedp.NewExecAllocator(
-		timeoutCtx,
-		chromedp.ExecPath(edgePath),
-		chromedp.Flag("headless", true),
-	)
-	defer pcancel()
-	ctx, cancel := chromedp.NewContext(
-		pctx,
-		chromedp.WithLogf(logger.SugaredLogger.Infof),
-		chromedp.WithErrorf(logger.SugaredLogger.Errorf),
-	)
+	var ctx context.Context
+	var cancel context.CancelFunc
+	path, e := checkEdgeOnWindows()
+	if e {
+		pctx, pcancel := chromedp.NewExecAllocator(
+			timeoutCtx,
+			chromedp.ExecPath(path),
+			chromedp.Flag("headless", true),
+		)
+		defer pcancel()
+		ctx, cancel = chromedp.NewContext(
+			pctx,
+			chromedp.WithLogf(logger.SugaredLogger.Infof),
+			chromedp.WithErrorf(logger.SugaredLogger.Errorf),
+		)
+	} else {
+		ctx, cancel = chromedp.NewContext(
+			timeoutCtx,
+			chromedp.WithLogf(logger.SugaredLogger.Infof),
+			chromedp.WithErrorf(logger.SugaredLogger.Errorf),
+		)
+	}
 	defer cancel()
 
 	defer func(ctx context.Context) {

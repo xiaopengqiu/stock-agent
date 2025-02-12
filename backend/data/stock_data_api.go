@@ -19,6 +19,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
+	"golang.org/x/sys/windows/registry"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"gorm.io/gorm"
@@ -517,25 +518,32 @@ func (IndexBasic) TableName() string {
 
 func SearchStockPriceInfo(stockCode string) *[]string {
 	url := "https://www.cls.cn/stock?code=" + stockCode
-	// 创建一个 chromedp 上下文
 
+	// 创建一个 chromedp 上下文
 	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer timeoutCtxCancel()
-
-	edgePath := `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`
-
-	pctx, pcancel := chromedp.NewExecAllocator(
-		timeoutCtx,
-		chromedp.ExecPath(edgePath),
-		chromedp.Flag("headless", true),
-	)
-	defer pcancel()
-	ctx, cancel := chromedp.NewContext(
-		pctx,
-		chromedp.WithLogf(logger.SugaredLogger.Infof),
-		chromedp.WithErrorf(logger.SugaredLogger.Errorf),
-	)
-
+	var ctx context.Context
+	var cancel context.CancelFunc
+	path, e := checkEdgeOnWindows()
+	if e {
+		pctx, pcancel := chromedp.NewExecAllocator(
+			timeoutCtx,
+			chromedp.ExecPath(path),
+			chromedp.Flag("headless", true),
+		)
+		defer pcancel()
+		ctx, cancel = chromedp.NewContext(
+			pctx,
+			chromedp.WithLogf(logger.SugaredLogger.Infof),
+			chromedp.WithErrorf(logger.SugaredLogger.Errorf),
+		)
+	} else {
+		ctx, cancel = chromedp.NewContext(
+			timeoutCtx,
+			chromedp.WithLogf(logger.SugaredLogger.Infof),
+			chromedp.WithErrorf(logger.SugaredLogger.Errorf),
+		)
+	}
 	defer cancel()
 
 	defer func(ctx context.Context) {
@@ -603,20 +611,30 @@ func SearchStockInfo(stock, msgType string) *[]string {
 	// 创建一个 chromedp 上下文
 	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer timeoutCtxCancel()
-	edgePath := `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`
-
-	pctx, pcancel := chromedp.NewExecAllocator(
-		timeoutCtx,
-		chromedp.ExecPath(edgePath),
-		chromedp.Flag("headless", true),
-	)
-	defer pcancel()
-	ctx, cancel := chromedp.NewContext(
-		pctx,
-		chromedp.WithLogf(logger.SugaredLogger.Infof),
-		chromedp.WithErrorf(logger.SugaredLogger.Errorf),
-	)
+	var ctx context.Context
+	var cancel context.CancelFunc
+	path, e := checkEdgeOnWindows()
+	if e {
+		pctx, pcancel := chromedp.NewExecAllocator(
+			timeoutCtx,
+			chromedp.ExecPath(path),
+			chromedp.Flag("headless", true),
+		)
+		defer pcancel()
+		ctx, cancel = chromedp.NewContext(
+			pctx,
+			chromedp.WithLogf(logger.SugaredLogger.Infof),
+			chromedp.WithErrorf(logger.SugaredLogger.Errorf),
+		)
+	} else {
+		ctx, cancel = chromedp.NewContext(
+			timeoutCtx,
+			chromedp.WithLogf(logger.SugaredLogger.Infof),
+			chromedp.WithErrorf(logger.SugaredLogger.Errorf),
+		)
+	}
 	defer cancel()
+
 	defer func(ctx context.Context) {
 		err := chromedp.Cancel(ctx)
 		if err != nil {
@@ -689,4 +707,24 @@ func SearchStockInfoByCode(stock string) *[]string {
 		}
 	})
 	return &messages
+}
+
+// checkEdgeOnWindows 在 Windows 系统上检查Edge浏览器是否安装，并返回安装路径
+func checkEdgeOnWindows() (string, bool) {
+	key, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe`, registry.QUERY_VALUE)
+	if err != nil {
+		// 尝试在 WOW6432Node 中查找（适用于 64 位系统上的 32 位程序）
+		key, err = registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe`, registry.QUERY_VALUE)
+		if err != nil {
+			return "", false
+		}
+		defer key.Close()
+	}
+	defer key.Close()
+	path, _, err := key.GetStringValue("Path")
+	logger.SugaredLogger.Infof("Edge安装路径：%s", path)
+	if err != nil {
+		return "", false
+	}
+	return path + "\\msedge.exe", true
 }
