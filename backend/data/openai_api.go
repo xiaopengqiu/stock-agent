@@ -191,22 +191,22 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			}
 		}()
 
-		go func() {
-			defer wg.Done()
-			messages := SearchStockInfo(stock, "depth", o.CrawlTimeOut)
-			if messages == nil || len(*messages) == 0 {
-				logger.SugaredLogger.Error("获取股票资讯失败")
-				//ch <- "***❗获取股票资讯失败,分析结果可能不准确***<hr>"
-				//go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取股票资讯失败,分析结果可能不准确")
-				return
-			}
-			for _, message := range *messages {
-				msg = append(msg, map[string]interface{}{
-					"role":    "assistant",
-					"content": message,
-				})
-			}
-		}()
+		//go func() {
+		//	defer wg.Done()
+		//	messages := SearchStockInfo(stock, "depth", o.CrawlTimeOut)
+		//	if messages == nil || len(*messages) == 0 {
+		//		logger.SugaredLogger.Error("获取股票资讯失败")
+		//		//ch <- "***❗获取股票资讯失败,分析结果可能不准确***<hr>"
+		//		//go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取股票资讯失败,分析结果可能不准确")
+		//		return
+		//	}
+		//	for _, message := range *messages {
+		//		msg = append(msg, map[string]interface{}{
+		//			"role":    "assistant",
+		//			"content": message,
+		//		})
+		//	}
+		//}()
 		go func() {
 			defer wg.Done()
 			messages := SearchStockInfo(stock, "telegram", o.CrawlTimeOut)
@@ -223,6 +223,24 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 				})
 			}
 		}()
+
+		go func() {
+			defer wg.Done()
+			messages := SearchGuShiTongStockInfo(stockCode, o.CrawlTimeOut)
+			if messages == nil || len(*messages) == 0 {
+				logger.SugaredLogger.Error("获取股势通资讯失败")
+				//ch <- "***❗获取股势通资讯失败,分析结果可能不准确***<hr>"
+				//go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取股势通资讯失败,分析结果可能不准确")
+				return
+			}
+			for _, message := range *messages {
+				msg = append(msg, map[string]interface{}{
+					"role":    "assistant",
+					"content": message,
+				})
+			}
+		}()
+
 		wg.Wait()
 		msg = append(msg, map[string]interface{}{
 			"role":    "user",
@@ -306,6 +324,45 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		}
 	}()
 	return ch
+}
+
+func SearchGuShiTongStockInfo(stock string, crawlTimeOut int64) *[]string {
+	crawlerAPI := CrawlerApi{}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(crawlTimeOut)*time.Second)
+	defer cancel()
+
+	crawlerAPI = crawlerAPI.NewCrawler(ctx, CrawlerBaseInfo{
+		Name:    "百度股市通",
+		BaseUrl: "https://gushitong.baidu.com",
+		Headers: map[string]string{"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"},
+	})
+	url := "https://gushitong.baidu.com/stock/ab-" + RemoveAllNonDigitChar(stock)
+	logger.SugaredLogger.Infof("SearchGuShiTongStockInfo搜索股票-%s: %s", stock, url)
+	actions := []chromedp.Action{
+		chromedp.Navigate(url),
+		chromedp.WaitVisible("div.cos-tab"),
+		chromedp.Click("div.cos-tab:nth-child(5)", chromedp.ByQuery),
+		chromedp.ScrollIntoView("div.body-box"),
+		chromedp.WaitVisible("div.body-col"),
+		chromedp.Evaluate(`window.scrollTo(0, document.body.scrollHeight);`, nil),
+		chromedp.Sleep(1 * time.Second),
+	}
+	htmlContent, success := crawlerAPI.GetHtmlWithActions(&actions, true)
+	var messages []string
+	if success {
+		document, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
+		if err != nil {
+			logger.SugaredLogger.Error(err.Error())
+			return &[]string{}
+		}
+		document.Find("div.finance-hover,div.list-date").Each(func(i int, selection *goquery.Selection) {
+			text := strutil.RemoveNonPrintable(selection.Text())
+			messages = append(messages, text)
+			logger.SugaredLogger.Infof("SearchGuShiTongStockInfo搜索到消息-%s: %s", "", text)
+		})
+		logger.SugaredLogger.Infof("messages:%d", len(messages))
+	}
+	return &messages
 }
 
 func GetFinancialReports(stockCode string, crawlTimeOut int64) *[]string {

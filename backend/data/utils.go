@@ -15,3 +15,9 @@ func removeAllSpaces(s string) string {
 	re := regexp.MustCompile(`\s`)
 	return re.ReplaceAllString(s, "")
 }
+
+// RemoveAllNonDigitChar 去除所有非数字字符
+func RemoveAllNonDigitChar(s string) string {
+	re := regexp.MustCompile(`\D`)
+	return re.ReplaceAllString(s, "")
+}
