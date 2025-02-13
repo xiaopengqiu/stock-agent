@@ -90,10 +90,10 @@ onMounted(() => {
             </p>
             <n-divider/>
             <p>
-              本软件基于开源技术构建，使用Wails、NaiveUI、Vue等开源项目。
+              本软件基于开源技术构建，使用Wails、NaiveUI、Vue等开源项目。技术上如有问题，可以先向对应的开源社区请求帮助。
             </p>
             <p>
-              开源不易，本人精力和时间有限，如需一对一技术支持，请先赞助。联系微信(备注 技术支持)：ArvinLovegood
+              开源不易，本人精力和时间有限，如确实需要一对一技术支持，请先赞助。联系微信(备注 技术支持)：ArvinLovegood
             </p>
             <n-table id="support">
               <n-thead>
