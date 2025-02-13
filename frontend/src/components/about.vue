@@ -51,8 +51,10 @@ onMounted(() => {
             <p>
               邮箱：<a href="mailto:sparkmemory@163.com">sparkmemory@163.com</a><n-divider vertical />
               QQ：  506808970<n-divider vertical />
-              微信：ArvinLovegood</p><n-divider vertical />
-              <p>开源不易，如果觉得好用，可以请作者喝杯咖啡。</p>
+              微信：ArvinLovegood</p>
+            <p style="color: #FAA04A">*加微信或者QQ时，请备注您的意图(如：<a href="#support">技术支持</a>，功能建议，商业咨询等，否则会被忽略)</p>
+            <n-divider vertical />
+            <p>开源不易，如果觉得好用，可以请作者喝杯咖啡。</p>
             <n-flex justify="center">
               <n-image width="200" :src="alipay" />
               <n-image width="200" :src="wxpay" />
@@ -93,7 +95,7 @@ onMounted(() => {
             <p>
               开源不易，本人精力和时间有限，如需一对一技术支持，请先赞助。联系微信(备注 技术支持)：ArvinLovegood
             </p>
-            <n-table>
+            <n-table id="support">
               <n-thead>
                 <n-tr>
                   <n-th>技术支持方式</n-th><n-th>赞助(元)</n-th>
