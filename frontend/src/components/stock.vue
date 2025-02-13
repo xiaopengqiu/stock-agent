@@ -225,6 +225,7 @@ EventsOn("warnMsg",async (msg) => {
           src: icon.value
         }),
     title: '警告',
+    duration: 5000,
     content: () => {
       return h('div', {
         style: {

@@ -518,7 +518,6 @@ func (IndexBasic) TableName() string {
 
 func SearchStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 	url := "https://www.cls.cn/stock?code=" + stockCode
-
 	// 创建一个 chromedp 上下文
 	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), time.Duration(crawlTimeOut)*time.Second)
 	defer timeoutCtxCancel()
@@ -546,13 +545,6 @@ func SearchStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 		)
 	}
 	defer cancel()
-
-	defer func(ctx context.Context) {
-		err := chromedp.Cancel(ctx)
-		if err != nil {
-			logger.SugaredLogger.Error(err.Error())
-		}
-	}(ctx)
 
 	var htmlContent string
 
@@ -609,59 +601,23 @@ func FetchPrice(ctx context.Context) (string, error) {
 	}
 }
 func SearchStockInfo(stock, msgType string, crawlTimeOut int64) *[]string {
-	// 创建一个 chromedp 上下文
+	crawler := CrawlerApi{
+		crawlerBaseInfo: CrawlerBaseInfo{
+
+			Name:        "财联社",
+			BaseUrl:     "https://www.cls.cn",
+			Description: "财联社",
+			Headers:     map[string]string{"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"},
+		},
+	}
 	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), time.Duration(crawlTimeOut)*time.Second)
 	defer timeoutCtxCancel()
-	var ctx context.Context
-	var cancel context.CancelFunc
-	path, e := checkBrowserOnWindows()
-	logger.SugaredLogger.Infof("SearchStockInfo path:%s", path)
-
-	if e {
-		pctx, pcancel := chromedp.NewExecAllocator(
-			timeoutCtx,
-			chromedp.ExecPath(path),
-			chromedp.Flag("headless", true),
-		)
-		defer pcancel()
-		ctx, cancel = chromedp.NewContext(
-			pctx,
-			chromedp.WithLogf(logger.SugaredLogger.Infof),
-			chromedp.WithErrorf(logger.SugaredLogger.Errorf),
-		)
-	} else {
-		ctx, cancel = chromedp.NewContext(
-			timeoutCtx,
-			chromedp.WithLogf(logger.SugaredLogger.Infof),
-			chromedp.WithErrorf(logger.SugaredLogger.Errorf),
-		)
-	}
-	defer cancel()
-
-	defer func(ctx context.Context) {
-		err := chromedp.Cancel(ctx)
-		if err != nil {
-			logger.SugaredLogger.Error(err.Error())
-		}
-	}(ctx)
-	var htmlContent string
-	url := fmt.Sprintf("https://www.cls.cn/searchPage?keyword=%s&type=%s", strutil.RemoveNonPrintable(stock), msgType)
-	sel := ".subject-interest-list"
-	if msgType == "depth" {
-		sel = ".subject-interest-list"
-	}
-	if msgType == "telegram" {
-		sel = ".search-telegraph-list"
-	}
-	err := chromedp.Run(ctx,
-		chromedp.Navigate(url),
-		// 等待页面加载完成，可以根据需要调整等待时间
-		chromedp.WaitVisible(sel, chromedp.ByQuery),
-		chromedp.Sleep(3*time.Second),
-		chromedp.OuterHTML("html", &htmlContent, chromedp.ByQuery),
-	)
-	if err != nil {
-		logger.SugaredLogger.Error(err.Error())
+	crawler = crawler.NewCrawler(timeoutCtx, crawler.crawlerBaseInfo)
+	url := fmt.Sprintf("https://www.cls.cn/searchPage?keyword=%s&type=%s", RemoveAllBlankChar(stock), msgType)
+	logger.SugaredLogger.Infof("SearchStockInfo url:%s", url)
+	waitVisible := ".search-telegraph-list,.subject-interest-list"
+	htmlContent, ok := crawler.GetHtml(url, waitVisible, true)
+	if !ok {
 		return &[]string{}
 	}
 	document, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
@@ -670,12 +626,10 @@ func SearchStockInfo(stock, msgType string, crawlTimeOut int64) *[]string {
 		return &[]string{}
 	}
 	var messages []string
-	document.Find(".search-telegraph-list,.subject-interest-list").Each(func(i int, selection *goquery.Selection) {
+	document.Find(waitVisible).Each(func(i int, selection *goquery.Selection) {
 		text := strutil.RemoveNonPrintable(selection.Text())
-		//if strings.Contains(text, strutil.RemoveNonPrintable(stock)) {
 		messages = append(messages, text)
 		logger.SugaredLogger.Infof("搜索到消息-%s: %s", msgType, text)
-		//}
 	})
 	return &messages
 }
