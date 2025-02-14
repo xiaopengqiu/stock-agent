@@ -343,6 +343,7 @@ export namespace models {
 	    UpdatedAt: any;
 	    // Go type: gorm
 	    DeletedAt: any;
+	    modelName: string;
 	    stockCode: string;
 	    stockName: string;
 	    content: string;
@@ -358,6 +359,7 @@ export namespace models {
 	        this.CreatedAt = this.convertValues(source["CreatedAt"], null);
 	        this.UpdatedAt = this.convertValues(source["UpdatedAt"], null);
 	        this.DeletedAt = this.convertValues(source["DeletedAt"], null);
+	        this.modelName = source["modelName"];
 	        this.stockCode = source["stockCode"];
 	        this.stockName = source["stockName"];
 	        this.content = source["content"];

@@ -55,6 +55,7 @@ const formModel = ref({
 })
 
 const data = reactive({
+  modelName:"",
   name: "",
   code: "",
   fenshiURL:"",
@@ -485,6 +486,7 @@ function SendMessage(result,type){
     SendDingDingMessageByType(msg,result["股票代码"],type)
 }
 function aiReCheckStock(stock,stockCode) {
+  data.modelName=""
   data.airesult=""
   data.time=""
   data.name=stock
@@ -500,6 +502,7 @@ function aiReCheckStock(stock,stockCode) {
 function aiCheckStock(stock,stockCode){
   GetAIResponseResult(stockCode).then(result => {
     if(result.content){
+      data.modelName=result.modelName
       data.name=stock
       data.code=stockCode
       data.loading=false
@@ -515,6 +518,7 @@ function aiCheckStock(stock,stockCode){
       const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       data.time=formattedDate
     }else{
+      data.modelName=""
       data.airesult=""
       data.time=""
       data.name=stock
@@ -743,7 +747,7 @@ function saveAsMarkdown() {
     </template>
     <template #footer>
       <n-flex justify="space-between">
-        <n-text type="info" v-if="data.time" >分析时间:{{data.time}}</n-text>
+        <n-text type="info" v-if="data.time" ><n-tag v-if="data.modelName" type="warning" round  :bordered="false">{{data.modelName}}</n-tag>{{data.time}}</n-text>
         <n-text type="error" >*AI分析结果仅供参考，请以实际行情为准。投资需谨慎，风险自担。</n-text>
       </n-flex>
     </template>

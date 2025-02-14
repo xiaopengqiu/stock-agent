@@ -135,6 +135,7 @@ type Commit struct {
 
 type AIResponseResult struct {
 	gorm.Model
+	ModelName string                `json:"modelName"`
 	StockCode string                `json:"stockCode"`
 	StockName string                `json:"stockName"`
 	Content   string                `json:"content"`

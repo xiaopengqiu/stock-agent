@@ -356,7 +356,7 @@ func SearchGuShiTongStockInfo(stock string, crawlTimeOut int64) *[]string {
 			return &[]string{}
 		}
 		document.Find("div.finance-hover,div.list-date").Each(func(i int, selection *goquery.Selection) {
-			text := strutil.RemoveNonPrintable(selection.Text())
+			text := strutil.RemoveWhiteSpace(selection.Text(), false)
 			messages = append(messages, text)
 			logger.SugaredLogger.Infof("SearchGuShiTongStockInfo搜索到消息-%s: %s", "", text)
 		})
@@ -610,12 +610,13 @@ func (o OpenAi) SaveAIResponseResult(stockCode, stockName, result string) {
 	db.Dao.Create(&models.AIResponseResult{
 		StockCode: stockCode,
 		StockName: stockName,
+		ModelName: o.Model,
 		Content:   result,
 	})
 }
 
 func (o OpenAi) GetAIResponseResult(stock string) *models.AIResponseResult {
 	var result models.AIResponseResult
-	db.Dao.Where("stock_code = ?", stock).Order("id desc").First(&result)
+	db.Dao.Where("stock_code = ?", stock).Order("id desc").Limit(1).First(&result)
 	return &result
 }

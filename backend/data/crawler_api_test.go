@@ -105,7 +105,7 @@ func TestGetHtmlWithActions(t *testing.T) {
 		}
 		var messages []string
 		document.Find("div.finance-hover,div.list-date").Each(func(i int, selection *goquery.Selection) {
-			text := strutil.RemoveNonPrintable(selection.Text())
+			text := strutil.RemoveWhiteSpace(selection.Text(), false)
 			messages = append(messages, text)
 			logger.SugaredLogger.Infof("搜索到消息-%s: %s", "", text)
 		})
