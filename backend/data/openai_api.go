@@ -114,10 +114,21 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 				"content": o.Prompt,
 			},
 		}
-		question := strutil.ReplaceWithMap(o.QuestionTemplate, map[string]string{
+
+		replaceTemplates := map[string]string{
 			"{{stockName}}": RemoveAllBlankChar(stock),
 			"{{stockCode}}": RemoveAllBlankChar(stockCode),
-		})
+		}
+
+		followedStock := &FollowedStock{
+			StockCode: stockCode,
+		}
+		db.Dao.Model(&followedStock).Where("stock_code = ?", stockCode).First(followedStock)
+		if followedStock.CostPrice > 0 {
+			replaceTemplates["{{costPrice}}"] = fmt.Sprintf("%.2f", followedStock.CostPrice)
+		}
+
+		question := strutil.ReplaceWithMap(o.QuestionTemplate, replaceTemplates)
 		logger.SugaredLogger.Infof("NewChatStream stock:%s stockCode:%s", stock, stockCode)
 		logger.SugaredLogger.Infof("Prompt：%s", o.Prompt)
 		logger.SugaredLogger.Infof("User Prompt config:%v", o.QuestionTemplate)
