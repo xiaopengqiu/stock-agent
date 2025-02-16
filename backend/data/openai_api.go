@@ -89,8 +89,8 @@ type AiResponse struct {
 	SystemFingerprint string `json:"system_fingerprint"`
 }
 
-func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
-	ch := make(chan string, 512)
+func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[string]any {
+	ch := make(chan map[string]any, 512)
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -115,24 +115,30 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			},
 		}
 
-		replaceTemplates := map[string]string{
-			"{{stockName}}": RemoveAllBlankChar(stock),
-			"{{stockCode}}": RemoveAllBlankChar(stockCode),
+		question := ""
+		if userQuestion == "" {
+			replaceTemplates := map[string]string{
+				"{{stockName}}": RemoveAllBlankChar(stock),
+				"{{stockCode}}": RemoveAllBlankChar(stockCode),
+			}
+
+			followedStock := &FollowedStock{
+				StockCode: stockCode,
+			}
+			db.Dao.Model(&followedStock).Where("stock_code = ?", stockCode).First(followedStock)
+			if followedStock.CostPrice > 0 {
+				replaceTemplates["{{costPrice}}"] = fmt.Sprintf("%.2f", followedStock.CostPrice)
+			}
+			question = strutil.ReplaceWithMap(o.QuestionTemplate, replaceTemplates)
+		} else {
+			question = userQuestion
 		}
 
-		followedStock := &FollowedStock{
-			StockCode: stockCode,
-		}
-		db.Dao.Model(&followedStock).Where("stock_code = ?", stockCode).First(followedStock)
-		if followedStock.CostPrice > 0 {
-			replaceTemplates["{{costPrice}}"] = fmt.Sprintf("%.2f", followedStock.CostPrice)
-		}
-
-		question := strutil.ReplaceWithMap(o.QuestionTemplate, replaceTemplates)
 		logger.SugaredLogger.Infof("NewChatStream stock:%s stockCode:%s", stock, stockCode)
 		logger.SugaredLogger.Infof("Prompt：%s", o.Prompt)
 		logger.SugaredLogger.Infof("User Prompt config:%v", o.QuestionTemplate)
-		logger.SugaredLogger.Infof("User question:%s", question)
+		logger.SugaredLogger.Infof("User question:%s", userQuestion)
+		logger.SugaredLogger.Infof("final question:%s", question)
 
 		wg := &sync.WaitGroup{}
 		wg.Add(5)
@@ -141,7 +147,12 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 			messages := SearchStockPriceInfo(stockCode, o.CrawlTimeOut)
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股票价格失败")
-				ch <- "***❗获取股票价格失败,分析结果可能不准确***<hr>"
+				//ch <- "***❗获取股票价格失败,分析结果可能不准确***<hr>"
+				ch <- map[string]any{
+					"code":         1,
+					"question":     question,
+					"extraContent": "***❗获取股票价格失败,分析结果可能不准确***<hr>",
+				}
 				go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取股票价格失败,分析结果可能不准确")
 				return
 			}
@@ -157,10 +168,20 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 
 		go func() {
 			defer wg.Done()
+
+			if checkIsIndexBasic(stock) {
+				return
+			}
+
 			messages := GetFinancialReports(stockCode, o.CrawlTimeOut)
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股票财报失败")
-				ch <- "***❗获取股票财报失败,分析结果可能不准确***<hr>"
+				// "***❗获取股票财报失败,分析结果可能不准确***<hr>"
+				ch <- map[string]any{
+					"code":         1,
+					"question":     question,
+					"extraContent": "***❗获取股票财报失败,分析结果可能不准确***<hr>",
+				}
 				go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取股票财报失败,分析结果可能不准确")
 				return
 			}
@@ -237,6 +258,11 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 
 		go func() {
 			defer wg.Done()
+
+			if checkIsIndexBasic(stock) {
+				return
+			}
+
 			messages := SearchGuShiTongStockInfo(stockCode, o.CrawlTimeOut)
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股势通资讯失败")
@@ -281,7 +307,12 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 		defer body.Close()
 		if err != nil {
 			logger.SugaredLogger.Infof("Stream error : %s", err.Error())
-			ch <- err.Error()
+			//ch <- err.Error()
+			ch <- map[string]any{
+				"code":     0,
+				"question": question,
+				"content":  err.Error(),
+			}
 			return
 		}
 
@@ -296,6 +327,8 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 				}
 
 				var streamResponse struct {
+					Id      string `json:"id"`
+					Model   string `json:"model"`
 					Choices []struct {
 						Delta struct {
 							Content          string `json:"content"`
@@ -308,11 +341,27 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 				if err := json.Unmarshal([]byte(data), &streamResponse); err == nil {
 					for _, choice := range streamResponse.Choices {
 						if content := choice.Delta.Content; content != "" {
-							ch <- content
+							//ch <- content
+							ch <- map[string]any{
+								"code":     1,
+								"question": question,
+								"chatId":   streamResponse.Id,
+								"model":    streamResponse.Model,
+								"content":  content,
+							}
+
 							logger.SugaredLogger.Infof("Content data: %s", content)
 						}
 						if reasoningContent := choice.Delta.ReasoningContent; reasoningContent != "" {
-							ch <- reasoningContent
+							//ch <- reasoningContent
+							ch <- map[string]any{
+								"code":     1,
+								"question": question,
+								"chatId":   streamResponse.Id,
+								"model":    streamResponse.Model,
+								"content":  reasoningContent,
+							}
+
 							logger.SugaredLogger.Infof("ReasoningContent data: %s", reasoningContent)
 						}
 						if choice.FinishReason == "stop" {
@@ -322,19 +371,44 @@ func (o OpenAi) NewChatStream(stock, stockCode string) <-chan string {
 				} else {
 					if err != nil {
 						logger.SugaredLogger.Infof("Stream data error : %s", err.Error())
-						ch <- err.Error()
+						//ch <- err.Error()
+						ch <- map[string]any{
+							"code":     0,
+							"question": question,
+							"content":  err.Error(),
+						}
 					} else {
 						logger.SugaredLogger.Infof("Stream data error : %s", data)
-						ch <- data
+						//ch <- data
+						ch <- map[string]any{
+							"code":     0,
+							"question": question,
+							"content":  data,
+						}
 					}
 				}
 			} else {
-				ch <- line
+				if strutil.RemoveNonPrintable(line) != "" {
+					//ch <- line
+					ch <- map[string]any{
+						"code":     0,
+						"question": question,
+						"content":  line,
+					}
+					logger.SugaredLogger.Infof("Stream data error : %s", line)
+				}
+
 			}
 
 		}
 	}()
 	return ch
+}
+
+func checkIsIndexBasic(stock string) bool {
+	count := int64(0)
+	db.Dao.Model(&IndexBasic{}).Where("name =  ?", stock).Count(&count)
+	return count > 0
 }
 
 func SearchGuShiTongStockInfo(stock string, crawlTimeOut int64) *[]string {
@@ -463,116 +537,6 @@ func GetFinancialReports(stockCode string, crawlTimeOut int64) *[]string {
 	return &messages
 }
 
-func (o OpenAi) NewCommonChatStream(stock, stockCode, apiURL, apiKey, Model string) <-chan string {
-	ch := make(chan string)
-	go func() {
-		defer close(ch)
-		client := resty.New()
-		client.SetHeader("Authorization", "Bearer "+apiKey)
-		client.SetHeader("Content-Type", "application/json")
-		client.SetRetryCount(3)
-
-		msg := []map[string]interface{}{
-			{
-				"role":    "system",
-				"content": o.Prompt,
-			},
-		}
-
-		wg := &sync.WaitGroup{}
-
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			messages := SearchStockPriceInfo(stockCode, o.CrawlTimeOut)
-			price := ""
-			for _, message := range *messages {
-				price += message + ";"
-			}
-			msg = append(msg, map[string]interface{}{
-				"role":    "assistant",
-				"content": stock + "当前价格：" + price,
-			})
-		}()
-		//go func() {
-		//	defer wg.Done()
-		//	messages := SearchStockInfo(stock, "depth")
-		//	for _, message := range *messages {
-		//		msg = append(msg, map[string]interface{}{
-		//			"role":    "assistant",
-		//			"content": message,
-		//		})
-		//	}
-		//}()
-		//go func() {
-		//	defer wg.Done()
-		//	messages := SearchStockInfo(stock, "telegram")
-		//	for _, message := range *messages {
-		//		msg = append(msg, map[string]interface{}{
-		//			"role":    "assistant",
-		//			"content": message,
-		//		})
-		//	}
-		//}()
-		wg.Wait()
-
-		msg = append(msg, map[string]interface{}{
-			"role":    "user",
-			"content": stock + "分析和总结",
-		})
-
-		resp, err := client.R().
-			SetDoNotParseResponse(true).
-			SetBody(map[string]interface{}{
-				"model":       Model,
-				"max_tokens":  o.MaxTokens,
-				"temperature": o.Temperature,
-				"stream":      true,
-				"messages":    msg,
-			}).
-			Post(apiURL)
-
-		if err != nil {
-			ch <- err.Error()
-			return
-		}
-		defer resp.RawBody().Close()
-
-		scanner := bufio.NewScanner(resp.RawBody())
-		for scanner.Scan() {
-			line := scanner.Text()
-			logger.SugaredLogger.Infof("Received data: %s", line)
-			if strings.HasPrefix(line, "data:") {
-				data := strings.TrimPrefix(line, "data:")
-				if data == "[DONE]" {
-					return
-				}
-
-				var streamResponse struct {
-					Choices []struct {
-						Delta struct {
-							Content string `json:"content"`
-						} `json:"delta"`
-						FinishReason string `json:"finish_reason"`
-					} `json:"choices"`
-				}
-
-				if err := json.Unmarshal([]byte(data), &streamResponse); err == nil {
-					for _, choice := range streamResponse.Choices {
-						if content := choice.Delta.Content; content != "" {
-							ch <- content
-						}
-						if choice.FinishReason == "stop" {
-							return
-						}
-					}
-				}
-			}
-		}
-	}()
-	return ch
-}
-
 func GetTelegraphList(crawlTimeOut int64) *[]string {
 	url := "https://www.cls.cn/telegraph"
 	response, err := resty.New().SetTimeout(time.Duration(crawlTimeOut)*time.Second).R().
@@ -617,12 +581,14 @@ func GetTopNewsList(crawlTimeOut int64) *[]string {
 	return &telegraph
 }
 
-func (o OpenAi) SaveAIResponseResult(stockCode, stockName, result string) {
+func (o OpenAi) SaveAIResponseResult(stockCode, stockName, result, chatId, question string) {
 	db.Dao.Create(&models.AIResponseResult{
 		StockCode: stockCode,
 		StockName: stockName,
 		ModelName: o.Model,
 		Content:   result,
+		ChatId:    chatId,
+		Question:  question,
 	})
 }
 

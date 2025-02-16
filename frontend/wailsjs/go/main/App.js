@@ -34,12 +34,12 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
-export function NewChatStream(arg1, arg2) {
-  return window['go']['main']['App']['NewChatStream'](arg1, arg2);
+export function NewChatStream(arg1, arg2, arg3) {
+  return window['go']['main']['App']['NewChatStream'](arg1, arg2, arg3);
 }
 
-export function SaveAIResponseResult(arg1, arg2, arg3) {
-  return window['go']['main']['App']['SaveAIResponseResult'](arg1, arg2, arg3);
+export function SaveAIResponseResult(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['SaveAIResponseResult'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function SendDingDingMessage(arg1, arg2) {

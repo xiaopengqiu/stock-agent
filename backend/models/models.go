@@ -135,9 +135,11 @@ type Commit struct {
 
 type AIResponseResult struct {
 	gorm.Model
+	ChatId    string                `json:"chatId"`
 	ModelName string                `json:"modelName"`
 	StockCode string                `json:"stockCode"`
 	StockName string                `json:"stockName"`
+	Question  string                `json:"question"`
 	Content   string                `json:"content"`
 	IsDel     soft_delete.DeletedAt `gorm:"softDelete:flag"`
 }

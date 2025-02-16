@@ -91,20 +91,23 @@ func TestGetHtmlWithActions(t *testing.T) {
 	actions := []chromedp.Action{
 		chromedp.Navigate("https://gushitong.baidu.com/stock/ab-600745"),
 		chromedp.WaitVisible("div.cos-tab"),
-		chromedp.Click("div.cos-tab:nth-child(5)", chromedp.ByQuery),
-		chromedp.ScrollIntoView("div.body-box"),
-		chromedp.WaitVisible("div.body-col"),
+		chromedp.Click(".header div.cos-tab:nth-child(6)", chromedp.ByQuery),
+		chromedp.ScrollIntoView("div.finance-container >div.row:nth-child(3)"),
+		chromedp.WaitVisible("div.cos-tabs-header-container"),
+		chromedp.Click(".page-content .cos-tabs-header-container .cos-tabs-header .cos-tab:nth-child(1)", chromedp.ByQuery),
+		chromedp.WaitVisible(".page-content .finance-container .report-col-content", chromedp.ByQuery),
+		chromedp.Click(".page-content .cos-tabs-header-container .cos-tabs-header .cos-tab:nth-child(4)", chromedp.ByQuery),
 		chromedp.Evaluate(`window.scrollTo(0, document.body.scrollHeight);`, nil),
 		chromedp.Sleep(1 * time.Second),
 	}
-	htmlContent, success := crawlerAPI.GetHtmlWithActions(&actions, true)
+	htmlContent, success := crawlerAPI.GetHtmlWithActions(&actions, false)
 	if success {
 		document, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
 		if err != nil {
 			logger.SugaredLogger.Error(err.Error())
 		}
 		var messages []string
-		document.Find("div.finance-hover,div.list-date").Each(func(i int, selection *goquery.Selection) {
+		document.Find("div.report-table-list-container,div.report-row").Each(func(i int, selection *goquery.Selection) {
 			text := strutil.RemoveWhiteSpace(selection.Text(), false)
 			messages = append(messages, text)
 			logger.SugaredLogger.Infof("搜索到消息-%s: %s", "", text)

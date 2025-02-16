@@ -179,7 +179,9 @@ window.onerror = function (msg, source, lineno, colno, error) {
     <n-message-provider >
       <n-notification-provider>
       <n-modal-provider>
-  <n-watermark
+        <n-dialog-provider>
+
+        <n-watermark
       :content="content"
       cross
       selectable
@@ -218,6 +220,7 @@ window.onerror = function (msg, source, lineno, colno, error) {
 
   </n-flex>
   </n-watermark>
+        </n-dialog-provider>
       </n-modal-provider>
       </n-notification-provider>
     </n-message-provider>

@@ -19,6 +19,7 @@ import {
   NInputNumber,
   NText,
   useMessage,
+  useDialog,
   useModal,
   useNotification
 } from 'naive-ui'
@@ -32,7 +33,7 @@ const mdPreviewRef = ref(null)
 const message = useMessage()
 const modal = useModal()
 const notify = useNotification()
-
+const dialog = useDialog()
 const stocks=ref([])
 const results=ref({})
 const ticker=ref({})
@@ -56,6 +57,8 @@ const formModel = ref({
 
 const data = reactive({
   modelName:"",
+  chatId: "",
+  question:"",
   name: "",
   code: "",
   fenshiURL:"",
@@ -160,11 +163,19 @@ EventsOn("newChatStream",async (msg) => {
   //console.log("newChatStream:->",data.airesult)
   data.loading = false
   if (msg === "DONE") {
-    SaveAIResponseResult(data.code, data.name, data.airesult)
+    SaveAIResponseResult(data.code, data.name, data.airesult, data.chatId,data.question)
     message.info("AI分析完成！")
     message.destroyAll()
   } else {
-    data.airesult = data.airesult + msg
+    if(msg.code===1){
+      if(msg.chatId){
+        data.chatId = msg.chatId
+      }
+      if(msg.question){
+        data.question = msg.question
+      }
+      data.airesult = data.airesult + (msg.content||msg.extraContent)
+    }
   }
 })
 
@@ -496,13 +507,17 @@ function aiReCheckStock(stock,stockCode) {
   message.loading("ai检测中...",{
     duration: 0,
   })
-  NewChatStream(stock,stockCode)
+  //
+
+  NewChatStream(stock,stockCode,data.question)
 }
 
 function aiCheckStock(stock,stockCode){
   GetAIResponseResult(stockCode).then(result => {
     if(result.content){
       data.modelName=result.modelName
+      data.chatId=result.chatId
+      data.question=result.question
       data.name=stock
       data.code=stockCode
       data.loading=false
@@ -747,12 +762,25 @@ function saveAsMarkdown() {
     </template>
     <template #footer>
       <n-flex justify="space-between">
-        <n-text type="info" v-if="data.time" ><n-tag v-if="data.modelName" type="warning" round  :bordered="false">{{data.modelName}}</n-tag>{{data.time}}</n-text>
+        <n-text type="info" v-if="data.time" >
+          <n-tag v-if="data.modelName" type="warning" round :title="data.chatId" :bordered="false">{{data.modelName}}</n-tag>
+          {{data.time}}
+        </n-text>
         <n-text type="error" >*AI分析结果仅供参考，请以实际行情为准。投资需谨慎，风险自担。</n-text>
       </n-flex>
     </template>
     <template #action>
+
       <n-flex justify="right">
+        <n-input v-model:value="data.question"
+                 type="textarea"
+                 :show-count="true"
+                 placeholder="请输入您的问题:例如{{stockName}}[{{stockCode}}]分析和总结"
+                 :autosize="{
+              minRows: 2,
+              maxRows: 5
+            }"
+        />
         <n-button size="tiny"  type="warning" @click="aiReCheckStock(data.name,data.code)">再次分析</n-button>
         <n-button size="tiny" type="info" @click="saveAsImage(data.name,data.code)">保存为图片</n-button>
         <n-button size="tiny" type="success" @click="copyToClipboard">复制到剪切板</n-button>

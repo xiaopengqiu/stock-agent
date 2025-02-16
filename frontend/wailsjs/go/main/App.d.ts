@@ -19,9 +19,9 @@ export function GetVersionInfo():Promise<models.VersionInfo>;
 
 export function Greet(arg1:string):Promise<data.StockInfo>;
 
-export function NewChatStream(arg1:string,arg2:string):Promise<void>;
+export function NewChatStream(arg1:string,arg2:string,arg3:string):Promise<void>;
 
-export function SaveAIResponseResult(arg1:string,arg2:string,arg3:string):Promise<void>;
+export function SaveAIResponseResult(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<void>;
 
 export function SendDingDingMessage(arg1:string,arg2:string):Promise<string>;
 
