@@ -31,3 +31,8 @@ func TestRemoveNonPrintable(t *testing.T) {
 	logger.SugaredLogger.Infof("RemoveAllBlankChar(%s)", txt)
 
 }
+
+func TestConvertStockCodeToTushareCode(t *testing.T) {
+	logger.SugaredLogger.Infof("ConvertStockCodeToTushareCode(%s)", ConvertStockCodeToTushareCode("sz000802"))
+	logger.SugaredLogger.Infof("ConvertTushareCodeToStockCode(%s)", ConvertTushareCodeToStockCode("000802.SZ"))
+}

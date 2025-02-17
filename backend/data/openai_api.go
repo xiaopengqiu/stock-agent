@@ -141,7 +141,19 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 		logger.SugaredLogger.Infof("final question:%s", question)
 
 		wg := &sync.WaitGroup{}
-		wg.Add(5)
+		wg.Add(6)
+
+		go func() {
+			defer wg.Done()
+			endDate := time.Now().Format("20060102")
+			startDate := time.Now().Add(-time.Hour * 24 * 365).Format("20060102")
+			K := NewTushareApi(getConfig()).GetDaily(ConvertStockCodeToTushareCode(stockCode), startDate, endDate)
+			msg = append(msg, map[string]interface{}{
+				"role":    "assistant",
+				"content": stock + "日K数据如下：\n" + K,
+			})
+		}()
+
 		go func() {
 			defer wg.Done()
 			messages := SearchStockPriceInfo(stockCode, o.CrawlTimeOut)
