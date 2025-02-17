@@ -12,7 +12,7 @@ import (
 func TestGetDaily(t *testing.T) {
 	db.Init("../../data/stock.db")
 	tushareApi := NewTushareApi(getConfig())
-	res := tushareApi.GetDaily("000802.SZ", "20250101", "20250217")
+	res := tushareApi.GetDaily("000802.SZ", "20250101", "20250217", 30)
 	t.Log(res)
 
 }

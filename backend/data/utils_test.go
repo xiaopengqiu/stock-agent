@@ -36,3 +36,8 @@ func TestConvertStockCodeToTushareCode(t *testing.T) {
 	logger.SugaredLogger.Infof("ConvertStockCodeToTushareCode(%s)", ConvertStockCodeToTushareCode("sz000802"))
 	logger.SugaredLogger.Infof("ConvertTushareCodeToStockCode(%s)", ConvertTushareCodeToStockCode("000802.SZ"))
 }
+func TestReplaceSensitiveWords(t *testing.T) {
+	txt := "新 希 望习近平"
+	txt2 := ReplaceSensitiveWords(txt)
+	logger.SugaredLogger.Infof("ReplaceSensitiveWords(%s)", txt2)
+}

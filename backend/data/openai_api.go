@@ -147,7 +147,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 			defer wg.Done()
 			endDate := time.Now().Format("20060102")
 			startDate := time.Now().Add(-time.Hour * 24 * 365).Format("20060102")
-			K := NewTushareApi(getConfig()).GetDaily(ConvertStockCodeToTushareCode(stockCode), startDate, endDate)
+			K := NewTushareApi(getConfig()).GetDaily(ConvertStockCodeToTushareCode(stockCode), startDate, endDate, o.CrawlTimeOut)
 			msg = append(msg, map[string]interface{}{
 				"role":    "assistant",
 				"content": stock + "日K数据如下：\n" + K,
@@ -454,7 +454,7 @@ func SearchGuShiTongStockInfo(stock string, crawlTimeOut int64) *[]string {
 		}
 		document.Find("div.finance-hover,div.list-date").Each(func(i int, selection *goquery.Selection) {
 			text := strutil.RemoveWhiteSpace(selection.Text(), false)
-			messages = append(messages, text)
+			messages = append(messages, ReplaceSensitiveWords(text))
 			logger.SugaredLogger.Infof("SearchGuShiTongStockInfo搜索到消息-%s: %s", "", text)
 		})
 		logger.SugaredLogger.Infof("messages:%d", len(messages))
@@ -566,7 +566,7 @@ func GetTelegraphList(crawlTimeOut int64) *[]string {
 	var telegraph []string
 	document.Find("div.telegraph-content-box").Each(func(i int, selection *goquery.Selection) {
 		logger.SugaredLogger.Info(selection.Text())
-		telegraph = append(telegraph, selection.Text())
+		telegraph = append(telegraph, ReplaceSensitiveWords(selection.Text()))
 	})
 	return &telegraph
 }
@@ -588,7 +588,7 @@ func GetTopNewsList(crawlTimeOut int64) *[]string {
 	var telegraph []string
 	document.Find("div.home-article-title a,div.home-article-rec a").Each(func(i int, selection *goquery.Selection) {
 		logger.SugaredLogger.Info(selection.Text())
-		telegraph = append(telegraph, selection.Text())
+		telegraph = append(telegraph, ReplaceSensitiveWords(selection.Text()))
 	})
 	return &telegraph
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/go-resty/resty/v2"
 	"go-stock/backend/logger"
+	"time"
 )
 
 // @Author spark
@@ -25,11 +26,11 @@ func NewTushareApi(config *Settings) *TushareApi {
 }
 
 // GetDaily tushare A股日线行情
-func (receiver TushareApi) GetDaily(tsCode, startDate, endDate string) string {
+func (receiver TushareApi) GetDaily(tsCode, startDate, endDate string, crawlTimeOut int64) string {
 	logger.SugaredLogger.Debugf("tushare daily request: ts_code=%s, start_date=%s, end_date=%s", tsCode, startDate, endDate)
 	fields := "ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount"
 	resp := &TushareStockBasicResponse{}
-	_, err := receiver.client.R().
+	_, err := receiver.client.SetTimeout(time.Duration(crawlTimeOut)*time.Second).R().
 		SetHeader("content-type", "application/json").
 		SetBody(&TushareRequest{
 			ApiName: "daily",

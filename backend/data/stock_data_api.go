@@ -628,7 +628,7 @@ func SearchStockInfo(stock, msgType string, crawlTimeOut int64) *[]string {
 	var messages []string
 	document.Find(waitVisible).Each(func(i int, selection *goquery.Selection) {
 		text := strutil.RemoveNonPrintable(selection.Text())
-		messages = append(messages, text)
+		messages = append(messages, ReplaceSensitiveWords(text))
 		logger.SugaredLogger.Infof("搜索到消息-%s: %s", msgType, text)
 	})
 	return &messages
