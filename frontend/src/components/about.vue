@@ -104,14 +104,6 @@ onMounted(() => {
               <n-tbody>
                 <n-tr>
                   <n-td>
-                    邮件：sparkmemory@163.com
-                  </n-td>
-                  <n-td>
-                   50/次
-                  </n-td>
-                </n-tr>
-                <n-tr>
-                  <n-td>
                     加 QQ：506808970，微信：ArvinLovegood
                   </n-td>
                   <n-td>
@@ -120,10 +112,10 @@ onMounted(() => {
                 </n-tr>
                 <n-tr>
                   <n-td>
-                    长期不定时技术支持（不限次数）
+                    长期技术支持（不限次数，新功能优先体验）
                   </n-td>
                   <n-td>
-                    1000
+                    5000
                   </n-td>
                 </n-tr>
               </n-tbody>
