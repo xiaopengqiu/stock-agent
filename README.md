@@ -25,11 +25,14 @@
 ## 🧩 功能开发计划
 | 功能说明            | 状态 | 备注                                                                                                       |
 |-----------------|----|----------------------------------------------------------------------------------------------------------|
-| 多轮对话            | 🚧 | AI分析后可继续对话提问                                                                                             |
+| 多轮对话            | ✅ | AI分析后可继续对话提问                                                                                             |
 | 自定义AI分析提问模板     | ✅  | 可配置的提问模板 [v2025.2.12.7-alpha](https://github.com/ArvinLovegood/go-stock/releases/tag/v2025.2.12.7-alpha) |
 | 不再强制依赖Chrome浏览器 | ✅  | 默认使用edge浏览器抓取新闻资讯                                                                                        |
 
 ## 👀 更新日志
+### 2025.02.16 AI分析后可继续对话提问
+- [v2025.2.16.1-alpha](https://github.com/ArvinLovegood/go-stock/releases/tag/v2025.2.16.1-alpha)
+
 ### 2025.02.12 可配置的提问模板
 - [v2025.2.12.7-alpha](https://github.com/ArvinLovegood/go-stock/releases/tag/v2025.2.12.7-alpha)
 
