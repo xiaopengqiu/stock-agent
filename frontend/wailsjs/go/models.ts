@@ -78,6 +78,7 @@ export namespace data {
 	    checkUpdate: boolean;
 	    questionTemplate: string;
 	    crawlTimeOut: number;
+	    kDays: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -106,6 +107,7 @@ export namespace data {
 	        this.checkUpdate = source["checkUpdate"];
 	        this.questionTemplate = source["questionTemplate"];
 	        this.crawlTimeOut = source["crawlTimeOut"];
+	        this.kDays = source["kDays"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

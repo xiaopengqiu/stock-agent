@@ -27,6 +27,7 @@ type Settings struct {
 	CheckUpdate       bool    `json:"checkUpdate"`
 	QuestionTemplate  string  `json:"questionTemplate"`
 	CrawlTimeOut      int64   `json:"crawlTimeOut"`
+	KDays             int64   `json:"kDays"`
 }
 
 func (receiver Settings) TableName() string {
@@ -65,6 +66,7 @@ func (s SettingsApi) UpdateConfig() string {
 			"open_ai_api_time_out":       s.Config.OpenAiApiTimeOut,
 			"question_template":          s.Config.QuestionTemplate,
 			"crawl_time_out":             s.Config.CrawlTimeOut,
+			"k_days":                     s.Config.KDays,
 		})
 	} else {
 		logger.SugaredLogger.Infof("未找到配置，创建默认配置:%+v", s.Config)
@@ -86,6 +88,7 @@ func (s SettingsApi) UpdateConfig() string {
 			OpenAiApiTimeOut:       s.Config.OpenAiApiTimeOut,
 			QuestionTemplate:       s.Config.QuestionTemplate,
 			CrawlTimeOut:           s.Config.CrawlTimeOut,
+			KDays:                  s.Config.KDays,
 		})
 	}
 	return "保存成功！"
@@ -93,6 +96,18 @@ func (s SettingsApi) UpdateConfig() string {
 func (s SettingsApi) GetConfig() *Settings {
 	var settings Settings
 	db.Dao.Model(&Settings{}).First(&settings)
+
+	if settings.OpenAiEnable {
+		if settings.OpenAiApiTimeOut <= 0 {
+			settings.OpenAiApiTimeOut = 60 * 5
+		}
+		if settings.CrawlTimeOut <= 0 {
+			settings.CrawlTimeOut = 60
+		}
+		if settings.KDays < 30 {
+			settings.KDays = 30
+		}
+	}
 	return &settings
 }
 

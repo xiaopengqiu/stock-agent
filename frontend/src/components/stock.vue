@@ -772,7 +772,7 @@ function saveAsMarkdown() {
     <template #action>
 
       <n-flex justify="right">
-        <n-input v-model:value="data.question"
+        <n-input v-model:value="data.question" style="text-align: left"
                  type="textarea"
                  :show-count="true"
                  placeholder="请输入您的问题:例如{{stockName}}[{{stockCode}}]分析和总结"

@@ -31,6 +31,7 @@ const formValue = ref({
     timeout: 5,
     questionTemplate: "{{stockName}}分析和总结",
     crawlTimeOut:30,
+    kDays:30,
   }
 })
 
@@ -58,6 +59,7 @@ onMounted(()=>{
       timeout:res.openAiApiTimeOut,
       questionTemplate:res.questionTemplate?res.questionTemplate:'{{stockName}}分析和总结',
       crawlTimeOut:res.crawlTimeOut,
+      kDays:res.kDays,
     }
     console.log(res)
   })
@@ -84,6 +86,7 @@ function saveConfig(){
     openAiApiTimeOut:formValue.value.openAI.timeout,
     questionTemplate:formValue.value.openAI.questionTemplate,
     crawlTimeOut:formValue.value.openAI.crawlTimeOut,
+    kDays:formValue.value.openAI.kDays
   })
 
  //console.log("Settings",config)
@@ -152,6 +155,7 @@ function importConfig(){
         timeout:config.openAiApiTimeOut,
         questionTemplate:config.questionTemplate,
         crawlTimeOut:config.crawlTimeOut,
+        kDays:config.kDays
       }
      // formRef.value.resetFields()
     };
@@ -240,8 +244,11 @@ window.onerror = function (event, source, lineno, colno, error) {
       <n-form-item-gi :span="12"  v-if="formValue.openAI.enable" label="openAI temperature：" path="openAI.temperature" >
         <n-input-number  placeholder="temperature"  v-model:value="formValue.openAI.temperature"/>
       </n-form-item-gi>
-      <n-form-item-gi :span="10"  v-if="formValue.openAI.enable" label="openAI maxTokens："  path="openAI.maxTokens">
+      <n-form-item-gi :span="5"  v-if="formValue.openAI.enable" label="openAI maxTokens："  path="openAI.maxTokens">
         <n-input-number  placeholder="maxTokens"  v-model:value="formValue.openAI.maxTokens"/>
+      </n-form-item-gi>
+      <n-form-item-gi :span="5"  v-if="formValue.openAI.enable" title="天数越多消耗tokens越多" label="日K线数据(天)："  path="openAI.maxTokens">
+        <n-input-number  min="30" step="1" max="365"  placeholder="日K线数据(天)" title="天数越多消耗tokens越多" v-model:value="formValue.openAI.kDays"/>
       </n-form-item-gi>
       <n-form-item-gi :span="22"  v-if="formValue.openAI.enable" label="模型系统 Prompt："  path="openAI.prompt">
         <n-input v-model:value="formValue.openAI.prompt"

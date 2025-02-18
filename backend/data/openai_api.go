@@ -33,6 +33,7 @@ type OpenAi struct {
 	TimeOut          int     `json:"time_out"`
 	QuestionTemplate string  `json:"question_template"`
 	CrawlTimeOut     int64   `json:"crawl_time_out"`
+	KDays            int64   `json:"kDays"`
 }
 
 func NewDeepSeekOpenAi(ctx context.Context) *OpenAi {
@@ -43,6 +44,9 @@ func NewDeepSeekOpenAi(ctx context.Context) *OpenAi {
 		}
 		if config.CrawlTimeOut <= 0 {
 			config.CrawlTimeOut = 60
+		}
+		if config.KDays < 30 {
+			config.KDays = 30
 		}
 	}
 	return &OpenAi{
@@ -56,6 +60,7 @@ func NewDeepSeekOpenAi(ctx context.Context) *OpenAi {
 		TimeOut:          config.OpenAiApiTimeOut,
 		QuestionTemplate: config.QuestionTemplate,
 		CrawlTimeOut:     config.CrawlTimeOut,
+		KDays:            config.KDays,
 	}
 }
 
@@ -146,7 +151,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 		go func() {
 			defer wg.Done()
 			endDate := time.Now().Format("20060102")
-			startDate := time.Now().Add(-time.Hour * 24 * 365).Format("20060102")
+			startDate := time.Now().Add(-time.Hour * time.Duration(24*o.KDays)).Format("20060102")
 			K := NewTushareApi(getConfig()).GetDaily(ConvertStockCodeToTushareCode(stockCode), startDate, endDate, o.CrawlTimeOut)
 			msg = append(msg, map[string]interface{}{
 				"role":    "assistant",
