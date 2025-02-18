@@ -406,13 +406,16 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 				}
 			} else {
 				if strutil.RemoveNonPrintable(line) != "" {
-					//ch <- line
-					ch <- map[string]any{
-						"code":     0,
-						"question": question,
-						"content":  line,
-					}
 					logger.SugaredLogger.Infof("Stream data error : %s", line)
+					res := &models.Resp{}
+					if err := json.Unmarshal([]byte(line), res); err == nil {
+						//ch <- line
+						ch <- map[string]any{
+							"code":     0,
+							"question": question,
+							"content":  res.Message,
+						}
+					}
 				}
 
 			}

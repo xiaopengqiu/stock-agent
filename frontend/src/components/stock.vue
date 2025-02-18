@@ -1,14 +1,20 @@
 <script setup>
 import {computed, h, onBeforeMount, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import {
-  Follow, GetConfig,
+  Follow,
+  GetAIResponseResult,
+  GetConfig,
   GetFollowList,
   GetStockList,
-  Greet, SaveAIResponseResult, NewChatStream,
-  SendDingDingMessage, SendDingDingMessageByType,
+  GetVersionInfo,
+  Greet,
+  NewChatStream,
+  SaveAIResponseResult,
+  SendDingDingMessageByType,
   SetAlarmChangePercent,
-  SetCostPriceAndVolume, SetStockSort,
-  UnFollow, GetAIResponseResult, GetVersionInfo
+  SetCostPriceAndVolume,
+  SetStockSort,
+  UnFollow
 } from '../../wailsjs/go/main/App'
 import {
   NAvatar,
@@ -18,17 +24,18 @@ import {
   NFormItem,
   NInputNumber,
   NText,
-  useMessage,
   useDialog,
+  useMessage,
   useModal,
   useNotification
 } from 'naive-ui'
 import {EventsEmit, EventsOn, WindowFullscreen, WindowReload, WindowUnfullscreen} from '../../wailsjs/runtime'
-import {Add, Search,StarOutline} from '@vicons/ionicons5'
-import { MdPreview } from 'md-editor-v3';
+import {Add} from '@vicons/ionicons5'
+import {MdPreview} from 'md-editor-v3';
 // preview.css相比style.css少了编辑器那部分样式
 import 'md-editor-v3/lib/preview.css';
 import html2canvas from "html2canvas";
+
 const mdPreviewRef = ref(null)
 const message = useMessage()
 const modal = useModal()
@@ -162,20 +169,25 @@ EventsOn("refreshFollowList",(data)=>{
 EventsOn("newChatStream",async (msg) => {
   //console.log("newChatStream:->",data.airesult)
   data.loading = false
+  //console.log(msg)
   if (msg === "DONE") {
     SaveAIResponseResult(data.code, data.name, data.airesult, data.chatId,data.question)
     message.info("AI分析完成！")
     message.destroyAll()
   } else {
-    if(msg.code===1){
       if(msg.chatId){
         data.chatId = msg.chatId
       }
       if(msg.question){
         data.question = msg.question
       }
-      data.airesult = data.airesult + (msg.content||msg.extraContent)
-    }
+      if(msg.content){
+        data.airesult = data.airesult + msg.content
+      }
+      if(msg.extraContent){
+        data.airesult = data.airesult + msg.extraContent
+      }
+
   }
 })
 
@@ -530,8 +542,7 @@ function aiCheckStock(stock,stockCode){
       const hours = String(date.getHours()).padStart(2, '0');
       const minutes = String(date.getMinutes()).padStart(2, '0');
       const seconds = String(date.getSeconds()).padStart(2, '0');
-      const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-      data.time=formattedDate
+      data.time=`${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
     }else{
       data.modelName=""
       data.airesult=""

@@ -162,3 +162,8 @@ type VersionInfo struct {
 func (receiver VersionInfo) TableName() string {
 	return "version_info"
 }
+
+type Resp struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
