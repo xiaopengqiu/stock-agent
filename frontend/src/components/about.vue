@@ -31,7 +31,9 @@ onMounted(() => {
             <h1>go-stock <n-tag  size="small" round>{{versionInfo}}</n-tag></h1>
             <div style="justify-self: center;text-align: left" >
               <p>自选股行情实时监控，基于Wails和NaiveUI构建的AI赋能股票分析工具</p>
+              <p>支持DeepSeek，OpenAI， Ollama，LMStudio，AnythingLLM，硅基流动，火山方舟，阿里云百炼等平台或模型</p>
               <p>
+                本软件仅供学习研究，AI分析股票结果仅供参考，不提供任何投资建议或决策。
               </p>
               <p>
                 欢迎点赞GitHub：<a href="https://github.com/ArvinLovegood/go-stock" target="_blank">go-stock</a><n-divider vertical />
@@ -52,8 +54,7 @@ onMounted(() => {
               邮箱：<a href="mailto:sparkmemory@163.com">sparkmemory@163.com</a><n-divider vertical />
               QQ：  506808970<n-divider vertical />
               微信：ArvinLovegood</p>
-            <p style="color: #FAA04A">*加微信或者QQ时，请备注您的意图(如：<a href="#support">技术支持</a>，功能建议，商业咨询等，否则会被忽略)</p>
-            <n-divider vertical />
+            <p style="color: #FAA04A">*加微信或者QQ时，请先备注或留言需求(如：<a href="#support">技术支持</a>，功能建议，商业咨询等，否则会被忽略)</p>
             <p>开源不易，如果觉得好用，可以请作者喝杯咖啡。</p>
             <n-flex justify="center">
               <n-image width="200" :src="alipay" />
@@ -83,10 +84,7 @@ onMounted(() => {
           <n-divider title-placement="center">关于版权和技术支持申明</n-divider>
           <div style="justify-self: center;text-align: left" >
             <p>
-              本软件仅供学习研究，请勿用于非法和商业用途。
-            </p>
-            <p>
-              如需商业用途，请联系作者微信(备注 商业咨询)：ArvinLovegood
+              如需软件商业授权或定制开发，请联系作者微信(备注 商业咨询)：ArvinLovegood
             </p>
             <n-divider/>
             <p>
