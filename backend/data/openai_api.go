@@ -179,7 +179,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 			}
 			msg = append(msg, map[string]interface{}{
 				"role":    "assistant",
-				"content": stock + "当前价格：" + price,
+				"content": stock + time.Now().Format(time.DateOnly) + "价格：" + price,
 			})
 		}()
 
