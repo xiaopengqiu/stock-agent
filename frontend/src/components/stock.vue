@@ -31,12 +31,26 @@ import {
 } from 'naive-ui'
 import {EventsEmit, EventsOn, WindowFullscreen, WindowReload, WindowUnfullscreen} from '../../wailsjs/runtime'
 import {Add} from '@vicons/ionicons5'
-import {MdPreview} from 'md-editor-v3';
+import {MdPreview,MdEditor } from 'md-editor-v3';
 // preview.css相比style.css少了编辑器那部分样式
-import 'md-editor-v3/lib/preview.css';
+//import 'md-editor-v3/lib/preview.css';
+import 'md-editor-v3/lib/style.css';
+
+import { ExportPDF } from '@vavt/v3-extension';
+import '@vavt/v3-extension/lib/asset/ExportPDF.css';
 import html2canvas from "html2canvas";
+import {asBlob} from 'html-docx-js-typescript'; //将html转为word
+
+
+const toolbars = [0];
+const handleProgress = (progress) => {
+  console.log(`Export progress: ${progress.ratio * 100}%`);
+};
+const  enableEditor= ref(false)
 
 const mdPreviewRef = ref(null)
+const mdEditorRef =  ref(null)
+const tipsRef = ref(null)
 const message = useMessage()
 const modal = useModal()
 const notify = useNotification()
@@ -631,9 +645,48 @@ function saveAsMarkdown() {
   link.download = `${data.name}[${data.code}]-ai-analysis-result.md`;
   link.click();
   URL.revokeObjectURL(link.href);
+  link.remove()
+}
+function getHtml(ref) {
+  if (ref.value) {
+    // 获取 MdPreview 组件的根元素
+    const rootElement = ref.value.$el;
+    // 获取 HTML 内容
+    return rootElement.innerHTML;
+  } else {
+    console.error('mdPreviewRef is not yet available');
+    return "";
+  }
 }
 
-
+// 导出文档
+async function saveAsWord() {
+  // 将富文本内容拼接为一个完整的html
+  const html = getHtml(mdPreviewRef)
+  const tipsHtml = getHtml(tipsRef)
+  const value =  `
+         ${html}
+         <hr>
+         <div style="font-size: 12px;color: red">
+         ${tipsHtml}
+          </div>
+<br>
+本报告由go-stock项目生成：
+<p>
+<a href="https://github.com/ArvinLovegood/go-stock">
+AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警推送，市场整体/个股情绪分析，K线技术指标分析等。数据全部保留在本地。支持DeepSeek，OpenAI， Ollama，LMStudio，AnythingLLM，硅基流动，火山方舟，阿里云百炼等平台或模型。
+</a></p>>
+`
+  // landscape就是横着的，portrait是竖着的，默认是竖屏portrait。
+  const blob = await asBlob(value, { orientation: 'portrait' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `${data.name}[${data.code}]-ai-analysis-result.docx`;
+  a.click()
+  // 下载后将标签移除
+  URL.revokeObjectURL(a.href);
+  a.remove()
+}
 </script>
 
 <template>
@@ -766,13 +819,15 @@ function saveAsMarkdown() {
 
   <n-modal transform-origin="center" v-model:show="modalShow4"  preset="card" style="width: 800px;" :title="'['+data.name+']AI分析结果'" >
     <n-spin size="small" :show="data.loading">
-      <MdPreview  ref="mdPreviewRef" style="height: 440px;text-align: left" :modelValue="data.airesult" :theme="'dark'"/>
+      <MdEditor  v-if="enableEditor"  :toolbars="toolbars" ref="mdEditorRef" style="height: 440px;text-align: left" :modelValue="data.airesult" :theme="'dark'">
+        <template #defToolbars>
+          <ExportPDF :file-name="data.name+'['+data.code+']AI分析报告'" style="text-align: left" :modelValue="data.airesult" @onProgress="handleProgress" />
+        </template>
+      </MdEditor >
+      <MdPreview v-if="!enableEditor"  ref="mdPreviewRef"  style="height: 440px;text-align: left" :modelValue="data.airesult" :theme="'dark'"/>
     </n-spin>
-    <template #header-extra>
-
-    </template>
     <template #footer>
-      <n-flex justify="space-between">
+      <n-flex justify="space-between" ref="tipsRef">
         <n-text type="info" v-if="data.time" >
           <n-tag v-if="data.modelName" type="warning" round :title="data.chatId" :bordered="false">{{data.modelName}}</n-tag>
           {{data.time}}
@@ -781,9 +836,8 @@ function saveAsMarkdown() {
       </n-flex>
     </template>
     <template #action>
-
       <n-flex justify="right">
-        <n-input v-model:value="data.question" style="text-align: left"
+        <n-input v-model:value="data.question" style="text-align: left"  clearable
                  type="textarea"
                  :show-count="true"
                  placeholder="请输入您的问题:例如{{stockName}}[{{stockCode}}]分析和总结"
@@ -792,10 +846,12 @@ function saveAsMarkdown() {
               maxRows: 5
             }"
         />
+<!--        <n-button size="tiny" type="error" @click="enableEditor=!enableEditor">编辑/预览</n-button>-->
         <n-button size="tiny"  type="warning" @click="aiReCheckStock(data.name,data.code)">再次分析</n-button>
         <n-button size="tiny" type="info" @click="saveAsImage(data.name,data.code)">保存为图片</n-button>
         <n-button size="tiny" type="success" @click="copyToClipboard">复制到剪切板</n-button>
         <n-button size="tiny" type="primary" @click="saveAsMarkdown">保存为Markdown文件</n-button>
+        <n-button size="tiny" type="primary" @click="saveAsWord">保存为Word文件</n-button>
       </n-flex>
     </template>
   </n-modal>
