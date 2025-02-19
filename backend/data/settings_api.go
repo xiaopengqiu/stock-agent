@@ -105,7 +105,7 @@ func (s SettingsApi) GetConfig() *Settings {
 			settings.CrawlTimeOut = 60
 		}
 		if settings.KDays < 30 {
-			settings.KDays = 30
+			settings.KDays = 120
 		}
 	}
 	return &settings
