@@ -538,7 +538,6 @@ function aiReCheckStock(stock,stockCode) {
 
   NewChatStream(stock,stockCode,data.question)
 }
-
 function aiCheckStock(stock,stockCode){
   GetAIResponseResult(stockCode).then(result => {
     if(result.content){
