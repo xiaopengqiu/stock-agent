@@ -524,6 +524,7 @@ function SendMessage(result,type){
 }
 function aiReCheckStock(stock,stockCode) {
   data.modelName=""
+  data.question=""
   data.airesult=""
   data.time=""
   data.name=stock
@@ -559,6 +560,7 @@ function aiCheckStock(stock,stockCode){
       data.time=`${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
     }else{
       data.modelName=""
+      data.question=""
       data.airesult=""
       data.time=""
       data.name=stock
