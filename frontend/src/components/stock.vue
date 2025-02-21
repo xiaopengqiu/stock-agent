@@ -524,7 +524,6 @@ function SendMessage(result,type){
 }
 function aiReCheckStock(stock,stockCode) {
   data.modelName=""
-  data.question=""
   data.airesult=""
   data.time=""
   data.name=stock
