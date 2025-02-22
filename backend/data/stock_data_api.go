@@ -19,6 +19,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
+	"go-stock/backend/models"
 	"golang.org/x/sys/windows/registry"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
@@ -387,6 +388,9 @@ func (receiver StockDataApi) GetStockList(key string) []StockBasic {
 	var result2 []IndexBasic
 	db.Dao.Model(&IndexBasic{}).Where("market in ?", []string{"SSE", "SZSE"}).Where("name like ? or ts_code like ?", "%"+key+"%", "%"+key+"%").Find(&result2)
 
+	var result3 []models.StockInfoHK
+	db.Dao.Model(&models.StockInfoHK{}).Where("name like ? or code like ?", "%"+key+"%", "%"+key+"%").Find(&result3)
+
 	for _, item := range result2 {
 		result = append(result, StockBasic{
 			TsCode:   item.TsCode,
@@ -395,6 +399,14 @@ func (receiver StockDataApi) GetStockList(key string) []StockBasic {
 			Symbol:   item.Symbol,
 			Market:   item.Market,
 			ListDate: item.ListDate,
+		})
+	}
+	for _, item := range result3 {
+		result = append(result, StockBasic{
+			TsCode:   item.Code,
+			Name:     item.Name,
+			Fullname: item.Name,
+			Market:   "HK",
 		})
 	}
 
@@ -416,6 +428,73 @@ func ParseFullSingleStockData(data string) (*StockInfo, error) {
 	if len(datas) < 2 {
 		return nil, fmt.Errorf("invalid data format")
 	}
+	var result map[string]string
+	var err error
+	if strutil.ContainsAny(datas[0], []string{"hq_str_sz", "hq_str_sh"}) {
+		result, err = ParseSHSZStockData(datas)
+	}
+	if strutil.ContainsAny(datas[0], []string{"hq_str_hk"}) {
+		result, err = ParseHKStockData(datas)
+	}
+
+	//logger.SugaredLogger.Infof("股票数据解析完成: %v", result)
+	marshal, err := json.Marshal(result)
+	if err != nil {
+		return nil, err
+	}
+	stockInfo := &StockInfo{}
+	err = json.Unmarshal(marshal, &stockInfo)
+	if err != nil {
+		return nil, err
+	}
+	//logger.SugaredLogger.Infof("股票数据解析完成stockInfo: %+v", stockInfo)
+
+	return stockInfo, nil
+}
+
+func ParseHKStockData(datas []string) (map[string]string, error) {
+	code := strings.Split(datas[0], "hq_str_")[1]
+	result := make(map[string]string)
+	parts := strutil.SplitAndTrim(datas[1], ",", "\"")
+	//parts := strings.Split(data, ",")
+	if len(parts) < 19 {
+		return nil, fmt.Errorf("invalid data format")
+	}
+	/*
+		XIAOMI-W,    0
+		小米集团－Ｗ,  1 股票名称
+		50.050,		 2 今日开盘价
+		49.150,		 3 昨日收盘价
+		51.950,      4 今日最高价
+		49.700,      5 今日最低价
+		51.700,      6 当前价格
+		2.550,       7 涨跌额
+		5.188,		 8 涨跌幅
+		51.65000,    9
+		51.70000,    10
+		15770408249, 11 成交额
+		308362585,   12 成交量
+		0.000,       13
+		0.000,       14
+		51.950,		 15 52周最高
+		12.560,		 16 52周最低
+		2025/02/21,  17
+		16:08        18
+	*/
+	result["股票代码"] = code
+	result["股票名称"] = parts[1]
+	result["今日开盘价"] = parts[2]
+	result["昨日收盘价"] = parts[3]
+	result["今日最高价"] = parts[4]
+	result["今日最低价"] = parts[5]
+	result["当前价格"] = parts[6]
+	result["日期"] = parts[17]
+	result["时间"] = parts[18]
+	logger.SugaredLogger.Infof("股票数据解析完成: %v", result)
+	return result, nil
+}
+
+func ParseSHSZStockData(datas []string) (map[string]string, error) {
 	code := strings.Split(datas[0], "hq_str_")[1]
 	result := make(map[string]string)
 	parts := strutil.SplitAndTrim(datas[1], ",", "\"")
@@ -482,19 +561,7 @@ func ParseFullSingleStockData(data string) (*StockInfo, error) {
 	result["卖五报价"] = parts[29]
 	result["日期"] = parts[30]
 	result["时间"] = parts[31]
-	//logger.SugaredLogger.Infof("股票数据解析完成: %v", result)
-	marshal, err := json.Marshal(result)
-	if err != nil {
-		return nil, err
-	}
-	stockInfo := &StockInfo{}
-	err = json.Unmarshal(marshal, &stockInfo)
-	if err != nil {
-		return nil, err
-	}
-	//logger.SugaredLogger.Infof("股票数据解析完成stockInfo: %+v", stockInfo)
-
-	return stockInfo, nil
+	return result, nil
 }
 
 type IndexBasic struct {
@@ -519,6 +586,63 @@ func (IndexBasic) TableName() string {
 }
 
 func SearchStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
+
+	if strutil.HasPrefixAny(stockCode, []string{"HK", "hk"}) {
+		return getHKStockPriceInfo(stockCode, crawlTimeOut)
+	}
+	if strutil.HasPrefixAny(stockCode, []string{"SZ", "SH", "sh", "sz"}) {
+		return getSHSZStockPriceInfo(stockCode, crawlTimeOut)
+	}
+	return &[]string{}
+}
+
+func getHKStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
+	var messages []string
+	crawlerAPI := CrawlerApi{}
+	crawlerBaseInfo := CrawlerBaseInfo{
+		Name:        "SinaCrawler",
+		Description: "SinaCrawler Crawler Description",
+		BaseUrl:     "https://stock.finance.sina.com.cn",
+		Headers:     map[string]string{"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(crawlTimeOut)*time.Second)
+	defer cancel()
+	crawlerAPI = crawlerAPI.NewCrawler(ctx, crawlerBaseInfo)
+
+	url := fmt.Sprintf("https://stock.finance.sina.com.cn/hkstock/quotes/%s.html", strings.ReplaceAll(stockCode, "hk", ""))
+	htmlContent, ok := crawlerAPI.GetHtml(url, ".deta_hqContainer >.deta03 ", true)
+	if !ok {
+		return &[]string{}
+	}
+	document, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+	}
+	stockName := ""
+	stockPrice := ""
+	document.Find("#stock_cname").Each(func(i int, selection *goquery.Selection) {
+		stockName = strutil.RemoveNonPrintable(selection.Text())
+		logger.SugaredLogger.Infof("股票名称-:%s", stockName)
+	})
+
+	document.Find("#mts_stock_hk_price").Each(func(i int, selection *goquery.Selection) {
+		stockPrice = strutil.RemoveNonPrintable(selection.Text())
+		logger.SugaredLogger.Infof("股票名称-现价: %s", stockPrice)
+	})
+
+	messages = append(messages, fmt.Sprintf("%s现价%s", stockName, stockPrice))
+
+	document.Find(".deta_hqContainer >.deta03 li").Each(func(i int, selection *goquery.Selection) {
+		text := strutil.RemoveNonPrintable(selection.Text())
+		logger.SugaredLogger.Infof("股票名称-%s: %s", stockName, text)
+		messages = append(messages, text)
+	})
+
+	return &messages
+}
+
+func getSHSZStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
+	var messages []string
 	url := "https://www.cls.cn/stock?code=" + stockCode
 	// 创建一个 chromedp 上下文
 	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), time.Duration(crawlTimeOut)*time.Second)
@@ -570,7 +694,7 @@ func SearchStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 		logger.SugaredLogger.Error(err.Error())
 		return &[]string{}
 	}
-	var messages []string
+
 	document.Find("div.quote-text-border,span.quote-price").Each(func(i int, selection *goquery.Selection) {
 		text := strutil.RemoveNonPrintable(selection.Text())
 		logger.SugaredLogger.Info(text)

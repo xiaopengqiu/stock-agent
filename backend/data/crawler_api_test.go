@@ -2,9 +2,12 @@ package data
 
 import (
 	"context"
+	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/duke-git/lancet/v2/strutil"
+	"go-stock/backend/db"
 	"go-stock/backend/logger"
+	"go-stock/backend/models"
 	"strings"
 	"testing"
 	"time"
@@ -115,4 +118,51 @@ func TestGetHtmlWithActions(t *testing.T) {
 		logger.SugaredLogger.Infof("messages:%d", len(messages))
 	}
 	//logger.SugaredLogger.Infof("htmlContent:%s", htmlContent)
+}
+
+func TestHk(t *testing.T) {
+	//https://stock.finance.sina.com.cn/hkstock/quotes/00001.html
+	db.Init("../../data/stock.db")
+	hks := &[]models.StockInfoHK{}
+	db.Dao.Model(&models.StockInfoHK{}).Limit(1).Find(hks)
+
+	crawlerAPI := CrawlerApi{}
+	crawlerBaseInfo := CrawlerBaseInfo{
+		Name:        "TestCrawler",
+		Description: "Test Crawler Description",
+		BaseUrl:     "https://stock.finance.sina.com.cn",
+		Headers:     map[string]string{"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
+	defer cancel()
+	crawlerAPI = crawlerAPI.NewCrawler(ctx, crawlerBaseInfo)
+
+	for _, hk := range *hks {
+		logger.SugaredLogger.Infof("hk: %+v", hk)
+		url := fmt.Sprintf("https://stock.finance.sina.com.cn/hkstock/quotes/%s.html", strings.ReplaceAll(hk.Code, ".HK", ""))
+		htmlContent, ok := crawlerAPI.GetHtml(url, "#stock_cname", true)
+		if !ok {
+			continue
+		}
+		//logger.SugaredLogger.Infof("htmlContent: %s", htmlContent)
+		document, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
+		if err != nil {
+			logger.SugaredLogger.Error(err.Error())
+		}
+		document.Find("#stock_cname").Each(func(i int, selection *goquery.Selection) {
+			text := strutil.RemoveNonPrintable(selection.Text())
+			logger.SugaredLogger.Infof("股票名称-:%s", text)
+		})
+
+		document.Find("#mts_stock_hk_price").Each(func(i int, selection *goquery.Selection) {
+			text := strutil.RemoveNonPrintable(selection.Text())
+			logger.SugaredLogger.Infof("股票名称-现价: %s", text)
+		})
+
+		document.Find(".deta_hqContainer >.deta03 li").Each(func(i int, selection *goquery.Selection) {
+			text := strutil.RemoveNonPrintable(selection.Text())
+			logger.SugaredLogger.Infof("股票名称-%s: %s", "", text)
+		})
+
+	}
 }

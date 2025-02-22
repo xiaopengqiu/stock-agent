@@ -675,7 +675,7 @@ async function saveAsWord() {
 <p>
 <a href="https://github.com/ArvinLovegood/go-stock">
 AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警推送，市场整体/个股情绪分析，K线技术指标分析等。数据全部保留在本地。支持DeepSeek，OpenAI， Ollama，LMStudio，AnythingLLM，硅基流动，火山方舟，阿里云百炼等平台或模型。
-</a></p>>
+</a></p>
 `
   // landscape就是横着的，portrait是竖着的，默认是竖屏portrait。
   const blob = await asBlob(value, { orientation: 'portrait' })

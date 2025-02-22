@@ -442,6 +442,14 @@ func SearchGuShiTongStockInfo(stock string, crawlTimeOut int64) *[]string {
 		Headers: map[string]string{"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"},
 	})
 	url := "https://gushitong.baidu.com/stock/ab-" + RemoveAllNonDigitChar(stock)
+
+	if strutil.HasPrefixAny(stock, []string{"HK", "hk"}) {
+		url = "https://gushitong.baidu.com/stock/hk-" + RemoveAllNonDigitChar(stock)
+	}
+	if strutil.HasPrefixAny(stock, []string{"SZ", "SH", "sh", "sz"}) {
+		url = "https://gushitong.baidu.com/stock/ab-" + RemoveAllNonDigitChar(stock)
+	}
+
 	logger.SugaredLogger.Infof("SearchGuShiTongStockInfo搜索股票-%s: %s", stock, url)
 	actions := []chromedp.Action{
 		chromedp.Navigate(url),
@@ -471,6 +479,11 @@ func SearchGuShiTongStockInfo(stock string, crawlTimeOut int64) *[]string {
 }
 
 func GetFinancialReports(stockCode string, crawlTimeOut int64) *[]string {
+	if strutil.HasPrefixAny(stockCode, []string{"HK", "hk"}) {
+		stockCode = strings.ReplaceAll(stockCode, "hk", "")
+		stockCode = strings.ReplaceAll(stockCode, "HK", "")
+	}
+
 	// 创建一个 chromedp 上下文
 	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), time.Duration(crawlTimeOut)*time.Second)
 	defer timeoutCtxCancel()

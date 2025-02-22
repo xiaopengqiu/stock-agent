@@ -3,6 +3,7 @@ package data
 import (
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/slice"
+	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/go-resty/resty/v2"
 	"go-stock/backend/logger"
 	"time"
@@ -30,10 +31,12 @@ func (receiver TushareApi) GetDaily(tsCode, startDate, endDate string, crawlTime
 	logger.SugaredLogger.Debugf("tushare daily request: ts_code=%s, start_date=%s, end_date=%s", tsCode, startDate, endDate)
 	fields := "ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount"
 	resp := &TushareStockBasicResponse{}
+	stockType := getStockType(tsCode)
+	logger.SugaredLogger.Debugf("tushare daily request: %s", stockType)
 	_, err := receiver.client.SetTimeout(time.Duration(crawlTimeOut)*time.Second).R().
 		SetHeader("content-type", "application/json").
 		SetBody(&TushareRequest{
-			ApiName: "daily",
+			ApiName: stockType,
 			Token:   receiver.config.TushareToken,
 			Params: map[string]any{
 				"ts_code":    tsCode,
@@ -63,4 +66,14 @@ func (receiver TushareApi) GetDaily(tsCode, startDate, endDate string, crawlTime
 	}
 	logger.SugaredLogger.Debugf("tushare response: %s", res)
 	return res
+}
+
+func getStockType(code string) string {
+	if strutil.HasSuffixAny(code, []string{"SZ", "SH", "sh", "sz"}) {
+		return "daily"
+	}
+	if strutil.HasSuffixAny(code, []string{"HK", "hk"}) {
+		return "hk_daily"
+	}
+	return ""
 }

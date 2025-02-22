@@ -21,3 +21,9 @@ func TestNewDeepSeekOpenAiConfig(t *testing.T) {
 func TestGetTopNewsList(t *testing.T) {
 	GetTopNewsList(30)
 }
+
+func TestSearchGuShiTongStockInfo(t *testing.T) {
+	SearchGuShiTongStockInfo("hk01810", 60)
+	SearchGuShiTongStockInfo("sh600745", 60)
+
+}

@@ -24,7 +24,9 @@ func TestGetTelegraph(t *testing.T) {
 }
 
 func TestGetFinancialReports(t *testing.T) {
-	GetFinancialReports("sz000802", 30)
+	//GetFinancialReports("sz000802", 30)
+	GetFinancialReports("hk00927", 30)
+
 }
 
 func TestGetTelegraphSearch(t *testing.T) {
@@ -41,7 +43,8 @@ func TestSearchStockInfoByCode(t *testing.T) {
 }
 
 func TestSearchStockPriceInfo(t *testing.T) {
-	SearchStockPriceInfo("sh600745", 30)
+	SearchStockPriceInfo("hk00927", 30)
+	SearchStockPriceInfo("sh600859", 30)
 }
 
 func TestParseFullSingleStockData(t *testing.T) {
@@ -49,7 +52,7 @@ func TestParseFullSingleStockData(t *testing.T) {
 		SetHeader("Host", "hq.sinajs.cn").
 		SetHeader("Referer", "https://finance.sina.com.cn/").
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0").
-		Get(fmt.Sprintf(sinaStockUrl, time.Now().Unix(), "sh600859,sh600745"))
+		Get(fmt.Sprintf(sinaStockUrl, time.Now().Unix(), "sh600859,sz000034,hk01810,hk00856"))
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
 	}
@@ -57,6 +60,11 @@ func TestParseFullSingleStockData(t *testing.T) {
 	strs := strutil.SplitEx(data, "\n", true)
 	for _, str := range strs {
 		logger.SugaredLogger.Info(str)
+		stockData, err := ParseFullSingleStockData(str)
+		if err != nil {
+			return
+		}
+		logger.SugaredLogger.Infof("%+#v", stockData)
 	}
 }
 

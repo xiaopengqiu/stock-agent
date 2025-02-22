@@ -41,6 +41,9 @@ var wxpay []byte
 //go:embed build/stock_basic.json
 var stocksBin []byte
 
+//go:embed build/stock_base_info_hk.json
+var stocksBinHK []byte
+
 //go:generate cp -R ./data ./build/bin
 
 var Version string
@@ -55,10 +58,15 @@ func main() {
 	db.Dao.AutoMigrate(&data.IndexBasic{})
 	db.Dao.AutoMigrate(&data.Settings{})
 	db.Dao.AutoMigrate(&models.AIResponseResult{})
+	db.Dao.AutoMigrate(&models.StockInfoHK{})
 
 	if stocksBin != nil && len(stocksBin) > 0 {
 		go initStockData()
 	}
+	if stocksBinHK != nil && len(stocksBinHK) > 0 {
+		go initStockDataHK()
+	}
+
 	updateBasicInfo()
 
 	// Create an instance of the app structure
@@ -160,6 +168,23 @@ func main() {
 		log.Fatal(err)
 	}
 
+}
+
+func initStockDataHK() {
+	var count int64
+	db.Dao.Model(&models.StockInfoHK{}).Count(&count)
+	if count > 0 {
+		return
+	}
+	var v []models.StockInfoHK
+	err := json.Unmarshal(stocksBinHK, &v)
+	if err != nil {
+		return
+	}
+	for _, item := range v {
+		db.Dao.Model(&models.StockInfoHK{}).Create(&item)
+	}
+	log.Printf("init stock data hk %d", len(v))
 }
 
 func updateBasicInfo() {
