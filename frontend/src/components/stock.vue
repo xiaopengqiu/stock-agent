@@ -146,7 +146,6 @@ onMounted(() => {
   GetVersionInfo().then((res) => {
     icon.value = res.icon;
   });
-
   // 创建 WebSocket 连接
   ws.value = new WebSocket('ws://8.134.249.145:16688/ws'); // 替换为你的 WebSocket 服务器地址
 
