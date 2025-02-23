@@ -723,7 +723,7 @@ AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警
 </script>
 
 <template>
-    <vue-danmaku v-model:danmus="danmus"  style="height:100px; width:100%;z-index: 9;position:absolute; top: 30%" ></vue-danmaku>
+    <vue-danmaku v-model:danmus="danmus"  style="height:100px; width:100%;z-index: 9;position:absolute; top: 30%; pointer-events: none;" ></vue-danmaku>
   <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
     <n-gi v-for="result in sortedResults" style="margin-left: 2px" onmouseover="this.style.border='1px solid  #3498db' " onmouseout="this.style.border='0px'">
          <n-card   :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
