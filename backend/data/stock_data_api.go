@@ -455,7 +455,7 @@ func ParseFullSingleStockData(data string) (*StockInfo, error) {
 func ParseHKStockData(datas []string) (map[string]string, error) {
 	code := strings.Split(datas[0], "hq_str_")[1]
 	result := make(map[string]string)
-	parts := strutil.SplitAndTrim(datas[1], ",", "\"")
+	parts := strutil.SplitAndTrim(datas[1], ",", "\"", ";")
 	//parts := strings.Split(data, ",")
 	if len(parts) < 19 {
 		return nil, fmt.Errorf("invalid data format")
@@ -488,8 +488,8 @@ func ParseHKStockData(datas []string) (map[string]string, error) {
 	result["今日最高价"] = parts[4]
 	result["今日最低价"] = parts[5]
 	result["当前价格"] = parts[6]
-	result["日期"] = parts[17]
-	result["时间"] = parts[18]
+	result["日期"] = strings.ReplaceAll(parts[17], "/", "-")
+	result["时间"] = strings.ReplaceAll(parts[18], "\";", ":00")
 	logger.SugaredLogger.Infof("股票数据解析完成: %v", result)
 	return result, nil
 }

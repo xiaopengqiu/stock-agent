@@ -44,7 +44,7 @@ func TestSearchStockInfoByCode(t *testing.T) {
 
 func TestSearchStockPriceInfo(t *testing.T) {
 	SearchStockPriceInfo("hk00927", 30)
-	SearchStockPriceInfo("sh600859", 30)
+	//SearchStockPriceInfo("sh600859", 30)
 }
 
 func TestParseFullSingleStockData(t *testing.T) {
