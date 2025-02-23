@@ -24,8 +24,8 @@ func TestGetTelegraph(t *testing.T) {
 }
 
 func TestGetFinancialReports(t *testing.T) {
-	//GetFinancialReports("sz000802", 30)
-	GetFinancialReports("hk00927", 30)
+	GetFinancialReports("sz000802", 30)
+	//GetFinancialReports("hk00927", 30)
 
 }
 

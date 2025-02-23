@@ -30,7 +30,7 @@ import {
   useNotification
 } from 'naive-ui'
 import {EventsEmit, EventsOn, WindowFullscreen, WindowReload, WindowUnfullscreen} from '../../wailsjs/runtime'
-import {Add} from '@vicons/ionicons5'
+import {Add, BalloonOutline} from '@vicons/ionicons5'
 import {MdPreview,MdEditor } from 'md-editor-v3';
 // preview.css相比style.css少了编辑器那部分样式
 //import 'md-editor-v3/lib/preview.css';
@@ -39,8 +39,11 @@ import 'md-editor-v3/lib/style.css';
 import { ExportPDF } from '@vavt/v3-extension';
 import '@vavt/v3-extension/lib/asset/ExportPDF.css';
 import html2canvas from "html2canvas";
-import {asBlob} from 'html-docx-js-typescript'; //将html转为word
+import {asBlob} from 'html-docx-js-typescript';
 
+import vueDanmaku from 'vue3-danmaku'
+const danmus = ref(['欢迎回来~'])
+const ws = ref(null)
 
 const toolbars = [0];
 const handleProgress = (progress) => {
@@ -144,11 +147,32 @@ onMounted(() => {
     icon.value = res.icon;
   });
 
+  // 创建 WebSocket 连接
+  ws.value = new WebSocket('ws://8.134.249.145:16688/ws'); // 替换为你的 WebSocket 服务器地址
+
+  ws.value.onopen = () => {
+    console.log('WebSocket 连接已打开');
+  };
+
+  ws.value.onmessage = (event) => {
+    const message = event.data;
+    danmus.value.push(message);
+  };
+
+  ws.value.onerror = (error) => {
+    console.error('WebSocket 错误:', error);
+  };
+
+  ws.value.onclose = () => {
+    console.log('WebSocket 连接已关闭');
+  };
 })
 
 onBeforeUnmount(() => {
  // console.log(`the component is now unmounted.`)
   clearInterval(ticker.value)
+  ws.value.close()
+
 })
 
 EventsOn("refresh",(data)=>{
@@ -331,7 +355,17 @@ function removeMonitor(code,name,key) {
   })
 }
 
+function SendDanmu(){
+  //danmus.value.push(data.name)
+  console.log("SendDanmu",data.name)
+  console.log("SendDanmu-readyState", ws.value.readyState)
+  ws.value.send(data.name)
+}
+
 function getStockList(value){
+
+
+
  // console.log("getStockList",value)
   let result;
   result=stockList.value.filter(item => item.name.includes(value)||item.ts_code.includes(value))
@@ -690,8 +724,9 @@ AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警
 </script>
 
 <template>
+    <vue-danmaku v-model:danmus="danmus"  style="height:100px; width:100%;z-index: 9;position:absolute; top: 30%" ></vue-danmaku>
   <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
-      <n-gi v-for="result in sortedResults" style="margin-left: 2px" onmouseover="this.style.border='1px solid  #3498db' " onmouseout="this.style.border='0px'">
+    <n-gi v-for="result in sortedResults" style="margin-left: 2px" onmouseover="this.style.border='1px solid  #3498db' " onmouseout="this.style.border='0px'">
          <n-card   :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
            <n-grid :cols="1" :y-gap="6">
              <n-gi>
@@ -747,19 +782,23 @@ AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警
          </n-card >
       </n-gi>
     </n-grid>
-  <div style="position: fixed;bottom: 18px;right:0;z-index: 10;width: 350px">
+  <div style="position: fixed;bottom: 18px;right:0;z-index: 10;width: 420px">
 <!--    <n-card :bordered="false">-->
-      <n-input-group>
+      <n-input-group >
 <!--        <n-button  type="error" @click="addBTN=!addBTN" > <n-icon :component="Search"/>&nbsp;<n-text  v-if="addBTN">隐藏</n-text></n-button>-->
-        <n-auto-complete v-model:value="data.name"  v-if="addBTN"
+
+        <n-auto-complete  v-model:value="data.name"  v-if="addBTN"
                          :input-props="{
                                 autocomplete: 'disabled',
                               }"
                          :options="options"
-                         placeholder="请输入股票/指数名称或者代码"
+                         placeholder="股票指数名称/代码/弹幕"
                          clearable @update-value="getStockList" :on-select="onSelect"/>
         <n-button type="primary" @click="AddStock"  v-if="addBTN">
           <n-icon :component="Add"/> &nbsp;关注该股票
+        </n-button>
+        <n-button type="info" @click="SendDanmu">
+          <n-icon :component="BalloonOutline"/> &nbsp;发送弹幕
         </n-button>
       </n-input-group>
 <!--    </n-card>-->

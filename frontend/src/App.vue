@@ -18,7 +18,6 @@ import {
   ExpandOutline,
   RefreshOutline, PowerOutline, LogoGithub, MoveOutline, WalletOutline, StarOutline,
 } from '@vicons/ionicons5'
-
 const content = ref('数据来源于网络,仅供参考;投资有风险,入市需谨慎')
 const isFullscreen = ref(false)
 const activeKey = ref('stock')
