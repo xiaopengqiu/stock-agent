@@ -730,7 +730,7 @@ AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警
            <n-grid :cols="1" :y-gap="6">
              <n-gi>
                <n-text :type="result.type" >
-                 <n-number-animation :duration="1000" :precision="2" :from="result['上次当前价格']" :to="Number(result['当前价格'])" />
+                  <n-number-animation :duration="1000" :precision="2" :from="result['上次当前价格']" :to="Number(result['当前价格'])" />
                </n-text>
                <n-text style="padding-left: 10px;" :type="result.type">
                  <n-number-animation :duration="1000" :precision="3" :from="0" :to="result.changePercent" />%
@@ -755,6 +755,7 @@ AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警
                </n-gi>
              </n-grid>
            <template #header-extra>
+             <n-tag size="small" :bordered="false">{{result['股票代码']}}</n-tag>&nbsp;
              <n-button size="tiny" secondary type="primary" @click="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
                取消关注
              </n-button>&nbsp;
@@ -813,7 +814,7 @@ AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警
               <n-form-item label="股票成本" path="costPrice">
                 <n-input-number v-model:value="formModel.costPrice" min="0"  placeholder="请输入股票成本" >
                   <template #suffix>
-                    ¥
+                    {{formModel.code.indexOf("hk")>=0?"HK$":"¥"}}
                   </template>
                 </n-input-number>
               </n-form-item>
@@ -834,7 +835,7 @@ AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警
               <n-form-item label="股价提醒" path="alarmPrice">
                 <n-input-number v-model:value="formModel.alarmPrice"  min="0" placeholder="请输入股价报警值(¥)" >
                   <template #suffix>
-                    ¥
+                    {{formModel.code.indexOf("hk")>=0?"HK$":"¥"}}
                   </template>
                 </n-input-number>
               </n-form-item>

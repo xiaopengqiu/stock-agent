@@ -103,7 +103,7 @@ func (a *App) domReady(ctx context.Context) {
 		ticker := time.NewTicker(time.Second * time.Duration(interval))
 		defer ticker.Stop()
 		for range ticker.C {
-			if isTradingTime(time.Now()) {
+			if isTradingTime(time.Now()) || IsHKTradingTime(time.Now()) {
 				MonitorStockPrices(a)
 			}
 		}
@@ -199,6 +199,32 @@ func isTradingTime(date time.Time) bool {
 		return true
 	}
 
+	return false
+}
+
+// IsHKTradingTime 判断当前时间是否在港股交易时间内
+func IsHKTradingTime(date time.Time) bool {
+	hour, minute, _ := date.Clock()
+
+	// 开市前竞价时段：09:00 - 09:30
+	if (hour == 9 && minute >= 0) || (hour == 9 && minute <= 30) {
+		return true
+	}
+
+	// 上午持续交易时段：09:30 - 12:00
+	if (hour == 9 && minute > 30) || (hour >= 10 && hour < 12) || (hour == 12 && minute == 0) {
+		return true
+	}
+
+	// 下午持续交易时段：13:00 - 16:00
+	if (hour == 13 && minute >= 0) || (hour >= 14 && hour < 16) || (hour == 16 && minute == 0) {
+		return true
+	}
+
+	// 收市竞价交易时段：16:00 - 16:10
+	if (hour == 16 && minute >= 0) || (hour == 16 && minute <= 10) {
+		return true
+	}
 	return false
 }
 
