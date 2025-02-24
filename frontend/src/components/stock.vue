@@ -30,7 +30,15 @@ import {
   useNotification
 } from 'naive-ui'
 import {EventsEmit, EventsOn, WindowFullscreen, WindowReload, WindowUnfullscreen} from '../../wailsjs/runtime'
-import {Add, BalloonOutline} from '@vicons/ionicons5'
+import {
+  Add,
+  Balloon,
+  BalloonOutline, ChatboxOutline, ChatbubbleEllipses,
+  ChatbubbleEllipsesOutline,
+  ChatbubbleOutline,
+  Chatbubbles,
+  ChatbubblesSharp
+} from '@vicons/ionicons5'
 import {MdPreview,MdEditor } from 'md-editor-v3';
 // preview.css相比style.css少了编辑器那部分样式
 //import 'md-editor-v3/lib/preview.css';
@@ -148,6 +156,7 @@ onMounted(() => {
   });
   // 创建 WebSocket 连接
   ws.value = new WebSocket('ws://8.134.249.145:16688/ws'); // 替换为你的 WebSocket 服务器地址
+  //ws.value = new WebSocket('ws://localhost:16688/ws'); // 替换为你的 WebSocket 服务器地址
 
   ws.value.onopen = () => {
     console.log('WebSocket 连接已打开');
@@ -797,8 +806,8 @@ AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警
         <n-button type="primary" @click="AddStock"  v-if="addBTN">
           <n-icon :component="Add"/> &nbsp;关注该股票
         </n-button>
-        <n-button type="info" @click="SendDanmu">
-          <n-icon :component="BalloonOutline"/> &nbsp;发送弹幕
+        <n-button type="error" @click="SendDanmu">
+          <n-icon :component="ChatboxOutline"/> &nbsp;发送弹幕
         </n-button>
       </n-input-group>
 <!--    </n-card>-->

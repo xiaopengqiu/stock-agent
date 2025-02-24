@@ -620,6 +620,7 @@ func getHKStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 	}
 	stockName := ""
 	stockPrice := ""
+	stockPriceTime := ""
 	document.Find("#stock_cname").Each(func(i int, selection *goquery.Selection) {
 		stockName = strutil.RemoveNonPrintable(selection.Text())
 		logger.SugaredLogger.Infof("股票名称-:%s", stockName)
@@ -627,10 +628,16 @@ func getHKStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 
 	document.Find("#mts_stock_hk_price").Each(func(i int, selection *goquery.Selection) {
 		stockPrice = strutil.RemoveNonPrintable(selection.Text())
-		logger.SugaredLogger.Infof("股票名称-现价: %s", stockPrice)
+		logger.SugaredLogger.Infof("现价: %s", stockPrice)
 	})
 
-	messages = append(messages, fmt.Sprintf("%s现价%s", stockName, stockPrice))
+	document.Find("#mts_stock_hk_time").Each(func(i int, selection *goquery.Selection) {
+		stockPriceTime = strutil.RemoveNonPrintable(selection.Text())
+		logger.SugaredLogger.Infof("时间: %s", stockPriceTime)
+	})
+
+	messages = append(messages, fmt.Sprintf("%s:%s现价%s", stockPriceTime, stockName, stockPrice))
+	logger.SugaredLogger.Infof("股票: %s", messages)
 
 	document.Find(".deta_hqContainer >.deta03 li").Each(func(i int, selection *goquery.Selection) {
 		text := strutil.RemoveNonPrintable(selection.Text())

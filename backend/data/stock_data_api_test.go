@@ -43,7 +43,7 @@ func TestSearchStockInfoByCode(t *testing.T) {
 }
 
 func TestSearchStockPriceInfo(t *testing.T) {
-	SearchStockPriceInfo("hk00927", 30)
+	SearchStockPriceInfo("hk06030", 30)
 	//SearchStockPriceInfo("sh600859", 30)
 }
 
