@@ -120,7 +120,7 @@ func main() {
 	// Create application with options
 	err = wails.Run(&options.App{
 		Title:                    "go-stock",
-		Width:                    width * 2 / 3,
+		Width:                    width * 4 / 5,
 		Height:                   height * 2 / 3,
 		MinWidth:                 1024,
 		MinHeight:                768,
