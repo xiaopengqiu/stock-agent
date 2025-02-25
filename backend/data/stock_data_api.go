@@ -585,6 +585,45 @@ func (IndexBasic) TableName() string {
 	return "tushare_index_basic"
 }
 
+type RealTimeStockPriceInfo struct {
+	StockCode string
+	Price     string `json:"当前价格"`
+	Time      time.Time
+}
+
+func GetRealTimeStockPriceInfo(ctx context.Context, stockCode string) (price, priceTime string) {
+	if strutil.HasPrefixAny(stockCode, []string{"SZ", "SH", "sh", "sz"}) {
+		crawlerAPI := CrawlerApi{}
+		crawlerBaseInfo := CrawlerBaseInfo{
+			Name:        "EastmoneyCrawler",
+			Description: "EastmoneyCrawler Description",
+			BaseUrl:     "https://quote.eastmoney.com/",
+			Headers:     map[string]string{"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"},
+		}
+		crawlerAPI = crawlerAPI.NewCrawler(ctx, crawlerBaseInfo)
+		htmlContent, ok := crawlerAPI.GetHtml(fmt.Sprintf("https://quote.eastmoney.com/%s.html", stockCode), "div.zxj", true)
+		if ok {
+			price := ""
+			priceTime := ""
+			document, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
+			if err != nil {
+				logger.SugaredLogger.Errorf("GetRealTimeStockPriceInfo error: %v", err)
+			}
+			document.Find("div.zxj").Each(func(i int, selection *goquery.Selection) {
+				price = selection.Text()
+				logger.SugaredLogger.Infof("股票代码: %s, 当前价格: %s", stockCode, price)
+			})
+
+			document.Find("span.quote_title_time").Each(func(i int, selection *goquery.Selection) {
+				priceTime = selection.Text()
+				logger.SugaredLogger.Infof("股票代码: %s, 当前价格时间: %s", stockCode, priceTime)
+			})
+			return price, priceTime
+		}
+	}
+	return price, priceTime
+}
+
 func SearchStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 
 	if strutil.HasPrefixAny(stockCode, []string{"HK", "hk"}) {

@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/duke-git/lancet/v2/convertor"
@@ -9,6 +10,7 @@ import (
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"io/ioutil"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -43,8 +45,36 @@ func TestSearchStockInfoByCode(t *testing.T) {
 }
 
 func TestSearchStockPriceInfo(t *testing.T) {
-	SearchStockPriceInfo("hk06030", 30)
-	//SearchStockPriceInfo("sh600859", 30)
+	//SearchStockPriceInfo("hk06030", 30)
+	SearchStockPriceInfo("sh600171", 30)
+}
+
+func TestGetRealTimeStockPriceInfo(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	text, texttime := GetRealTimeStockPriceInfo(ctx, "sh600171")
+	logger.SugaredLogger.Infof("res:%s,%s", text, texttime)
+
+	text, texttime = GetRealTimeStockPriceInfo(ctx, "sh600438")
+	logger.SugaredLogger.Infof("res:%s,%s", text, texttime)
+
+	texttime = strings.ReplaceAll(texttime, "）", "")
+	texttime = strings.ReplaceAll(texttime, "（", "")
+	parts := strings.Split(texttime, " ")
+	logger.SugaredLogger.Infof("parts:%+v", parts)
+
+	//去除中文字符
+	// 正则表达式匹配中文字符
+	re := regexp.MustCompile(`\p{Han}+`)
+	texttime = re.ReplaceAllString(texttime, "")
+
+	logger.SugaredLogger.Infof("texttime:%s", texttime)
+	location, err := time.ParseInLocation("2006-01-02 15:04:05", texttime, time.Local)
+	if err != nil {
+		return
+	}
+	logger.SugaredLogger.Infof("location:%s", location.Format("2006-01-02 15:04:05"))
 }
 
 func TestParseFullSingleStockData(t *testing.T) {
@@ -52,7 +82,7 @@ func TestParseFullSingleStockData(t *testing.T) {
 		SetHeader("Host", "hq.sinajs.cn").
 		SetHeader("Referer", "https://finance.sina.com.cn/").
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0").
-		Get(fmt.Sprintf(sinaStockUrl, time.Now().Unix(), "sh600859,sz000034,hk01810,hk00856"))
+		Get(fmt.Sprintf(sinaStockUrl, time.Now().Unix(), "sh600584,sz000938,hk01810,hk00856"))
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
 	}

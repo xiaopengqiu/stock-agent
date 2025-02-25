@@ -107,14 +107,25 @@ func main() {
 	logger.NewDefaultLogger().Info("version: " + Version)
 	logger.NewDefaultLogger().Info("commit: " + VersionCommit)
 	// Create application with options
-	err := wails.Run(&options.App{
+	var width, height int
+	var err error
+
+	width, height, err = getScreenResolution()
+	if err != nil {
+		logger.NewDefaultLogger().Error("get screen resolution error")
+		width = 1366
+		height = 768
+	}
+
+	// Create application with options
+	err = wails.Run(&options.App{
 		Title:                    "go-stock",
-		Width:                    1366,
-		Height:                   920,
+		Width:                    width * 2 / 3,
+		Height:                   height * 2 / 3,
 		MinWidth:                 1024,
 		MinHeight:                768,
-		MaxWidth:                 1920,
-		MaxHeight:                960,
+		MaxWidth:                 width,
+		MaxHeight:                height,
 		DisableResize:            false,
 		Fullscreen:               false,
 		Frameless:                true,

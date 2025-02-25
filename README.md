@@ -10,7 +10,12 @@
 - 本项目仅供娱乐，不喜勿喷，AI分析股票结果仅供学习研究，投资有风险，请谨慎使用。
 - 开发环境主要基于Windows10+，其他平台未测试或功能受限。
 
-### 💬 大模型
+### 📦 立即体验
+- 安装版：[go-stock-amd64-installer.exe](https://github.com/ArvinLovegood/go-stock/releases)
+- 绿色版：[go-stock-windows-amd64.exe](https://github.com/ArvinLovegood/go-stock/releases)
+
+
+### 💬 支持大模型/平台
 | 模型 | 状态 | 备注                                        |
 | --- | --- |-------------------------------------------|
 | [OpenAI](https://platform.openai.com/) | ✅ | 可接入任何 OpenAI 接口格式模型                       |
@@ -46,10 +51,6 @@
 
 ### 2025.02.12 可配置的提问模板
 - [v2025.2.12.7-alpha](https://github.com/ArvinLovegood/go-stock/releases/tag/v2025.2.12.7-alpha)
-
-## 📦 立即体验
-- 安装版：[go-stock-amd64-installer.exe](https://github.com/ArvinLovegood/go-stock/releases)
-- 绿色版：[go-stock-windows-amd64.exe](https://github.com/ArvinLovegood/go-stock/releases)
 
 
 ## 🦄 重大更新

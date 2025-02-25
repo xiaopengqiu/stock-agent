@@ -21,6 +21,7 @@ import (
 	"golang.org/x/sys/windows/registry"
 	"os"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -637,4 +638,13 @@ func (a *App) ExportConfig() string {
 		return err.Error()
 	}
 	return "导出成功:" + file
+}
+func getScreenResolution() (int, int, error) {
+	user32 := syscall.NewLazyDLL("user32.dll")
+	getSystemMetrics := user32.NewProc("GetSystemMetrics")
+
+	width, _, _ := getSystemMetrics.Call(0)
+	height, _, _ := getSystemMetrics.Call(1)
+
+	return int(width), int(height), nil
 }
