@@ -811,7 +811,7 @@ AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警
         <n-button type="primary" @click="AddStock"  v-if="addBTN">
           <n-icon :component="Add"/> &nbsp;关注该股票
         </n-button>
-        <n-button type="error" @click="SendDanmu">
+        <n-button type="error" @click="SendDanmu" v-if="data.enableDanmu">
           <n-icon :component="ChatboxOutline"/> &nbsp;发送弹幕
         </n-button>
       </n-input-group>
