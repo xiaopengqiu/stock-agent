@@ -121,7 +121,7 @@ func main() {
 	err = wails.Run(&options.App{
 		Title:                    "go-stock",
 		Width:                    width * 4 / 5,
-		Height:                   height * 2 / 3,
+		Height:                   height * 4 / 5,
 		MinWidth:                 1024,
 		MinHeight:                768,
 		MaxWidth:                 width,

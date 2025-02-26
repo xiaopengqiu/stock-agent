@@ -32,7 +32,8 @@ const formValue = ref({
     questionTemplate: "{{stockName}}分析和总结",
     crawlTimeOut:30,
     kDays:30,
-  }
+  },
+  enableDanmu:false,
 })
 
 onMounted(()=>{
@@ -61,6 +62,7 @@ onMounted(()=>{
       crawlTimeOut:res.crawlTimeOut,
       kDays:res.kDays,
     }
+    formValue.value.enableDanmu = res.enableDanmu
     console.log(res)
   })
   //message.info("加载完成")
@@ -86,7 +88,8 @@ function saveConfig(){
     openAiApiTimeOut:formValue.value.openAI.timeout,
     questionTemplate:formValue.value.openAI.questionTemplate,
     crawlTimeOut:formValue.value.openAI.crawlTimeOut,
-    kDays:formValue.value.openAI.kDays
+    kDays:formValue.value.openAI.kDays,
+    enableDanmu:formValue.value.enableDanmu
   })
 
  //console.log("Settings",config)
@@ -157,6 +160,7 @@ function importConfig(){
         crawlTimeOut:config.crawlTimeOut,
         kDays:config.kDays
       }
+      formValue.value.enableDanmu = config.enableDanmu
      // formRef.value.resetFields()
     };
     reader.readAsText(file);
@@ -191,10 +195,10 @@ window.onerror = function (event, source, lineno, colno, error) {
         <n-form-item-gi  :span="10" label="Tushare api token：" path="tushareToken" >
           <n-input  type="text" placeholder="Tushare api token"  v-model:value="formValue.tushareToken" clearable />
         </n-form-item-gi>
-        <n-form-item-gi  :span="6" label="启动时更新A股/指数信息：" path="updateBasicInfoOnStart" >
+        <n-form-item-gi  :span="4" label="启动时更新A股/指数信息：" path="updateBasicInfoOnStart" >
           <n-switch v-model:value="formValue.updateBasicInfoOnStart" />
         </n-form-item-gi>
-        <n-form-item-gi  :span="6" label="数据刷新间隔(重启生效)：" path="refreshInterval" >
+        <n-form-item-gi  :span="5" label="数据刷新间隔(重启生效)：" path="refreshInterval" >
           <n-input-number v-model:value="formValue.refreshInterval" placeholder="请输入数据刷新间隔(秒)">
             <template #suffix>
               秒
@@ -212,6 +216,9 @@ window.onerror = function (event, source, lineno, colno, error) {
           </n-form-item-gi>
           <n-form-item-gi  :span="6" label="是否启用本地推送：" path="localPush.enable" >
             <n-switch v-model:value="formValue.localPush.enable" />
+          </n-form-item-gi>
+          <n-form-item-gi  :span="5" label="弹幕功能：" path="enableDanmu" >
+            <n-switch v-model:value="formValue.enableDanmu" />
           </n-form-item-gi>
           <n-form-item-gi :span="22"  v-if="formValue.dingPush.enable" label="钉钉机器人接口地址：" path="dingPush.dingRobot" >
             <n-input  placeholder="请输入钉钉机器人接口地址"  v-model:value="formValue.dingPush.dingRobot"/>

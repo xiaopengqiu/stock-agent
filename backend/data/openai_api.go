@@ -301,7 +301,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 			"content": question,
 		})
 		client := resty.New()
-		client.SetBaseURL(o.BaseUrl)
+		client.SetBaseURL(strutil.Trim(o.BaseUrl))
 		client.SetHeader("Authorization", "Bearer "+o.ApiKey)
 		client.SetHeader("Content-Type", "application/json")
 		//client.SetRetryCount(3)

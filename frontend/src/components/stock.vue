@@ -50,7 +50,7 @@ import html2canvas from "html2canvas";
 import {asBlob} from 'html-docx-js-typescript';
 
 import vueDanmaku from 'vue3-danmaku'
-const danmus = ref(['欢迎回来~'])
+const danmus = ref([])
 const ws = ref(null)
 
 const toolbars = [0];
@@ -100,6 +100,7 @@ const data = reactive({
   airesult: "",
   openAiEnable: false,
   loading: true,
+  enableDanmu: false,
 })
 const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
 
@@ -137,6 +138,9 @@ onBeforeMount(()=>{
     if (result.openAiEnable) {
       data.openAiEnable = true
     }
+    if (result.enableDanmu) {
+      data.enableDanmu = true
+    }
   })
 })
 
@@ -163,8 +167,9 @@ onMounted(() => {
   };
 
   ws.value.onmessage = (event) => {
-    const message = event.data;
-    danmus.value.push(message);
+    if(data.enableDanmu){
+      danmus.value.push(event.data);
+    }
   };
 
   ws.value.onerror = (error) => {

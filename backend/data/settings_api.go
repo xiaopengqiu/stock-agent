@@ -28,6 +28,7 @@ type Settings struct {
 	QuestionTemplate  string  `json:"questionTemplate"`
 	CrawlTimeOut      int64   `json:"crawlTimeOut"`
 	KDays             int64   `json:"kDays"`
+	EnableDanmu       bool    `json:"enableDanmu"`
 }
 
 func (receiver Settings) TableName() string {
@@ -67,6 +68,7 @@ func (s SettingsApi) UpdateConfig() string {
 			"question_template":          s.Config.QuestionTemplate,
 			"crawl_time_out":             s.Config.CrawlTimeOut,
 			"k_days":                     s.Config.KDays,
+			"enable_danmu":               s.Config.EnableDanmu,
 		})
 	} else {
 		logger.SugaredLogger.Infof("未找到配置，创建默认配置:%+v", s.Config)
@@ -89,6 +91,7 @@ func (s SettingsApi) UpdateConfig() string {
 			QuestionTemplate:       s.Config.QuestionTemplate,
 			CrawlTimeOut:           s.Config.CrawlTimeOut,
 			KDays:                  s.Config.KDays,
+			EnableDanmu:            s.Config.EnableDanmu,
 		})
 	}
 	return "保存成功！"

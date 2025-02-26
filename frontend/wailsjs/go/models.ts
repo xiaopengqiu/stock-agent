@@ -79,6 +79,7 @@ export namespace data {
 	    questionTemplate: string;
 	    crawlTimeOut: number;
 	    kDays: number;
+	    enableDanmu: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -108,6 +109,7 @@ export namespace data {
 	        this.questionTemplate = source["questionTemplate"];
 	        this.crawlTimeOut = source["crawlTimeOut"];
 	        this.kDays = source["kDays"];
+	        this.enableDanmu = source["enableDanmu"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
