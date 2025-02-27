@@ -1,6 +1,6 @@
 <script setup>
 
-import {onMounted, ref, watch} from "vue";
+import {onMounted, ref} from "vue";
 import {ExportConfig, GetConfig, SendDingDingMessageByType, UpdateConfig} from "../../wailsjs/go/main/App";
 import {useMessage} from "naive-ui";
 import {data} from "../../wailsjs/go/models";

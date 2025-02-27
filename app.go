@@ -59,7 +59,7 @@ func (a *App) startup(ctx context.Context) {
 
 }
 
-func checkUpdate(a *App) {
+func (a *App) CheckUpdate() {
 	releaseVersion := &models.GitHubReleaseVersion{}
 	_, err := resty.New().R().
 		SetResult(releaseVersion).
@@ -126,7 +126,7 @@ func (a *App) domReady(ctx context.Context) {
 
 	//检查新版本
 	go func() {
-		checkUpdate(a)
+		a.CheckUpdate()
 	}()
 
 	//检查谷歌浏览器

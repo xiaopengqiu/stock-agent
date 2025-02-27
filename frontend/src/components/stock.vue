@@ -32,12 +32,7 @@ import {
 import {EventsEmit, EventsOn, WindowFullscreen, WindowReload, WindowUnfullscreen} from '../../wailsjs/runtime'
 import {
   Add,
-  Balloon,
-  BalloonOutline, ChatboxOutline, ChatbubbleEllipses,
-  ChatbubbleEllipsesOutline,
-  ChatbubbleOutline,
-  Chatbubbles,
-  ChatbubblesSharp
+  ChatboxOutline,
 } from '@vicons/ionicons5'
 import {MdPreview,MdEditor } from 'md-editor-v3';
 // preview.css相比style.css少了编辑器那部分样式
@@ -242,6 +237,7 @@ EventsOn("newChatStream",async (msg) => {
   }
 })
 
+
 EventsOn("updateVersion",async (msg) => {
   const githubTimeStr = msg.published_at;
   // 创建一个 Date 对象
@@ -277,7 +273,7 @@ EventsOn("updateVersion",async (msg) => {
         }
       }, { default: () => msg.commit?.message })
     },
-    duration: 0,
+    duration: 5000,
     meta: "发布时间:"+formattedDate,
     action: () => {
       return h(NButton, {

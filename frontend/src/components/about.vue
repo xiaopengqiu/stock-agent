@@ -1,14 +1,18 @@
 <script setup>
-import { MdPreview } from 'md-editor-v3';
+// import { MdPreview } from 'md-editor-v3';
 // preview.css相比style.css少了编辑器那部分样式
 import 'md-editor-v3/lib/preview.css';
-import {onMounted, ref} from 'vue';
-import {GetVersionInfo} from "../../wailsjs/go/main/App";
+import {h, onMounted, ref} from 'vue';
+import {CheckUpdate, GetVersionInfo} from "../../wailsjs/go/main/App";
+import {EventsOn} from "../../wailsjs/runtime";
+import {NAvatar, NButton, useNotification} from "naive-ui";
 const updateLog = ref('');
 const versionInfo = ref('');
 const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
 const alipay =ref('https://github.com/ArvinLovegood/go-stock/raw/master/build/screenshot/alipay.jpg')
 const wxpay =ref('https://github.com/ArvinLovegood/go-stock/raw/master/build/screenshot/wxpay.jpg')
+const notify = useNotification()
+
 onMounted(() => {
   document.title = '关于软件';
   GetVersionInfo().then((res) => {
@@ -19,6 +23,58 @@ onMounted(() => {
     wxpay.value=res.wxpay;
   });
 })
+
+
+
+EventsOn("updateVersion",async (msg) => {
+  const githubTimeStr = msg.published_at;
+  // 创建一个 Date 对象
+  const utcDate = new Date(githubTimeStr);
+// 获取本地时间
+  const date = new Date(utcDate.getTime());
+  const year = date.getFullYear();
+// getMonth 返回值是 0 - 11，所以要加 1
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+
+  console.log("GitHub UTC 时间:", utcDate);
+  console.log("转换后的本地时间:", formattedDate);
+  notify.info({
+    avatar: () =>
+        h(NAvatar, {
+          size: 'small',
+          round: false,
+          src: icon.value
+        }),
+    title: '发现新版本: ' + msg.tag_name,
+    content: () => {
+      //return h(MdPreview, {theme:'dark',modelValue:msg.commit?.message}, null)
+      return h('div', {
+        style: {
+          'text-align': 'left',
+          'font-size': '14px',
+        }
+      }, { default: () => msg.commit?.message })
+    },
+    duration: 5000,
+    meta: "发布时间:"+formattedDate,
+    action: () => {
+      return h(NButton, {
+        type: 'primary',
+        size: 'small',
+        onClick: () => {
+          window.open(msg.html_url)
+        }
+      }, { default: () => '查看' })
+    }
+  })
+})
+
 </script>
 
 <template>
@@ -28,10 +84,18 @@ onMounted(() => {
           <n-divider title-placement="center">关于软件</n-divider>
           <n-space vertical >
             <n-image width="100" :src="icon" />
-            <h1>go-stock <n-tag  size="small" round>{{versionInfo}}</n-tag></h1>
+            <h1>
+              <n-badge :value="versionInfo" :offset="[50,10]"  type="success">
+                <n-gradient-text type="info" :size="50" >go-stock</n-gradient-text>
+              </n-badge>
+            </h1>
+            <n-button size="tiny" @click="CheckUpdate"  type="info" tertiary >检查更新</n-button>
+
+
+
             <div style="justify-self: center;text-align: left" >
               <p>自选股行情实时监控，基于Wails和NaiveUI构建的AI赋能股票分析工具</p>
-              <p>支持DeepSeek，OpenAI， Ollama，LMStudio，AnythingLLM，硅基流动，火山方舟，阿里云百炼等平台或模型</p>
+              <p>支持DeepSeek，OpenAI， Ollama，LMStudio，AnythingLLM，<a href="https://cloud.siliconflow.cn/i/foufCerk" target="_blank">硅基流动</a>，<a href="https://www.volcengine.com/experience/ark?utm_term=202502dsinvite&ac=DSASUQY5&rc=IJSE43PZ" target="_blank">火山方舟</a>，阿里云百炼等平台或模型</p>
               <p>
                 本软件仅供学习研究，AI分析股票结果仅供参考，不提供任何投资建议或决策。
               </p>
@@ -42,6 +106,7 @@ onMounted(() => {
                 <a href="https://github.com/ArvinLovegood/go-stock/releases" target="_blank">Releases</a><n-divider vertical />
               </p>
               <p v-if="updateLog">更新说明：{{updateLog}}</p>
+
             </div>
           </n-space>
           <n-divider title-placement="center">关于作者</n-divider>

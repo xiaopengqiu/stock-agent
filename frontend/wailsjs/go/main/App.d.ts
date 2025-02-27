@@ -3,6 +3,8 @@
 import {models} from '../models';
 import {data} from '../models';
 
+export function CheckUpdate():Promise<void>;
+
 export function ExportConfig():Promise<string>;
 
 export function Follow(arg1:string):Promise<string>;

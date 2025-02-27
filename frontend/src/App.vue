@@ -1,12 +1,11 @@
 <script setup>
-import stockInfo from './components/stock.vue'
 import {
   EventsEmit,
   EventsOn,
   Quit,
   WindowFullscreen, WindowGetPosition,
   WindowHide,
-  WindowIsFullscreen, WindowSetPosition,
+  WindowSetPosition,
   WindowUnfullscreen
 } from '../wailsjs/runtime'
 import {h, ref} from "vue";
@@ -16,7 +15,7 @@ import {
   SettingsOutline,
   ReorderTwoOutline,
   ExpandOutline,
-  RefreshOutline, PowerOutline, LogoGithub, MoveOutline, WalletOutline, StarOutline,
+  PowerOutline, LogoGithub, MoveOutline, WalletOutline, StarOutline,
 } from '@vicons/ionicons5'
 const content = ref('数据来源于网络,仅供参考;投资有风险,入市需谨慎')
 const isFullscreen = ref(false)
