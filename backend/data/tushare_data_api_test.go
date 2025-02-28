@@ -16,3 +16,14 @@ func TestGetDaily(t *testing.T) {
 	t.Log(res)
 
 }
+
+func TestGetUSDaily(t *testing.T) {
+	db.Init("../../data/stock.db")
+	tushareApi := NewTushareApi(getConfig())
+
+	res := tushareApi.GetDaily("gb_AAPL", "20250101", "20250217", 30)
+	t.Log(res)
+
+	//
+
+}

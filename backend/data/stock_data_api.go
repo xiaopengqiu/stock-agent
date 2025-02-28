@@ -534,7 +534,7 @@ func ParseUSStockData(datas []string) (map[string]string, error) {
 	result["当前价格"] = parts[1]
 	result["日期"] = strutil.SplitAndTrim(parts[3], " ", "")[0]
 	result["时间"] = strutil.SplitAndTrim(parts[3], " ", "")[1]
-	logger.SugaredLogger.Infof("美股股票数据解析完成: %v", result)
+	//logger.SugaredLogger.Infof("美股股票数据解析完成: %v", result)
 	return result, nil
 }
 
@@ -576,7 +576,7 @@ func ParseHKStockData(datas []string) (map[string]string, error) {
 	result["当前价格"] = parts[6]
 	result["日期"] = strings.ReplaceAll(parts[17], "/", "-")
 	result["时间"] = strings.ReplaceAll(parts[18], "\";", ":00")
-	logger.SugaredLogger.Infof("股票数据解析完成: %v", result)
+	//logger.SugaredLogger.Infof("股票数据解析完成: %v", result)
 	return result, nil
 }
 
@@ -712,13 +712,68 @@ func GetRealTimeStockPriceInfo(ctx context.Context, stockCode string) (price, pr
 
 func SearchStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 
-	if strutil.HasPrefixAny(stockCode, []string{"HK", "hk"}) {
-		return getHKStockPriceInfo(stockCode, crawlTimeOut)
-	}
 	if strutil.HasPrefixAny(stockCode, []string{"SZ", "SH", "sh", "sz"}) {
 		return getSHSZStockPriceInfo(stockCode, crawlTimeOut)
 	}
+	if strutil.HasPrefixAny(stockCode, []string{"HK", "hk"}) {
+		return getHKStockPriceInfo(stockCode, crawlTimeOut)
+	}
+	if strutil.HasPrefixAny(stockCode, []string{"US", "us", "gb_"}) {
+		return getUSStockPriceInfo(stockCode, crawlTimeOut)
+	}
 	return &[]string{}
+}
+
+func getUSStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
+	var messages []string
+	crawlerAPI := CrawlerApi{}
+	crawlerBaseInfo := CrawlerBaseInfo{
+		Name:        "SinaCrawler",
+		Description: "SinaCrawler Crawler Description",
+		BaseUrl:     "https://stock.finance.sina.com.cn",
+		Headers:     map[string]string{"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(crawlTimeOut)*time.Second)
+	defer cancel()
+	crawlerAPI = crawlerAPI.NewCrawler(ctx, crawlerBaseInfo)
+
+	url := fmt.Sprintf("https://stock.finance.sina.com.cn/usstock/quotes/%s.html", strings.ReplaceAll(stockCode, "gb_", ""))
+	htmlContent, ok := crawlerAPI.GetHtml(url, "div#hqPrice", true)
+	if !ok {
+		return &[]string{}
+	}
+	document, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+	}
+	stockName := ""
+	stockPrice := ""
+	stockPriceTime := ""
+	document.Find("div.hq_title >h1").Each(func(i int, selection *goquery.Selection) {
+		stockName = strutil.RemoveNonPrintable(selection.Text())
+		logger.SugaredLogger.Infof("股票名称-:%s", stockName)
+	})
+
+	document.Find("#hqPrice").Each(func(i int, selection *goquery.Selection) {
+		stockPrice = strutil.RemoveNonPrintable(selection.Text())
+		logger.SugaredLogger.Infof("现价: %s", stockPrice)
+	})
+
+	document.Find("div.hq_time").Each(func(i int, selection *goquery.Selection) {
+		stockPriceTime = strutil.RemoveNonPrintable(selection.Text())
+		logger.SugaredLogger.Infof("时间: %s", stockPriceTime)
+	})
+
+	messages = append(messages, fmt.Sprintf("%s:%s现价%s", stockPriceTime, stockName, stockPrice))
+	logger.SugaredLogger.Infof("股票: %s", messages)
+
+	document.Find("div#hqDetails >table tbody tr").Each(func(i int, selection *goquery.Selection) {
+		text := strutil.RemoveNonPrintable(selection.Text())
+		logger.SugaredLogger.Infof("股票名称-%s: %s", stockName, text)
+		messages = append(messages, text)
+	})
+
+	return &messages
 }
 
 func getHKStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {

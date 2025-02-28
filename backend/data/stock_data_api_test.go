@@ -47,7 +47,9 @@ func TestSearchStockInfoByCode(t *testing.T) {
 
 func TestSearchStockPriceInfo(t *testing.T) {
 	//SearchStockPriceInfo("hk06030", 30)
-	SearchStockPriceInfo("sh600171", 30)
+	//SearchStockPriceInfo("sh600171", 30)
+	SearchStockPriceInfo("gb_aapl", 30)
+
 }
 
 func TestGetRealTimeStockPriceInfo(t *testing.T) {

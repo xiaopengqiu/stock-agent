@@ -6,6 +6,7 @@ import (
 	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/go-resty/resty/v2"
 	"go-stock/backend/logger"
+	"strings"
 	"time"
 )
 
@@ -32,14 +33,15 @@ func (receiver TushareApi) GetDaily(tsCode, startDate, endDate string, crawlTime
 	fields := "ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount"
 	resp := &TushareStockBasicResponse{}
 	stockType := getStockType(tsCode)
-	logger.SugaredLogger.Debugf("tushare daily request: %s", stockType)
+	tsCodeNEW := getTsCode(tsCode)
+	logger.SugaredLogger.Debugf("tushare daily request: %s,tsCode:%s,tsCodeNEW:%s", stockType, tsCode, tsCodeNEW)
 	_, err := receiver.client.SetTimeout(time.Duration(crawlTimeOut)*time.Second).R().
 		SetHeader("content-type", "application/json").
 		SetBody(&TushareRequest{
 			ApiName: stockType,
 			Token:   receiver.config.TushareToken,
 			Params: map[string]any{
-				"ts_code":    tsCode,
+				"ts_code":    tsCodeNEW,
 				"start_date": startDate,
 				"end_date":   endDate,
 			},
@@ -68,12 +70,24 @@ func (receiver TushareApi) GetDaily(tsCode, startDate, endDate string, crawlTime
 	return res
 }
 
+func getTsCode(code string) any {
+	if strutil.HasPrefixAny(code, []string{"US", "us", "gb_"}) {
+		code = strings.Replace(code, "gb_", "", 1)
+		code = strings.Replace(code, "us", "", 1)
+		return code
+	}
+	return code
+}
+
 func getStockType(code string) string {
 	if strutil.HasSuffixAny(code, []string{"SZ", "SH", "sh", "sz"}) {
 		return "daily"
 	}
 	if strutil.HasSuffixAny(code, []string{"HK", "hk"}) {
 		return "hk_daily"
+	}
+	if strutil.HasPrefixAny(code, []string{"US", "us", "gb_"}) {
+		return "us_daily"
 	}
 	return ""
 }

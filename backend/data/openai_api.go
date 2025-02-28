@@ -152,7 +152,11 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 			defer wg.Done()
 			endDate := time.Now().Format("20060102")
 			startDate := time.Now().Add(-time.Hour * time.Duration(24*o.KDays)).Format("20060102")
-			K := NewTushareApi(getConfig()).GetDaily(ConvertStockCodeToTushareCode(stockCode), startDate, endDate, o.CrawlTimeOut)
+			code := stockCode
+			if strutil.HasPrefixAny(stockCode, []string{"hk", "sz", "sh"}) {
+				code = ConvertStockCodeToTushareCode(stockCode)
+			}
+			K := NewTushareApi(getConfig()).GetDaily(code, startDate, endDate, o.CrawlTimeOut)
 			msg = append(msg, map[string]interface{}{
 				"role":    "assistant",
 				"content": stock + "日K数据如下：\n" + K,
