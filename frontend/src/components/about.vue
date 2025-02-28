@@ -95,6 +95,7 @@ EventsOn("updateVersion",async (msg) => {
 
             <div style="justify-self: center;text-align: left" >
               <p>自选股行情实时监控，基于Wails和NaiveUI构建的AI赋能股票分析工具</p>
+              <p>目前已支持A股，港股，美股，未来计划加入基金，ETF等支持</p>
               <p>支持DeepSeek，OpenAI， Ollama，LMStudio，AnythingLLM，<a href="https://cloud.siliconflow.cn/i/foufCerk" target="_blank">硅基流动</a>，<a href="https://www.volcengine.com/experience/ark?utm_term=202502dsinvite&ac=DSASUQY5&rc=IJSE43PZ" target="_blank">火山方舟</a>，阿里云百炼等平台或模型</p>
               <p>
                 本软件仅供学习研究，AI分析股票结果仅供参考，不提供任何投资建议或决策。

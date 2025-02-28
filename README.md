@@ -6,6 +6,7 @@
 [![star](https://gitcode.com/ArvinLovegood/go-stock/star/badge.svg)](https://gitcode.com/ArvinLovegood/go-stock)
 ###  ✨ 简介
 - 本项目基于Wails和NaiveUI开发，结合AI大模型构建的股票分析工具。
+- 目前已支持A股，港股，美股，未来计划加入基金，ETF等支持。
 - 支持市场整体/个股情绪分析，K线技术指标分析等功能。
 - 本项目仅供娱乐，不喜勿喷，AI分析股票结果仅供学习研究，投资有风险，请谨慎使用。
 - 开发环境主要基于Windows10+，其他平台未测试或功能受限。
