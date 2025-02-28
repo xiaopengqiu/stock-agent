@@ -283,11 +283,24 @@ func (receiver StockDataApi) GetStockBaseInfo() {
 }
 
 func (receiver StockDataApi) GetStockCodeRealTimeData(StockCodes ...string) (*[]StockInfo, error) {
+
+	codes := slice.JoinFunc(StockCodes, ",", func(s string) string {
+		if strings.HasPrefix(s, "us") {
+			s = strings.Replace(s, "us", "gb_", 1)
+		}
+		if strings.HasPrefix(s, "US") {
+			s = strings.Replace(s, "US", "gb_", 1)
+		}
+		return strings.ToLower(s)
+	})
+
+	url := fmt.Sprintf(sinaStockUrl, time.Now().Unix(), codes)
+	//logger.SugaredLogger.Infof("GetStockCodeRealTimeData %s", url)
 	resp, err := receiver.client.R().
 		SetHeader("Host", "hq.sinajs.cn").
 		SetHeader("Referer", "https://finance.sina.com.cn/").
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0").
-		Get(fmt.Sprintf(sinaStockUrl, time.Now().Unix(), slice.Join(StockCodes, ",")))
+		Get(url)
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
 		return &[]StockInfo{}, err
@@ -391,6 +404,9 @@ func (receiver StockDataApi) GetStockList(key string) []StockBasic {
 	var result3 []models.StockInfoHK
 	db.Dao.Model(&models.StockInfoHK{}).Where("name like ? or code like ?", "%"+key+"%", "%"+key+"%").Find(&result3)
 
+	var result4 []models.StockInfoUS
+	db.Dao.Model(&models.StockInfoUS{}).Where("name like ? or code like ?", "%"+key+"%", "%"+key+"%").Find(&result4)
+
 	for _, item := range result2 {
 		result = append(result, StockBasic{
 			TsCode:   item.TsCode,
@@ -407,6 +423,14 @@ func (receiver StockDataApi) GetStockList(key string) []StockBasic {
 			Name:     item.Name,
 			Fullname: item.Name,
 			Market:   "HK",
+		})
+	}
+	for _, item := range result4 {
+		result = append(result, StockBasic{
+			TsCode:   item.Code,
+			Name:     item.Name,
+			Fullname: item.Name,
+			Market:   "US",
 		})
 	}
 
@@ -436,6 +460,9 @@ func ParseFullSingleStockData(data string) (*StockInfo, error) {
 	if strutil.ContainsAny(datas[0], []string{"hq_str_hk"}) {
 		result, err = ParseHKStockData(datas)
 	}
+	if strutil.ContainsAny(datas[0], []string{"hq_str_gb"}) {
+		result, err = ParseUSStockData(datas)
+	}
 
 	//logger.SugaredLogger.Infof("股票数据解析完成: %v", result)
 	marshal, err := json.Marshal(result)
@@ -450,6 +477,65 @@ func ParseFullSingleStockData(data string) (*StockInfo, error) {
 	//logger.SugaredLogger.Infof("股票数据解析完成stockInfo: %+v", stockInfo)
 
 	return stockInfo, nil
+}
+
+func ParseUSStockData(datas []string) (map[string]string, error) {
+	code := strings.Split(datas[0], "hq_str_")[1]
+	result := make(map[string]string)
+	parts := strutil.SplitAndTrim(datas[1], ",", "\"", ";")
+	//parts := strings.Split(data, ",")
+	if len(parts) < 30 {
+		return nil, fmt.Errorf("invalid data format")
+	}
+	/*
+		谷歌,   0
+		170.2100, 1 现价
+		-2.57, 2 涨跌幅
+		2025-02-28 09:38:50, 3 时间
+		-4.4900, 4 涨跌额
+		175.9400, 5 今日开盘价
+		176.5900, 6 区间
+		169.7520, 7 区间
+		208.7000, 8 52周区间
+		130.9500, 9 52周区间
+		25930485, 10 成交量
+		17083496, 11 10日均量
+		2074859900000, 12 市值
+		8.13, 13 每股收益
+		20.940000 , 14 市盈率
+		0.00,  15
+		0.00,  16
+		0.20,  17
+		0.00,	18
+		12190000000, 19
+		71, 20
+		170.2000, 21 盘后
+		-0.01, 22
+		-0.01, 23
+		Feb 27 07:59PM EST, 24
+		Feb 27 04:00PM EST, 25
+		174.7000, 26 前收盘
+		2917444, 27
+		1, 28
+		2025, 29
+		4456143849.0000, 30
+		176.1200, 31
+		163.7039, 32
+		496605933.1411, 33
+		170.2100, 34 现价
+		174.7000 35 前收盘
+	*/
+	result["股票代码"] = code
+	result["股票名称"] = parts[0]
+	result["今日开盘价"] = parts[5]
+	result["昨日收盘价"] = parts[26]
+	result["今日最高价"] = parts[6]
+	result["今日最低价"] = parts[7]
+	result["当前价格"] = parts[1]
+	result["日期"] = strutil.SplitAndTrim(parts[3], " ", "")[0]
+	result["时间"] = strutil.SplitAndTrim(parts[3], " ", "")[1]
+	logger.SugaredLogger.Infof("美股股票数据解析完成: %v", result)
+	return result, nil
 }
 
 func ParseHKStockData(datas []string) (map[string]string, error) {

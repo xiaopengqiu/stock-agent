@@ -449,6 +449,9 @@ func SearchGuShiTongStockInfo(stock string, crawlTimeOut int64) *[]string {
 	if strutil.HasPrefixAny(stock, []string{"SZ", "SH", "sh", "sz"}) {
 		url = "https://gushitong.baidu.com/stock/ab-" + RemoveAllNonDigitChar(stock)
 	}
+	if strutil.HasPrefixAny(stock, []string{"us", "US", "gb_", "gb"}) {
+		url = "https://gushitong.baidu.com/stock/us-" + strings.Replace(stock, "gb_", "", 1)
+	}
 
 	logger.SugaredLogger.Infof("SearchGuShiTongStockInfo搜索股票-%s: %s", stock, url)
 	actions := []chromedp.Action{
@@ -482,6 +485,10 @@ func GetFinancialReports(stockCode string, crawlTimeOut int64) *[]string {
 	if strutil.HasPrefixAny(stockCode, []string{"HK", "hk"}) {
 		stockCode = strings.ReplaceAll(stockCode, "hk", "")
 		stockCode = strings.ReplaceAll(stockCode, "HK", "")
+	}
+	if strutil.HasPrefixAny(stockCode, []string{"us", "gb_"}) {
+		stockCode = strings.ReplaceAll(stockCode, "us", "")
+		stockCode = strings.ReplaceAll(stockCode, "gb_", "")
 	}
 
 	// 创建一个 chromedp 上下文

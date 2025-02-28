@@ -25,5 +25,6 @@ func TestGetTopNewsList(t *testing.T) {
 func TestSearchGuShiTongStockInfo(t *testing.T) {
 	SearchGuShiTongStockInfo("hk01810", 60)
 	SearchGuShiTongStockInfo("sh600745", 60)
+	SearchGuShiTongStockInfo("gb_goog", 60)
 
 }

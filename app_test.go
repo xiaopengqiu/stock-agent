@@ -13,3 +13,7 @@ func TestIsHKTradingTime(t *testing.T) {
 	f := IsHKTradingTime(time.Now())
 	t.Log(f)
 }
+
+func TestIsUSTradingTime(t *testing.T) {
+	t.Log(IsUSTradingTime(time.Now()))
+}

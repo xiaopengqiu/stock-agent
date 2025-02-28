@@ -10,12 +10,12 @@ import {
 } from '../wailsjs/runtime'
 import {h, ref} from "vue";
 import { RouterLink } from 'vue-router'
-import {darkTheme, NIcon, NText,} from 'naive-ui'
+import {darkTheme, NGradientText, NIcon, NText,} from 'naive-ui'
 import {
   SettingsOutline,
   ReorderTwoOutline,
   ExpandOutline,
-  PowerOutline, LogoGithub, MoveOutline, WalletOutline, StarOutline,
+  PowerOutline, LogoGithub, MoveOutline, WalletOutline, StarOutline, AlarmOutline, SparklesOutline,
 } from '@vicons/ionicons5'
 const content = ref('数据来源于网络,仅供参考;投资有风险,入市需谨慎')
 const isFullscreen = ref(false)
@@ -36,7 +36,7 @@ const menuOptions = ref([
                 },
               }
             },
-            { default: () => '我的自选',}
+            { default: () => '股票自选',}
         ),
     key: 'stock',
     icon: renderIcon(StarOutline),
@@ -46,6 +46,29 @@ const menuOptions = ref([
         key: 'realtimeProfit',
         show: realtimeProfit.value,
         icon: renderIcon(WalletOutline),
+      },
+    ]
+  },
+  {
+    label: () =>
+        h(
+            NGradientText,
+            {
+              type: 'warning',
+              style: {
+                'text-decoration': 'line-through',
+              }
+            },
+            { default: () => '基金自选' }
+        ),
+    key: 'fund',
+    icon: renderIcon(SparklesOutline),
+    children:[
+      {
+        label: ()=> h(NText, {type:realtimeProfit.value>0?'error':'success'},{ default: () => '敬请期待！'}),
+        key: 'realtimeProfit',
+        show: realtimeProfit.value,
+        icon: renderIcon(AlarmOutline),
       },
     ]
   },

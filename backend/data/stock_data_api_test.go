@@ -26,14 +26,15 @@ func TestGetTelegraph(t *testing.T) {
 }
 
 func TestGetFinancialReports(t *testing.T) {
-	GetFinancialReports("sz000802", 30)
+	//GetFinancialReports("sz000802", 30)
 	//GetFinancialReports("hk00927", 30)
+	GetFinancialReports("gb_aapl", 30)
 
 }
 
 func TestGetTelegraphSearch(t *testing.T) {
 	//url := "https://www.cls.cn/searchPage?keyword=%E9%97%BB%E6%B3%B0%E7%A7%91%E6%8A%80&type=telegram"
-	messages := SearchStockInfo("新 希 望", "telegram", 30)
+	messages := SearchStockInfo("谷歌", "telegram", 30)
 	for _, message := range *messages {
 		logger.SugaredLogger.Info(message)
 	}
@@ -82,7 +83,7 @@ func TestParseFullSingleStockData(t *testing.T) {
 		SetHeader("Host", "hq.sinajs.cn").
 		SetHeader("Referer", "https://finance.sina.com.cn/").
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0").
-		Get(fmt.Sprintf(sinaStockUrl, time.Now().Unix(), "sh600584,sz000938,hk01810,hk00856"))
+		Get(fmt.Sprintf(sinaStockUrl, time.Now().Unix(), "sh600584,sz000938,hk01810,hk00856,gb_aapl"))
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
 	}

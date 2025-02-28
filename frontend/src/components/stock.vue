@@ -465,7 +465,7 @@ function search(code,name){
     //window.open("https://www.cls.cn/stock?code="+code)
     //window.open("https://quote.eastmoney.com/"+code+".html")
     //window.open("https://finance.sina.com.cn/realstock/company/"+code+"/nc.shtml")
-    window.open("https://www.iwencai.com/unifiedwap/result?w="+code)
+    window.open("https://www.iwencai.com/unifiedwap/result?w="+name)
     //window.open("https://www.iwencai.com/chat/?question="+code)
   }, 500)
 }
@@ -486,14 +486,32 @@ function showFenshi(code,name){
   data.code=code
   data.name=name
   data.fenshiURL='http://image.sinajs.cn/newchart/min/n/'+data.code+'.gif'+"?t="+Date.now()
+
+  if(code.startsWith('hk')){
+    data.fenshiURL='http://image.sinajs.cn/newchart/hk_stock/min/'+data.code.replace("hk","")+'.gif'+"?t="+Date.now()
+  }
+  if(code.startsWith('gb_')){
+    data.fenshiURL='http://image.sinajs.cn/newchart/usstock/min/'+data.code.replace("gb_","")+'.gif'+"?t="+Date.now()
+  }
+
   modalShow2.value=true
 }
 function showK(code,name){
   data.code=code
   data.name=name
   data.kURL='http://image.sinajs.cn/newchart/daily/n/'+data.code+'.gif'+"?t="+Date.now()
+  if(code.startsWith('hk')){
+    data.kURL='http://image.sinajs.cn/newchart/hk_stock/daily/'+data.code.replace("hk","")+'.gif'+"?t="+Date.now()
+  }
+  if(code.startsWith('gb_')){
+    data.kURL='http://image.sinajs.cn/newchart/usstock/daily/'+data.code.replace("gb_","")+'.gif'+"?t="+Date.now()
+  }
+  //https://image.sinajs.cn/newchart/usstock/daily/dji.gif
+  //https://image.sinajs.cn/newchart/hk_stock/daily/06030.gif?1740729404273
   modalShow3.value=true
 }
+
+
 
 
 function updateCostPriceAndVolumeNew(code,price,volume,alarm,formModel){

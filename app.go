@@ -11,6 +11,7 @@ import (
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/mathutil"
 	"github.com/duke-git/lancet/v2/slice"
+	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/getlantern/systray"
 	"github.com/go-resty/resty/v2"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -104,9 +105,8 @@ func (a *App) domReady(ctx context.Context) {
 		ticker := time.NewTicker(time.Second * time.Duration(interval))
 		defer ticker.Stop()
 		for range ticker.C {
-			if isTradingTime(time.Now()) || IsHKTradingTime(time.Now()) {
-				MonitorStockPrices(a)
-			}
+			MonitorStockPrices(a)
+
 		}
 	}()
 
@@ -229,6 +229,35 @@ func IsHKTradingTime(date time.Time) bool {
 	return false
 }
 
+// IsUSTradingTime 判断当前时间是否在美股交易时间内
+func IsUSTradingTime(date time.Time) bool {
+	// 获取美国东部时区
+	est, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		logger.SugaredLogger.Errorf("加载时区失败: %s", err.Error())
+		return false
+	}
+
+	// 将当前时间转换为美国东部时间
+	estTime := date.In(est)
+
+	// 判断是否是周末
+	weekday := estTime.Weekday()
+	if weekday == time.Saturday || weekday == time.Sunday {
+		return false
+	}
+
+	// 获取小时和分钟
+	hour, minute, _ := estTime.Clock()
+
+	// 判断是否在9:30到16:00之间
+	if (hour == 9 && minute >= 30) || (hour >= 10 && hour < 16) || (hour == 16 && minute == 0) {
+		return true
+	}
+
+	return false
+}
+
 func MonitorStockPrices(a *App) {
 	dest := &[]data.FollowedStock{}
 	db.Dao.Model(&data.FollowedStock{}).Find(dest)
@@ -244,6 +273,16 @@ func MonitorStockPrices(a *App) {
 
 	stockInfos := GetStockInfos(*dest...)
 	for _, stockInfo := range *stockInfos {
+		if strutil.HasPrefixAny(stockInfo.Code, []string{"SZ", "SH", "sh", "sz"}) && (!isTradingTime(time.Now())) {
+			continue
+		}
+		if strutil.HasPrefixAny(stockInfo.Code, []string{"hk", "HK"}) && (!IsHKTradingTime(time.Now())) {
+			continue
+		}
+		if strutil.HasPrefixAny(stockInfo.Code, []string{"us", "US", "gb_"}) && (!IsUSTradingTime(time.Now())) {
+			continue
+		}
+
 		total += stockInfo.ProfitAmountToday
 		price, _ := convertor.ToFloat(stockInfo.Price)
 		if stockInfo.PrePrice != price {

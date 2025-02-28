@@ -176,6 +176,21 @@ func (receiver StockInfoHK) TableName() string {
 	return "stock_base_info_hk"
 }
 
+type StockInfoUS struct {
+	gorm.Model
+	Code     string                `json:"code"`
+	Name     string                `json:"name"`
+	FullName string                `json:"fullName"`
+	EName    string                `json:"eName"`
+	Exchange string                `json:"exchange"`
+	Type     string                `json:"type"`
+	IsDel    soft_delete.DeletedAt `gorm:"softDelete:flag"`
+}
+
+func (receiver StockInfoUS) TableName() string {
+	return "stock_base_info_us"
+}
+
 type Resp struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`

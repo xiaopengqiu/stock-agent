@@ -17,7 +17,7 @@ var SensitiveWords = strings.Split("戊边、戍边、戌边、边防、李鹏�
 func ReplaceSensitiveWords(text string) string {
 	for _, word := range SensitiveWords {
 		if strings.Contains(text, word) {
-			text = strings.ReplaceAll(text, word, "*")
+			text = strings.ReplaceAll(text, word, "")
 		}
 	}
 	return text

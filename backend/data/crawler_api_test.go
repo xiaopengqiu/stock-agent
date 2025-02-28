@@ -2,12 +2,14 @@ package data
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/duke-git/lancet/v2/strutil"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"go-stock/backend/models"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -165,4 +167,144 @@ func TestHk(t *testing.T) {
 		})
 
 	}
+}
+
+func TestUpdateUSName(t *testing.T) {
+	db.Init("../../data/stock.db")
+	us := &[]models.StockInfoUS{}
+	db.Dao.Model(&models.StockInfoUS{}).Where("name = ?", "").Order("RANDOM()").Find(us)
+
+	for _, us := range *us {
+		crawlerAPI := CrawlerApi{}
+		crawlerBaseInfo := CrawlerBaseInfo{
+			Name:        "TestCrawler",
+			Description: "Test Crawler Description",
+			BaseUrl:     "https://stock.finance.sina.com.cn",
+			Headers:     map[string]string{"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"},
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+		crawlerAPI = crawlerAPI.NewCrawler(ctx, crawlerBaseInfo)
+
+		url := fmt.Sprintf("https://stock.finance.sina.com.cn/usstock/quotes/%s.html", us.Code[:len(us.Code)-3])
+		logger.SugaredLogger.Infof("url: %s", url)
+		//waitVisible := "span.quote_title_name"
+		waitVisible := "div.hq_title > h1"
+
+		htmlContent, ok := crawlerAPI.GetHtml(url, waitVisible, true)
+
+		if !ok {
+			continue
+		}
+		//logger.SugaredLogger.Infof("htmlContent: %s", htmlContent)
+		document, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
+		if err != nil {
+			logger.SugaredLogger.Error(err.Error())
+		}
+		name := ""
+		document.Find(waitVisible).Each(func(i int, selection *goquery.Selection) {
+			name = strutil.RemoveNonPrintable(selection.Text())
+			name = strutil.SplitAndTrim(name, " ", "")[0]
+			logger.SugaredLogger.Infof("股票名称-:%s", name)
+		})
+		db.Dao.Model(&models.StockInfoUS{}).Where("code = ?", us.Code).Updates(map[string]interface{}{
+			"name":      name,
+			"full_name": name,
+		})
+	}
+
+}
+func TestUS(t *testing.T) {
+	db.Init("../../data/stock.db")
+	bytes, err := os.ReadFile("../../build/us.json")
+	if err != nil {
+		return
+	}
+	crawlerAPI := CrawlerApi{}
+	crawlerBaseInfo := CrawlerBaseInfo{
+		Name:        "TestCrawler",
+		Description: "Test Crawler Description",
+		BaseUrl:     "https://quote.eastmoney.com",
+		Headers:     map[string]string{"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
+	defer cancel()
+	crawlerAPI = crawlerAPI.NewCrawler(ctx, crawlerBaseInfo)
+
+	tick := &Tick{}
+	json.Unmarshal(bytes, &tick)
+	for i, datum := range tick.Data {
+		logger.SugaredLogger.Infof("datum: %d, %+v", i, datum)
+		name := ""
+
+		//https://quote.eastmoney.com/us/AAPL.html
+		//https://stock.finance.sina.com.cn/usstock/quotes/goog.html
+		//url := fmt.Sprintf("https://stock.finance.sina.com.cn/usstock/quotes/%s.html", strings.ReplaceAll(datum.C, ".US", ""))
+		////waitVisible := "span.quote_title_name"
+		//waitVisible := "div.hq_title > h1"
+		//
+		//htmlContent, ok := crawlerAPI.GetHtml(url, waitVisible, true)
+		//
+		//if !ok {
+		//	continue
+		//}
+		////logger.SugaredLogger.Infof("htmlContent: %s", htmlContent)
+		//document, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
+		//if err != nil {
+		//	logger.SugaredLogger.Error(err.Error())
+		//}
+		//document.Find(waitVisible).Each(func(i int, selection *goquery.Selection) {
+		//	name = strutil.RemoveNonPrintable(selection.Text())
+		//	name = strutil.SplitAndTrim(name, " ", "")[0]
+		//	logger.SugaredLogger.Infof("股票名称-:%s", name)
+		//})
+
+		us := &models.StockInfoUS{
+			Code:     datum.C + ".US",
+			EName:    datum.N,
+			FullName: datum.N,
+			Name:     name,
+			Exchange: datum.E,
+			Type:     datum.T,
+		}
+		db.Dao.Create(us)
+	}
+}
+
+func TestUSSINA(t *testing.T) {
+	//https://finance.sina.com.cn/stock/usstock/sector.shtml#cm
+	crawlerAPI := CrawlerApi{}
+	crawlerBaseInfo := CrawlerBaseInfo{
+		Name:        "TestCrawler",
+		Description: "Test Crawler Description",
+		BaseUrl:     "https://quote.eastmoney.com",
+		Headers:     map[string]string{"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
+	defer cancel()
+	crawlerAPI = crawlerAPI.NewCrawler(ctx, crawlerBaseInfo)
+
+	html, ok := crawlerAPI.GetHtml("https://finance.sina.com.cn/stock/usstock/sector.shtml#cm", "div#data", false)
+	if !ok {
+		return
+	}
+	document, err := goquery.NewDocumentFromReader(strings.NewReader(html))
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+	}
+	document.Find("div#data > table >tbody >tr").Each(func(i int, selection *goquery.Selection) {
+		tr := selection.Text()
+		logger.SugaredLogger.Infof("tr: %s", tr)
+	})
+}
+
+type Tick struct {
+	Code   int    `json:"code"`
+	Status string `json:"status"`
+	Data   []struct {
+		C string `json:"c"`
+		N string `json:"n"`
+		T string `json:"t"`
+		E string `json:"e"`
+	} `json:"data"`
 }
