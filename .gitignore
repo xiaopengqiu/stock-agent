@@ -110,3 +110,4 @@ dist
 /build/*.exe
 /build/bin/*
 frontend/package.json.md5
+/build/us.json
