@@ -44,6 +44,9 @@ var stocksBin []byte
 //go:embed build/stock_base_info_hk.json
 var stocksBinHK []byte
 
+//go:embed build/stock_base_info_us.json
+var stocksBinUS []byte
+
 //go:generate cp -R ./data ./build/bin
 
 var Version string
@@ -66,6 +69,9 @@ func main() {
 	}
 	if stocksBinHK != nil && len(stocksBinHK) > 0 {
 		go initStockDataHK()
+	}
+	if stocksBinUS != nil && len(stocksBinUS) > 0 {
+		go initStockDataUS()
 	}
 
 	updateBasicInfo()
@@ -180,6 +186,23 @@ func main() {
 		log.Fatal(err)
 	}
 
+}
+
+func initStockDataUS() {
+	var count int64
+	db.Dao.Model(&models.StockInfoUS{}).Count(&count)
+	if count > 0 {
+		return
+	}
+	var v []models.StockInfoUS
+	err := json.Unmarshal(stocksBinUS, &v)
+	if err != nil {
+		return
+	}
+	for _, item := range v {
+		db.Dao.Model(&models.StockInfoUS{}).Create(&item)
+	}
+	log.Printf("init stock data us %d", len(v))
 }
 
 func initStockDataHK() {
