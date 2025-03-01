@@ -279,15 +279,16 @@ func MonitorStockPrices(a *App) {
 		if strutil.HasPrefixAny(stockInfo.Code, []string{"hk", "HK"}) && (!IsHKTradingTime(time.Now())) {
 			continue
 		}
-		if strutil.HasPrefixAny(stockInfo.Code, []string{"us", "US", "gb_"}) && (!IsUSTradingTime(time.Now())) {
-			continue
-		}
+		//if strutil.HasPrefixAny(stockInfo.Code, []string{"us", "US", "gb_"}) && (!IsUSTradingTime(time.Now())) {
+		//	continue
+		//}
 
-		total += stockInfo.ProfitAmountToday
-		price, _ := convertor.ToFloat(stockInfo.Price)
-		if stockInfo.PrePrice != price {
-			go runtime.EventsEmit(a.ctx, "stock_price", stockInfo)
-		}
+		//total += stockInfo.ProfitAmountToday
+		//price, _ := convertor.ToFloat(stockInfo.Price)
+		//if stockInfo.PrePrice != price {
+		logger.SugaredLogger.Infof("-----------------------股票代码: %s, 股票名称: %s, 股票价格: %s,盘前盘后:%s", stockInfo.Code, stockInfo.Name, stockInfo.Price, stockInfo.BA)
+		go runtime.EventsEmit(a.ctx, "stock_price", stockInfo)
+		//}
 	}
 	if total != 0 {
 		title := "go-stock " + time.Now().Format(time.DateTime) + fmt.Sprintf("  %.2f¥", total)
@@ -307,6 +308,10 @@ func GetStockInfos(follows ...data.FollowedStock) *[]data.StockInfo {
 	stockData, _ := data.NewStockDataApi().GetStockCodeRealTimeData(stockCodes...)
 	for _, info := range *stockData {
 		v, ok := slice.FindBy(follows, func(idx int, follow data.FollowedStock) bool {
+			if strutil.HasPrefixAny(follow.StockCode, []string{"US", "us"}) {
+				return strings.ToLower(strings.Replace(follow.StockCode, "us", "gb_", 1)) == info.Code
+			}
+
 			return follow.StockCode == info.Code
 		})
 		if ok {
@@ -453,7 +458,7 @@ func (a *App) UnFollow(stockCode string) string {
 	return data.NewStockDataApi().UnFollow(stockCode)
 }
 
-func (a *App) GetFollowList() []data.FollowedStock {
+func (a *App) GetFollowList() *[]data.FollowedStock {
 	return data.NewStockDataApi().GetFollowList()
 }
 

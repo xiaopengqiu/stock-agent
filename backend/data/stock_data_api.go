@@ -73,6 +73,8 @@ type StockInfo struct {
 	A4V      string  `json:"卖四申报"`
 	A5P      string  `json:"卖五报价"`
 	A5V      string  `json:"卖五申报"`
+	Market   string  `json:"市场"`
+	BA       string  `json:"盘前盘后"`
 
 	//以下是字段值需二次计算
 	ChangePercent     float64 `json:"changePercent"`     //涨跌幅
@@ -315,6 +317,7 @@ func (receiver StockDataApi) GetStockCodeRealTimeData(StockCodes ...string) (*[]
 	for _, data := range dataStr {
 		//logger.SugaredLogger.Info(data)
 		stockData, err := ParseFullSingleStockData(data)
+		logger.SugaredLogger.Infof("GetStockCodeRealTimeData %v", stockData)
 		if err != nil {
 			logger.SugaredLogger.Error(err.Error())
 			continue
@@ -360,11 +363,21 @@ func (receiver StockDataApi) Follow(stockCode string) string {
 }
 
 func (receiver StockDataApi) UnFollow(stockCode string) string {
+	if strutil.HasPrefixAny(stockCode, []string{"gb_"}) {
+		stockCode = strings.ToUpper(stockCode)
+		stockCode = strings.Replace(stockCode, "gb_", "us", 1)
+		stockCode = strings.Replace(stockCode, "GB_", "us", 1)
+	}
 	db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", stockCode).Delete(&FollowedStock{})
 	return "取消关注成功"
 }
 
 func (receiver StockDataApi) SetCostPriceAndVolume(price float64, volume int64, stockCode string) string {
+	if strutil.HasPrefixAny(stockCode, []string{"gb_"}) {
+		stockCode = strings.ToUpper(stockCode)
+		stockCode = strings.Replace(stockCode, "gb_", "us", 1)
+		stockCode = strings.Replace(stockCode, "GB_", "us", 1)
+	}
 	err := db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", stockCode).Update("cost_price", price).Update("volume", volume).Error
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
@@ -374,6 +387,11 @@ func (receiver StockDataApi) SetCostPriceAndVolume(price float64, volume int64, 
 }
 
 func (receiver StockDataApi) SetAlarmChangePercent(val, alarmPrice float64, stockCode string) string {
+	if strutil.HasPrefixAny(stockCode, []string{"gb_"}) {
+		stockCode = strings.ToUpper(stockCode)
+		stockCode = strings.Replace(stockCode, "gb_", "us", 1)
+		stockCode = strings.Replace(stockCode, "GB_", "us", 1)
+	}
 	err := db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", stockCode).Updates(&map[string]any{
 		"alarm_change_percent": val,
 		"alarm_price":          alarmPrice,
@@ -386,11 +404,16 @@ func (receiver StockDataApi) SetAlarmChangePercent(val, alarmPrice float64, stoc
 }
 
 func (receiver StockDataApi) SetStockSort(sort int64, stockCode string) {
+	if strutil.HasPrefixAny(stockCode, []string{"gb_"}) {
+		stockCode = strings.ToUpper(stockCode)
+		stockCode = strings.Replace(stockCode, "gb_", "us", 1)
+		stockCode = strings.Replace(stockCode, "GB_", "us", 1)
+	}
 	db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", stockCode).Update("sort", sort)
 }
 
-func (receiver StockDataApi) GetFollowList() []FollowedStock {
-	var result []FollowedStock
+func (receiver StockDataApi) GetFollowList() *[]FollowedStock {
+	var result *[]FollowedStock
 	db.Dao.Model(&FollowedStock{}).Order("sort asc,time desc").Find(&result)
 	return result
 }
@@ -427,7 +450,7 @@ func (receiver StockDataApi) GetStockList(key string) []StockBasic {
 	}
 	for _, item := range result4 {
 		result = append(result, StockBasic{
-			TsCode:   item.Code,
+			TsCode:   strings.ToLower(strings.Replace(item.Code, "us", "gb_", 1)),
 			Name:     item.Name,
 			Fullname: item.Name,
 			Market:   "US",
@@ -469,9 +492,11 @@ func ParseFullSingleStockData(data string) (*StockInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+	logger.SugaredLogger.Infof("股票数据解析完成marshal: %s", marshal)
 	stockInfo := &StockInfo{}
 	err = json.Unmarshal(marshal, &stockInfo)
 	if err != nil {
+		logger.SugaredLogger.Errorf("json.Unmarshal error:%s", err.Error())
 		return nil, err
 	}
 	//logger.SugaredLogger.Infof("股票数据解析完成stockInfo: %+v", stockInfo)
@@ -509,7 +534,7 @@ func ParseUSStockData(datas []string) (map[string]string, error) {
 		0.00,	18
 		12190000000, 19
 		71, 20
-		170.2000, 21 盘后
+		170.2000, 21 盘前盘后盘
 		-0.01, 22
 		-0.01, 23
 		Feb 27 07:59PM EST, 24
@@ -532,9 +557,10 @@ func ParseUSStockData(datas []string) (map[string]string, error) {
 	result["今日最高价"] = parts[6]
 	result["今日最低价"] = parts[7]
 	result["当前价格"] = parts[1]
+	result["盘前盘后"] = parts[21]
 	result["日期"] = strutil.SplitAndTrim(parts[3], " ", "")[0]
 	result["时间"] = strutil.SplitAndTrim(parts[3], " ", "")[1]
-	//logger.SugaredLogger.Infof("美股股票数据解析完成: %v", result)
+	logger.SugaredLogger.Infof("美股股票数据解析完成: %v", result)
 	return result, nil
 }
 

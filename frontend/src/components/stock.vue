@@ -122,7 +122,11 @@ onBeforeMount(()=>{
   GetFollowList().then(result => {
     followList.value = result
     for (const followedStock of result) {
+      if(followedStock.StockCode.startsWith("us")){
+        followedStock.StockCode="gb_"+ followedStock.StockCode.replace("us", "").toLowerCase()
+      }
       if (!stocks.value.includes(followedStock.StockCode)) {
+        console.log("followList",followedStock.StockCode)
         stocks.value.push(followedStock.StockCode)
       }
     }
@@ -192,7 +196,6 @@ EventsOn("showSearch",(data)=>{
 })
 
 EventsOn("stock_price",(data)=>{
-  //console.log("stock_price",data['股票代码'])
   updateData(data)
 })
 
@@ -390,6 +393,8 @@ function getStockList(value){
 }
 
 async function updateData(result) {
+  console.log("stock_price",result['日期'],result['时间'],result['股票代码'],result['股票名称'],result['当前价格'],result['盘前盘后'])
+
   if(result["当前价格"]<=0){
     result["当前价格"]=result["卖一报价"]
   }
@@ -474,7 +479,7 @@ function setStock(code,name){
     //console.log("res:",res)
     formModel.value.name=name
     formModel.value.code=code
-    formModel.value.volume=res[0].Volume
+    formModel.value.volume=res[0].Volume?res[0].Volume:0
     formModel.value.costPrice=res[0].CostPrice
     formModel.value.alarm=res[0].AlarmChangePercent
     formModel.value.alarmPrice=res[0].AlarmPrice
@@ -759,6 +764,7 @@ AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警
              <n-gi>
                <n-text :type="result.type" >
                   <n-number-animation :duration="1000" :precision="2" :from="result['上次当前价格']" :to="Number(result['当前价格'])" />
+                 <n-tag size="small" :bordered="false"  v-if="result['盘前盘后']">({{result['盘前盘后']}})</n-tag>
                </n-text>
                <n-text style="padding-left: 10px;" :type="result.type">
                  <n-number-animation :duration="1000" :precision="3" :from="0" :to="result.changePercent" />%
@@ -783,6 +789,7 @@ AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警
                </n-gi>
              </n-grid>
            <template #header-extra>
+
              <n-tag size="small" :bordered="false">{{result['股票代码']}}</n-tag>&nbsp;
              <n-button size="tiny" secondary type="primary" @click="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
                取消关注

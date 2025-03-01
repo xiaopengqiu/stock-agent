@@ -13,7 +13,7 @@ export function GetAIResponseResult(arg1:string):Promise<models.AIResponseResult
 
 export function GetConfig():Promise<data.Settings>;
 
-export function GetFollowList():Promise<Array<data.FollowedStock>>;
+export function GetFollowList():Promise<any>;
 
 export function GetStockList(arg1:string):Promise<Array<data.StockBasic>>;
 
