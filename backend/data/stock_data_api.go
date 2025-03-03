@@ -492,7 +492,7 @@ func ParseFullSingleStockData(data string) (*StockInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	logger.SugaredLogger.Infof("股票数据解析完成marshal: %s", marshal)
+	//logger.SugaredLogger.Infof("股票数据解析完成marshal: %s", marshal)
 	stockInfo := &StockInfo{}
 	err = json.Unmarshal(marshal, &stockInfo)
 	if err != nil {

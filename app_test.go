@@ -1,6 +1,7 @@
 package main
 
 import (
+	"go-stock/backend/logger"
 	"testing"
 	"time"
 )
@@ -15,5 +16,10 @@ func TestIsHKTradingTime(t *testing.T) {
 }
 
 func TestIsUSTradingTime(t *testing.T) {
+
+	date := time.Now()
+	hour, minute, _ := date.Clock()
+	logger.SugaredLogger.Infof("当前时间: %d:%d", hour, minute)
+
 	t.Log(IsUSTradingTime(time.Now()))
 }

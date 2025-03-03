@@ -250,8 +250,18 @@ func IsUSTradingTime(date time.Time) bool {
 	// 获取小时和分钟
 	hour, minute, _ := estTime.Clock()
 
-	// 判断是否在9:30到16:00之间
+	// 判断是否在4:00 AM到9:30 AM之间（盘前）
+	if (hour == 4) || (hour == 5) || (hour == 6) || (hour == 7) || (hour == 8) || (hour == 9 && minute < 30) {
+		return true
+	}
+
+	// 判断是否在9:30 AM到4:00 PM之间（盘中）
 	if (hour == 9 && minute >= 30) || (hour >= 10 && hour < 16) || (hour == 16 && minute == 0) {
+		return true
+	}
+
+	// 判断是否在4:00 PM到8:00 PM之间（盘后）
+	if (hour == 16 && minute > 0) || (hour >= 17 && hour < 20) || (hour == 20 && minute == 0) {
 		return true
 	}
 
@@ -279,14 +289,14 @@ func MonitorStockPrices(a *App) {
 		if strutil.HasPrefixAny(stockInfo.Code, []string{"hk", "HK"}) && (!IsHKTradingTime(time.Now())) {
 			continue
 		}
-		//if strutil.HasPrefixAny(stockInfo.Code, []string{"us", "US", "gb_"}) && (!IsUSTradingTime(time.Now())) {
-		//	continue
-		//}
+		if strutil.HasPrefixAny(stockInfo.Code, []string{"us", "US", "gb_"}) && (!IsUSTradingTime(time.Now())) {
+			continue
+		}
 
-		//total += stockInfo.ProfitAmountToday
+		total += stockInfo.ProfitAmountToday
 		//price, _ := convertor.ToFloat(stockInfo.Price)
 		//if stockInfo.PrePrice != price {
-		logger.SugaredLogger.Infof("-----------------------股票代码: %s, 股票名称: %s, 股票价格: %s,盘前盘后:%s", stockInfo.Code, stockInfo.Name, stockInfo.Price, stockInfo.BA)
+		//logger.SugaredLogger.Infof("-----------------------股票代码: %s, 股票名称: %s, 股票价格: %s,盘前盘后:%s", stockInfo.Code, stockInfo.Name, stockInfo.Price, stockInfo.BA)
 		go runtime.EventsEmit(a.ctx, "stock_price", stockInfo)
 		//}
 	}
@@ -303,6 +313,15 @@ func GetStockInfos(follows ...data.FollowedStock) *[]data.StockInfo {
 	stockInfos := make([]data.StockInfo, 0)
 	stockCodes := make([]string, 0)
 	for _, follow := range follows {
+		if strutil.HasPrefixAny(follow.StockCode, []string{"SZ", "SH", "sh", "sz"}) && (!isTradingTime(time.Now())) {
+			continue
+		}
+		if strutil.HasPrefixAny(follow.StockCode, []string{"hk", "HK"}) && (!IsHKTradingTime(time.Now())) {
+			continue
+		}
+		if strutil.HasPrefixAny(follow.StockCode, []string{"us", "US", "gb_"}) && (!IsUSTradingTime(time.Now())) {
+			continue
+		}
 		stockCodes = append(stockCodes, follow.StockCode)
 	}
 	stockData, _ := data.NewStockDataApi().GetStockCodeRealTimeData(stockCodes...)
@@ -493,7 +512,7 @@ func (a *App) SendDingDingMessage(message string, stockCode string) string {
 // SendDingDingMessageByType msgType 报警类型: 1 涨跌报警;2 股价报警 3 成本价报警
 func (a *App) SendDingDingMessageByType(message string, stockCode string, msgType int) string {
 	ttl, _ := a.cache.TTL([]byte(stockCode))
-	logger.SugaredLogger.Infof("stockCode %s ttl:%d", stockCode, ttl)
+	//logger.SugaredLogger.Infof("stockCode %s ttl:%d", stockCode, ttl)
 	if ttl > 0 {
 		return ""
 	}
