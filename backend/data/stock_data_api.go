@@ -75,6 +75,7 @@ type StockInfo struct {
 	A5V      string  `json:"卖五申报"`
 	Market   string  `json:"市场"`
 	BA       string  `json:"盘前盘后"`
+	BAChange string  `json:"盘前盘后涨跌幅"`
 
 	//以下是字段值需二次计算
 	ChangePercent     float64 `json:"changePercent"`     //涨跌幅
@@ -490,6 +491,7 @@ func ParseFullSingleStockData(data string) (*StockInfo, error) {
 	//logger.SugaredLogger.Infof("股票数据解析完成: %v", result)
 	marshal, err := json.Marshal(result)
 	if err != nil {
+		logger.SugaredLogger.Errorf("json.Marshal error:%s", err.Error())
 		return nil, err
 	}
 	//logger.SugaredLogger.Infof("股票数据解析完成marshal: %s", marshal)
@@ -535,7 +537,7 @@ func ParseUSStockData(datas []string) (map[string]string, error) {
 		12190000000, 19
 		71, 20
 		170.2000, 21 盘前盘后盘
-		-0.01, 22
+		-0.01, 22  盘前盘后涨跌幅
 		-0.01, 23
 		Feb 27 07:59PM EST, 24
 		Feb 27 04:00PM EST, 25
@@ -553,11 +555,12 @@ func ParseUSStockData(datas []string) (map[string]string, error) {
 	result["股票代码"] = code
 	result["股票名称"] = parts[0]
 	result["今日开盘价"] = parts[5]
-	result["昨日收盘价"] = parts[26]
+	result["昨日收盘价"] = parts[len(parts)-1]
 	result["今日最高价"] = parts[6]
 	result["今日最低价"] = parts[7]
 	result["当前价格"] = parts[1]
 	result["盘前盘后"] = parts[21]
+	result["盘前盘后涨跌幅"] = parts[22]
 	result["日期"] = strutil.SplitAndTrim(parts[3], " ", "")[0]
 	result["时间"] = strutil.SplitAndTrim(parts[3], " ", "")[1]
 	logger.SugaredLogger.Infof("美股股票数据解析完成: %v", result)

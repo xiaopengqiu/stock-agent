@@ -85,7 +85,7 @@ func TestParseFullSingleStockData(t *testing.T) {
 		SetHeader("Host", "hq.sinajs.cn").
 		SetHeader("Referer", "https://finance.sina.com.cn/").
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0").
-		Get(fmt.Sprintf(sinaStockUrl, time.Now().Unix(), "sh600584,sz000938,hk01810,hk00856,gb_aapl"))
+		Get(fmt.Sprintf(sinaStockUrl, time.Now().Unix(), "sh600584,sz000938,hk01810,hk00856,gb_aapl,gb_tsla"))
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
 	}
@@ -98,6 +98,32 @@ func TestParseFullSingleStockData(t *testing.T) {
 			return
 		}
 		logger.SugaredLogger.Infof("%+#v", stockData)
+	}
+
+	result, er := ParseFullSingleStockData("var hq_str_gb_tsla = \"特斯拉,268.8472,-5.55,2025-03-04 22:52:56,-15.8028,270.9300,278.2800,268.1000,488.5400,138.8030,23618295,88214389,864751599149,2.23,120.550000,0.00,0.00,0.00,0.00,3216517037,61,0.0000,0.00,0.00,,Mar 04 09:52AM EST,284.6500,0,1,2025,6458502467.0000,0.0000,0.0000,0.0000,0.0000,284.6500\";")
+	if er != nil {
+		logger.SugaredLogger.Error(er.Error())
+	}
+	logger.SugaredLogger.Infof("%+#v", result)
+	marshal, err := json.Marshal(result)
+	if err != nil {
+		logger.SugaredLogger.Errorf("json.Marshal error:%s", err.Error())
+	}
+	logger.SugaredLogger.Infof("json:%s", string(marshal))
+	stockInfo := &StockInfo{}
+	err = json.Unmarshal(marshal, &stockInfo)
+	if err != nil {
+		logger.SugaredLogger.Errorf("json.Unmarshal error:%s", err.Error())
+	}
+	logger.SugaredLogger.Infof("%+#v", stockInfo)
+	stockData := stockInfo
+	db.Init("../../data/stock.db")
+	var count int64
+	db.Dao.Model(&StockInfo{}).Where("code = ?", stockData.Code).Count(&count)
+	if count == 0 {
+		db.Dao.Model(&StockInfo{}).Create(stockData)
+	} else {
+		db.Dao.Model(&StockInfo{}).Where("code = ?", stockData.Code).Updates(stockData)
 	}
 }
 

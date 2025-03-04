@@ -233,13 +233,13 @@ func IsHKTradingTime(date time.Time) bool {
 func IsUSTradingTime(date time.Time) bool {
 	// 获取美国东部时区
 	est, err := time.LoadLocation("America/New_York")
+	var estTime time.Time
 	if err != nil {
-		logger.SugaredLogger.Errorf("加载时区失败: %s", err.Error())
-		return false
+		estTime = date.Add(time.Hour * -12)
+	} else {
+		// 将当前时间转换为美国东部时间
+		estTime = date.In(est)
 	}
-
-	// 将当前时间转换为美国东部时间
-	estTime := date.In(est)
 
 	// 判断是否是周末
 	weekday := estTime.Weekday()
@@ -392,14 +392,14 @@ func addStockFollowData(follow data.FollowedStock, stockData *data.StockInfo) {
 	//开盘价
 	//openPrice, _ := convertor.ToFloat(stockData.Open)
 
-	if price > 0 {
+	if price > 0 && preClosePrice > 0 {
 		stockData.ChangePrice = mathutil.RoundToFloat(price-preClosePrice, 2)
 		stockData.ChangePercent = mathutil.RoundToFloat(mathutil.Div(price-preClosePrice, preClosePrice)*100, 3)
 	}
-	if highPrice > 0 {
+	if highPrice > 0 && preClosePrice > 0 {
 		stockData.HighRate = mathutil.RoundToFloat(mathutil.Div(highPrice-preClosePrice, preClosePrice)*100, 3)
 	}
-	if lowPrice > 0 {
+	if lowPrice > 0 && preClosePrice > 0 {
 		stockData.LowRate = mathutil.RoundToFloat(mathutil.Div(lowPrice-preClosePrice, preClosePrice)*100, 3)
 	}
 	if follow.CostPrice > 0 && follow.Volume > 0 {

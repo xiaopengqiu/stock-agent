@@ -194,6 +194,7 @@ export namespace data {
 	    "卖五申报": string;
 	    "市场": string;
 	    "盘前盘后": string;
+	    "盘前盘后涨跌幅": string;
 	    changePercent: number;
 	    changePrice: number;
 	    highRate: number;
@@ -253,6 +254,7 @@ export namespace data {
 	        this["卖五申报"] = source["卖五申报"];
 	        this["市场"] = source["市场"];
 	        this["盘前盘后"] = source["盘前盘后"];
+	        this["盘前盘后涨跌幅"] = source["盘前盘后涨跌幅"];
 	        this.changePercent = source["changePercent"];
 	        this.changePrice = source["changePrice"];
 	        this.highRate = source["highRate"];

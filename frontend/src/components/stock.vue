@@ -756,7 +756,7 @@ AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警
 </script>
 
 <template>
-    <vue-danmaku v-model:danmus="danmus"  style="height:100px; width:100%;z-index: 9;position:absolute; top: 30%; pointer-events: none;" ></vue-danmaku>
+    <vue-danmaku v-model:danmus="danmus"  style="height:100px; width:100%;z-index: 9;position:absolute; top: 400px; pointer-events: none;" ></vue-danmaku>
   <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
     <n-gi v-for="result in sortedResults" style="margin-left: 2px" onmouseover="this.style.border='1px solid  #3498db' " onmouseout="this.style.border='0px'">
          <n-card   :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
@@ -764,7 +764,7 @@ AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警
              <n-gi>
                <n-text :type="result.type" >
                   <n-number-animation :duration="1000" :precision="2" :from="result['上次当前价格']" :to="Number(result['当前价格'])" />
-                 <n-tag size="small" :bordered="false"  v-if="result['盘前盘后']">({{result['盘前盘后']}})</n-tag>
+                 <n-tag size="small"  :type="result.type" :bordered="false"  v-if="result['盘前盘后']">({{result['盘前盘后']}} {{result['盘前盘后涨跌幅']}}%)</n-tag>
                </n-text>
                <n-text style="padding-left: 10px;" :type="result.type">
                  <n-number-animation :duration="1000" :precision="3" :from="0" :to="result.changePercent" />%
