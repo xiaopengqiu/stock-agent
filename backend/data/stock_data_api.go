@@ -511,7 +511,8 @@ func ParseUSStockData(datas []string) (map[string]string, error) {
 	result := make(map[string]string)
 	parts := strutil.SplitAndTrim(datas[1], ",", "\"", ";")
 	//parts := strings.Split(data, ",")
-	if len(parts) < 30 {
+	logger.SugaredLogger.Infof("股票数据解析完成: parts:%d", len(parts))
+	if len(parts) < 35 {
 		return nil, fmt.Errorf("invalid data format")
 	}
 	/*
@@ -555,7 +556,13 @@ func ParseUSStockData(datas []string) (map[string]string, error) {
 	result["股票代码"] = code
 	result["股票名称"] = parts[0]
 	result["今日开盘价"] = parts[5]
-	result["昨日收盘价"] = strutil.ReplaceWithMap(parts[len(parts)-1], map[string]string{"\"": ""})
+
+	if len(parts) >= 36 {
+		result["昨日收盘价"] = strutil.ReplaceWithMap(strutil.RemoveNonPrintable(parts[26]), map[string]string{"\"": "", ";": ""})
+	} else {
+		result["昨日收盘价"] = strutil.ReplaceWithMap(strutil.RemoveNonPrintable(parts[len(parts)-1]), map[string]string{"\"": "", ";": ""})
+	}
+
 	result["今日最高价"] = parts[6]
 	result["今日最低价"] = parts[7]
 	result["当前价格"] = parts[1]
