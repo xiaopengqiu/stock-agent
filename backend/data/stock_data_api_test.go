@@ -105,32 +105,12 @@ func TestParseFullSingleStockData(t *testing.T) {
 		logger.SugaredLogger.Error(er.Error())
 	}
 	logger.SugaredLogger.Infof("%+#v", result)
-	marshal, err := json.Marshal(result)
-	if err != nil {
-		logger.SugaredLogger.Errorf("json.Marshal error:%s", err.Error())
-	}
-	logger.SugaredLogger.Infof("json:%s", string(marshal))
-	stockInfo := &StockInfo{}
-	err = json.Unmarshal(marshal, &stockInfo)
-	if err != nil {
-		logger.SugaredLogger.Errorf("json.Unmarshal error:%s", err.Error())
-	}
-	logger.SugaredLogger.Infof("%+#v", stockInfo)
-	stockData := stockInfo
-	db.Init("../../data/stock.db")
-	var count int64
-	db.Dao.Model(&StockInfo{}).Where("code = ?", stockData.Code).Count(&count)
-	if count == 0 {
-		db.Dao.Model(&StockInfo{}).Create(stockData)
-	} else {
-		db.Dao.Model(&StockInfo{}).Where("code = ?", stockData.Code).Updates(stockData)
-	}
 }
 
 func TestNewStockDataApi(t *testing.T) {
 	db.Init("../../data/stock.db")
 	stockDataApi := NewStockDataApi()
-	datas, _ := stockDataApi.GetStockCodeRealTimeData("sh600859", "sh600745")
+	datas, _ := stockDataApi.GetStockCodeRealTimeData("sh600859", "sh600745", "gb_tsla")
 	for _, data := range *datas {
 		t.Log(data)
 	}
