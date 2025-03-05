@@ -1,5 +1,5 @@
-# ![go-stock](./build/appicon.png)
-## go-stock : 基于Wails和NaiveUI构建的AI赋能股票分析工具 
+# go-stock : 基于Wails和NaiveUI构建的AI赋能股票分析工具
+## ![go-stock](./build/appicon.png)
 ![GitHub Release](https://img.shields.io/github/v/release/ArvinLovegood/go-stock?link=https%3A%2F%2Fgithub.com%2FArvinLovegood%2Fgo-stock%2Freleases&link=https%3A%2F%2Fgithub.com%2FArvinLovegood%2Fgo-stock%2Freleases)
 [![GitHub Repo stars](https://img.shields.io/github/stars/ArvinLovegood/go-stock?link=https%3A%2F%2Fgithub.com%2FArvinLovegood%2Fgo-stock)](https://github.com/ArvinLovegood/go-stock)
 [![star](https://gitee.com/arvinlovegood_admin/go-stock/badge/star.svg?theme=dark)](https://gitee.com/arvinlovegood_admin/go-stock)
