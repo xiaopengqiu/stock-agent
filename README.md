@@ -4,6 +4,10 @@
 [![GitHub Repo stars](https://img.shields.io/github/stars/ArvinLovegood/go-stock?link=https%3A%2F%2Fgithub.com%2FArvinLovegood%2Fgo-stock)](https://github.com/ArvinLovegood/go-stock)
 [![star](https://gitee.com/arvinlovegood_admin/go-stock/badge/star.svg?theme=dark)](https://gitee.com/arvinlovegood_admin/go-stock)
 [![star](https://gitcode.com/ArvinLovegood/go-stock/star/badge.svg)](https://gitcode.com/ArvinLovegood/go-stock)
+
+### 推广链接
+- [野草云](https://my.yecaoyun.com/aff.php?aff=5743)： 高速、稳定的免备案香港/美国VPS服务器，仅22元/月起！ 
+
 ###  ✨ 简介
 - 本项目基于Wails和NaiveUI开发，结合AI大模型构建的股票分析工具。
 - 目前已支持A股，港股，美股，未来计划加入基金，ETF等支持。
