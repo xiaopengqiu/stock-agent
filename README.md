@@ -6,6 +6,7 @@
 [![star](https://gitcode.com/ArvinLovegood/go-stock/star/badge.svg)](https://gitcode.com/ArvinLovegood/go-stock)
 
 ### 推广链接
+开源不易，有需要的朋友可以看看，小破服务器挣个续费钱。😘
 - [野草云](https://my.yecaoyun.com/aff.php?aff=5743)： 高速、稳定的免备案香港/美国VPS服务器，仅22元/月起！ 
 
 ###  ✨ 简介
