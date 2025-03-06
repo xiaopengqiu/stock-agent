@@ -35,6 +35,8 @@ export function SetCostPriceAndVolume(arg1:string,arg2:number,arg3:number):Promi
 
 export function SetStockSort(arg1:number,arg2:string):Promise<void>;
 
+export function ShareAnalysis(arg1:string,arg2:string):Promise<string>;
+
 export function UnFollow(arg1:string):Promise<string>;
 
 export function UpdateConfig(arg1:data.Settings):Promise<string>;

@@ -711,3 +711,23 @@ func getScreenResolution() (int, int, error) {
 
 	return int(width), int(height), nil
 }
+
+func (a *App) ShareAnalysis(stockCode, stockName string) string {
+	//http://go-stock.sparkmemory.top:16688/upload
+	res := data.NewDeepSeekOpenAi(a.ctx).GetAIResponseResult(stockCode)
+	if res != nil {
+		analysisTime := res.CreatedAt.Format("2006/01/02")
+		logger.SugaredLogger.Infof("%s analysisTime:%s", res.CreatedAt, analysisTime)
+		response, err := resty.New().SetHeader("ua-x", "go-stock").R().SetFormData(map[string]string{
+			"text":         res.Content,
+			"stockCode":    stockCode,
+			"stockName":    stockName,
+			"analysisTime": analysisTime,
+		}).Post("http://go-stock.sparkmemory.top:16688/upload")
+		if err != nil {
+			return err.Error()
+		}
+		return response.String()
+	}
+	return "获取分析结果失败"
+}

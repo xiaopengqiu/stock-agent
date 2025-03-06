@@ -14,7 +14,8 @@ import {
   SetAlarmChangePercent,
   SetCostPriceAndVolume,
   SetStockSort,
-  UnFollow
+  UnFollow,
+  ShareAnalysis
 } from '../../wailsjs/go/main/App'
 import {
   NAvatar,
@@ -753,6 +754,12 @@ AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警
   URL.revokeObjectURL(a.href);
   a.remove()
 }
+
+function share(code,name){
+  ShareAnalysis(code,name).then(msg => {
+      message.info(msg)
+  })
+}
 </script>
 
 <template>
@@ -926,6 +933,7 @@ AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警
         <n-button size="tiny" type="success" @click="copyToClipboard">复制到剪切板</n-button>
         <n-button size="tiny" type="primary" @click="saveAsMarkdown">保存为Markdown文件</n-button>
         <n-button size="tiny" type="primary" @click="saveAsWord">保存为Word文件</n-button>
+        <n-button size="tiny" type="error" @click="share(data.code,data.name)">分享到项目社区</n-button>
       </n-flex>
     </template>
   </n-modal>
