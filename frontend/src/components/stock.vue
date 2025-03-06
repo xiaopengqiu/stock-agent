@@ -757,7 +757,25 @@ AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警
 
 function share(code,name){
   ShareAnalysis(code,name).then(msg => {
-      message.info(msg)
+    //message.info(msg)
+    notify.info({
+      avatar: () =>
+          h(NAvatar, {
+            size: 'small',
+            round: false,
+            src: icon.value
+          }),
+      title: '分享到社区',
+      duration:1000*30,
+      content: () => {
+        return h('div', {
+          style: {
+            'text-align': 'left',
+            'font-size': '14px',
+          }
+        }, { default: () => msg })
+      },
+    })
   })
 }
 </script>
