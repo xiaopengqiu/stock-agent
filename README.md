@@ -9,6 +9,10 @@
 开源不易，有需要的朋友可以看看，小破服务器挣个续费钱。😘
 - [野草云](https://my.yecaoyun.com/aff.php?aff=5743)： 高速、稳定的香港/美国VPS服务器，仅22元/月起！ 
 
+### 交流群
+QQ交流群：[点击链接加入群聊【go-stock交流群】：491605333](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0YQ8qD3exahsD4YLNhzQTWe5ssstWC89&authKey=usOMMRFtIQDC%2FYcatHYapcxQbJ7PwXPHK9OypTXWzNjAq%2FRVvQu9bj2lRgb%2BSZ3p&noverify=0&group_code=491605333)
+
+
 ###  ✨ 简介
 - 本项目基于Wails和NaiveUI开发，结合AI大模型构建的股票分析工具。
 - 目前已支持A股，港股，美股，未来计划加入基金，ETF等支持。
