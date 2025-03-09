@@ -394,7 +394,7 @@ function getStockList(value){
 }
 
 async function updateData(result) {
-  console.log("stock_price",result['日期'],result['时间'],result['股票代码'],result['股票名称'],result['当前价格'],result['盘前盘后'])
+  //console.log("stock_price",result['日期'],result['时间'],result['股票代码'],result['股票名称'],result['当前价格'],result['盘前盘后'])
 
   if(result["当前价格"]<=0){
     result["当前价格"]=result["卖一报价"]
@@ -842,7 +842,7 @@ function share(code,name){
          </n-card >
       </n-gi>
     </n-grid>
-  <div style="position: fixed;bottom: 18px;right:0;z-index: 10;width: 420px">
+  <div style="position: fixed;bottom: 18px;right:0;z-index: 10;width: 460px">
 <!--    <n-card :bordered="false">-->
       <n-input-group >
 <!--        <n-button  type="error" @click="addBTN=!addBTN" > <n-icon :component="Search"/>&nbsp;<n-text  v-if="addBTN">隐藏</n-text></n-button>-->
@@ -855,7 +855,7 @@ function share(code,name){
                          placeholder="股票指数名称/代码/弹幕"
                          clearable @update-value="getStockList" :on-select="onSelect"/>
         <n-button type="primary" @click="AddStock"  v-if="addBTN">
-          <n-icon :component="Add"/> &nbsp;关注该股票
+          <n-icon :component="Add"/> &nbsp;关注
         </n-button>
         <n-button type="error" @click="SendDanmu" v-if="data.enableDanmu">
           <n-icon :component="ChatboxOutline"/> &nbsp;发送弹幕

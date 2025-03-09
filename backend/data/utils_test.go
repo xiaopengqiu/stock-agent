@@ -1,7 +1,9 @@
 package data
 
 import (
+	"github.com/duke-git/lancet/v2/slice"
 	"go-stock/backend/logger"
+	"os"
 	"testing"
 )
 
@@ -40,4 +42,6 @@ func TestReplaceSensitiveWords(t *testing.T) {
 	txt := "新 希 望习近平"
 	txt2 := ReplaceSensitiveWords(txt)
 	logger.SugaredLogger.Infof("ReplaceSensitiveWords(%s)", txt2)
+
+	os.WriteFile("words.txt", []byte(slice.Join(SensitiveWords, "\n")), 0644)
 }

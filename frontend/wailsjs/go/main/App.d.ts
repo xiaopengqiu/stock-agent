@@ -9,15 +9,21 @@ export function ExportConfig():Promise<string>;
 
 export function Follow(arg1:string):Promise<string>;
 
+export function FollowFund(arg1:string):Promise<string>;
+
 export function GetAIResponseResult(arg1:string):Promise<models.AIResponseResult>;
 
 export function GetConfig():Promise<data.Settings>;
 
 export function GetFollowList():Promise<any>;
 
+export function GetFollowedFund():Promise<Array<data.FollowedFund>>;
+
 export function GetStockList(arg1:string):Promise<Array<data.StockBasic>>;
 
 export function GetVersionInfo():Promise<models.VersionInfo>;
+
+export function GetfundList(arg1:string):Promise<Array<data.FundBasic>>;
 
 export function Greet(arg1:string):Promise<data.StockInfo>;
 
@@ -38,5 +44,7 @@ export function SetStockSort(arg1:number,arg2:string):Promise<void>;
 export function ShareAnalysis(arg1:string,arg2:string):Promise<string>;
 
 export function UnFollow(arg1:string):Promise<string>;
+
+export function UnFollowFund(arg1:string):Promise<string>;
 
 export function UpdateConfig(arg1:data.Settings):Promise<string>;

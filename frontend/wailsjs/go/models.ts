@@ -1,5 +1,146 @@
 export namespace data {
 	
+	export class FundBasic {
+	    ID: number;
+	    // Go type: time
+	    CreatedAt: any;
+	    // Go type: time
+	    UpdatedAt: any;
+	    // Go type: gorm
+	    DeletedAt: any;
+	    code: string;
+	    name: string;
+	    fullName: string;
+	    type: string;
+	    establishment: string;
+	    scale: string;
+	    company: string;
+	    manager: string;
+	    rating: string;
+	    trackingTarget: string;
+	    netUnitValue?: number;
+	    netUnitValueDate: string;
+	    netEstimatedUnit?: number;
+	    netEstimatedUnitTime: string;
+	    netAccumulated?: number;
+	    netGrowth1?: number;
+	    netGrowth3?: number;
+	    netGrowth6?: number;
+	    netGrowth12?: number;
+	    netGrowth36?: number;
+	    netGrowth60?: number;
+	    netGrowthYTD?: number;
+	    netGrowthAll?: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new FundBasic(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ID = source["ID"];
+	        this.CreatedAt = this.convertValues(source["CreatedAt"], null);
+	        this.UpdatedAt = this.convertValues(source["UpdatedAt"], null);
+	        this.DeletedAt = this.convertValues(source["DeletedAt"], null);
+	        this.code = source["code"];
+	        this.name = source["name"];
+	        this.fullName = source["fullName"];
+	        this.type = source["type"];
+	        this.establishment = source["establishment"];
+	        this.scale = source["scale"];
+	        this.company = source["company"];
+	        this.manager = source["manager"];
+	        this.rating = source["rating"];
+	        this.trackingTarget = source["trackingTarget"];
+	        this.netUnitValue = source["netUnitValue"];
+	        this.netUnitValueDate = source["netUnitValueDate"];
+	        this.netEstimatedUnit = source["netEstimatedUnit"];
+	        this.netEstimatedUnitTime = source["netEstimatedUnitTime"];
+	        this.netAccumulated = source["netAccumulated"];
+	        this.netGrowth1 = source["netGrowth1"];
+	        this.netGrowth3 = source["netGrowth3"];
+	        this.netGrowth6 = source["netGrowth6"];
+	        this.netGrowth12 = source["netGrowth12"];
+	        this.netGrowth36 = source["netGrowth36"];
+	        this.netGrowth60 = source["netGrowth60"];
+	        this.netGrowthYTD = source["netGrowthYTD"];
+	        this.netGrowthAll = source["netGrowthAll"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class FollowedFund {
+	    ID: number;
+	    // Go type: time
+	    CreatedAt: any;
+	    // Go type: time
+	    UpdatedAt: any;
+	    // Go type: gorm
+	    DeletedAt: any;
+	    code: string;
+	    name: string;
+	    netUnitValue?: number;
+	    netUnitValueDate: string;
+	    netEstimatedUnit?: number;
+	    netEstimatedUnitTime: string;
+	    netAccumulated?: number;
+	    fundBasic: FundBasic;
+	
+	    static createFrom(source: any = {}) {
+	        return new FollowedFund(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ID = source["ID"];
+	        this.CreatedAt = this.convertValues(source["CreatedAt"], null);
+	        this.UpdatedAt = this.convertValues(source["UpdatedAt"], null);
+	        this.DeletedAt = this.convertValues(source["DeletedAt"], null);
+	        this.code = source["code"];
+	        this.name = source["name"];
+	        this.netUnitValue = source["netUnitValue"];
+	        this.netUnitValueDate = source["netUnitValueDate"];
+	        this.netEstimatedUnit = source["netEstimatedUnit"];
+	        this.netEstimatedUnitTime = source["netEstimatedUnitTime"];
+	        this.netAccumulated = source["netAccumulated"];
+	        this.fundBasic = this.convertValues(source["fundBasic"], FundBasic);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	
 	export class Settings {
 	    ID: number;
 	    // Go type: time

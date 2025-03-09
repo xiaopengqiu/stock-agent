@@ -106,7 +106,15 @@ func (a *App) domReady(ctx context.Context) {
 		defer ticker.Stop()
 		for range ticker.C {
 			MonitorStockPrices(a)
+		}
+	}()
 
+	//刷新基金净值信息
+	go func() {
+		ticker := time.NewTicker(time.Second * time.Duration(60))
+		defer ticker.Stop()
+		for range ticker.C {
+			MonitorFundPrices(a)
 		}
 	}()
 
@@ -123,7 +131,8 @@ func (a *App) domReady(ctx context.Context) {
 	}()
 	go runtime.EventsEmit(a.ctx, "telegraph", refreshTelegraphList())
 	go MonitorStockPrices(a)
-
+	go MonitorFundPrices(a)
+	go data.NewFundApi().AllFund()
 	//检查新版本
 	go func() {
 		a.CheckUpdate()
@@ -266,6 +275,19 @@ func IsUSTradingTime(date time.Time) bool {
 	}
 
 	return false
+}
+func MonitorFundPrices(a *App) {
+	dest := &[]data.FollowedFund{}
+	db.Dao.Model(&data.FollowedFund{}).Find(dest)
+	for _, follow := range *dest {
+		_, err := data.NewFundApi().CrawlFundBasic(follow.Code)
+		if err != nil {
+			logger.SugaredLogger.Errorf("获取基金基本信息失败，基金代码：%s，错误信息：%s", follow.Code, err.Error())
+			continue
+		}
+		data.NewFundApi().CrawlFundNetEstimatedUnit(follow.Code)
+		data.NewFundApi().CrawlFundNetUnitValue(follow.Code)
+	}
 }
 
 func MonitorStockPrices(a *App) {
@@ -730,4 +752,17 @@ func (a *App) ShareAnalysis(stockCode, stockName string) string {
 		return response.String()
 	}
 	return "获取分析结果失败"
+}
+
+func (a *App) GetfundList(key string) []data.FundBasic {
+	return data.NewFundApi().GetFundList(key)
+}
+func (a *App) GetFollowedFund() []data.FollowedFund {
+	return data.NewFundApi().GetFollowedFund()
+}
+func (a *App) FollowFund(fundCode string) string {
+	return data.NewFundApi().FollowFund(fundCode)
+}
+func (a *App) UnFollowFund(fundCode string) string {
+	return data.NewFundApi().UnFollowFund(fundCode)
 }

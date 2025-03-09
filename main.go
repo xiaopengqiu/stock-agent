@@ -63,6 +63,8 @@ func main() {
 	db.Dao.AutoMigrate(&models.AIResponseResult{})
 	db.Dao.AutoMigrate(&models.StockInfoHK{})
 	db.Dao.AutoMigrate(&models.StockInfoUS{})
+	db.Dao.AutoMigrate(&data.FollowedFund{})
+	db.Dao.AutoMigrate(&data.FundBasic{})
 
 	if stocksBin != nil && len(stocksBin) > 0 {
 		go initStockData()

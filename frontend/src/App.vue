@@ -52,20 +52,22 @@ const menuOptions = ref([
   {
     label: () =>
         h(
-            NGradientText,
+            RouterLink,
             {
-              type: 'warning',
-              style: {
-                'text-decoration': 'line-through',
+              to: {
+                name: 'fund',
+                params: {
+                  id: 'zh-CN'
+                },
               }
             },
-            { default: () => '基金自选' }
+            { default: () => '基金自选',}
         ),
     key: 'fund',
     icon: renderIcon(SparklesOutline),
     children:[
       {
-        label: ()=> h(NText, {type:realtimeProfit.value>0?'error':'success'},{ default: () => '敬请期待！'}),
+        label: ()=> h(NText, {type:realtimeProfit.value>0?'error':'success'},{ default: () => '功能完善中！'}),
         key: 'realtimeProfit',
         show: realtimeProfit.value,
         icon: renderIcon(AlarmOutline),
