@@ -83,6 +83,12 @@ func (FundBasic) TableName() string {
 
 // CrawlFundBasic 爬取基金基本信息
 func (f *FundApi) CrawlFundBasic(fundCode string) (*FundBasic, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.SugaredLogger.Errorf("CrawlFundBasic panic: %v", r)
+		}
+	}()
+
 	crawler := CrawlerApi{
 		crawlerBaseInfo: CrawlerBaseInfo{
 			Name:    "天天基金",
@@ -254,6 +260,12 @@ func (f *FundApi) UnFollowFund(fundCode string) string {
 }
 
 func (f *FundApi) AllFund() {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.SugaredLogger.Errorf("AllFund panic: %v", r)
+		}
+	}()
+
 	response, err := f.client.SetTimeout(time.Duration(f.config.CrawlTimeOut)*time.Second).R().
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36").
 		Get("https://fund.eastmoney.com/allfund.html")
@@ -272,8 +284,7 @@ func (f *FundApi) AllFund() {
 			name := text[0]
 			str := strutil.SplitAndTrim(name, "）", "（", "）")
 			logger.SugaredLogger.Infof("%d,基金信息 code:%s,name:%s", cnt, str[0], str[1])
-			//f.CrawlFundBasic(str[0])
-
+			//go f.CrawlFundBasic(str[0])
 			fund := &FundBasic{
 				Code: str[0],
 				Name: str[1],
@@ -282,8 +293,6 @@ func (f *FundApi) AllFund() {
 			db.Dao.Model(fund).Where("code=?", fund.Code).Count(&count)
 			if count == 0 {
 				db.Dao.Create(fund)
-			} else {
-				db.Dao.Model(fund).Where("code=?", fund.Code).Updates(fund)
 			}
 
 		}

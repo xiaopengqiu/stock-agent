@@ -75,7 +75,6 @@ func main() {
 	if stocksBinUS != nil && len(stocksBinUS) > 0 {
 		go initStockDataUS()
 	}
-
 	updateBasicInfo()
 
 	// Create an instance of the app structure
@@ -191,34 +190,34 @@ func main() {
 }
 
 func initStockDataUS() {
-	var count int64
-	db.Dao.Model(&models.StockInfoUS{}).Count(&count)
-	if count > 0 {
-		return
-	}
 	var v []models.StockInfoUS
+	log.Printf("init stock data us %d", len(v))
 	err := json.Unmarshal(stocksBinUS, &v)
 	if err != nil {
 		return
 	}
 	for _, item := range v {
+		var count int64
+		db.Dao.Model(&models.StockInfoUS{}).Count(&count)
+		if count > 0 {
+			return
+		}
 		db.Dao.Model(&models.StockInfoUS{}).Create(&item)
 	}
-	log.Printf("init stock data us %d", len(v))
 }
 
 func initStockDataHK() {
-	var count int64
-	db.Dao.Model(&models.StockInfoHK{}).Count(&count)
-	if count > 0 {
-		return
-	}
 	var v []models.StockInfoHK
 	err := json.Unmarshal(stocksBinHK, &v)
 	if err != nil {
 		return
 	}
 	for _, item := range v {
+		var count int64
+		db.Dao.Model(&models.StockInfoHK{}).Count(&count)
+		if count > 0 {
+			continue
+		}
 		db.Dao.Model(&models.StockInfoHK{}).Create(&item)
 	}
 	log.Printf("init stock data hk %d", len(v))
@@ -234,11 +233,6 @@ func updateBasicInfo() {
 }
 
 func initStockData() {
-	var count int64
-	db.Dao.Model(&data.StockBasic{}).Count(&count)
-	if count > 0 {
-		return
-	}
 	logger.NewDefaultLogger().Info("init stock data")
 	res := &data.TushareStockBasicResponse{}
 	err := json.Unmarshal(stocksBin, res)
@@ -265,7 +259,14 @@ func initStockData() {
 		stock.Cnspell = convertor.ToString(item[14])
 		stock.Fullname = convertor.ToString(item[20])
 		stock.Ename = convertor.ToString(item[21])
-		db.Dao.Model(&data.StockBasic{}).FirstOrCreate(stock, &data.StockBasic{TsCode: stock.TsCode}).Updates(stock)
+
+		var count int64
+		db.Dao.Model(&data.StockBasic{}).Where("ts_code = ?", stock.TsCode).Count(&count)
+		if count > 0 {
+			continue
+		} else {
+			db.Dao.Create(stock)
+		}
 	}
 }
 

@@ -124,7 +124,7 @@ function getFundList(value){
     options.value=[]
     result.forEach(item=>{
       options.value.push({
-        label: item.name,
+        label: item.name+" ["+item.code+"]",
         value: item.code,
       })
     })
