@@ -7,7 +7,7 @@
 
 ### 🎁 推广链接
 开源不易，有需要的朋友可以看看，小破服务器挣个续费钱。😘
-- [AI大模型设置说明](https://mp.weixin.qq.com/s/x-D009cDG8wYckhr1EuQMQ)
+- [AI大模型设置说明](https://mp.weixin.qq.com/s/O8-nRQC2JoUdqQ5jaMQHjA)
 - [野草云](https://my.yecaoyun.com/aff.php?aff=5743)： 高速、稳定的香港/美国VPS服务器，仅22元/月起！ 
 
 ### 📈 交流群
