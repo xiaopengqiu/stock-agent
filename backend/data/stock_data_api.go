@@ -478,7 +478,7 @@ func ParseFullSingleStockData(data string) (*StockInfo, error) {
 	}
 	var result map[string]string
 	var err error
-	if strutil.ContainsAny(datas[0], []string{"hq_str_sz", "hq_str_sh"}) {
+	if strutil.ContainsAny(datas[0], []string{"hq_str_sz", "hq_str_sh", "hq_str_bj", "hq_str_sb"}) {
 		result, err = ParseSHSZStockData(datas)
 	}
 	if strutil.ContainsAny(datas[0], []string{"hq_str_hk"}) {

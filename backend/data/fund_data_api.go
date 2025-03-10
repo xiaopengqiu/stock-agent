@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/duke-git/lancet/v2/convertor"
+	"github.com/duke-git/lancet/v2/mathutil"
 	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/go-resty/resty/v2"
 	"go-stock/backend/db"
@@ -34,12 +35,16 @@ type FollowedFund struct {
 	Code string `json:"code" gorm:"index"` // 基金代码
 	Name string `json:"name"`              // 基金简称
 
-	NetUnitValue     *float64  `json:"netUnitValue"`         // 单位净值
-	NetUnitValueDate string    `json:"netUnitValueDate"`     // 单位净值日期
-	NetEstimatedUnit *float64  `json:"netEstimatedUnit"`     // 估算单位净值
-	NetEstimatedTime string    `json:"netEstimatedUnitTime"` // 估算单位净值日期
-	NetAccumulated   *float64  `json:"netAccumulated"`       // 累计净值
-	FundBasic        FundBasic `json:"fundBasic" gorm:"foreignKey:Code;references:Code"`
+	NetUnitValue     *float64 `json:"netUnitValue"`         // 单位净值
+	NetUnitValueDate string   `json:"netUnitValueDate"`     // 单位净值日期
+	NetEstimatedUnit *float64 `json:"netEstimatedUnit"`     // 估算单位净值
+	NetEstimatedTime string   `json:"netEstimatedUnitTime"` // 估算单位净值日期
+	NetAccumulated   *float64 `json:"netAccumulated"`       // 累计净值
+
+	//计算值
+	NetEstimatedRate *float64 `json:"netEstimatedRate"` // 估算单位净值涨跌幅
+
+	FundBasic FundBasic `json:"fundBasic" gorm:"foreignKey:Code;references:Code"`
 }
 
 func (FollowedFund) TableName() string {
@@ -226,6 +231,14 @@ func (f *FundApi) GetFundList(key string) []FundBasic {
 func (f *FundApi) GetFollowedFund() []FollowedFund {
 	var funds []FollowedFund
 	db.Dao.Preload("FundBasic").Find(&funds)
+	for i, fund := range funds {
+		if fund.NetUnitValue != nil && fund.NetEstimatedUnit != nil && *fund.NetUnitValue > 0 {
+			netEstimatedRate := (*(funds[i].NetEstimatedUnit) - *(funds[i].NetUnitValue)) / *(fund.NetUnitValue) * 100
+			netEstimatedRate = mathutil.RoundToFloat(netEstimatedRate, 2)
+			funds[i].NetEstimatedRate = &netEstimatedRate
+		}
+
+	}
 	return funds
 }
 func (f *FundApi) FollowFund(fundCode string) string {

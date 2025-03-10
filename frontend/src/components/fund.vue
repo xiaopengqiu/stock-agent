@@ -154,9 +154,13 @@ function formatterTitle(title){
             <n-tag size="small"  :bordered="false" type="info">{{info.code}}</n-tag>&nbsp;
             <n-tag size="small"  :bordered="false" type="success" @click="unFollow(info.code)"> 取消关注</n-tag>
           </template>
-            <n-tag size="small" :type="info.netEstimatedUnit>0?'error':'success'" :bordered="false" v-if="info.netEstimatedUnit">估算净值：{{info.netEstimatedUnit}}({{info.netEstimatedUnitTime}})</n-tag>
+            <n-tag size="small" :type="info.netEstimatedRate>0?'error':'success'" :bordered="false" v-if="info.netEstimatedUnit">
+              估算净值：{{info.netEstimatedUnit}}&nbsp;
+              {{info.netEstimatedRate}} %&nbsp;&nbsp;&nbsp;
+              ({{info.netEstimatedUnitTime}})</n-tag>
           <n-divider vertical></n-divider>
-          <n-tag size="small" :type="info.netUnitValue>0?'error':'success'" :bordered="false" v-if="info.netUnitValue">单位净值：{{info.netUnitValue}}({{info.netUnitValueDate}})</n-tag>
+          <n-tag size="small" :type="info.netEstimatedRate>0?'error':'success'" :bordered="false" v-if="info.netUnitValue">
+            单位净值：{{info.netUnitValue}}&nbsp;({{info.netUnitValueDate}})</n-tag>
           <n-divider  v-if="info.netUnitValue"></n-divider>
             <n-flex justify="start">
             <n-tag size="small" :type="info.fundBasic.netGrowth1>0?'error':'success'" :bordered="false" v-if="info.fundBasic.netGrowth1">近一月：{{info.fundBasic.netGrowth1}}%</n-tag>

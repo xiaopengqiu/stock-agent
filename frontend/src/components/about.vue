@@ -98,7 +98,7 @@ EventsOn("updateVersion",async (msg) => {
               <p>目前已支持A股，港股，美股，未来计划加入基金，ETF等支持</p>
               <p>支持DeepSeek，OpenAI， Ollama，LMStudio，AnythingLLM，<a href="https://cloud.siliconflow.cn/i/foufCerk" target="_blank">硅基流动</a>，<a href="https://www.volcengine.com/experience/ark?utm_term=202502dsinvite&ac=DSASUQY5&rc=IJSE43PZ" target="_blank">火山方舟</a>，阿里云百炼等平台或模型</p>
               <p>
-                本软件仅供学习研究，AI分析股票结果仅供参考，不提供任何投资建议或决策。
+                <i style="color: crimson">本软件仅供学习研究目的，AI分析结果仅供参考，本软件不提供任何投资建议或决策，风险自担！</i>
               </p>
               <p>
                 欢迎点赞GitHub：<a href="https://github.com/ArvinLovegood/go-stock" target="_blank">go-stock</a><n-divider vertical />
@@ -107,7 +107,8 @@ EventsOn("updateVersion",async (msg) => {
                 <a href="https://github.com/ArvinLovegood/go-stock/releases" target="_blank">Releases</a><n-divider vertical />
               </p>
               <p v-if="updateLog">更新说明：{{updateLog}}</p>
-
+              <p>项目社区：<a href="https://go-stock.sparkmemory.top/" target="_blank">https://go-stock.sparkmemory.top/</a></p>
+              <p>QQ交流群：<a href="http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0YQ8qD3exahsD4YLNhzQTWe5ssstWC89&authKey=usOMMRFtIQDC%2FYcatHYapcxQbJ7PwXPHK9OypTXWzNjAq%2FRVvQu9bj2lRgb%2BSZ3p&noverify=0&group_code=491605333" target="_blank">491605333</a></p>
             </div>
           </n-space>
           <n-divider title-placement="center">关于作者</n-divider>
@@ -116,11 +117,6 @@ EventsOn("updateVersion",async (msg) => {
             <n-avatar width="100" src="https://avatars.githubusercontent.com/u/7401917?v=4" />
             <h2><a href="https://github.com/ArvinLovegood" target="_blank">@ArvinLovegood</a></h2>
             <p>一个热爱编程的小白，欢迎关注我的Github</p>
-            <p>
-              邮箱：<a href="mailto:sparkmemory@163.com">sparkmemory@163.com</a><n-divider vertical />
-              QQ：  506808970<n-divider vertical />
-              微信：ArvinLovegood</p>
-            <p style="color: #FAA04A">*加微信或者QQ时，请先备注或留言需求(如：<a href="#support">技术支持</a>，功能建议，商业咨询等，否则会被忽略)</p>
             <p>开源不易，如果觉得好用，可以请作者喝杯咖啡。</p>
             <n-flex justify="center">
               <n-image width="200" :src="alipay" />
@@ -149,6 +145,7 @@ EventsOn("updateVersion",async (msg) => {
           </div>
           <n-divider title-placement="center">关于版权和技术支持申明</n-divider>
           <div style="justify-self: center;text-align: left" >
+            <p style="color: #FAA04A">如有问题，请先查看项目文档，如果问题依然存在，请优先加群（491605333）咨询。</p>
             <p>
               如需软件商业授权或定制开发，请联系作者微信(备注 商业咨询)：ArvinLovegood
             </p>
@@ -157,8 +154,9 @@ EventsOn("updateVersion",async (msg) => {
               本软件基于开源技术构建，使用Wails、NaiveUI、Vue等开源项目。技术上如有问题，可以先向对应的开源社区请求帮助。
             </p>
             <p>
-              开源不易，本人精力和时间有限，如确实需要一对一技术支持，请先赞助。联系微信(备注 技术支持)：ArvinLovegood
+              开源不易，本人精力和时间有限，如确实需要一对一技术支持，<i style="color: crimson">请先赞助！</i>联系微信(备注 技术支持)：ArvinLovegood
             </p>
+            <p style="color: #FAA04A">*加微信或者QQ时，请先备注或留言需求(如：<a href="#support">技术支持</a>，功能建议，商业咨询等，否则会被忽略)</p>
             <n-table id="support">
               <n-thead>
                 <n-tr>
