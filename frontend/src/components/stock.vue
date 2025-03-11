@@ -64,7 +64,7 @@ const notify = useNotification()
 const dialog = useDialog()
 const stocks=ref([])
 const results=ref({})
-const ticker=ref({})
+//const ticker=ref({})
 const stockList=ref([])
 const followList=ref([])
 const options=ref([])
@@ -148,12 +148,12 @@ onMounted(() => {
   message.loading("Loading...")
  // console.log(`the component is now mounted.`)
 
-    ticker.value=setInterval(() => {
-      if(isTradingTime()){
-        //monitor()
-        data.fenshiURL='http://image.sinajs.cn/newchart/min/n/'+data.code+'.gif'+"?t="+Date.now()
-      }
-    }, 3500)
+    // ticker.value=setInterval(() => {
+    //   if(isTradingTime()){
+    //     //monitor()
+    //     //data.fenshiURL='http://image.sinajs.cn/newchart/min/n/'+data.code+'.gif'+"?t="+Date.now()
+    //   }
+    // }, 3500)
 
   GetVersionInfo().then((res) => {
     icon.value = res.icon;
@@ -183,7 +183,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
  // console.log(`the component is now unmounted.`)
-  clearInterval(ticker.value)
+  //clearInterval(ticker.value)
   ws.value.close()
 
 })
