@@ -533,6 +533,17 @@ func (a *App) SendDingDingMessage(message string, stockCode string) string {
 
 // SendDingDingMessageByType msgType 报警类型: 1 涨跌报警;2 股价报警 3 成本价报警
 func (a *App) SendDingDingMessageByType(message string, stockCode string, msgType int) string {
+
+	if strutil.HasPrefixAny(stockCode, []string{"SZ", "SH", "sh", "sz"}) && (!isTradingTime(time.Now())) {
+		return "非A股交易时间"
+	}
+	if strutil.HasPrefixAny(stockCode, []string{"hk", "HK"}) && (!IsHKTradingTime(time.Now())) {
+		return "非港股交易时间"
+	}
+	if strutil.HasPrefixAny(stockCode, []string{"us", "US", "gb_"}) && (!IsUSTradingTime(time.Now())) {
+		return "非美股交易时间"
+	}
+
 	ttl, _ := a.cache.TTL([]byte(stockCode))
 	//logger.SugaredLogger.Infof("stockCode %s ttl:%d", stockCode, ttl)
 	if ttl > 0 {
