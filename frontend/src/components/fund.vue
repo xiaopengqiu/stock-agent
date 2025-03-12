@@ -16,7 +16,7 @@ const danmus = ref([])
 const ws = ref(null)
 const icon = ref(null)
 const message = useMessage()
-
+const modalShow = ref(false)
 const data = reactive({
   modelName:"",
   chatId: "",
@@ -142,6 +142,20 @@ function formatterTitle(title){
   },{default: () => title,}
   )
 }
+
+function search(code,name){
+  setTimeout(() => {
+    window.open("https://fund.eastmoney.com/"+code+".html","_blank","noreferrer,width=1000,top=100,left=100,status=no,toolbar=no,location=no,scrollbars=no")
+    //window.open("https://finance.sina.com.cn/fund/quotes/"+code+"/bc.shtml","_blank","width=1000,height=800,top=100,left=100,toolbar=no,location=no")
+  }, 500)
+}
+
+function newchart(code,name){
+  modalShow.value=true
+  data.name=name
+  data.code=code
+  data.fenshiURL='https://image.sinajs.cn/newchart/v5/fund/nav/ss/'+code+'.gif'+"?t="+Date.now()
+}
 </script>
 
 <template>
@@ -154,15 +168,16 @@ function formatterTitle(title){
             <n-tag size="small"  :bordered="false" type="info">{{info.code}}</n-tag>&nbsp;
             <n-tag size="small"  :bordered="false" type="success" @click="unFollow(info.code)"> 取消关注</n-tag>
           </template>
-            <n-tag size="small" :type="info.netEstimatedRate>0?'error':'success'" :bordered="false" v-if="info.netEstimatedUnit">
+          <n-flex>
+            <n-text size="small" :type="info.netEstimatedRate>0?'error':'success'" :bordered="false" v-if="info.netEstimatedUnit">
               估算净值：{{info.netEstimatedUnit}}&nbsp;
               {{info.netEstimatedRate}} %&nbsp;&nbsp;&nbsp;
-              ({{info.netEstimatedUnitTime}})</n-tag>
-          <n-divider vertical></n-divider>
-          <n-tag size="small" :type="info.netEstimatedRate>0?'error':'success'" :bordered="false" v-if="info.netUnitValue">
-            单位净值：{{info.netUnitValue}}&nbsp;({{info.netUnitValueDate}})</n-tag>
-          <n-divider  v-if="info.netUnitValue"></n-divider>
-            <n-flex justify="start">
+              ({{info.netEstimatedUnitTime}})</n-text>
+            <br>
+            <n-text size="small" :type="info.netEstimatedRate>0?'error':'success'" :bordered="false" v-if="info.netUnitValue">
+              单位净值：{{info.netUnitValue}}&nbsp;&nbsp;&nbsp; ({{info.netUnitValueDate}})</n-text>
+          </n-flex>
+            <n-flex justify="start" style="margin-top: 10px">
             <n-tag size="small" :type="info.fundBasic.netGrowth1>0?'error':'success'" :bordered="false" v-if="info.fundBasic.netGrowth1">近一月：{{info.fundBasic.netGrowth1}}%</n-tag>
             <n-tag size="small" :type="info.fundBasic.netGrowth3>0?'error':'success'" :bordered="false" v-if="info.fundBasic.netGrowth3">近三月：{{info.fundBasic.netGrowth3}}%</n-tag>
             <n-tag size="small" :type="info.fundBasic.netGrowth6>0?'error':'success'" :bordered="false" v-if="info.fundBasic.netGrowth6">近六月：{{info.fundBasic.netGrowth6}}%</n-tag>
@@ -173,20 +188,26 @@ function formatterTitle(title){
             <n-tag size="small" :type="info.fundBasic.netGrowthAll>0?'error':'success'" :bordered="false" >成立来：{{info.fundBasic.netGrowthAll}}%</n-tag>
           </n-flex>
           <template #footer>
-            <n-flex justify="start">
+            <n-flex justify="space-between">
               <n-tag size="small"  :bordered="false" type="warning"> {{info.fundBasic.type}}</n-tag>
               <n-tag size="small"  :bordered="false" type="info"> {{info.fundBasic.company}}：{{info.fundBasic.manager}}</n-tag>
             </n-flex>
           </template>
-<!--          <template #action>
+          <template #action>
             <n-flex justify="end">
-            <n-button size="tiny" type="warning" @click="unFollow(info.code)">取消关注</n-button>
+              <n-button size="tiny" type="error" @click="newchart(info.code,info.name)"> 走势 </n-button>
+              <n-button size="tiny" type="warning" @click="search(info.code,info.name)"> 详情 </n-button>
             </n-flex>
-          </template>-->
+          </template>
         </n-card>
       </n-gi>
     </n-grid>
   </n-flex>
+
+  <n-modal v-model:show="modalShow" :title="data.name" style="width: 400px" :preset="'card'">
+    <n-image :src="data.fenshiURL"   />
+  </n-modal>
+
   <div style="position: fixed;bottom: 18px;right:0;z-index: 10;width: 480px">
     <n-input-group >
       <n-auto-complete  v-model:value="data.name"

@@ -158,7 +158,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 			}
 			K := NewTushareApi(getConfig()).GetDaily(code, startDate, endDate, o.CrawlTimeOut)
 			msg = append(msg, map[string]interface{}{
-				"role":    "assistant",
+				"role":    "user",
 				"content": stock + "日K数据如下：\n" + K,
 			})
 		}()
@@ -182,7 +182,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 				price += message + ";"
 			}
 			msg = append(msg, map[string]interface{}{
-				"role":    "assistant",
+				"role":    "user",
 				"content": stock + time.Now().Format(time.DateOnly) + "价格：" + price,
 			})
 		}()
@@ -208,7 +208,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 			}
 			for _, message := range *messages {
 				msg = append(msg, map[string]interface{}{
-					"role":    "assistant",
+					"role":    "user",
 					"content": stock + message,
 				})
 			}
@@ -225,7 +225,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 			}
 			for _, message := range *messages {
 				msg = append(msg, map[string]interface{}{
-					"role":    "assistant",
+					"role":    "user",
 					"content": message,
 				})
 			}
@@ -238,7 +238,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 			}
 			for _, message := range *messages {
 				msg = append(msg, map[string]interface{}{
-					"role":    "assistant",
+					"role":    "user",
 					"content": message,
 				})
 			}
@@ -255,7 +255,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 		//	}
 		//	for _, message := range *messages {
 		//		msg = append(msg, map[string]interface{}{
-		//			"role":    "assistant",
+		//			"role":    "user",
 		//			"content": message,
 		//		})
 		//	}
@@ -271,7 +271,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 			}
 			for _, message := range *messages {
 				msg = append(msg, map[string]interface{}{
-					"role":    "assistant",
+					"role":    "user",
 					"content": message,
 				})
 			}
@@ -293,7 +293,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 			}
 			for _, message := range *messages {
 				msg = append(msg, map[string]interface{}{
-					"role":    "assistant",
+					"role":    "user",
 					"content": message,
 				})
 			}
@@ -341,8 +341,8 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 		for scanner.Scan() {
 			line := scanner.Text()
 			logger.SugaredLogger.Infof("Received data: %s", line)
-			if strings.HasPrefix(line, "data: ") {
-				data := strings.TrimPrefix(line, "data: ")
+			if strings.HasPrefix(line, "data:") {
+				data := strutil.Trim(strings.TrimPrefix(line, "data:"))
 				if data == "[DONE]" {
 					return
 				}
