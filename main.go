@@ -200,7 +200,7 @@ func initStockDataUS() {
 		var count int64
 		db.Dao.Model(&models.StockInfoUS{}).Count(&count)
 		if count > 0 {
-			return
+			continue
 		}
 		db.Dao.Model(&models.StockInfoUS{}).Create(&item)
 	}
