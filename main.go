@@ -15,8 +15,9 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"go-stock/backend/data"
 	"go-stock/backend/db"
+	log "go-stock/backend/logger"
 	"go-stock/backend/models"
-	"log"
+
 	"os"
 	goruntime "runtime"
 	"runtime/debug"
@@ -69,9 +70,13 @@ func main() {
 	if stocksBin != nil && len(stocksBin) > 0 {
 		go initStockData()
 	}
+	log.SugaredLogger.Infof("init stocksBinHK %d", len(stocksBinHK))
+
 	if stocksBinHK != nil && len(stocksBinHK) > 0 {
 		go initStockDataHK()
 	}
+	log.SugaredLogger.Infof("init stocksBinUS %d", len(stocksBinUS))
+
 	if stocksBinUS != nil && len(stocksBinUS) > 0 {
 		go initStockDataUS()
 	}
@@ -112,15 +117,15 @@ func main() {
 	//FileMenu.AddText("退出", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
 	//	runtime.Quit(app.ctx)
 	//})
-	logger.NewDefaultLogger().Info("version: " + Version)
-	logger.NewDefaultLogger().Info("commit: " + VersionCommit)
+	log.SugaredLogger.Info("version: " + Version)
+	log.SugaredLogger.Info("commit: " + VersionCommit)
 	// Create application with options
 	var width, height int
 	var err error
 
 	width, height, err = getScreenResolution()
 	if err != nil {
-		logger.NewDefaultLogger().Error("get screen resolution error")
+		log.SugaredLogger.Error("get screen resolution error")
 		width = 1366
 		height = 768
 	}
@@ -184,22 +189,24 @@ func main() {
 	})
 
 	if err != nil {
-		log.Fatal(err)
+		log.SugaredLogger.Fatal(err)
 	}
 
 }
 
 func initStockDataUS() {
 	var v []models.StockInfoUS
-	log.Printf("init stock data us %d", len(v))
 	err := json.Unmarshal(stocksBinUS, &v)
 	if err != nil {
+		log.SugaredLogger.Error(err.Error())
 		return
 	}
+	log.SugaredLogger.Infof("init stock data us %d", len(v))
 	for _, item := range v {
 		var count int64
-		db.Dao.Model(&models.StockInfoUS{}).Count(&count)
+		db.Dao.Model(&models.StockInfoUS{}).Where("code = ?", item.Code).Count(&count)
 		if count > 0 {
+			log.SugaredLogger.Infof("stock data us %s exist", item.Code)
 			continue
 		}
 		db.Dao.Model(&models.StockInfoUS{}).Create(&item)
@@ -210,17 +217,19 @@ func initStockDataHK() {
 	var v []models.StockInfoHK
 	err := json.Unmarshal(stocksBinHK, &v)
 	if err != nil {
+		log.SugaredLogger.Error(err.Error())
 		return
 	}
+	log.SugaredLogger.Infof("init stock data hk %d", len(v))
 	for _, item := range v {
 		var count int64
-		db.Dao.Model(&models.StockInfoHK{}).Count(&count)
+		db.Dao.Model(&models.StockInfoHK{}).Where("code = ?", item.Code).Count(&count)
 		if count > 0 {
+			log.SugaredLogger.Infof("stock data hk %s exist", item.Code)
 			continue
 		}
 		db.Dao.Model(&models.StockInfoHK{}).Create(&item)
 	}
-	log.Printf("init stock data hk %d", len(v))
 }
 
 func updateBasicInfo() {
@@ -233,11 +242,11 @@ func updateBasicInfo() {
 }
 
 func initStockData() {
-	logger.NewDefaultLogger().Info("init stock data")
+	log.SugaredLogger.Info("init stock data")
 	res := &data.TushareStockBasicResponse{}
 	err := json.Unmarshal(stocksBin, res)
 	if err != nil {
-		logger.NewDefaultLogger().Error(err.Error())
+		log.SugaredLogger.Error(err.Error())
 		return
 	}
 	for _, item := range res.Data.Items {
@@ -274,7 +283,7 @@ func checkDir(dir string) {
 	_, err := os.Stat(dir)
 	if os.IsNotExist(err) {
 		os.Mkdir(dir, os.ModePerm)
-		logger.NewDefaultLogger().Info("create dir: " + dir)
+		log.SugaredLogger.Info("create dir: " + dir)
 	}
 }
 
