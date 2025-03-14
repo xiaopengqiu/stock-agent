@@ -709,7 +709,7 @@ function saveAsMarkdown() {
   const blob = new Blob([data.airesult], { type: 'text/markdown;charset=utf-8' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = `${data.name}[${data.code}]-ai-analysis-result.md`;
+  link.download = `${data.name}[${data.code}]-${data.time}ai-analysis-result.md`;
   link.click();
   URL.revokeObjectURL(link.href);
   link.remove()
