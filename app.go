@@ -147,14 +147,14 @@ func (a *App) domReady(ctx context.Context) {
 	//}()
 
 	//检查Edge浏览器
-	go func() {
-		path, e := checkEdgeOnWindows()
-		if !e {
-			go runtime.EventsEmit(a.ctx, "warnMsg", "Edge浏览器未安装,ai分析功能可能无法使用")
-		} else {
-			logger.SugaredLogger.Infof("Edge浏览器已安装，路径为: %s", path)
-		}
-	}()
+	//go func() {
+	//	path, e := checkEdgeOnWindows()
+	//	if !e {
+	//		go runtime.EventsEmit(a.ctx, "warnMsg", "Edge浏览器未安装,ai分析功能可能无法使用")
+	//	} else {
+	//		logger.SugaredLogger.Infof("Edge浏览器已安装，路径为: %s", path)
+	//	}
+	//}()
 }
 
 func refreshTelegraphList() *[]string {
