@@ -34,6 +34,7 @@ const formValue = ref({
     kDays:30,
   },
   enableDanmu:false,
+  browserPath: '',
 })
 
 onMounted(()=>{
@@ -63,6 +64,7 @@ onMounted(()=>{
       kDays:res.kDays,
     }
     formValue.value.enableDanmu = res.enableDanmu
+    formValue.value.browserPath = res.browserPath
     console.log(res)
   })
   //message.info("加载完成")
@@ -89,7 +91,8 @@ function saveConfig(){
     questionTemplate:formValue.value.openAI.questionTemplate,
     crawlTimeOut:formValue.value.openAI.crawlTimeOut,
     kDays:formValue.value.openAI.kDays,
-    enableDanmu:formValue.value.enableDanmu
+    enableDanmu:formValue.value.enableDanmu,
+    browserPath:formValue.value.browserPath
   })
 
  //console.log("Settings",config)
@@ -161,6 +164,7 @@ function importConfig(){
         kDays:config.kDays
       }
       formValue.value.enableDanmu = config.enableDanmu
+      formValue.value.browserPath = config.browserPath
      // formRef.value.resetFields()
     };
     reader.readAsText(file);
@@ -204,6 +208,9 @@ window.onerror = function (event, source, lineno, colno, error) {
               秒
             </template>
           </n-input-number>
+        </n-form-item-gi>
+        <n-form-item-gi  :span="22" label="浏览器路径：" path="browserPath" >
+          <n-input  type="text" placeholder="浏览器路径"  v-model:value="formValue.browserPath" clearable />
         </n-form-item-gi>
       </n-grid>
 

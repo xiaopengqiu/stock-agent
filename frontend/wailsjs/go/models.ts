@@ -170,6 +170,7 @@ export namespace data {
 	    crawlTimeOut: number;
 	    kDays: number;
 	    enableDanmu: boolean;
+	    browserPath: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -200,6 +201,7 @@ export namespace data {
 	        this.crawlTimeOut = source["crawlTimeOut"];
 	        this.kDays = source["kDays"];
 	        this.enableDanmu = source["enableDanmu"];
+	        this.browserPath = source["browserPath"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

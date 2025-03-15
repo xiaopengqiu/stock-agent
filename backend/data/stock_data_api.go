@@ -872,9 +872,9 @@ func getSHSZStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 	defer timeoutCtxCancel()
 	var ctx context.Context
 	var cancel context.CancelFunc
-	path, e := checkBrowserOnWindows()
-	logger.SugaredLogger.Infof("SearchStockPriceInfo path:%s", path)
-	if e {
+	path := getConfig().BrowserPath
+	logger.SugaredLogger.Infof("SearchStockPriceInfo BrowserPath:%s", path)
+	if path != "" {
 		pctx, pcancel := chromedp.NewExecAllocator(
 			timeoutCtx,
 			chromedp.ExecPath(path),
@@ -1042,8 +1042,8 @@ func checkChromeOnWindows() (string, bool) {
 	return path + "\\chrome.exe", true
 }
 
-// checkBrowserOnWindows 在 Windows 系统上检查Edge浏览器是否安装，并返回安装路径
-func checkBrowserOnWindows() (string, bool) {
+// CheckBrowserOnWindows 在 Windows 系统上检查Edge浏览器是否安装，并返回安装路径
+func CheckBrowserOnWindows() (string, bool) {
 	if path, ok := checkChromeOnWindows(); ok {
 		return path, true
 	}

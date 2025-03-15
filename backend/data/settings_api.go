@@ -29,6 +29,7 @@ type Settings struct {
 	CrawlTimeOut      int64   `json:"crawlTimeOut"`
 	KDays             int64   `json:"kDays"`
 	EnableDanmu       bool    `json:"enableDanmu"`
+	BrowserPath       string  `json:"browserPath"`
 }
 
 func (receiver Settings) TableName() string {
@@ -69,6 +70,7 @@ func (s SettingsApi) UpdateConfig() string {
 			"crawl_time_out":             s.Config.CrawlTimeOut,
 			"k_days":                     s.Config.KDays,
 			"enable_danmu":               s.Config.EnableDanmu,
+			"browser_path":               s.Config.BrowserPath,
 		})
 	} else {
 		logger.SugaredLogger.Infof("未找到配置，创建默认配置:%+v", s.Config)
@@ -92,6 +94,7 @@ func (s SettingsApi) UpdateConfig() string {
 			CrawlTimeOut:           s.Config.CrawlTimeOut,
 			KDays:                  s.Config.KDays,
 			EnableDanmu:            s.Config.EnableDanmu,
+			BrowserPath:            s.Config.BrowserPath,
 		})
 	}
 	return "保存成功！"
@@ -111,6 +114,10 @@ func (s SettingsApi) GetConfig() *Settings {
 			settings.KDays = 120
 		}
 	}
+	if settings.BrowserPath == "" {
+		settings.BrowserPath, _ = CheckBrowserOnWindows()
+	}
+
 	return &settings
 }
 

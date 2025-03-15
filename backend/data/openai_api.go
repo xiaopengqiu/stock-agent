@@ -34,6 +34,7 @@ type OpenAi struct {
 	QuestionTemplate string  `json:"question_template"`
 	CrawlTimeOut     int64   `json:"crawl_time_out"`
 	KDays            int64   `json:"kDays"`
+	BrowserPath      string  `json:"browser_path"`
 }
 
 func NewDeepSeekOpenAi(ctx context.Context) *OpenAi {
@@ -61,6 +62,7 @@ func NewDeepSeekOpenAi(ctx context.Context) *OpenAi {
 		QuestionTemplate: config.QuestionTemplate,
 		CrawlTimeOut:     config.CrawlTimeOut,
 		KDays:            config.KDays,
+		BrowserPath:      config.BrowserPath,
 	}
 }
 
@@ -500,10 +502,10 @@ func GetFinancialReports(stockCode string, crawlTimeOut int64) *[]string {
 	defer timeoutCtxCancel()
 	var ctx context.Context
 	var cancel context.CancelFunc
-	path, e := checkBrowserOnWindows()
+	path := getConfig().BrowserPath
 	logger.SugaredLogger.Infof("GetFinancialReports path:%s", path)
 
-	if e {
+	if path != "" {
 		pctx, pcancel := chromedp.NewExecAllocator(
 			timeoutCtx,
 			chromedp.ExecPath(path),
