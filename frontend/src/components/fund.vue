@@ -132,6 +132,7 @@ function getFundList(value){
 }
 function onSelectFund(value){
   data.code=value
+  blinkBorder(value)
 }
 function formatterTitle(title){
   return () => h(NEllipsis,{
@@ -156,14 +157,34 @@ function newchart(code,name){
   data.code=code
   data.fenshiURL='https://image.sinajs.cn/newchart/v5/fund/nav/ss/'+code+'.gif'+"?t="+Date.now()
 }
+
+function blinkBorder(findId){
+  // 获取要滚动到的元素
+  const element = document.getElementById(findId);
+  if (element) {
+    // 滚动到该元素
+    element.scrollIntoView({ behavior: 'smooth' });
+    const pelement = document.getElementById(findId +'_gi');
+    if(pelement){
+      // 添加闪烁效果
+      pelement.classList.add('blink-border');
+      // 3秒后移除闪烁效果
+      setTimeout(() => {
+        pelement.classList.remove('blink-border');
+      }, 1000*5);
+    }else{
+      console.error(`Element with ID ${findId}_gi not found`);
+    }
+  }
+}
 </script>
 
 <template>
   <vue-danmaku v-model:danmus="danmus"  style="height:100px; width:100%;z-index: 9;position:absolute; top: 400px; pointer-events: none;" ></vue-danmaku>
   <n-flex justify="start" >
     <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
-      <n-gi v-for="info in  followList" style="margin-left: 2px" onmouseover="this.style.border='1px solid  #3498db' " onmouseout="this.style.border='0px'">
-        <n-card :title="formatterTitle(info.name)">
+      <n-gi :id="info.code+'_gi'" v-for="info in  followList" style="margin-left: 2px" onmouseover="this.style.border='1px solid  #3498db' " onmouseout="this.style.border='0px'">
+        <n-card :id="info.code" :title="formatterTitle(info.name)">
           <template #header-extra>
             <n-tag size="small"  :bordered="false" type="info">{{info.code}}</n-tag>&nbsp;
             <n-tag size="small"  :bordered="false" type="success" @click="unFollow(info.code)"> 取消关注</n-tag>
@@ -228,5 +249,21 @@ function newchart(code,name){
 </template>
 
 <style scoped>
+/* 添加闪烁效果的CSS类 */
+.blink-border {
+  animation: blink-border 1s linear infinite;
+  border: 4px  solid transparent;
+}
 
+@keyframes blink-border {
+  0% {
+    border-color: red;
+  }
+  50% {
+    border-color: transparent;
+  }
+  100% {
+    border-color: red;
+  }
+}
 </style>

@@ -391,6 +391,40 @@ function getStockList(value){
   if(value&&value.indexOf("-")<=0){
     data.code=value
   }
+
+  console.log("getStockList-options",data.code)
+
+  if(data.code){
+    let findId=data.code
+    if(findId.startsWith("us")){
+      findId="gb_"+ findId.replace("us", "").toLowerCase()
+    }
+    blinkBorder(findId)
+  }
+
+
+
+
+}
+
+function blinkBorder(findId){
+  // 获取要滚动到的元素
+  const element = document.getElementById(findId);
+  if (element) {
+    // 滚动到该元素
+    element.scrollIntoView({ behavior: 'smooth' });
+    const pelement = document.getElementById(findId +'_gi');
+    if(pelement){
+      // 添加闪烁效果
+      pelement.classList.add('blink-border');
+      // 3秒后移除闪烁效果
+      setTimeout(() => {
+        pelement.classList.remove('blink-border');
+      }, 1000*5);
+    }else{
+      console.error(`Element with ID ${findId}_gi not found`);
+    }
+  }
 }
 
 async function updateData(result) {
@@ -783,8 +817,8 @@ function share(code,name){
 <template>
     <vue-danmaku v-model:danmus="danmus"  style="height:100px; width:100%;z-index: 9;position:absolute; top: 400px; pointer-events: none;" ></vue-danmaku>
   <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
-    <n-gi v-for="result in sortedResults" style="margin-left: 2px" onmouseover="this.style.border='1px solid  #3498db' " onmouseout="this.style.border='0px'">
-         <n-card   :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
+    <n-gi :id="result['股票代码']+'_gi'"  v-for="result in sortedResults" style="margin-left: 2px;" onmouseover="this.style.border='1px solid  #3498db' " onmouseout="this.style.border='1px'">
+         <n-card  :id="result['股票代码']"  :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
            <n-grid :cols="1" :y-gap="6">
              <n-gi>
                <n-text :type="result.type" >
@@ -964,5 +998,22 @@ function share(code,name){
 
  .md-editor-preview p{
    text-align: left !important;
+ }
+ /* 添加闪烁效果的CSS类 */
+ .blink-border {
+   animation: blink-border 1s linear infinite;
+   border: 4px  solid transparent;
+ }
+
+ @keyframes blink-border {
+   0% {
+     border-color: red;
+   }
+   50% {
+     border-color: transparent;
+   }
+   100% {
+     border-color: red;
+   }
  }
 </style>

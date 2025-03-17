@@ -429,7 +429,7 @@ func (receiver StockDataApi) GetStockList(key string) []StockBasic {
 	db.Dao.Model(&models.StockInfoHK{}).Where("name like ? or code like ?", "%"+key+"%", "%"+key+"%").Find(&result3)
 
 	var result4 []models.StockInfoUS
-	db.Dao.Model(&models.StockInfoUS{}).Where("name like ? or code like ?", "%"+key+"%", "%"+key+"%").Find(&result4)
+	db.Dao.Model(&models.StockInfoUS{}).Where("name like ? or code like ? or e_name like ?", "%"+key+"%", "%"+key+"%", "%"+key+"%").Find(&result4)
 
 	for _, item := range result2 {
 		result = append(result, StockBasic{
