@@ -369,7 +369,7 @@ func (receiver StockDataApi) UnFollow(stockCode string) string {
 		stockCode = strings.Replace(stockCode, "gb_", "us", 1)
 		stockCode = strings.Replace(stockCode, "GB_", "us", 1)
 	}
-	db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", stockCode).Delete(&FollowedStock{})
+	db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", strings.ToLower(stockCode)).Delete(&FollowedStock{})
 	return "取消关注成功"
 }
 
@@ -379,7 +379,7 @@ func (receiver StockDataApi) SetCostPriceAndVolume(price float64, volume int64, 
 		stockCode = strings.Replace(stockCode, "gb_", "us", 1)
 		stockCode = strings.Replace(stockCode, "GB_", "us", 1)
 	}
-	err := db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", stockCode).Update("cost_price", price).Update("volume", volume).Error
+	err := db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", strings.ToLower(stockCode)).Update("cost_price", price).Update("volume", volume).Error
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
 		return "设置失败"
@@ -393,7 +393,7 @@ func (receiver StockDataApi) SetAlarmChangePercent(val, alarmPrice float64, stoc
 		stockCode = strings.Replace(stockCode, "gb_", "us", 1)
 		stockCode = strings.Replace(stockCode, "GB_", "us", 1)
 	}
-	err := db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", stockCode).Updates(&map[string]any{
+	err := db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", strings.ToLower(stockCode)).Updates(&map[string]any{
 		"alarm_change_percent": val,
 		"alarm_price":          alarmPrice,
 	}).Error
@@ -410,7 +410,7 @@ func (receiver StockDataApi) SetStockSort(sort int64, stockCode string) {
 		stockCode = strings.Replace(stockCode, "gb_", "us", 1)
 		stockCode = strings.Replace(stockCode, "GB_", "us", 1)
 	}
-	db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", stockCode).Update("sort", sort)
+	db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", strings.ToLower(stockCode)).Update("sort", sort)
 }
 
 func (receiver StockDataApi) GetFollowList() *[]FollowedStock {
