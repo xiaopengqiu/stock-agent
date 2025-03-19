@@ -183,7 +183,7 @@ function blinkBorder(findId){
   <vue-danmaku v-model:danmus="danmus"  style="height:100px; width:100%;z-index: 9;position:absolute; top: 400px; pointer-events: none;" ></vue-danmaku>
   <n-flex justify="start" >
     <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
-      <n-gi :id="info.code+'_gi'" v-for="info in  followList" style="margin-left: 2px" onmouseover="this.style.border='1px solid  #3498db' " onmouseout="this.style.border='0px'">
+      <n-gi :id="info.code+'_gi'" v-for="info in  followList" style="margin-left: 2px" >
         <n-card :id="info.code" :title="formatterTitle(info.name)">
           <template #header-extra>
             <n-tag size="small"  :bordered="false" type="info">{{info.code}}</n-tag>&nbsp;

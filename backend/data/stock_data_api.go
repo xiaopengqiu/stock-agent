@@ -748,7 +748,14 @@ func GetRealTimeStockPriceInfo(ctx context.Context, stockCode string) (price, pr
 
 func SearchStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 
-	if strutil.HasPrefixAny(stockCode, []string{"SZ", "SH", "sh", "sz"}) {
+	if strutil.HasPrefixAny(stockCode, []string{"SZ", "SH", "sh", "sz", "bj"}) {
+		if strutil.HasPrefixAny(stockCode, []string{"bj", "BJ"}) {
+			stockCode = strutil.ReplaceWithMap(stockCode, map[string]string{
+				"bj": "",
+				"BJ": "",
+			}) + ".BJ"
+		}
+
 		return getSHSZStockPriceInfo(stockCode, crawlTimeOut)
 	}
 	if strutil.HasPrefixAny(stockCode, []string{"HK", "hk"}) {
