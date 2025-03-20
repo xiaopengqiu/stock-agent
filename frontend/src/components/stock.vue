@@ -876,7 +876,7 @@ function share(code,name){
          </n-card >
       </n-gi>
     </n-grid>
-  <div style="position: fixed;bottom: 18px;right:0;z-index: 10;width: 460px">
+  <div style="position: fixed;bottom: 18px;right:2px;z-index: 10;width: 400px">
 <!--    <n-card :bordered="false">-->
       <n-input-group >
 <!--        <n-button  type="error" @click="addBTN=!addBTN" > <n-icon :component="Search"/>&nbsp;<n-text  v-if="addBTN">隐藏</n-text></n-button>-->

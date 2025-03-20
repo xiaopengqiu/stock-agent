@@ -229,7 +229,7 @@ function blinkBorder(findId){
     <n-image :src="data.fenshiURL"   />
   </n-modal>
 
-  <div style="position: fixed;bottom: 18px;right:0;z-index: 10;width: 480px">
+  <div style="position: fixed;bottom: 18px;right:2px;z-index: 10;width: 400px">
     <n-input-group >
       <n-auto-complete  v-model:value="data.name"
                         :input-props="{

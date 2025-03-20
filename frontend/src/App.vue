@@ -8,7 +8,7 @@ import {
   WindowSetPosition,
   WindowUnfullscreen
 } from '../wailsjs/runtime'
-import {h, ref} from "vue";
+import {h, onMounted, ref} from "vue";
 import { RouterLink } from 'vue-router'
 import {darkTheme, NGradientText, NIcon, NText,} from 'naive-ui'
 import {
@@ -17,6 +17,8 @@ import {
   ExpandOutline,
   PowerOutline, LogoGithub, MoveOutline, WalletOutline, StarOutline, AlarmOutline, SparklesOutline,
 } from '@vicons/ionicons5'
+
+const contentStyle =  ref("")
 const content = ref('数据来源于网络,仅供参考;投资有风险,入市需谨慎')
 const isFullscreen = ref(false)
 const activeKey = ref('stock')
@@ -194,11 +196,16 @@ window.onerror = function (msg, source, lineno, colno, error) {
   });
   return true;
 };
+
+onMounted(()=>{
+  contentStyle.value="max-height: calc(90vh);overflow: hidden"
+})
+
 </script>
 <template>
 
 
-  <n-config-provider :theme="darkTheme" ref="containerRef">
+  <n-config-provider :theme="darkTheme" ref="containerRef" >
     <n-message-provider >
       <n-notification-provider>
       <n-modal-provider>
@@ -218,17 +225,25 @@ window.onerror = function (msg, source, lineno, colno, error) {
   >
   <n-flex justify="center">
         <n-grid x-gap="12" :cols="1">
+<!--
           <n-gi style="position: relative;top:1px;z-index: 19;width: 100%" v-if="telegraph.length>0">
-            <n-marquee :speed="120" >
-              <n-tag type="warning" v-for="item in telegraph" style="margin-right: 10px">
-                {{item}}
-              </n-tag>
-<!--              <n-text type="warning"> {{telegraph[0]}}</n-text>-->
-            </n-marquee>
+
           </n-gi>
-          <n-gi style="padding-bottom: 70px;padding-top: 5px">
-            <RouterView />
-          </n-gi>
+-->
+
+            <n-gi>
+              <n-marquee :speed="100" style="position: relative;top:0;z-index: 19;width: 100%" v-if="telegraph.length>0">
+                <n-tag type="warning" v-for="item in telegraph" style="margin-right: 10px">
+                  {{item}}
+                </n-tag>
+                <!--              <n-text type="warning"> {{telegraph[0]}}</n-text>-->
+              </n-marquee>
+              <n-scrollbar :style="contentStyle">
+              <RouterView />
+              </n-scrollbar>
+            </n-gi>
+
+
           <n-gi style="position: fixed;bottom:0;z-index: 9;width: 100%">
                   <n-card size="small">
                   <n-menu style="font-size: 18px;"
@@ -240,7 +255,6 @@ window.onerror = function (msg, source, lineno, colno, error) {
                 </n-card>
           </n-gi>
         </n-grid>
-
   </n-flex>
   </n-watermark>
         </n-dialog-provider>
