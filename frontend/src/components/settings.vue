@@ -264,7 +264,7 @@ window.onerror = function (event, source, lineno, colno, error) {
       <n-form-item-gi :span="5"  v-if="formValue.openAI.enable" title="天数越多消耗tokens越多" label="日K线数据(天)："  path="openAI.maxTokens">
         <n-input-number  min="30" step="1" max="365"  placeholder="日K线数据(天)" title="天数越多消耗tokens越多" v-model:value="formValue.openAI.kDays"/>
       </n-form-item-gi>
-      <n-form-item-gi :span="22"  v-if="formValue.openAI.enable" label="模型系统 Prompt："  path="openAI.prompt">
+      <n-form-item-gi :span="11"  v-if="formValue.openAI.enable" label="模型系统 Prompt："  path="openAI.prompt">
         <n-input v-model:value="formValue.openAI.prompt"
             type="textarea"
             :show-count="true"
@@ -275,14 +275,14 @@ window.onerror = function (event, source, lineno, colno, error) {
             }"
         />
       </n-form-item-gi>
-      <n-form-item-gi :span="22"  v-if="formValue.openAI.enable" label="模型用户 Prompt："   path="openAI.questionTemplate">
+      <n-form-item-gi :span="11"  v-if="formValue.openAI.enable" label="模型用户 Prompt："   path="openAI.questionTemplate">
         <n-input v-model:value="formValue.openAI.questionTemplate"
             type="textarea"
             :show-count="true"
             placeholder="请输入用户prompt:例如{{stockName}}[{{stockCode}}]分析和总结"
             :autosize="{
-              minRows: 2,
-              maxRows: 5
+              minRows: 5,
+              maxRows: 8
             }"
         />
      </n-form-item-gi>

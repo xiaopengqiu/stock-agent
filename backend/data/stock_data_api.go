@@ -347,6 +347,12 @@ func (receiver StockDataApi) Follow(stockCode string) string {
 		logger.SugaredLogger.Error(err)
 		return "关注失败"
 	}
+
+	maxSort := int64(0)
+	db.Dao.Model(&FollowedStock{}).Raw("select max(sort) as sort from followed_stock").Scan(&maxSort)
+
+	logger.SugaredLogger.Infof("Follow-maxSort %v", maxSort)
+
 	stockInfo := (*stockInfos)[0]
 	price, _ := convertor.ToFloat(stockInfo.Price)
 	db.Dao.Model(&FollowedStock{}).FirstOrCreate(&FollowedStock{
@@ -356,7 +362,7 @@ func (receiver StockDataApi) Follow(stockCode string) string {
 		Time:               time.Now(),
 		ChangePercent:      0,
 		PriceChange:        0,
-		Sort:               0,
+		Sort:               maxSort + 1,
 		AlarmChangePercent: 3,
 		AlarmPrice:         price + 1,
 	}, &FollowedStock{StockCode: stockCode})
