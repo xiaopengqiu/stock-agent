@@ -8,7 +8,7 @@ import {
   WindowSetPosition,
   WindowUnfullscreen
 } from '../wailsjs/runtime'
-import {h, onMounted, ref} from "vue";
+import {h, onBeforeMount, onMounted, ref} from "vue";
 import { RouterLink } from 'vue-router'
 import {darkTheme, NGradientText, NIcon, NText,} from 'naive-ui'
 import {
@@ -17,7 +17,8 @@ import {
   ExpandOutline,
   PowerOutline, LogoGithub, MoveOutline, WalletOutline, StarOutline, AlarmOutline, SparklesOutline,
 } from '@vicons/ionicons5'
-
+import {GetConfig} from "../wailsjs/go/main/App";
+const enableNews= ref(false)
 const contentStyle =  ref("")
 const content = ref('数据来源于网络,仅供参考;投资有风险,入市需谨慎')
 const isFullscreen = ref(false)
@@ -197,6 +198,15 @@ window.onerror = function (msg, source, lineno, colno, error) {
   return true;
 };
 
+onBeforeMount(()=>{
+  GetConfig().then((res)=>{
+    console.log(res)
+    if(res.enableNews){
+      enableNews.value=true
+    }
+  })
+})
+
 onMounted(()=>{
   contentStyle.value="max-height: calc(90vh);overflow: hidden"
 })
@@ -232,7 +242,7 @@ onMounted(()=>{
 -->
 
             <n-gi>
-              <n-marquee :speed="100" style="position: relative;top:0;z-index: 19;width: 100%" v-if="telegraph.length>0">
+              <n-marquee :speed="100" style="position: relative;top:0;z-index: 19;width: 100%" v-if="(telegraph.length>0)&&(enableNews)">
                 <n-tag type="warning" v-for="item in telegraph" style="margin-right: 10px">
                   {{item}}
                 </n-tag>

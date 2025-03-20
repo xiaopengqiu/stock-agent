@@ -96,8 +96,8 @@ func (a *App) domReady(ctx context.Context) {
 
 	// Add your action here
 	//定时更新数据
+	config := data.NewSettingsApi(&data.Settings{}).GetConfig()
 	go func() {
-		config := data.NewSettingsApi(&data.Settings{}).GetConfig()
 		interval := config.RefreshInterval
 		if interval <= 0 {
 			interval = 1
@@ -123,13 +123,15 @@ func (a *App) domReady(ctx context.Context) {
 		defer ticker.Stop()
 		for range ticker.C {
 			telegraph := refreshTelegraphList()
-			if telegraph != nil {
+			if telegraph != nil && config.EnableNews {
 				go runtime.EventsEmit(a.ctx, "telegraph", telegraph)
 			}
 		}
 
 	}()
-	go runtime.EventsEmit(a.ctx, "telegraph", refreshTelegraphList())
+	if config.EnableNews {
+		go runtime.EventsEmit(a.ctx, "telegraph", refreshTelegraphList())
+	}
 	go MonitorStockPrices(a)
 	go MonitorFundPrices(a)
 	go data.NewFundApi().AllFund()

@@ -35,6 +35,7 @@ const formValue = ref({
   },
   enableDanmu:false,
   browserPath: '',
+  enableNews:false,
 })
 
 onMounted(()=>{
@@ -65,6 +66,8 @@ onMounted(()=>{
     }
     formValue.value.enableDanmu = res.enableDanmu
     formValue.value.browserPath = res.browserPath
+    formValue.value.enableNews = res.enableNews
+
     console.log(res)
   })
   //message.info("加载完成")
@@ -92,7 +95,8 @@ function saveConfig(){
     crawlTimeOut:formValue.value.openAI.crawlTimeOut,
     kDays:formValue.value.openAI.kDays,
     enableDanmu:formValue.value.enableDanmu,
-    browserPath:formValue.value.browserPath
+    browserPath:formValue.value.browserPath,
+    enableNews:formValue.value.enableNews,
   })
 
  //console.log("Settings",config)
@@ -165,6 +169,7 @@ function importConfig(){
       }
       formValue.value.enableDanmu = config.enableDanmu
       formValue.value.browserPath = config.browserPath
+      formValue.value.enableNews = config.enableNews
      // formRef.value.resetFields()
     };
     reader.readAsText(file);
@@ -226,6 +231,9 @@ window.onerror = function (event, source, lineno, colno, error) {
           </n-form-item-gi>
           <n-form-item-gi  :span="5" label="弹幕功能：" path="enableDanmu" >
             <n-switch v-model:value="formValue.enableDanmu" />
+          </n-form-item-gi>
+          <n-form-item-gi  :span="5" label="是否显示滚动快讯(重启生效)：" path="enableNews" >
+            <n-switch v-model:value="formValue.enableNews" />
           </n-form-item-gi>
           <n-form-item-gi :span="22"  v-if="formValue.dingPush.enable" label="钉钉机器人接口地址：" path="dingPush.dingRobot" >
             <n-input  placeholder="请输入钉钉机器人接口地址"  v-model:value="formValue.dingPush.dingRobot"/>

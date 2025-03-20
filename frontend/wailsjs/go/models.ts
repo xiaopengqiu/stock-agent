@@ -171,6 +171,7 @@ export namespace data {
 	    kDays: number;
 	    enableDanmu: boolean;
 	    browserPath: string;
+	    enableNews: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -202,6 +203,7 @@ export namespace data {
 	        this.kDays = source["kDays"];
 	        this.enableDanmu = source["enableDanmu"];
 	        this.browserPath = source["browserPath"];
+	        this.enableNews = source["enableNews"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

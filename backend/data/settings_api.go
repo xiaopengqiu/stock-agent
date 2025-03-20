@@ -30,6 +30,7 @@ type Settings struct {
 	KDays             int64   `json:"kDays"`
 	EnableDanmu       bool    `json:"enableDanmu"`
 	BrowserPath       string  `json:"browserPath"`
+	EnableNews        bool    `json:"enableNews"`
 }
 
 func (receiver Settings) TableName() string {
@@ -71,6 +72,7 @@ func (s SettingsApi) UpdateConfig() string {
 			"k_days":                     s.Config.KDays,
 			"enable_danmu":               s.Config.EnableDanmu,
 			"browser_path":               s.Config.BrowserPath,
+			"enable_news":                s.Config.EnableNews,
 		})
 	} else {
 		logger.SugaredLogger.Infof("未找到配置，创建默认配置:%+v", s.Config)
@@ -95,6 +97,7 @@ func (s SettingsApi) UpdateConfig() string {
 			KDays:                  s.Config.KDays,
 			EnableDanmu:            s.Config.EnableDanmu,
 			BrowserPath:            s.Config.BrowserPath,
+			EnableNews:             s.Config.EnableNews,
 		})
 	}
 	return "保存成功！"
