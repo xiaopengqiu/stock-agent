@@ -14,6 +14,8 @@ import (
 	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/getlantern/systray"
 	"github.com/go-resty/resty/v2"
+	"github.com/go-toast/toast"
+	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"go-stock/backend/data"
 	"go-stock/backend/db"
@@ -118,18 +120,18 @@ func (a *App) domReady(ctx context.Context) {
 		}
 	}()
 
-	go func() {
-		ticker := time.NewTicker(time.Second * time.Duration(60))
-		defer ticker.Stop()
-		for range ticker.C {
-			telegraph := refreshTelegraphList()
-			if telegraph != nil && config.EnableNews {
-				go runtime.EventsEmit(a.ctx, "telegraph", telegraph)
-			}
-		}
-
-	}()
 	if config.EnableNews {
+		go func() {
+			ticker := time.NewTicker(time.Second * time.Duration(60))
+			defer ticker.Stop()
+			for range ticker.C {
+				telegraph := refreshTelegraphList()
+				if telegraph != nil {
+					go runtime.EventsEmit(a.ctx, "telegraph", telegraph)
+				}
+			}
+
+		}()
 		go runtime.EventsEmit(a.ctx, "telegraph", refreshTelegraphList())
 	}
 	go MonitorStockPrices(a)
@@ -479,6 +481,7 @@ func (a *App) shutdown(ctx context.Context) {
 	defer PanicHandler()
 	// Perform your teardown here
 	systray.Quit()
+	os.Exit(0)
 }
 
 // Greet returns a greeting for the given name
@@ -673,6 +676,7 @@ func getMsgTypeName(msgType int) string {
 func onExit(a *App) {
 	// 清理操作
 	logger.SugaredLogger.Infof("onExit")
+	systray.Quit()
 	runtime.Quit(a.ctx)
 }
 
@@ -696,15 +700,12 @@ func onReady(a *App) {
 			case <-mQuitOrig.ClickedCh:
 				logger.SugaredLogger.Infof("退出应用程序")
 				runtime.Quit(a.ctx)
-				//systray.Quit()
 			case <-show.ClickedCh:
 				logger.SugaredLogger.Infof("显示应用程序")
 				runtime.WindowShow(a.ctx)
-			//runtime.WindowShow(a.ctx)
 			case <-hide.ClickedCh:
 				logger.SugaredLogger.Infof("隐藏应用程序")
 				runtime.WindowHide(a.ctx)
-
 			}
 		}
 	}()
@@ -779,4 +780,20 @@ func (a *App) FollowFund(fundCode string) string {
 }
 func (a *App) UnFollowFund(fundCode string) string {
 	return data.NewFundApi().UnFollowFund(fundCode)
+}
+
+func OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceData) {
+	notification := toast.Notification{
+		AppID:    "go-stock",
+		Title:    "go-stock",
+		Message:  "程序已经在运行了",
+		Icon:     "",
+		Duration: "short",
+		Audio:    toast.Default,
+	}
+	err := notification.Push()
+	if err != nil {
+		logger.SugaredLogger.Error(err)
+	}
+	time.Sleep(time.Second * 3)
 }

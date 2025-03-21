@@ -129,15 +129,15 @@ const menuOptions = ref([
     key: 'hide',
     icon: renderIcon(ReorderTwoOutline),
   },
-  {
-    label: ()=> h("a", {
-      href: 'javascript:void(0)',
-      style: 'cursor: move;',
-      onClick: toggleStartMoveWindow,
-    }, { default: () => '移动' }),
-    key: 'move',
-    icon: renderIcon(MoveOutline),
-  },
+  // {
+  //   label: ()=> h("a", {
+  //     href: 'javascript:void(0)',
+  //     style: 'cursor: move;',
+  //     onClick: toggleStartMoveWindow,
+  //   }, { default: () => '移动' }),
+  //   key: 'move',
+  //   icon: renderIcon(MoveOutline),
+  // },
   {
     label: ()=> h("a", {
       href: '#',
@@ -161,22 +161,22 @@ function toggleFullscreen(e) {
     }
   isFullscreen.value=!isFullscreen.value
 }
-const drag = ref(false)
-const lastPos= ref({x:0,y:0})
-function toggleStartMoveWindow(e) {
-  drag.value=!drag.value
-  lastPos.value={x:e.clientX,y:e.clientY}
-}
-function dragstart(e) {
-  if (drag.value) {
-    let x=e.clientX-lastPos.value.x
-    let y=e.clientY-lastPos.value.y
-    WindowGetPosition().then((pos) => {
-      WindowSetPosition(pos.x+x,pos.y+y)
-    })
-  }
-}
-window.addEventListener('mousemove', dragstart)
+// const drag = ref(false)
+// const lastPos= ref({x:0,y:0})
+// function toggleStartMoveWindow(e) {
+//   drag.value=!drag.value
+//   lastPos.value={x:e.clientX,y:e.clientY}
+// }
+// function dragstart(e) {
+//   if (drag.value) {
+//     let x=e.clientX-lastPos.value.x
+//     let y=e.clientY-lastPos.value.y
+//     WindowGetPosition().then((pos) => {
+//       WindowSetPosition(pos.x+x,pos.y+y)
+//     })
+//   }
+// }
+// window.addEventListener('mousemove', dragstart)
 
 EventsOn("realtime_profit",(data)=>{
   realtimeProfit.value=data

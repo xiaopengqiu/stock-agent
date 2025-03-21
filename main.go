@@ -17,7 +17,6 @@ import (
 	"go-stock/backend/db"
 	log "go-stock/backend/logger"
 	"go-stock/backend/models"
-
 	"os"
 	goruntime "runtime"
 	"runtime/debug"
@@ -126,7 +125,7 @@ func main() {
 	width, height, err = getScreenResolution()
 	if err != nil {
 		log.SugaredLogger.Error("get screen resolution error")
-		width = 1366
+		width = 1456
 		height = 768
 	}
 
@@ -135,7 +134,7 @@ func main() {
 		Title:                    "go-stock",
 		Width:                    width * 4 / 5,
 		Height:                   height * 4 / 5,
-		MinWidth:                 1024,
+		MinWidth:                 1456,
 		MinHeight:                768,
 		MaxWidth:                 width,
 		MaxHeight:                height,
@@ -156,6 +155,10 @@ func main() {
 		OnBeforeClose:            app.beforeClose,
 		OnShutdown:               app.shutdown,
 		WindowStartState:         options.Normal,
+		SingleInstanceLock: &options.SingleInstanceLock{
+			UniqueId:               "go-stock",
+			OnSecondInstanceLaunch: OnSecondInstanceLaunch,
+		},
 		Bind: []interface{}{
 			app,
 		},
