@@ -8,9 +8,6 @@
 ### 🌟公众号
 ![扫码_搜索联合传播样式-白色版.png](build/screenshot/%E6%89%AB%E7%A0%81_%E6%90%9C%E7%B4%A2%E8%81%94%E5%90%88%E4%BC%A0%E6%92%AD%E6%A0%B7%E5%BC%8F-%E7%99%BD%E8%89%B2%E7%89%88.png)
 
-### 🎁 设置教程
-- [AI大模型设置说明](https://mp.weixin.qq.com/s/O8-nRQC2JoUdqQ5jaMQHjA)
-
 ### 📈 交流群
 QQ交流群：[点击链接加入群聊【go-stock交流群】：491605333](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0YQ8qD3exahsD4YLNhzQTWe5ssstWC89&authKey=usOMMRFtIQDC%2FYcatHYapcxQbJ7PwXPHK9OypTXWzNjAq%2FRVvQu9bj2lRgb%2BSZ3p&noverify=0&group_code=491605333)
 
