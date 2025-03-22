@@ -119,25 +119,25 @@ func main() {
 	log.SugaredLogger.Info("version: " + Version)
 	log.SugaredLogger.Info("commit: " + VersionCommit)
 	// Create application with options
-	var width, height int
-	var err error
-
-	width, height, err = getScreenResolution()
-	if err != nil {
-		log.SugaredLogger.Error("get screen resolution error")
-		width = 1456
-		height = 768
-	}
+	//var width, height int
+	//var err error
+	//
+	//width, height, err = getScreenResolution()
+	//if err != nil {
+	//	log.SugaredLogger.Error("get screen resolution error")
+	//	width = 1456
+	//	height = 768
+	//}
 
 	// Create application with options
-	err = wails.Run(&options.App{
-		Title:                    "go-stock",
-		Width:                    width * 4 / 5,
-		Height:                   height * 4 / 5,
-		MinWidth:                 1456,
-		MinHeight:                768,
-		MaxWidth:                 width,
-		MaxHeight:                height,
+	err := wails.Run(&options.App{
+		Title: "go-stock",
+		//Width:     width * 4 / 5,
+		//Height:    height * 4 / 5,
+		MinWidth:  1456,
+		MinHeight: 768,
+		//MaxWidth:                 width,
+		//MaxHeight:                height,
 		DisableResize:            false,
 		Fullscreen:               false,
 		Frameless:                true,

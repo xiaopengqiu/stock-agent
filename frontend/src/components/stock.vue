@@ -876,7 +876,7 @@ function share(code,name){
          </n-card >
       </n-gi>
     </n-grid>
-  <div style="position: fixed;bottom: 18px;right:2px;z-index: 10;width: 400px">
+  <div style="position: fixed;bottom: 18px;right:5px;z-index: 10;width: 400px">
 <!--    <n-card :bordered="false">-->
       <n-input-group >
 <!--        <n-button  type="error" @click="addBTN=!addBTN" > <n-icon :component="Search"/>&nbsp;<n-text  v-if="addBTN">隐藏</n-text></n-button>-->
@@ -891,7 +891,7 @@ function share(code,name){
         <n-button type="primary" @click="AddStock"  v-if="addBTN">
           <n-icon :component="Add"/> &nbsp;关注
         </n-button>
-        <n-button type="error" @click="SendDanmu" v-if="data.enableDanmu">
+        <n-button type="info" @click="SendDanmu" v-if="data.enableDanmu">
           <n-icon :component="ChatboxOutline"/> &nbsp;发送弹幕
         </n-button>
       </n-input-group>

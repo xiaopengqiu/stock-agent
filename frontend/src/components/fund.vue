@@ -229,7 +229,7 @@ function blinkBorder(findId){
     <n-image :src="data.fenshiURL"   />
   </n-modal>
 
-  <div style="position: fixed;bottom: 18px;right:2px;z-index: 10;width: 400px">
+  <div style="position: fixed;bottom: 18px;right:5px;z-index: 10;width: 400px">
     <n-input-group >
       <n-auto-complete  v-model:value="data.name"
                         :input-props="{
@@ -238,12 +238,14 @@ function blinkBorder(findId){
                         :options="options"
                         placeholder="基金名称/代码/弹幕"
                         clearable @update-value="getFundList" :on-select="onSelectFund"/>
-      <n-button type="primary" @click="AddFund">
-        <n-icon :component="Add"/> &nbsp;关注
-      </n-button>
-      <n-button type="error" @click="SendDanmu" v-if="data.enableDanmu">
-        <n-icon :component="ChatboxOutline"/> &nbsp;发送弹幕
-      </n-button>
+        <n-button   type="primary" @click="AddFund" >
+            <n-icon :component="Add"/>
+          关注
+        </n-button>
+        <n-button   type="info" @click="SendDanmu" v-if="data.enableDanmu" >
+            <n-icon :component="ChatboxOutline"/>
+          发送弹幕
+        </n-button>
     </n-input-group>
   </div>
 </template>
