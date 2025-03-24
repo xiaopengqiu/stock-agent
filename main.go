@@ -135,7 +135,7 @@ func main() {
 		//Width:     width * 4 / 5,
 		//Height:    height * 4 / 5,
 		MinWidth:  1456,
-		MinHeight: 768,
+		MinHeight: 800,
 		//MaxWidth:                 width,
 		//MaxHeight:                height,
 		DisableResize:            false,
