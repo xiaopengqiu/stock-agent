@@ -818,7 +818,7 @@ function share(code,name){
     <vue-danmaku v-model:danmus="danmus"  style="height:100px; width:100%;z-index: 9;position:absolute; top: 400px; pointer-events: none;" ></vue-danmaku>
   <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
     <n-gi :id="result['股票代码']+'_gi'"  v-for="result in sortedResults" style="margin-left: 2px;" >
-         <n-card  :id="result['股票代码']"  :data-code="result['股票代码']" :bordered="false" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
+         <n-card  :id="result['股票代码']"  :data-code="result['股票代码']" :bordered="true" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
            <n-grid :cols="1" :y-gap="6">
              <n-gi>
                <n-text :type="result.type" >

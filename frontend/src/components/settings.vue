@@ -1,6 +1,6 @@
 <script setup>
 
-import {onMounted, ref} from "vue";
+import {computed, onMounted, ref} from "vue";
 import {ExportConfig, GetConfig, SendDingDingMessageByType, UpdateConfig} from "../../wailsjs/go/main/App";
 import {useMessage} from "naive-ui";
 import {data} from "../../wailsjs/go/models";
@@ -36,6 +36,7 @@ const formValue = ref({
   enableDanmu:false,
   browserPath: '',
   enableNews:false,
+  darkTheme:true,
 })
 
 onMounted(()=>{
@@ -67,6 +68,7 @@ onMounted(()=>{
     formValue.value.enableDanmu = res.enableDanmu
     formValue.value.browserPath = res.browserPath
     formValue.value.enableNews = res.enableNews
+    formValue.value.darkTheme = res.darkTheme
 
     console.log(res)
   })
@@ -97,6 +99,7 @@ function saveConfig(){
     enableDanmu:formValue.value.enableDanmu,
     browserPath:formValue.value.browserPath,
     enableNews:formValue.value.enableNews,
+    darkTheme:formValue.value.darkTheme
   })
 
  //console.log("Settings",config)
@@ -170,6 +173,7 @@ function importConfig(){
       formValue.value.enableDanmu = config.enableDanmu
       formValue.value.browserPath = config.browserPath
       formValue.value.enableNews = config.enableNews
+      formValue.value.darkTheme = config.darkTheme
      // formRef.value.resetFields()
     };
     reader.readAsText(file);
@@ -196,12 +200,12 @@ window.onerror = function (event, source, lineno, colno, error) {
 
 <template>
   <n-flex justify="left" style="margin-top: 12px;padding-left: 12px">
-  <n-form ref="formRef"  :label-placement="'left'" :label-align="'left'">
-      <n-grid :cols="24" :x-gap="24" style="text-align: left">
+  <n-form ref="formRef"  :label-placement="'left'" :label-align="'left'" >
+      <n-grid :cols="24" :x-gap="24" style="text-align: left" >
         <n-gi :span="24">
-          <n-text type="default" style="font-size: 25px;font-weight: bold">基础设置</n-text>
+          <n-text type="primary" style="font-size: 25px;font-weight: bold">基础设置</n-text>
         </n-gi>
-        <n-form-item-gi  :span="10" label="Tushare api token：" path="tushareToken" >
+        <n-form-item-gi  :span="10" label="Tushare api token：" path="tushareToken"  >
           <n-input  type="text" placeholder="Tushare api token"  v-model:value="formValue.tushareToken" clearable />
         </n-form-item-gi>
         <n-form-item-gi  :span="4" label="启动时更新A股/指数信息：" path="updateBasicInfoOnStart" >
@@ -214,6 +218,9 @@ window.onerror = function (event, source, lineno, colno, error) {
             </template>
           </n-input-number>
         </n-form-item-gi>
+        <n-form-item-gi  :span="5" label="暗黑主题(重启生效)：" path="darkTheme" >
+          <n-switch v-model:value="formValue.darkTheme" />
+        </n-form-item-gi>
         <n-form-item-gi  :span="22" label="浏览器路径：" path="browserPath" >
           <n-input  type="text" placeholder="浏览器路径"  v-model:value="formValue.browserPath" clearable />
         </n-form-item-gi>
@@ -221,12 +228,12 @@ window.onerror = function (event, source, lineno, colno, error) {
 
         <n-grid :cols="24" :x-gap="24" style="text-align: left">
           <n-gi :span="24">
-            <n-text type="default" style="font-size: 25px;font-weight: bold">通知设置</n-text>
+            <n-text type="primary" style="font-size: 25px;font-weight: bold">通知设置</n-text>
           </n-gi>
           <n-form-item-gi  :span="6" label="是否启用钉钉推送：" path="dingPush.enable" >
             <n-switch v-model:value="formValue.dingPush.enable" />
           </n-form-item-gi>
-          <n-form-item-gi  :span="6" label="是否启用本地推送：" path="localPush.enable" >
+          <n-form-item-gi  :span="6" label="是否启用本地推送：" path="localPush.enable"  >
             <n-switch v-model:value="formValue.localPush.enable" />
           </n-form-item-gi>
           <n-form-item-gi  :span="5" label="弹幕功能：" path="enableDanmu" >
@@ -243,36 +250,36 @@ window.onerror = function (event, source, lineno, colno, error) {
 
     <n-grid :cols="24" :x-gap="24" style="text-align: left;">
       <n-gi :span="24">
-        <n-text type="default" style="font-size: 25px;font-weight: bold">OpenAI设置</n-text>
+        <n-text type="primary" style="font-size: 25px;font-weight: bold">OpenAI设置</n-text>
       </n-gi>
       <n-form-item-gi  :span="3" label="是否启用AI诊股：" path="openAI.enable" >
         <n-switch v-model:value="formValue.openAI.enable" />
       </n-form-item-gi>
-      <n-form-item-gi :span="9"  v-if="formValue.openAI.enable" label="openAI 接口地址：" path="openAI.baseUrl">
+      <n-form-item-gi :span="9"  v-if="formValue.openAI.enable" label="openAI 接口地址：" path="openAI.baseUrl" >
         <n-input  type="text"  placeholder="AI接口地址"  v-model:value="formValue.openAI.baseUrl" clearable />
       </n-form-item-gi>
-      <n-form-item-gi  :span="5" v-if="formValue.openAI.enable" label="AI Timeout(秒)：" title="AI请求超时时间(秒)"  path="openAI.timeout">
+      <n-form-item-gi  :span="5" v-if="formValue.openAI.enable" label="AI Timeout(秒)：" title="AI请求超时时间(秒)"  path="openAI.timeout" >
         <n-input-number min="60" step="1" placeholder="AI请求超时时间(秒)"  v-model:value="formValue.openAI.timeout" />
       </n-form-item-gi>
-      <n-form-item-gi  :span="5" v-if="formValue.openAI.enable" label="Crawler Timeout(秒)：" title="资讯采集超时时间(秒)" path="openAI.crawlTimeOut">
+      <n-form-item-gi  :span="5" v-if="formValue.openAI.enable" label="Crawler Timeout(秒)：" title="资讯采集超时时间(秒)" path="openAI.crawlTimeOut" >
         <n-input-number min="30" step="1" placeholder="资讯采集超时时间(秒)"  v-model:value="formValue.openAI.crawlTimeOut" />
       </n-form-item-gi>
-      <n-form-item-gi  :span="12" v-if="formValue.openAI.enable" label="openAI 令牌(apiKey)："  path="openAI.apiKey">
+      <n-form-item-gi  :span="12" v-if="formValue.openAI.enable" label="openAI 令牌(apiKey)："  path="openAI.apiKey" >
         <n-input  type="text" placeholder="apiKey"  v-model:value="formValue.openAI.apiKey" clearable />
       </n-form-item-gi>
-      <n-form-item-gi :span="10"  v-if="formValue.openAI.enable" label="AI模型名称：" path="openAI.model">
+      <n-form-item-gi :span="10"  v-if="formValue.openAI.enable" label="AI模型名称：" path="openAI.model" >
         <n-input  type="text" placeholder="AI模型名称"  v-model:value="formValue.openAI.model" clearable />
       </n-form-item-gi>
       <n-form-item-gi :span="12"  v-if="formValue.openAI.enable" label="openAI temperature：" path="openAI.temperature" >
         <n-input-number  placeholder="temperature"  v-model:value="formValue.openAI.temperature"/>
       </n-form-item-gi>
-      <n-form-item-gi :span="5"  v-if="formValue.openAI.enable" label="openAI maxTokens："  path="openAI.maxTokens">
+      <n-form-item-gi :span="5"  v-if="formValue.openAI.enable" label="openAI maxTokens："  path="openAI.maxTokens" >
         <n-input-number  placeholder="maxTokens"  v-model:value="formValue.openAI.maxTokens"/>
       </n-form-item-gi>
-      <n-form-item-gi :span="5"  v-if="formValue.openAI.enable" title="天数越多消耗tokens越多" label="日K线数据(天)："  path="openAI.maxTokens">
+      <n-form-item-gi :span="5"  v-if="formValue.openAI.enable" title="天数越多消耗tokens越多" label="日K线数据(天)："  path="openAI.maxTokens" >
         <n-input-number  min="30" step="1" max="365"  placeholder="日K线数据(天)" title="天数越多消耗tokens越多" v-model:value="formValue.openAI.kDays"/>
       </n-form-item-gi>
-      <n-form-item-gi :span="11"  v-if="formValue.openAI.enable" label="模型系统 Prompt："  path="openAI.prompt">
+      <n-form-item-gi :span="11"  v-if="formValue.openAI.enable" label="模型系统 Prompt："  path="openAI.prompt" >
         <n-input v-model:value="formValue.openAI.prompt"
             type="textarea"
             :show-count="true"
@@ -283,7 +290,7 @@ window.onerror = function (event, source, lineno, colno, error) {
             }"
         />
       </n-form-item-gi>
-      <n-form-item-gi :span="11"  v-if="formValue.openAI.enable" label="模型用户 Prompt："   path="openAI.questionTemplate">
+      <n-form-item-gi :span="11"  v-if="formValue.openAI.enable" label="模型用户 Prompt："   path="openAI.questionTemplate" >
         <n-input v-model:value="formValue.openAI.questionTemplate"
             type="textarea"
             :show-count="true"

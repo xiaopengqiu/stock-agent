@@ -129,13 +129,19 @@ func main() {
 	//	height = 768
 	//}
 
+	darkTheme := data.NewSettingsApi(&data.Settings{}).GetConfig().DarkTheme
+	backgroundColour := &options.RGBA{R: 255, G: 255, B: 255, A: 1}
+	if darkTheme {
+		backgroundColour = &options.RGBA{R: 27, G: 38, B: 54, A: 1}
+	}
+
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title: "go-stock",
 		//Width:     width * 4 / 5,
 		//Height:    height * 4 / 5,
 		MinWidth:  1456,
-		MinHeight: 800,
+		MinHeight: 820,
 		//MaxWidth:                 width,
 		//MaxHeight:                height,
 		DisableResize:            false,
@@ -144,7 +150,7 @@ func main() {
 		StartHidden:              false,
 		HideWindowOnClose:        false,
 		EnableDefaultContextMenu: true,
-		BackgroundColour:         &options.RGBA{R: 255, G: 255, B: 255, A: 255},
+		BackgroundColour:         backgroundColour,
 		Assets:                   assets,
 		Menu:                     AppMenu,
 		Logger:                   nil,

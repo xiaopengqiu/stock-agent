@@ -8,7 +8,7 @@ import fundView from "../components/fund.vue";
 const routes = [
     { path: '/', component: stockView,name: 'stock' },
     { path: '/fund', component: fundView,name: 'fund' },
-    { path: '/settings/:id', component: settingsView,name: 'settings' },
+    { path: '/settings', component: settingsView,name: 'settings' },
     { path: '/about', component: about,name: 'about' },
 ]
 

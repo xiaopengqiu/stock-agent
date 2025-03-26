@@ -20,9 +20,10 @@ import {
 import {GetConfig} from "../wailsjs/go/main/App";
 const enableNews= ref(false)
 const contentStyle =  ref("")
+const enableDarkTheme = ref(true)
 const content = ref('数据来源于网络,仅供参考;投资有风险,入市需谨慎')
 const isFullscreen = ref(false)
-const activeKey = ref('stock')
+const activeKey = ref('')
 const containerRef= ref({})
 const realtimeProfit= ref(0)
 const telegraph= ref([])
@@ -35,7 +36,6 @@ const menuOptions = ref([
               to: {
                 name: 'stock',
                 params: {
-                  id: 'zh-CN'
                 },
               }
             },
@@ -60,7 +60,6 @@ const menuOptions = ref([
               to: {
                 name: 'fund',
                 params: {
-                  id: 'zh-CN'
                 },
               }
             },
@@ -85,7 +84,6 @@ const menuOptions = ref([
               to: {
                 name: 'settings',
                 params: {
-                  id: 'zh-CN'
                 }
               }
             },
@@ -102,7 +100,6 @@ const menuOptions = ref([
               to: {
                 name: 'about',
                 params: {
-                  id: 'zh-CN'
                 }
               }
             },
@@ -199,23 +196,35 @@ window.onerror = function (msg, source, lineno, colno, error) {
 };
 
 onBeforeMount(()=>{
+  // GetConfig().then((res)=>{
+  //   console.log(res)
+  //   if(res.darkTheme){
+  //     enableDarkTheme.value=darkTheme
+  //   }
+  //   if(res.enableNews){
+  //     enableNews.value=true
+  //   }
+  // })
+})
+
+onMounted(()=>{
+  contentStyle.value="max-height: calc(90vh);overflow: hidden"
   GetConfig().then((res)=>{
     console.log(res)
+    if(res.darkTheme){
+      enableDarkTheme.value=darkTheme
+    }else{
+      enableDarkTheme.value=null
+    }
     if(res.enableNews){
       enableNews.value=true
     }
   })
 })
 
-onMounted(()=>{
-  contentStyle.value="max-height: calc(90vh);overflow: hidden"
-})
-
 </script>
 <template>
-
-
-  <n-config-provider :theme="darkTheme" ref="containerRef" >
+  <n-config-provider  ref="containerRef" :theme="enableDarkTheme" >
     <n-message-provider >
       <n-notification-provider>
       <n-modal-provider>

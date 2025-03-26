@@ -172,6 +172,7 @@ export namespace data {
 	    enableDanmu: boolean;
 	    browserPath: string;
 	    enableNews: boolean;
+	    darkTheme: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -204,6 +205,7 @@ export namespace data {
 	        this.enableDanmu = source["enableDanmu"];
 	        this.browserPath = source["browserPath"];
 	        this.enableNews = source["enableNews"];
+	        this.darkTheme = source["darkTheme"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

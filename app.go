@@ -319,11 +319,11 @@ func MonitorStockPrices(a *App) {
 		}
 
 		total += stockInfo.ProfitAmountToday
-		//price, _ := convertor.ToFloat(stockInfo.Price)
-		//if stockInfo.PrePrice != price {
-		//logger.SugaredLogger.Infof("-----------------------股票代码: %s, 股票名称: %s, 股票价格: %s,盘前盘后:%s", stockInfo.Code, stockInfo.Name, stockInfo.Price, stockInfo.BA)
-		go runtime.EventsEmit(a.ctx, "stock_price", stockInfo)
-		//}
+		price, _ := convertor.ToFloat(stockInfo.Price)
+		if stockInfo.PrePrice != price {
+			logger.SugaredLogger.Infof("-----------------------股票代码: %s, 股票名称: %s, 股票价格: %s,盘前盘后:%s", stockInfo.Code, stockInfo.Name, stockInfo.Price, stockInfo.BA)
+			go runtime.EventsEmit(a.ctx, "stock_price", stockInfo)
+		}
 	}
 	if total != 0 {
 		title := "go-stock " + time.Now().Format(time.DateTime) + fmt.Sprintf("  %.2f¥", total)
