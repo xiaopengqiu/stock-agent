@@ -180,7 +180,13 @@ function blinkBorder(findId){
 </script>
 
 <template>
-  <vue-danmaku v-model:danmus="danmus"  style="height:100px; width:100%;z-index: 9;position:absolute; top: 400px; pointer-events: none;" ></vue-danmaku>
+  <vue-danmaku v-model:danmus="danmus" useSlot style="height:100px; width:100%;z-index: 9;position:absolute; top: 400px; pointer-events: none;" >
+    <template v-slot:dm="{ index, danmu }">
+      <n-gradient-text type="info">
+        <n-icon :component="ChatboxOutline"/>{{ danmu }}
+      </n-gradient-text>
+    </template>
+  </vue-danmaku>
   <n-flex justify="start" >
     <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
       <n-gi :id="info.code+'_gi'" v-for="info in  followList" style="margin-left: 2px" >

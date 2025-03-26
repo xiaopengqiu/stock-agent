@@ -97,7 +97,17 @@ const data = reactive({
   openAiEnable: false,
   loading: true,
   enableDanmu: false,
+  darkTheme:false,
 })
+
+const theme=computed(() => {
+  return data.darkTheme ? 'dark' : 'light'
+})
+
+const danmakuColor = computed(()=> {
+  return data.darkTheme ? 'color:#fff' : 'color:#000'
+})
+
 const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
 
 const sortedResults = computed(() => {
@@ -140,6 +150,9 @@ onBeforeMount(()=>{
     }
     if (result.enableDanmu) {
       data.enableDanmu = true
+    }
+    if (result.darkTheme) {
+      data.darkTheme = true
     }
   })
 })
@@ -815,7 +828,13 @@ function share(code,name){
 </script>
 
 <template>
-    <vue-danmaku v-model:danmus="danmus"  style="height:100px; width:100%;z-index: 9;position:absolute; top: 400px; pointer-events: none;" ></vue-danmaku>
+    <vue-danmaku v-model:danmus="danmus"  useSlot  style="height:100px; width:100%;z-index: 9;position:absolute; top: 400px; pointer-events: none;" >
+      <template v-slot:dm="{ index, danmu }">
+        <n-gradient-text type="info">
+          <n-icon :component="ChatboxOutline"/>{{ danmu }}
+        </n-gradient-text>
+      </template>
+    </vue-danmaku>
   <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
     <n-gi :id="result['股票代码']+'_gi'"  v-for="result in sortedResults" style="margin-left: 2px;" >
          <n-card  :id="result['股票代码']"  :data-code="result['股票代码']" :bordered="true" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
@@ -952,12 +971,12 @@ function share(code,name){
 
   <n-modal transform-origin="center" v-model:show="modalShow4"  preset="card" style="width: 800px;" :title="'['+data.name+']AI分析结果'" >
     <n-spin size="small" :show="data.loading">
-      <MdEditor  v-if="enableEditor"  :toolbars="toolbars" ref="mdEditorRef" style="height: 440px;text-align: left" :modelValue="data.airesult" :theme="'dark'">
+      <MdEditor  v-if="enableEditor"  :toolbars="toolbars" ref="mdEditorRef" style="height: 440px;text-align: left" :modelValue="data.airesult" :theme="theme">
         <template #defToolbars>
           <ExportPDF :file-name="data.name+'['+data.code+']AI分析报告'" style="text-align: left" :modelValue="data.airesult" @onProgress="handleProgress" />
         </template>
       </MdEditor >
-      <MdPreview v-if="!enableEditor"  ref="mdPreviewRef"  style="height: 440px;text-align: left" :modelValue="data.airesult" :theme="'dark'"/>
+      <MdPreview v-if="!enableEditor"  ref="mdPreviewRef"  style="height: 440px;text-align: left" :modelValue="data.airesult" :theme="theme"/>
     </n-spin>
     <template #footer>
       <n-flex justify="space-between" ref="tipsRef">
