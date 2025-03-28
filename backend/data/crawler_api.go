@@ -68,6 +68,7 @@ func (c *CrawlerApi) GetHtml(url, waitVisible string, headless bool) (string, bo
 		defer pcancel()
 		ctx, cancel := chromedp.NewContext(pctx, chromedp.WithLogf(logger.SugaredLogger.Infof))
 		defer cancel()
+		defer chromedp.Cancel(ctx)
 		err := chromedp.Run(ctx, chromedp.Navigate(url),
 			chromedp.WaitVisible(waitVisible, chromedp.ByQuery), // 确保  元素可见
 			chromedp.WaitReady(waitVisible, chromedp.ByQuery),   // 确保  元素准备好
@@ -80,6 +81,7 @@ func (c *CrawlerApi) GetHtml(url, waitVisible string, headless bool) (string, bo
 	} else {
 		ctx, cancel := chromedp.NewContext(c.crawlerCtx, chromedp.WithLogf(logger.SugaredLogger.Infof))
 		defer cancel()
+		defer chromedp.Cancel(ctx)
 		err := chromedp.Run(ctx, chromedp.Navigate(url), chromedp.WaitVisible("body"), chromedp.InnerHTML("body", &htmlContent))
 		if err != nil {
 			logger.SugaredLogger.Error(err.Error())
@@ -197,6 +199,7 @@ func (c *CrawlerApi) GetHtmlWithActions(actions *[]chromedp.Action, headless boo
 		defer pcancel()
 		ctx, cancel := chromedp.NewContext(pctx, chromedp.WithLogf(logger.SugaredLogger.Infof))
 		defer cancel()
+		defer chromedp.Cancel(ctx)
 
 		err := chromedp.Run(ctx, *actions...)
 		if err != nil {
@@ -206,6 +209,7 @@ func (c *CrawlerApi) GetHtmlWithActions(actions *[]chromedp.Action, headless boo
 	} else {
 		ctx, cancel := chromedp.NewContext(c.crawlerCtx, chromedp.WithLogf(logger.SugaredLogger.Infof))
 		defer cancel()
+		defer chromedp.Cancel(ctx)
 
 		err := chromedp.Run(ctx, *actions...)
 		if err != nil {
