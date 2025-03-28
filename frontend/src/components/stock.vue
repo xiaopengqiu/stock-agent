@@ -15,7 +15,7 @@ import {
   SetCostPriceAndVolume,
   SetStockSort,
   UnFollow,
-  ShareAnalysis
+  ShareAnalysis, SaveAsMarkdown
 } from '../../wailsjs/go/main/App'
 import {
   NAvatar,
@@ -752,7 +752,12 @@ async function copyToClipboard() {
     message.error('复制失败: ' + err);
   }
 }
-function saveAsMarkdown() {
+function saveAsMarkdown(){
+  SaveAsMarkdown(data.code,data.name).then(result => {
+    message.success(result)
+  })
+}
+function saveAsMarkdown_old() {
   const blob = new Blob([data.airesult], { type: 'text/markdown;charset=utf-8' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);

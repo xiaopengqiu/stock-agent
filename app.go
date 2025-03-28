@@ -780,7 +780,28 @@ func (a *App) FollowFund(fundCode string) string {
 func (a *App) UnFollowFund(fundCode string) string {
 	return data.NewFundApi().UnFollowFund(fundCode)
 }
-
+func (a *App) SaveAsMarkdown(stockCode, stockName string) string {
+	res := data.NewDeepSeekOpenAi(a.ctx).GetAIResponseResult(stockCode)
+	if res != nil && len(res.Content) > 100 {
+		analysisTime := res.CreatedAt.Format("2006-01-02_15_04_05")
+		file, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+			Title:           "保存为Markdown",
+			DefaultFilename: fmt.Sprintf("%s[%s]AI分析结果_%s.md", stockName, stockCode, analysisTime),
+			Filters: []runtime.FileFilter{
+				{
+					DisplayName: "Markdown",
+					Pattern:     "*.md;*.markdown",
+				},
+			},
+		})
+		if err != nil {
+			return err.Error()
+		}
+		err = os.WriteFile(file, []byte(res.Content), 0644)
+		return "已保存至：" + file
+	}
+	return "分析结果异常,无法保存。"
+}
 func OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceData) {
 	notification := toast.Notification{
 		AppID:    "go-stock",

@@ -58,6 +58,10 @@ export function SaveAIResponseResult(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['SaveAIResponseResult'](arg1, arg2, arg3, arg4, arg5);
 }
 
+export function SaveAsMarkdown(arg1, arg2) {
+  return window['go']['main']['App']['SaveAsMarkdown'](arg1, arg2);
+}
+
 export function SendDingDingMessage(arg1, arg2) {
   return window['go']['main']['App']['SendDingDingMessage'](arg1, arg2);
 }

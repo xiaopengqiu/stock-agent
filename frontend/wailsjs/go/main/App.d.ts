@@ -31,6 +31,8 @@ export function NewChatStream(arg1:string,arg2:string,arg3:string):Promise<void>
 
 export function SaveAIResponseResult(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<void>;
 
+export function SaveAsMarkdown(arg1:string,arg2:string):Promise<string>;
+
 export function SendDingDingMessage(arg1:string,arg2:string):Promise<string>;
 
 export function SendDingDingMessageByType(arg1:string,arg2:string,arg3:number):Promise<string>;
