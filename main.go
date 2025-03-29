@@ -65,6 +65,7 @@ func main() {
 	db.Dao.AutoMigrate(&models.StockInfoUS{})
 	db.Dao.AutoMigrate(&data.FollowedFund{})
 	db.Dao.AutoMigrate(&data.FundBasic{})
+	db.Dao.AutoMigrate(&models.PromptTemplate{})
 
 	if stocksBin != nil && len(stocksBin) > 0 {
 		go initStockData()
@@ -141,7 +142,7 @@ func main() {
 		//Width:     width * 4 / 5,
 		//Height:    height * 4 / 5,
 		MinWidth:  1456,
-		MinHeight: 820,
+		MinHeight: 900,
 		//MaxWidth:                 width,
 		//MaxHeight:                height,
 		DisableResize:            false,

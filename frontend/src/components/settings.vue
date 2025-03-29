@@ -1,9 +1,16 @@
 <script setup>
 
 import {computed, onMounted, ref} from "vue";
-import {ExportConfig, GetConfig, SendDingDingMessageByType, UpdateConfig} from "../../wailsjs/go/main/App";
+import {
+  AddPrompt, DelPrompt,
+  ExportConfig,
+  GetConfig,
+  GetPromptTemplates,
+  SendDingDingMessageByType,
+  UpdateConfig
+} from "../../wailsjs/go/main/App";
 import {useMessage} from "naive-ui";
-import {data} from "../../wailsjs/go/models";
+import {data, models} from "../../wailsjs/go/models";
 import {EventsEmit} from "../../wailsjs/runtime";
 const message = useMessage()
 
@@ -38,7 +45,7 @@ const formValue = ref({
   enableNews:false,
   darkTheme:true,
 })
-
+const promptTemplates=ref([])
 onMounted(()=>{
   GetConfig().then(res=>{
     formValue.value.ID = res.ID
@@ -73,6 +80,11 @@ onMounted(()=>{
     console.log(res)
   })
   //message.info("加载完成")
+
+  GetPromptTemplates("","").then(res=>{
+    console.log(res)
+    promptTemplates.value=res
+  })
 })
 
 
@@ -196,6 +208,49 @@ window.onerror = function (event, source, lineno, colno, error) {
   //message.error("发生错误:"+event)
   return true;
 };
+
+const showManagePromptsModal=ref(false)
+const promptTypeOptions=[
+  {label:"模型系统Prompt",value:'模型系统Prompt'},
+  {label:"模型用户Prompt",value:'模型用户Prompt'},]
+const formPromptRef=ref(null)
+const formPrompt=ref({
+  ID:0,
+  Name:'',
+  Content:'',
+  Type:'',
+})
+function managePrompts(){
+  formPrompt.value.ID=0
+  showManagePromptsModal.value=true
+}
+function savePrompt(){
+  AddPrompt(formPrompt.value).then(res=>{
+    message.success(res)
+    GetPromptTemplates("","").then(res=>{
+      console.log(res)
+      promptTemplates.value=res
+    })
+    showManagePromptsModal.value=false
+  })
+}
+function editPrompt(prompt){
+  console.log(prompt)
+  formPrompt.value.ID=prompt.ID
+  formPrompt.value.Name=prompt.name
+  formPrompt.value.Content=prompt.content
+  formPrompt.value.Type=prompt.type
+  showManagePromptsModal.value=true
+}
+function deletePrompt(ID){
+  DelPrompt(ID).then(res=>{
+    message.success(res)
+    GetPromptTemplates("","").then(res=>{
+      console.log(res)
+      promptTemplates.value=res
+    })
+  })
+}
 </script>
 
 <template>
@@ -304,6 +359,9 @@ window.onerror = function (event, source, lineno, colno, error) {
     </n-grid>
     <n-gi :span="24">
         <n-space justify="center">
+          <n-button  type="warning" @click="managePrompts">
+            添加提示词模板
+          </n-button>
         <n-button  type="primary" @click="saveConfig">
           保存
         </n-button>
@@ -316,7 +374,52 @@ window.onerror = function (event, source, lineno, colno, error) {
         </n-space>
     </n-gi>
   </n-form>
+    <n-gi :span="24"  v-if="promptTemplates.length>0"  v-for="prompt in promptTemplates" >
+      <n-flex justify="start">
+        <n-tag closable  @close="deletePrompt(prompt.ID)" @click="editPrompt(prompt)" :title="prompt.content" :type="prompt.type==='模型系统Prompt'?'success':'info'" :bordered="false"> {{prompt.name}} </n-tag>
+      </n-flex>
+    </n-gi>
   </n-flex>
+  <n-modal v-model:show="showManagePromptsModal" closable  :mask-closable="false">
+    <n-card
+        style="width: 800px;height: 600px;text-align: left"
+        :bordered="false"
+        :title="(formPrompt.ID>0?'修改':'添加')+'提示词'"
+        size="huge"
+        role="dialog"
+        aria-modal="true"
+    >
+      <n-form ref="formPromptRef"  :label-placement="'left'" :label-align="'left'" >
+        <n-form-item  label="名称">
+          <n-input v-model:value="formPrompt.Name" placeholder="请输入提示词名称" />
+        </n-form-item>
+        <n-form-item  label="类型">
+          <n-select v-model:value="formPrompt.Type" :options="promptTypeOptions" placeholder="请选择提示词类型" />
+        </n-form-item>
+        <n-form-item  label="内容">
+          <n-input v-model:value="formPrompt.Content"
+                   type="textarea"
+                   :show-count="true"
+                   placeholder="请输入prompt"
+                   :autosize="{
+              minRows: 12,
+              maxRows: 12,
+            }"
+          />
+        </n-form-item>
+      </n-form>
+      <template #footer>
+        <n-flex justify="end">
+          <n-button type="primary" @click="savePrompt">
+            保存
+          </n-button>
+          <n-button type="warning" @click="showManagePromptsModal=false">
+            取消
+          </n-button>
+        </n-flex>
+      </template>
+    </n-card>
+  </n-modal>
 </template>
 
 <style scoped>

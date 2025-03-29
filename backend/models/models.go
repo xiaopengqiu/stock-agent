@@ -195,3 +195,23 @@ type Resp struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
+
+type PromptTemplate struct {
+	ID        int `gorm:"primarykey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string `json:"name"`
+	Content   string `json:"content"`
+	Type      string `json:"type"`
+}
+
+func (p PromptTemplate) TableName() string {
+	return "prompt_templates"
+}
+
+type Prompt struct {
+	ID      int    `json:"ID"`
+	Name    string `json:"name"`
+	Content string `json:"content"`
+	Type    string `json:"type"`
+}

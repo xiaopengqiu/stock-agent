@@ -494,6 +494,24 @@ export namespace models {
 		    return a;
 		}
 	}
+	export class Prompt {
+	    ID: number;
+	    name: string;
+	    content: string;
+	    type: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Prompt(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ID = source["ID"];
+	        this.name = source["name"];
+	        this.content = source["content"];
+	        this.type = source["type"];
+	    }
+	}
 	export class VersionInfo {
 	    ID: number;
 	    // Go type: time

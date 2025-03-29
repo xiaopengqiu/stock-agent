@@ -96,7 +96,7 @@ type AiResponse struct {
 	SystemFingerprint string `json:"system_fingerprint"`
 }
 
-func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[string]any {
+func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId *int) <-chan map[string]any {
 	ch := make(chan map[string]any, 512)
 
 	defer func() {
@@ -113,12 +113,25 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 			}
 		}()
 		defer close(ch)
+
+		logger.SugaredLogger.Errorf("NewChatStream stock:%s stockCode:%s,sysPromptId:%d", stock, stockCode, *sysPromptId)
+
+		sysPrompt := ""
+		if sysPromptId == nil || *sysPromptId == 0 {
+			sysPrompt = o.Prompt
+		} else {
+			sysPrompt = NewPromptTemplateApi().GetPromptTemplateByID(*sysPromptId)
+		}
+		if sysPrompt == "" {
+			sysPrompt = o.Prompt
+		}
+
 		msg := []map[string]interface{}{
 			{
 				"role": "system",
 				//"content": "作为一位专业的A股市场分析师和投资顾问,请你根据以下信息提供详细的技术分析和投资策略建议:",
 				//"content": "【角色设定】\n你是一位拥有20年实战经验的顶级股票分析师，精通技术分析、基本面分析、市场心理学和量化交易。擅长发现成长股、捕捉行业轮动机会，在牛熊市中都能保持稳定收益。你的风格是价值投资与技术择时相结合，注重风险控制。\n\n【核心功能】\n\n市场分析维度：\n\n宏观经济（GDP/CPI/货币政策）\n\n行业景气度（产业链/政策红利/技术革新）\n\n个股三维诊断：\n\n基本面：PE/PB/ROE/现金流/护城河\n\n技术面：K线形态/均线系统/量价关系/指标背离\n\n资金面：主力动向/北向资金/融资余额/大宗交易\n\n智能策略库：\n√ 趋势跟踪策略（鳄鱼线+ADX）\n√ 波段交易策略（斐波那契回撤+RSI）\n√ 事件驱动策略（财报/并购/政策）\n√ 量化对冲策略（α/β分离）\n\n风险管理体系：\n▶ 动态止损：ATR波动止损法\n▶ 仓位控制：凯利公式优化\n▶ 组合对冲：跨市场/跨品种对冲\n\n【工作流程】\n\n接收用户指令（行业/市值/风险偏好）\n\n调用多因子选股模型初筛\n\n人工智慧叠加分析：\n\n自然语言处理解读年报管理层讨论\n\n卷积神经网络识别K线形态\n\n知识图谱分析产业链关联\n\n生成投资建议（附压力测试结果）\n\n【输出要求】\n★ 结构化呈现：\n① 核心逻辑（3点关键驱动力）\n② 买卖区间（理想建仓/加仓/止盈价位）\n③ 风险警示（最大回撤概率）\n④ 替代方案（同类备选标的）\n\n【注意事项】\n※ 严格遵守监管要求，不做收益承诺\n※ 区分投资建议与市场观点\n※ 重要数据标注来源及更新时间\n※ 根据用户认知水平调整专业术语密度\n\n【教育指导】\n当用户提问时，采用苏格拉底式追问：\n\"您更关注短期事件驱动还是长期价值发现？\"\n\"当前仓位是否超过总资产的30%？\"\n\"是否了解科创板与主板的交易规则差异？\"\n\n示例输出格式：\n📈 标的名称：XXXXXX\n⚖️ 多空信号：金叉确认/顶背离预警\n🎯 关键价位：支撑位XX.XX/压力位XX.XX\n📊 建议仓位：核心仓位X%+卫星仓位X%\n⏳ 持有周期：短线（1-3周）/中线（季度轮动）\n🔍 跟踪要素：重点关注Q2毛利率变化及股东减持进展",
-				"content": o.Prompt,
+				"content": sysPrompt,
 			},
 		}
 
@@ -142,7 +155,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string) <-chan map[
 		}
 
 		logger.SugaredLogger.Infof("NewChatStream stock:%s stockCode:%s", stock, stockCode)
-		logger.SugaredLogger.Infof("Prompt：%s", o.Prompt)
+		logger.SugaredLogger.Infof("Prompt：%s", sysPrompt)
 		logger.SugaredLogger.Infof("User Prompt config:%v", o.QuestionTemplate)
 		logger.SugaredLogger.Infof("User question:%s", userQuestion)
 		logger.SugaredLogger.Infof("final question:%s", question)

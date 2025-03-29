@@ -564,8 +564,8 @@ func (a *App) SendDingDingMessageByType(message string, stockCode string, msgTyp
 	return data.NewDingDingAPI().SendDingDingMessage(message)
 }
 
-func (a *App) NewChatStream(stock, stockCode, question string) {
-	msgs := data.NewDeepSeekOpenAi(a.ctx).NewChatStream(stock, stockCode, question)
+func (a *App) NewChatStream(stock, stockCode, question string, sysPromptId *int) {
+	msgs := data.NewDeepSeekOpenAi(a.ctx).NewChatStream(stock, stockCode, question, sysPromptId)
 	for msg := range msgs {
 		runtime.EventsEmit(a.ctx, "newChatStream", msg)
 	}
@@ -802,6 +802,23 @@ func (a *App) SaveAsMarkdown(stockCode, stockName string) string {
 	}
 	return "分析结果异常,无法保存。"
 }
+
+func (a *App) GetPromptTemplates(name, promptType string) *[]models.PromptTemplate {
+	return data.NewPromptTemplateApi().GetPromptTemplates(name, promptType)
+}
+func (a *App) AddPrompt(prompt models.Prompt) string {
+	promptTemplate := models.PromptTemplate{
+		ID:      prompt.ID,
+		Content: prompt.Content,
+		Name:    prompt.Name,
+		Type:    prompt.Type,
+	}
+	return data.NewPromptTemplateApi().AddPrompt(promptTemplate)
+}
+func (a *App) DelPrompt(id uint) string {
+	return data.NewPromptTemplateApi().DelPrompt(id)
+}
+
 func OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceData) {
 	notification := toast.Notification{
 		AppID:    "go-stock",

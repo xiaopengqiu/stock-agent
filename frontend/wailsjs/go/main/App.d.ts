@@ -3,7 +3,11 @@
 import {models} from '../models';
 import {data} from '../models';
 
+export function AddPrompt(arg1:models.Prompt):Promise<string>;
+
 export function CheckUpdate():Promise<void>;
+
+export function DelPrompt(arg1:number):Promise<string>;
 
 export function ExportConfig():Promise<string>;
 
@@ -19,6 +23,8 @@ export function GetFollowList():Promise<any>;
 
 export function GetFollowedFund():Promise<Array<data.FollowedFund>>;
 
+export function GetPromptTemplates(arg1:string,arg2:string):Promise<any>;
+
 export function GetStockList(arg1:string):Promise<Array<data.StockBasic>>;
 
 export function GetVersionInfo():Promise<models.VersionInfo>;
@@ -27,7 +33,7 @@ export function GetfundList(arg1:string):Promise<Array<data.FundBasic>>;
 
 export function Greet(arg1:string):Promise<data.StockInfo>;
 
-export function NewChatStream(arg1:string,arg2:string,arg3:string):Promise<void>;
+export function NewChatStream(arg1:string,arg2:string,arg3:string,arg4:any):Promise<void>;
 
 export function SaveAIResponseResult(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<void>;
 

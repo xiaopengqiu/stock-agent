@@ -15,7 +15,7 @@ import {
   SetCostPriceAndVolume,
   SetStockSort,
   UnFollow,
-  ShareAnalysis, SaveAsMarkdown
+  ShareAnalysis, SaveAsMarkdown, GetPromptTemplates
 } from '../../wailsjs/go/main/App'
 import {
   NAvatar,
@@ -82,11 +82,14 @@ const formModel = ref({
   alarmPrice:0,
   sort:999,
 })
-
+const promptTemplates=ref([])
+const sysPromptOptions=ref([])
+const userPromptOptions=ref([])
 const data = reactive({
   modelName:"",
   chatId: "",
   question:"",
+  sysPromptId:null,
   name: "",
   code: "",
   fenshiURL:"",
@@ -155,6 +158,16 @@ onBeforeMount(()=>{
       data.darkTheme = true
     }
   })
+  GetPromptTemplates("","").then(res=>{
+    promptTemplates.value=res
+
+    sysPromptOptions.value=promptTemplates.value.filter(item => item.type === '模型系统Prompt')
+    userPromptOptions.value=promptTemplates.value.filter(item => item.type === '模型用户Prompt')
+
+    console.log("userPromptOptions",userPromptOptions.value)
+    console.log("sysPromptOptions",sysPromptOptions.value)
+  })
+
 })
 
 onMounted(() => {
@@ -649,7 +662,8 @@ function aiReCheckStock(stock,stockCode) {
   })
   //
 
-  NewChatStream(stock,stockCode,data.question)
+  //message.info("sysPromptId:"+data.sysPromptId)
+  NewChatStream(stock,stockCode,data.question,data.sysPromptId)
 }
 function aiCheckStock(stock,stockCode){
   GetAIResponseResult(stockCode).then(result => {
@@ -682,7 +696,7 @@ function aiCheckStock(stock,stockCode){
       message.loading("ai检测中...",{
         duration: 0,
       })
-      NewChatStream(stock,stockCode)
+      NewChatStream(stock,stockCode,"",data.sysPromptId)
     }
   })
 }
@@ -993,6 +1007,11 @@ function share(code,name){
       </n-flex>
     </template>
     <template #action>
+
+      <n-flex justify="space-between" style="margin-bottom: 10px">
+        <n-select style="width: 49%" v-model:value="data.sysPromptId" label-field="name" value-field="ID" :options="sysPromptOptions" placeholder="请选择系统提示词" />
+        <n-select style="width: 49%" v-model:value="data.question" label-field="name" value-field="content" :options="userPromptOptions" placeholder="请选择用户提示词" />
+      </n-flex>
       <n-flex justify="right">
         <n-input v-model:value="data.question" style="text-align: left"  clearable
                  type="textarea"
