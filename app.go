@@ -30,9 +30,10 @@ import (
 
 // App struct
 type App struct {
-	ctx   context.Context
-	cache *freecache.Cache
-	cron  *cron.Cron
+	ctx        context.Context
+	cache      *freecache.Cache
+	cron       *cron.Cron
+	cronEntrys map[string]cron.EntryID
 }
 
 // NewApp creates a new App application struct
@@ -42,8 +43,9 @@ func NewApp() *App {
 	c := cron.New(cron.WithSeconds())
 	c.Start()
 	return &App{
-		cache: cache,
-		cron:  c,
+		cache:      cache,
+		cron:       c,
+		cronEntrys: make(map[string]cron.EntryID),
 	}
 }
 
@@ -172,33 +174,43 @@ func (a *App) domReady(ctx context.Context) {
 		if follow.Cron == "" {
 			continue
 		}
-		logger.SugaredLogger.Errorf("添加自动分析任务:%s cron=%s", follow.Name, follow.Cron)
-		a.cron.AddFunc(follow.Cron, func() {
-			go runtime.EventsEmit(a.ctx, "warnMsg", "开始自动分析"+follow.Name+"_"+follow.StockCode)
-			ai := data.NewDeepSeekOpenAi(a.ctx)
-			msgs := ai.NewChatStream(follow.Name, follow.StockCode, "", nil)
-			var res strings.Builder
-
-			chatId := ""
-			question := ""
-			for msg := range msgs {
-				if msg["extraContent"] != nil {
-					res.WriteString(msg["extraContent"].(string) + "\n")
-				}
-				if msg["content"] != nil {
-					res.WriteString(msg["content"].(string))
-				}
-				if msg["chatId"] != nil {
-					chatId = msg["chatId"].(string)
-				}
-				if msg["question"] != nil {
-					question = msg["question"].(string)
-				}
-			}
-			data.NewDeepSeekOpenAi(a.ctx).SaveAIResponseResult(follow.StockCode, follow.Name, res.String(), chatId, question)
-		})
+		entryID, err := a.cron.AddFunc(follow.Cron, a.AddCronTask(follow))
+		logger.SugaredLogger.Errorf("添加自动分析任务:%s cron=%s entryID:%v", follow.Name, follow.Cron, entryID)
+		a.cronEntrys[follow.StockCode] = entryID
+		if err != nil {
+			return
+		}
 	}
 
+}
+
+func (a *App) AddCronTask(follow data.FollowedStock) func() {
+	return func() {
+		go runtime.EventsEmit(a.ctx, "warnMsg", "开始自动分析"+follow.Name+"_"+follow.StockCode)
+		ai := data.NewDeepSeekOpenAi(a.ctx)
+		msgs := ai.NewChatStream(follow.Name, follow.StockCode, "", nil)
+		var res strings.Builder
+
+		chatId := ""
+		question := ""
+		for msg := range msgs {
+			if msg["extraContent"] != nil {
+				res.WriteString(msg["extraContent"].(string) + "\n")
+			}
+			if msg["content"] != nil {
+				res.WriteString(msg["content"].(string))
+			}
+			if msg["chatId"] != nil {
+				chatId = msg["chatId"].(string)
+			}
+			if msg["question"] != nil {
+				question = msg["question"].(string)
+			}
+		}
+		data.NewDeepSeekOpenAi(a.ctx).SaveAIResponseResult(follow.StockCode, follow.Name, res.String(), chatId, question)
+		go runtime.EventsEmit(a.ctx, "warnMsg", "AI分析完成："+follow.Name+"_"+follow.StockCode)
+
+	}
 }
 
 func refreshTelegraphList() *[]string {
@@ -860,8 +872,18 @@ func (a *App) AddPrompt(prompt models.Prompt) string {
 func (a *App) DelPrompt(id uint) string {
 	return data.NewPromptTemplateApi().DelPrompt(id)
 }
-func (a *App) SetStockAICron(cron, stockCode string) {
-	data.NewStockDataApi().SetStockAICron(cron, stockCode)
+func (a *App) SetStockAICron(cronText, stockCode string) {
+	data.NewStockDataApi().SetStockAICron(cronText, stockCode)
+	if strutil.HasPrefixAny(stockCode, []string{"gb_"}) {
+		stockCode = strings.ToUpper(stockCode)
+		stockCode = strings.Replace(stockCode, "gb_", "us", 1)
+		stockCode = strings.Replace(stockCode, "GB_", "us", 1)
+	}
+	if entryID, exists := a.cronEntrys[stockCode]; exists {
+		a.cron.Remove(entryID)
+	}
+	follow := data.NewStockDataApi().GetFollowedStockByStockCode(stockCode)
+	a.cron.AddFunc(cronText, a.AddCronTask(follow))
 }
 func OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceData) {
 	notification := toast.Notification{

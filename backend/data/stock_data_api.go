@@ -426,6 +426,7 @@ func (receiver StockDataApi) SetStockAICron(cron string, stockCode string) {
 		stockCode = strings.Replace(stockCode, "GB_", "us", 1)
 	}
 	db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", strings.ToLower(stockCode)).Update("cron", cron)
+
 }
 func (receiver StockDataApi) GetFollowList() *[]FollowedStock {
 	var result *[]FollowedStock
@@ -472,6 +473,12 @@ func (receiver StockDataApi) GetStockList(key string) []StockBasic {
 		})
 	}
 
+	return result
+}
+
+func (receiver StockDataApi) GetFollowedStockByStockCode(code string) FollowedStock {
+	var result FollowedStock
+	db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", strings.ToLower(code)).First(&result)
 	return result
 }
 
