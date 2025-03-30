@@ -15,7 +15,7 @@ import {
   SetCostPriceAndVolume,
   SetStockSort,
   UnFollow,
-  ShareAnalysis, SaveAsMarkdown, GetPromptTemplates
+  ShareAnalysis, SaveAsMarkdown, GetPromptTemplates, SetStockAICron
 } from '../../wailsjs/go/main/App'
 import {
   NAvatar,
@@ -81,6 +81,7 @@ const formModel = ref({
   alarm: 0,
   alarmPrice:0,
   sort:999,
+  cron:"",
 })
 const promptTemplates=ref([])
 const sysPromptOptions=ref([])
@@ -545,6 +546,7 @@ function setStock(code,name){
     formModel.value.alarm=res[0].AlarmChangePercent
     formModel.value.alarmPrice=res[0].AlarmPrice
     formModel.value.sort=res[0].Sort
+    formModel.value.cron=res[0].Cron
     modalShow.value=true
 }
 
@@ -584,6 +586,11 @@ function updateCostPriceAndVolumeNew(code,price,volume,alarm,formModel){
 
   if(formModel.sort){
     SetStockSort(formModel.sort,code).then(result => {
+      //message.success(result)
+    })
+  }
+  if(formModel.cron){
+    SetStockAICron(formModel.cron,code).then(result => {
       //message.success(result)
     })
   }
@@ -974,6 +981,9 @@ function share(code,name){
               <n-form-item label="股票排序" path="sort">
                 <n-input-number v-model:value="formModel.sort"  min="0" placeholder="请输入股价排序值" >
                 </n-input-number>
+              </n-form-item>
+              <n-form-item label="AI cron" path="cron">
+                <n-input v-model:value="formModel.cron"  placeholder="请输入cron表达式" />
               </n-form-item>
             </n-form>
             <template #footer>

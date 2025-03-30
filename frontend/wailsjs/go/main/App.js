@@ -90,6 +90,10 @@ export function SetCostPriceAndVolume(arg1, arg2, arg3) {
   return window['go']['main']['App']['SetCostPriceAndVolume'](arg1, arg2, arg3);
 }
 
+export function SetStockAICron(arg1, arg2) {
+  return window['go']['main']['App']['SetStockAICron'](arg1, arg2);
+}
+
 export function SetStockSort(arg1, arg2) {
   return window['go']['main']['App']['SetStockSort'](arg1, arg2);
 }

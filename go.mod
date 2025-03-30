@@ -13,6 +13,7 @@ require (
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-resty/resty/v2 v2.16.2
 	github.com/go-toast/toast v0.0.0-20190211030409-01e6764cf0a4
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.10.0
 	github.com/wailsapp/wails/v2 v2.10.1
 	go.uber.org/zap v1.27.0

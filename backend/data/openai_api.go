@@ -114,8 +114,6 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 		}()
 		defer close(ch)
 
-		logger.SugaredLogger.Errorf("NewChatStream stock:%s stockCode:%s,sysPromptId:%d", stock, stockCode, *sysPromptId)
-
 		sysPrompt := ""
 		if sysPromptId == nil || *sysPromptId == 0 {
 			sysPrompt = o.Prompt

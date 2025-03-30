@@ -15,6 +15,7 @@ import (
 	"github.com/getlantern/systray"
 	"github.com/go-resty/resty/v2"
 	"github.com/go-toast/toast"
+	"github.com/robfig/cron/v3"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"go-stock/backend/data"
@@ -31,14 +32,18 @@ import (
 type App struct {
 	ctx   context.Context
 	cache *freecache.Cache
+	cron  *cron.Cron
 }
 
 // NewApp creates a new App application struct
 func NewApp() *App {
 	cacheSize := 512 * 1024
 	cache := freecache.NewCache(cacheSize)
+	c := cron.New(cron.WithSeconds())
+	c.Start()
 	return &App{
 		cache: cache,
+		cron:  c,
 	}
 }
 
@@ -58,7 +63,6 @@ func (a *App) startup(ctx context.Context) {
 	}, func() {
 		go onExit(a)
 	})
-
 }
 
 func (a *App) CheckUpdate() {
@@ -139,6 +143,11 @@ func (a *App) domReady(ctx context.Context) {
 	//检查新版本
 	go func() {
 		a.CheckUpdate()
+		a.cron.AddFunc("30 05 8,12,20 * * *", func() {
+			logger.SugaredLogger.Errorf("Checking for updates...")
+			a.CheckUpdate()
+		})
+
 	}()
 
 	//检查谷歌浏览器
@@ -158,6 +167,38 @@ func (a *App) domReady(ctx context.Context) {
 	//		logger.SugaredLogger.Infof("Edge浏览器已安装，路径为: %s", path)
 	//	}
 	//}()
+	followList := data.NewStockDataApi().GetFollowList()
+	for _, follow := range *followList {
+		if follow.Cron == "" {
+			continue
+		}
+		logger.SugaredLogger.Errorf("添加自动分析任务:%s cron=%s", follow.Name, follow.Cron)
+		a.cron.AddFunc(follow.Cron, func() {
+			go runtime.EventsEmit(a.ctx, "warnMsg", "开始自动分析"+follow.Name+"_"+follow.StockCode)
+			ai := data.NewDeepSeekOpenAi(a.ctx)
+			msgs := ai.NewChatStream(follow.Name, follow.StockCode, "", nil)
+			var res strings.Builder
+
+			chatId := ""
+			question := ""
+			for msg := range msgs {
+				if msg["extraContent"] != nil {
+					res.WriteString(msg["extraContent"].(string) + "\n")
+				}
+				if msg["content"] != nil {
+					res.WriteString(msg["content"].(string))
+				}
+				if msg["chatId"] != nil {
+					chatId = msg["chatId"].(string)
+				}
+				if msg["question"] != nil {
+					question = msg["question"].(string)
+				}
+			}
+			data.NewDeepSeekOpenAi(a.ctx).SaveAIResponseResult(follow.StockCode, follow.Name, res.String(), chatId, question)
+		})
+	}
+
 }
 
 func refreshTelegraphList() *[]string {
@@ -480,6 +521,7 @@ func (a *App) shutdown(ctx context.Context) {
 	defer PanicHandler()
 	// Perform your teardown here
 	systray.Quit()
+	a.cron.Stop()
 	os.Exit(0)
 }
 
@@ -818,7 +860,9 @@ func (a *App) AddPrompt(prompt models.Prompt) string {
 func (a *App) DelPrompt(id uint) string {
 	return data.NewPromptTemplateApi().DelPrompt(id)
 }
-
+func (a *App) SetStockAICron(cron, stockCode string) {
+	data.NewStockDataApi().SetStockAICron(cron, stockCode)
+}
 func OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceData) {
 	notification := toast.Notification{
 		AppID:    "go-stock",

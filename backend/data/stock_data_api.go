@@ -163,6 +163,7 @@ type FollowedStock struct {
 	AlarmPrice         float64
 	Time               time.Time
 	Sort               int64
+	Cron               string
 	IsDel              soft_delete.DeletedAt `gorm:"softDelete:flag"`
 }
 
@@ -418,7 +419,14 @@ func (receiver StockDataApi) SetStockSort(sort int64, stockCode string) {
 	}
 	db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", strings.ToLower(stockCode)).Update("sort", sort)
 }
-
+func (receiver StockDataApi) SetStockAICron(cron string, stockCode string) {
+	if strutil.HasPrefixAny(stockCode, []string{"gb_"}) {
+		stockCode = strings.ToUpper(stockCode)
+		stockCode = strings.Replace(stockCode, "gb_", "us", 1)
+		stockCode = strings.Replace(stockCode, "GB_", "us", 1)
+	}
+	db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", strings.ToLower(stockCode)).Update("cron", cron)
+}
 func (receiver StockDataApi) GetFollowList() *[]FollowedStock {
 	var result *[]FollowedStock
 	db.Dao.Model(&FollowedStock{}).Order("sort asc,time desc").Find(&result)
