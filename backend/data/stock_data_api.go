@@ -891,6 +891,37 @@ func getHKStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 	return &messages
 }
 
+func getZSInfo(name, stockCode string, crawlTimeOut int64) string {
+	url := "https://finance.sina.com.cn/realstock/company/" + stockCode + "/nc.shtml"
+	crawlerAPI := CrawlerApi{}
+	crawlerBaseInfo := CrawlerBaseInfo{
+		Name:        "TestCrawler",
+		Description: "Test Crawler Description",
+		BaseUrl:     "https://finance.sina.com.cn",
+		Headers:     map[string]string{"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(crawlTimeOut)*time.Second)
+	defer cancel()
+	crawlerAPI = crawlerAPI.NewCrawler(ctx, crawlerBaseInfo)
+	html, ok := crawlerAPI.GetHtml(url, "div#hqDetails table", true)
+	if !ok {
+		return ""
+	}
+	document, err := goquery.NewDocumentFromReader(strings.NewReader(html))
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+	}
+
+	//price
+	price := strutil.RemoveWhiteSpace(document.Find("div#price").First().Text(), false)
+	hqTime := strutil.RemoveWhiteSpace(document.Find("div#hqTime").First().Text(), false)
+
+	var markdown strings.Builder
+	markdown.WriteString(fmt.Sprintf("### %s：%s 时间：%s\n", name, price, hqTime))
+	GetTableMarkdown(document, "div#hqDetails table", &markdown)
+	return markdown.String()
+}
+
 func getSHSZStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 	url := "https://finance.sina.com.cn/realstock/company/" + stockCode + "/nc.shtml"
 	crawlerAPI := CrawlerApi{}

@@ -159,7 +159,19 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 		logger.SugaredLogger.Infof("final question:%s", question)
 
 		wg := &sync.WaitGroup{}
-		wg.Add(6)
+		wg.Add(7)
+
+		go func() {
+			defer wg.Done()
+			var market strings.Builder
+			market.WriteString(getZSInfo("创业板指数", "sz399006", 30) + "\n")
+			market.WriteString(getZSInfo("上证综合指数", "sh000001", 30) + "\n")
+			market.WriteString(getZSInfo("沪深300指数", "sh000300", 30) + "\n")
+			msg = append(msg, map[string]interface{}{
+				"role":    "user",
+				"content": "大盘指数情况如下：\n" + market.String(),
+			})
+		}()
 
 		go func() {
 			defer wg.Done()
@@ -517,7 +529,6 @@ func GetFinancialReports(stockCode string, crawlTimeOut int64) *[]string {
 
 	logger.SugaredLogger.Infof("GetFinancialReports搜索股票-%s: %s", stockCode, url)
 
-	db.Init("../../data/stock.db")
 	crawlerAPI := CrawlerApi{}
 	crawlerBaseInfo := CrawlerBaseInfo{
 		Name:        "TestCrawler",
