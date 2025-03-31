@@ -38,7 +38,7 @@ type OpenAi struct {
 }
 
 func NewDeepSeekOpenAi(ctx context.Context) *OpenAi {
-	config := getConfig()
+	config := GetConfig()
 	if config.OpenAiEnable {
 		if config.OpenAiApiTimeOut <= 0 {
 			config.OpenAiApiTimeOut = 60 * 5
@@ -186,7 +186,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 			if strutil.HasPrefixAny(stockCode, []string{"hk", "sz", "sh"}) {
 				code = ConvertStockCodeToTushareCode(stockCode)
 			}
-			K := NewTushareApi(getConfig()).GetDaily(code, startDate, endDate, o.CrawlTimeOut)
+			K := NewTushareApi(GetConfig()).GetDaily(code, startDate, endDate, o.CrawlTimeOut)
 			msg = append(msg, map[string]interface{}{
 				"role":    "user",
 				"content": stock + "日K数据",

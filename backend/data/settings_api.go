@@ -32,6 +32,7 @@ type Settings struct {
 	BrowserPath       string  `json:"browserPath"`
 	EnableNews        bool    `json:"enableNews"`
 	DarkTheme         bool    `json:"darkTheme"`
+	BrowserPoolSize   int     `json:"browserPoolSize"`
 }
 
 func (receiver Settings) TableName() string {
@@ -123,7 +124,9 @@ func (s SettingsApi) GetConfig() *Settings {
 	if settings.BrowserPath == "" {
 		settings.BrowserPath, _ = CheckBrowserOnWindows()
 	}
-
+	if settings.BrowserPoolSize <= 0 {
+		settings.BrowserPoolSize = 3
+	}
 	return &settings
 }
 

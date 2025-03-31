@@ -15,6 +15,7 @@ import (
 type CrawlerApi struct {
 	crawlerCtx      context.Context
 	crawlerBaseInfo CrawlerBaseInfo
+	pool            *BrowserPool
 }
 
 func (c *CrawlerApi) NewTimeOutCrawler(timeout int, crawlerBaseInfo CrawlerBaseInfo) CrawlerApi {
@@ -26,12 +27,19 @@ func (c *CrawlerApi) NewCrawler(ctx context.Context, crawlerBaseInfo CrawlerBase
 	return CrawlerApi{
 		crawlerCtx:      ctx,
 		crawlerBaseInfo: crawlerBaseInfo,
+		pool:            NewBrowserPool(GetConfig().BrowserPoolSize),
 	}
 }
-
 func (c *CrawlerApi) GetHtml(url, waitVisible string, headless bool) (string, bool) {
+	page, err := c.pool.FetchPage(url, waitVisible)
+	if err != nil {
+		return "", false
+	}
+	return page, true
+}
+func (c *CrawlerApi) GetHtml_old(url, waitVisible string, headless bool) (string, bool) {
 	htmlContent := ""
-	path := getConfig().BrowserPath
+	path := GetConfig().BrowserPath
 	//logger.SugaredLogger.Infof("Browser path:%s", path)
 	if path != "" {
 		pctx, pcancel := chromedp.NewExecAllocator(
@@ -94,7 +102,7 @@ func (c *CrawlerApi) GetHtml(url, waitVisible string, headless bool) (string, bo
 
 func (c *CrawlerApi) GetHtmlWithNoCancel(url, waitVisible string, headless bool) (html string, ok bool, parent context.CancelFunc, child context.CancelFunc) {
 	htmlContent := ""
-	path := getConfig().BrowserPath
+	path := GetConfig().BrowserPath
 	//logger.SugaredLogger.Infof("BrowserPath :%s", path)
 	var parentCancel context.CancelFunc
 	var childCancel context.CancelFunc
@@ -162,7 +170,7 @@ func (c *CrawlerApi) GetHtmlWithActions(actions *[]chromedp.Action, headless boo
 	htmlContent := ""
 	*actions = append(*actions, chromedp.InnerHTML("body", &htmlContent))
 
-	path := getConfig().BrowserPath
+	path := GetConfig().BrowserPath
 	//logger.SugaredLogger.Infof("GetHtmlWithActions path:%s", path)
 	if path != "" {
 		pctx, pcancel := chromedp.NewExecAllocator(

@@ -188,7 +188,7 @@ func (receiver StockBasic) TableName() string {
 func NewStockDataApi() *StockDataApi {
 	return &StockDataApi{
 		client: resty.New(),
-		config: getConfig(),
+		config: GetConfig(),
 	}
 }
 
