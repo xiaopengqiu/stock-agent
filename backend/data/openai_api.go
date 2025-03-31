@@ -499,99 +499,48 @@ func SearchGuShiTongStockInfo(stock string, crawlTimeOut int64) *[]string {
 }
 
 func GetFinancialReports(stockCode string, crawlTimeOut int64) *[]string {
+	url := "https://emweb.securities.eastmoney.com/pc_hsf10/pages/index.html?type=web&code=" + stockCode + "#/cwfx"
+	waitVisible := "div.report_table table"
 	if strutil.HasPrefixAny(stockCode, []string{"HK", "hk"}) {
 		stockCode = strings.ReplaceAll(stockCode, "hk", "")
 		stockCode = strings.ReplaceAll(stockCode, "HK", "")
+		url = "https://emweb.securities.eastmoney.com/PC_HKF10/pages/home/index.html?code=" + stockCode + "&type=web&color=w#/NewFinancialAnalysis"
+		waitVisible = "div table.commonTable"
 	}
 	if strutil.HasPrefixAny(stockCode, []string{"us", "gb_"}) {
 		stockCode = strings.ReplaceAll(stockCode, "us", "")
 		stockCode = strings.ReplaceAll(stockCode, "gb_", "")
+		url = "https://emweb.securities.eastmoney.com/pc_usf10/pages/index.html?type=web&code=" + stockCode + "#/cwfx"
+		waitVisible = "div.zyzb_table_detail table"
+
 	}
 
-	// 创建一个 chromedp 上下文
-	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), time.Duration(crawlTimeOut)*time.Second)
-	defer timeoutCtxCancel()
-	var ctx context.Context
-	var cancel context.CancelFunc
-	path := getConfig().BrowserPath
-	logger.SugaredLogger.Infof("GetFinancialReports path:%s", path)
+	logger.SugaredLogger.Infof("GetFinancialReports搜索股票-%s: %s", stockCode, url)
 
-	if path != "" {
-		pctx, pcancel := chromedp.NewExecAllocator(
-			timeoutCtx,
-			chromedp.ExecPath(path),
-			chromedp.Flag("headless", true),
-			chromedp.Flag("disable-javascript", false),
-			chromedp.Flag("disable-gpu", true),
-			chromedp.UserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"),
-			chromedp.Flag("disable-background-networking", true),
-			chromedp.Flag("enable-features", "NetworkService,NetworkServiceInProcess"),
-			chromedp.Flag("disable-background-timer-throttling", true),
-			chromedp.Flag("disable-backgrounding-occluded-windows", true),
-			chromedp.Flag("disable-breakpad", true),
-			chromedp.Flag("disable-client-side-phishing-detection", true),
-			chromedp.Flag("disable-default-apps", true),
-			chromedp.Flag("disable-dev-shm-usage", true),
-			chromedp.Flag("disable-extensions", true),
-			chromedp.Flag("disable-features", "site-per-process,Translate,BlinkGenPropertyTrees"),
-			chromedp.Flag("disable-hang-monitor", true),
-			chromedp.Flag("disable-ipc-flooding-protection", true),
-			chromedp.Flag("disable-popup-blocking", true),
-			chromedp.Flag("disable-prompt-on-repost", true),
-			chromedp.Flag("disable-renderer-backgrounding", true),
-			chromedp.Flag("disable-sync", true),
-			chromedp.Flag("force-color-profile", "srgb"),
-			chromedp.Flag("metrics-recording-only", true),
-			chromedp.Flag("safebrowsing-disable-auto-update", true),
-			chromedp.Flag("enable-automation", true),
-			chromedp.Flag("password-store", "basic"),
-			chromedp.Flag("use-mock-keychain", true),
-		)
-		defer pcancel()
-		ctx, cancel = chromedp.NewContext(
-			pctx,
-			chromedp.WithLogf(logger.SugaredLogger.Infof),
-			chromedp.WithErrorf(logger.SugaredLogger.Errorf),
-		)
-	} else {
-		ctx, cancel = chromedp.NewContext(
-			timeoutCtx,
-			chromedp.WithLogf(logger.SugaredLogger.Infof),
-			chromedp.WithErrorf(logger.SugaredLogger.Errorf),
-		)
+	db.Init("../../data/stock.db")
+	crawlerAPI := CrawlerApi{}
+	crawlerBaseInfo := CrawlerBaseInfo{
+		Name:        "TestCrawler",
+		Description: "Test Crawler Description",
+		BaseUrl:     "https://emweb.securities.eastmoney.com",
+		Headers:     map[string]string{"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"},
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(crawlTimeOut)*time.Second)
 	defer cancel()
-	var htmlContent string
-	url := fmt.Sprintf("https://xueqiu.com/snowman/S/%s/detail#/ZYCWZB", stockCode)
-	err := chromedp.Run(ctx,
-		chromedp.Navigate(url),
-		// 等待页面加载完成，可以根据需要调整等待时间
-		chromedp.WaitVisible("table.table", chromedp.ByQuery),
-		chromedp.OuterHTML("html", &htmlContent, chromedp.ByQuery),
-	)
+	crawlerAPI = crawlerAPI.NewCrawler(ctx, crawlerBaseInfo)
+
+	var markdown strings.Builder
+	markdown.WriteString("\n## 财务数据：\n")
+	html, ok := crawlerAPI.GetHtml(url, waitVisible, true)
+	if !ok {
+		return &[]string{""}
+	}
+	document, err := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
 	}
-	document, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
-	if err != nil {
-		logger.SugaredLogger.Error(err.Error())
-		return &[]string{}
-	}
-	var messages []string
-	document.Find("table tr").Each(func(i int, selection *goquery.Selection) {
-		tr := ""
-		selection.Find("th,td").Each(func(i int, selection *goquery.Selection) {
-			ret := selection.Find("p").First().Text()
-			if ret == "" {
-				ret = selection.Text()
-			}
-			text := strutil.RemoveNonPrintable(ret)
-			tr += text + " "
-		})
-		logger.SugaredLogger.Infof("%s", tr+" \n")
-		messages = append(messages, tr+" \n")
-	})
-	return &messages
+	GetTableMarkdown(document, waitVisible, &markdown)
+	return &[]string{markdown.String()}
 }
 
 func GetTelegraphList(crawlTimeOut int64) *[]string {

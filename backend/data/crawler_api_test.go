@@ -298,7 +298,7 @@ func TestUSSINA(t *testing.T) {
 	})
 }
 
-func TestXueqiu(t *testing.T) {
+func TestSina(t *testing.T) {
 	db.Init("../../data/stock.db")
 	url := "https://finance.sina.com.cn/realstock/company/sz002906/nc.shtml"
 	crawlerAPI := CrawlerApi{}
@@ -328,6 +328,34 @@ func TestXueqiu(t *testing.T) {
 	markdown.WriteString("\n ## 当前股票数据：\n")
 	markdown.WriteString(fmt.Sprintf("### 当前股价：%s 时间：%s\n", price, hqTime))
 	GetTableMarkdown(document, "div#hqDetails table", &markdown)
+
+}
+
+func TestDC(t *testing.T) {
+	url := "https://emweb.securities.eastmoney.com/pc_hsf10/pages/index.html?type=web&code=sh600745#/cwfx"
+	db.Init("../../data/stock.db")
+	crawlerAPI := CrawlerApi{}
+	crawlerBaseInfo := CrawlerBaseInfo{
+		Name:        "TestCrawler",
+		Description: "Test Crawler Description",
+		BaseUrl:     "https://emweb.securities.eastmoney.com",
+		Headers:     map[string]string{"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
+	defer cancel()
+	crawlerAPI = crawlerAPI.NewCrawler(ctx, crawlerBaseInfo)
+
+	var markdown strings.Builder
+	markdown.WriteString("\n ## 财务数据：\n")
+	html, ok := crawlerAPI.GetHtml(url, "div.report_table table", false)
+	if !ok {
+		return
+	}
+	document, err := goquery.NewDocumentFromReader(strings.NewReader(html))
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+	}
+	GetTableMarkdown(document, "div.report_table table", &markdown)
 
 }
 
