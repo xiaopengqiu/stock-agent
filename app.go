@@ -12,7 +12,7 @@ import (
 	"github.com/duke-git/lancet/v2/mathutil"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/duke-git/lancet/v2/strutil"
-	"github.com/getlantern/systray"
+	"github.com/energye/systray"
 	"github.com/go-resty/resty/v2"
 	"github.com/go-toast/toast"
 	"github.com/robfig/cron/v3"
@@ -60,10 +60,16 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 
 	// 创建系统托盘
+	//systray.RunWithExternalLoop(func() {
+	//	onReady(a)
+	//}, func() {
+	//	onExit(a)
+	//})
+
 	systray.Run(func() {
-		go onReady(a)
+		onReady(a)
 	}, func() {
-		go onExit(a)
+		onExit(a)
 	})
 }
 
@@ -742,30 +748,37 @@ func onReady(a *App) {
 	systray.SetTooltip("go-stock 股票行情实时获取")
 	// 创建菜单项
 	show := systray.AddMenuItem("显示", "显示应用程序")
+	show.Click(func() {
+		//logger.SugaredLogger.Infof("显示应用程序")
+		runtime.WindowShow(a.ctx)
+	})
 	hide := systray.AddMenuItem("隐藏", "隐藏应用程序")
+	hide.Click(func() {
+		//logger.SugaredLogger.Infof("隐藏应用程序")
+		runtime.WindowHide(a.ctx)
+	})
 	systray.AddSeparator()
 	mQuitOrig := systray.AddMenuItem("退出", "退出应用程序")
-
-	// 监听菜单项点击事件
-	go func() {
-		for {
-			select {
-			case <-mQuitOrig.ClickedCh:
-				logger.SugaredLogger.Infof("退出应用程序")
-				runtime.Quit(a.ctx)
-			case <-show.ClickedCh:
-				logger.SugaredLogger.Infof("显示应用程序")
-				runtime.WindowShow(a.ctx)
-			case <-hide.ClickedCh:
-				logger.SugaredLogger.Infof("隐藏应用程序")
-				runtime.WindowHide(a.ctx)
-			}
-		}
-	}()
+	mQuitOrig.Click(func() {
+		//logger.SugaredLogger.Infof("退出应用程序")
+		runtime.Quit(a.ctx)
+	})
+	systray.SetOnRClick(func(menu systray.IMenu) {
+		menu.ShowMenu()
+		//logger.SugaredLogger.Infof("SetOnRClick")
+	})
+	systray.SetOnClick(func(menu systray.IMenu) {
+		//logger.SugaredLogger.Infof("SetOnClick")
+		menu.ShowMenu()
+	})
+	systray.SetOnDClick(func(menu systray.IMenu) {
+		menu.ShowMenu()
+		//logger.SugaredLogger.Infof("SetOnDClick")
+	})
 }
 
 func (a *App) UpdateConfig(settings *data.Settings) string {
-	logger.SugaredLogger.Infof("UpdateConfig:%+v", settings)
+	//logger.SugaredLogger.Infof("UpdateConfig:%+v", settings)
 	return data.NewSettingsApi(settings).UpdateConfig()
 }
 
