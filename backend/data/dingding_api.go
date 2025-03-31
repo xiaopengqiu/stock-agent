@@ -22,7 +22,7 @@ func NewDingDingAPI() *DingDingAPI {
 
 func (DingDingAPI) SendDingDingMessage(message string) string {
 	if getConfig().DingPushEnable == false {
-		logger.SugaredLogger.Info("钉钉推送未开启")
+		//logger.SugaredLogger.Info("钉钉推送未开启")
 		return "钉钉推送未开启"
 	}
 	// 发送钉钉消息

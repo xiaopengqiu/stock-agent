@@ -32,7 +32,7 @@ func (c *CrawlerApi) NewCrawler(ctx context.Context, crawlerBaseInfo CrawlerBase
 func (c *CrawlerApi) GetHtml(url, waitVisible string, headless bool) (string, bool) {
 	htmlContent := ""
 	path := getConfig().BrowserPath
-	logger.SugaredLogger.Infof("Browser path:%s", path)
+	//logger.SugaredLogger.Infof("Browser path:%s", path)
 	if path != "" {
 		pctx, pcancel := chromedp.NewExecAllocator(
 			c.crawlerCtx,
@@ -95,7 +95,7 @@ func (c *CrawlerApi) GetHtml(url, waitVisible string, headless bool) (string, bo
 func (c *CrawlerApi) GetHtmlWithNoCancel(url, waitVisible string, headless bool) (html string, ok bool, parent context.CancelFunc, child context.CancelFunc) {
 	htmlContent := ""
 	path := getConfig().BrowserPath
-	logger.SugaredLogger.Infof("BrowserPath :%s", path)
+	//logger.SugaredLogger.Infof("BrowserPath :%s", path)
 	var parentCancel context.CancelFunc
 	var childCancel context.CancelFunc
 	var pctx context.Context
@@ -163,7 +163,7 @@ func (c *CrawlerApi) GetHtmlWithActions(actions *[]chromedp.Action, headless boo
 	*actions = append(*actions, chromedp.InnerHTML("body", &htmlContent))
 
 	path := getConfig().BrowserPath
-	logger.SugaredLogger.Infof("GetHtmlWithActions path:%s", path)
+	//logger.SugaredLogger.Infof("GetHtmlWithActions path:%s", path)
 	if path != "" {
 		pctx, pcancel := chromedp.NewExecAllocator(
 			c.crawlerCtx,

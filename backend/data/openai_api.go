@@ -167,9 +167,14 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 			market.WriteString(getZSInfo("创业板指数", "sz399006", 30) + "\n")
 			market.WriteString(getZSInfo("上证综合指数", "sh000001", 30) + "\n")
 			market.WriteString(getZSInfo("沪深300指数", "sh000300", 30) + "\n")
+			//logger.SugaredLogger.Infof("NewChatStream getZSInfo=\n%s", market.String())
 			msg = append(msg, map[string]interface{}{
 				"role":    "user",
-				"content": "大盘指数情况如下：\n" + market.String(),
+				"content": "市场指数",
+			})
+			msg = append(msg, map[string]interface{}{
+				"role":    "assistant",
+				"content": "市场指数情况如下：\n" + market.String(),
 			})
 		}()
 
@@ -184,6 +189,10 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 			K := NewTushareApi(getConfig()).GetDaily(code, startDate, endDate, o.CrawlTimeOut)
 			msg = append(msg, map[string]interface{}{
 				"role":    "user",
+				"content": stock + "日K数据",
+			})
+			msg = append(msg, map[string]interface{}{
+				"role":    "assistant",
 				"content": stock + "日K数据如下：\n" + K,
 			})
 		}()
@@ -208,6 +217,10 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 			}
 			msg = append(msg, map[string]interface{}{
 				"role":    "user",
+				"content": stock + "股价数据",
+			})
+			msg = append(msg, map[string]interface{}{
+				"role":    "assistant",
 				"content": "\n## " + stock + "股价数据：\n" + price,
 			})
 		}()
@@ -231,9 +244,13 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 				go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取股票财报失败,分析结果可能不准确")
 				return
 			}
+			msg = append(msg, map[string]interface{}{
+				"role":    "user",
+				"content": stock + "财报数据",
+			})
 			for _, message := range *messages {
 				msg = append(msg, map[string]interface{}{
-					"role":    "user",
+					"role":    "assistant",
 					"content": stock + message,
 				})
 			}
@@ -248,12 +265,19 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 				//go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取市场资讯失败,分析结果可能不准确")
 				return
 			}
+			var messageText strings.Builder
 			for _, message := range *messages {
-				msg = append(msg, map[string]interface{}{
-					"role":    "user",
-					"content": message,
-				})
+				messageText.WriteString(message + "\n")
 			}
+			msg = append(msg, map[string]interface{}{
+				"role":    "user",
+				"content": "市场资讯",
+			})
+			msg = append(msg, map[string]interface{}{
+				"role":    "assistant",
+				"content": messageText.String(),
+			})
+
 			messages = GetTopNewsList(o.CrawlTimeOut)
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取新闻资讯失败")
@@ -261,12 +285,18 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 				//go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取新闻资讯失败,分析结果可能不准确")
 				return
 			}
+			var newsText strings.Builder
 			for _, message := range *messages {
-				msg = append(msg, map[string]interface{}{
-					"role":    "user",
-					"content": message,
-				})
+				newsText.WriteString(message + "\n")
 			}
+			msg = append(msg, map[string]interface{}{
+				"role":    "user",
+				"content": "新闻资讯",
+			})
+			msg = append(msg, map[string]interface{}{
+				"role":    "assistant",
+				"content": newsText.String(),
+			})
 		}()
 
 		//go func() {
@@ -294,12 +324,18 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 				//go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取股票电报资讯失败,分析结果可能不准确")
 				return
 			}
+			var newsText strings.Builder
 			for _, message := range *messages {
-				msg = append(msg, map[string]interface{}{
-					"role":    "user",
-					"content": message,
-				})
+				newsText.WriteString(message + "\n")
 			}
+			msg = append(msg, map[string]interface{}{
+				"role":    "user",
+				"content": stock + "相关新闻资讯",
+			})
+			msg = append(msg, map[string]interface{}{
+				"role":    "assistant",
+				"content": newsText.String(),
+			})
 		}()
 
 		go func() {
@@ -316,12 +352,18 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 				//go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取股势通资讯失败,分析结果可能不准确")
 				return
 			}
+			var newsText strings.Builder
 			for _, message := range *messages {
-				msg = append(msg, map[string]interface{}{
-					"role":    "user",
-					"content": message,
-				})
+				newsText.WriteString(message + "\n")
 			}
+			msg = append(msg, map[string]interface{}{
+				"role":    "user",
+				"content": stock + "相关新闻资讯",
+			})
+			msg = append(msg, map[string]interface{}{
+				"role":    "assistant",
+				"content": newsText.String(),
+			})
 		}()
 
 		wg.Wait()
@@ -329,6 +371,10 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 			"role":    "user",
 			"content": question,
 		})
+
+		//reqJson, _ := json.Marshal(msg)
+		//logger.SugaredLogger.Errorf("Stream request: \n%s", reqJson)
+
 		client := resty.New()
 		client.SetBaseURL(strutil.Trim(o.BaseUrl))
 		client.SetHeader("Authorization", "Bearer "+o.ApiKey)
@@ -365,7 +411,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 		scanner := bufio.NewScanner(body)
 		for scanner.Scan() {
 			line := scanner.Text()
-			logger.SugaredLogger.Infof("Received data: %s", line)
+			//logger.SugaredLogger.Infof("Received data: %s", line)
 			if strings.HasPrefix(line, "data:") {
 				data := strutil.Trim(strings.TrimPrefix(line, "data:"))
 				if data == "[DONE]" {
@@ -396,7 +442,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 								"content":  content,
 							}
 
-							logger.SugaredLogger.Infof("Content data: %s", content)
+							//logger.SugaredLogger.Infof("Content data: %s", content)
 						}
 						if reasoningContent := choice.Delta.ReasoningContent; reasoningContent != "" {
 							//ch <- reasoningContent
@@ -408,7 +454,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 								"content":  reasoningContent,
 							}
 
-							logger.SugaredLogger.Infof("ReasoningContent data: %s", reasoningContent)
+							//logger.SugaredLogger.Infof("ReasoningContent data: %s", reasoningContent)
 						}
 						if choice.FinishReason == "stop" {
 							return
@@ -482,7 +528,7 @@ func SearchGuShiTongStockInfo(stock string, crawlTimeOut int64) *[]string {
 		url = "https://gushitong.baidu.com/stock/us-" + strings.Replace(stock, "gb_", "", 1)
 	}
 
-	logger.SugaredLogger.Infof("SearchGuShiTongStockInfo搜索股票-%s: %s", stock, url)
+	//logger.SugaredLogger.Infof("SearchGuShiTongStockInfo搜索股票-%s: %s", stock, url)
 	actions := []chromedp.Action{
 		chromedp.Navigate(url),
 		chromedp.WaitVisible("div.cos-tab"),
@@ -503,9 +549,9 @@ func SearchGuShiTongStockInfo(stock string, crawlTimeOut int64) *[]string {
 		document.Find("div.finance-hover,div.list-date").Each(func(i int, selection *goquery.Selection) {
 			text := strutil.RemoveWhiteSpace(selection.Text(), false)
 			messages = append(messages, ReplaceSensitiveWords(text))
-			logger.SugaredLogger.Infof("SearchGuShiTongStockInfo搜索到消息-%s: %s", "", text)
+			//logger.SugaredLogger.Infof("SearchGuShiTongStockInfo搜索到消息-%s: %s", "", text)
 		})
-		logger.SugaredLogger.Infof("messages:%d", len(messages))
+		//logger.SugaredLogger.Infof("messages:%d", len(messages))
 	}
 	return &messages
 }
@@ -527,7 +573,7 @@ func GetFinancialReports(stockCode string, crawlTimeOut int64) *[]string {
 
 	}
 
-	logger.SugaredLogger.Infof("GetFinancialReports搜索股票-%s: %s", stockCode, url)
+	//logger.SugaredLogger.Infof("GetFinancialReports搜索股票-%s: %s", stockCode, url)
 
 	crawlerAPI := CrawlerApi{}
 	crawlerBaseInfo := CrawlerBaseInfo{
@@ -570,7 +616,7 @@ func GetTelegraphList(crawlTimeOut int64) *[]string {
 	}
 	var telegraph []string
 	document.Find("div.telegraph-content-box").Each(func(i int, selection *goquery.Selection) {
-		logger.SugaredLogger.Info(selection.Text())
+		//logger.SugaredLogger.Info(selection.Text())
 		telegraph = append(telegraph, ReplaceSensitiveWords(selection.Text()))
 	})
 	return &telegraph
@@ -592,7 +638,7 @@ func GetTopNewsList(crawlTimeOut int64) *[]string {
 	}
 	var telegraph []string
 	document.Find("div.home-article-title a,div.home-article-rec a").Each(func(i int, selection *goquery.Selection) {
-		logger.SugaredLogger.Info(selection.Text())
+		//logger.SugaredLogger.Info(selection.Text())
 		telegraph = append(telegraph, ReplaceSensitiveWords(selection.Text()))
 	})
 	return &telegraph

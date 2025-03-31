@@ -267,7 +267,7 @@ func (receiver StockDataApi) GetStockBaseInfo() {
 		stock := &StockBasic{}
 		data := map[string]any{}
 		for _, field := range strings.Split(fields, ",") {
-			logger.SugaredLogger.Infof("field: %s", field)
+			//logger.SugaredLogger.Infof("field: %s", field)
 			idx := slice.IndexOf(res.Data.Fields, field)
 			if idx == -1 {
 				continue
@@ -318,7 +318,7 @@ func (receiver StockDataApi) GetStockCodeRealTimeData(StockCodes ...string) (*[]
 	for _, data := range dataStr {
 		//logger.SugaredLogger.Info(data)
 		stockData, err := ParseFullSingleStockData(data)
-		logger.SugaredLogger.Infof("GetStockCodeRealTimeData %v", stockData)
+		//logger.SugaredLogger.Infof("GetStockCodeRealTimeData %v", stockData)
 		if err != nil {
 			logger.SugaredLogger.Error(err.Error())
 			continue
@@ -341,7 +341,7 @@ func (receiver StockDataApi) GetStockCodeRealTimeData(StockCodes ...string) (*[]
 }
 
 func (receiver StockDataApi) Follow(stockCode string) string {
-	logger.SugaredLogger.Infof("Follow %s", stockCode)
+	//logger.SugaredLogger.Infof("Follow %s", stockCode)
 	stockInfos, err := receiver.GetStockCodeRealTimeData(stockCode)
 	if err != nil || len(*stockInfos) == 0 {
 		logger.SugaredLogger.Error(err)
@@ -351,7 +351,7 @@ func (receiver StockDataApi) Follow(stockCode string) string {
 	maxSort := int64(0)
 	db.Dao.Model(&FollowedStock{}).Raw("select max(sort) as sort from followed_stock").Scan(&maxSort)
 
-	logger.SugaredLogger.Infof("Follow-maxSort %v", maxSort)
+	//logger.SugaredLogger.Infof("Follow-maxSort %v", maxSort)
 
 	stockInfo := (*stockInfos)[0]
 	price, _ := convertor.ToFloat(stockInfo.Price)
@@ -531,7 +531,7 @@ func ParseUSStockData(datas []string) (map[string]string, error) {
 	result := make(map[string]string)
 	parts := strutil.SplitAndTrim(datas[1], ",", "\"", ";")
 	//parts := strings.Split(data, ",")
-	logger.SugaredLogger.Infof("股票数据解析完成: parts:%d", len(parts))
+	//logger.SugaredLogger.Infof("股票数据解析完成: parts:%d", len(parts))
 	if len(parts) < 35 {
 		return nil, fmt.Errorf("invalid data format")
 	}
@@ -590,7 +590,7 @@ func ParseUSStockData(datas []string) (map[string]string, error) {
 	result["盘前盘后涨跌幅"] = parts[22]
 	result["日期"] = strutil.SplitAndTrim(parts[3], " ", "")[0]
 	result["时间"] = strutil.SplitAndTrim(parts[3], " ", "")[1]
-	logger.SugaredLogger.Infof("美股股票数据解析完成: %v", result)
+	//logger.SugaredLogger.Infof("美股股票数据解析完成: %v", result)
 	return result, nil
 }
 
@@ -749,16 +749,16 @@ func GetRealTimeStockPriceInfo(ctx context.Context, stockCode string) (price, pr
 			priceTime := ""
 			document, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
 			if err != nil {
-				logger.SugaredLogger.Errorf("GetRealTimeStockPriceInfo error: %v", err)
+				//logger.SugaredLogger.Errorf("GetRealTimeStockPriceInfo error: %v", err)
 			}
 			document.Find("div.zxj").Each(func(i int, selection *goquery.Selection) {
 				price = selection.Text()
-				logger.SugaredLogger.Infof("股票代码: %s, 当前价格: %s", stockCode, price)
+				//logger.SugaredLogger.Infof("股票代码: %s, 当前价格: %s", stockCode, price)
 			})
 
 			document.Find("span.quote_title_time").Each(func(i int, selection *goquery.Selection) {
 				priceTime = selection.Text()
-				logger.SugaredLogger.Infof("股票代码: %s, 当前价格时间: %s", stockCode, priceTime)
+				//logger.SugaredLogger.Infof("股票代码: %s, 当前价格时间: %s", stockCode, priceTime)
 			})
 			return price, priceTime
 		}
@@ -814,25 +814,25 @@ func getUSStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 	stockPriceTime := ""
 	document.Find("div.hq_title >h1").Each(func(i int, selection *goquery.Selection) {
 		stockName = strutil.RemoveNonPrintable(selection.Text())
-		logger.SugaredLogger.Infof("股票名称-:%s", stockName)
+		//logger.SugaredLogger.Infof("股票名称-:%s", stockName)
 	})
 
 	document.Find("#hqPrice").Each(func(i int, selection *goquery.Selection) {
 		stockPrice = strutil.RemoveNonPrintable(selection.Text())
-		logger.SugaredLogger.Infof("现价: %s", stockPrice)
+		//logger.SugaredLogger.Infof("现价: %s", stockPrice)
 	})
 
 	document.Find("div.hq_time").Each(func(i int, selection *goquery.Selection) {
 		stockPriceTime = strutil.RemoveNonPrintable(selection.Text())
-		logger.SugaredLogger.Infof("时间: %s", stockPriceTime)
+		//logger.SugaredLogger.Infof("时间: %s", stockPriceTime)
 	})
 
 	messages = append(messages, fmt.Sprintf("%s:%s现价%s", stockPriceTime, stockName, stockPrice))
-	logger.SugaredLogger.Infof("股票: %s", messages)
+	//logger.SugaredLogger.Infof("股票: %s", messages)
 
 	document.Find("div#hqDetails >table tbody tr").Each(func(i int, selection *goquery.Selection) {
 		text := strutil.RemoveNonPrintable(selection.Text())
-		logger.SugaredLogger.Infof("股票名称-%s: %s", stockName, text)
+		//logger.SugaredLogger.Infof("股票名称-%s: %s", stockName, text)
 		messages = append(messages, text)
 	})
 
@@ -866,25 +866,25 @@ func getHKStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 	stockPriceTime := ""
 	document.Find("#stock_cname").Each(func(i int, selection *goquery.Selection) {
 		stockName = strutil.RemoveNonPrintable(selection.Text())
-		logger.SugaredLogger.Infof("股票名称-:%s", stockName)
+		//logger.SugaredLogger.Infof("股票名称-:%s", stockName)
 	})
 
 	document.Find("#mts_stock_hk_price").Each(func(i int, selection *goquery.Selection) {
 		stockPrice = strutil.RemoveNonPrintable(selection.Text())
-		logger.SugaredLogger.Infof("现价: %s", stockPrice)
+		//logger.SugaredLogger.Infof("现价: %s", stockPrice)
 	})
 
 	document.Find("#mts_stock_hk_time").Each(func(i int, selection *goquery.Selection) {
 		stockPriceTime = strutil.RemoveNonPrintable(selection.Text())
-		logger.SugaredLogger.Infof("时间: %s", stockPriceTime)
+		//logger.SugaredLogger.Infof("时间: %s", stockPriceTime)
 	})
 
 	messages = append(messages, fmt.Sprintf("%s:%s现价%s", stockPriceTime, stockName, stockPrice))
-	logger.SugaredLogger.Infof("股票: %s", messages)
+	//logger.SugaredLogger.Infof("股票: %s", messages)
 
 	document.Find(".deta_hqContainer >.deta03 li").Each(func(i int, selection *goquery.Selection) {
 		text := strutil.RemoveNonPrintable(selection.Text())
-		logger.SugaredLogger.Infof("股票名称-%s: %s", stockName, text)
+		//logger.SugaredLogger.Infof("股票名称-%s: %s", stockName, text)
 		messages = append(messages, text)
 	})
 
@@ -967,7 +967,7 @@ func SearchStockInfo(stock, msgType string, crawlTimeOut int64) *[]string {
 	defer timeoutCtxCancel()
 	crawler = crawler.NewCrawler(timeoutCtx, crawler.crawlerBaseInfo)
 	url := fmt.Sprintf("https://www.cls.cn/searchPage?keyword=%s&type=%s", RemoveAllBlankChar(stock), msgType)
-	logger.SugaredLogger.Infof("SearchStockInfo url:%s", url)
+	//logger.SugaredLogger.Infof("SearchStockInfo url:%s", url)
 	waitVisible := ".search-telegraph-list,.subject-interest-list"
 	htmlContent, ok := crawler.GetHtml(url, waitVisible, true)
 	if !ok {
@@ -982,7 +982,7 @@ func SearchStockInfo(stock, msgType string, crawlTimeOut int64) *[]string {
 	document.Find(waitVisible).Each(func(i int, selection *goquery.Selection) {
 		text := strutil.RemoveNonPrintable(selection.Text())
 		messages = append(messages, ReplaceSensitiveWords(text))
-		logger.SugaredLogger.Infof("搜索到消息-%s: %s", msgType, text)
+		//logger.SugaredLogger.Infof("搜索到消息-%s: %s", msgType, text)
 	})
 	return &messages
 }
@@ -1020,7 +1020,7 @@ func SearchStockInfoByCode(stock string) *[]string {
 		text := strutil.RemoveNonPrintable(selection.Text())
 		if strings.Contains(text, stock) {
 			messages = append(messages, text)
-			logger.SugaredLogger.Infof("搜索到消息: %s", text)
+			//logger.SugaredLogger.Infof("搜索到消息: %s", text)
 		}
 	})
 	return &messages
@@ -1039,7 +1039,7 @@ func checkChromeOnWindows() (string, bool) {
 	}
 	defer key.Close()
 	path, _, err := key.GetStringValue("Path")
-	logger.SugaredLogger.Infof("Chrome安装路径：%s", path)
+	//logger.SugaredLogger.Infof("Chrome安装路径：%s", path)
 	if err != nil {
 		return "", false
 	}
@@ -1063,7 +1063,7 @@ func CheckBrowserOnWindows() (string, bool) {
 	}
 	defer key.Close()
 	path, _, err := key.GetStringValue("Path")
-	logger.SugaredLogger.Infof("Edge安装路径：%s", path)
+	//logger.SugaredLogger.Infof("Edge安装路径：%s", path)
 	if err != nil {
 		return "", false
 	}
