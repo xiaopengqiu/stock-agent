@@ -15,7 +15,6 @@ import (
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/duke-git/lancet/v2/strutil"
-	"github.com/duke-git/lancet/v2/validator"
 	"github.com/go-resty/resty/v2"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
@@ -770,12 +769,12 @@ func GetRealTimeStockPriceInfo(ctx context.Context, stockCode string) (price, pr
 func SearchStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 
 	if strutil.HasPrefixAny(stockCode, []string{"SZ", "SH", "sh", "sz", "bj"}) {
-		if strutil.HasPrefixAny(stockCode, []string{"bj", "BJ"}) {
-			stockCode = strutil.ReplaceWithMap(stockCode, map[string]string{
-				"bj": "",
-				"BJ": "",
-			}) + ".BJ"
-		}
+		//if strutil.HasPrefixAny(stockCode, []string{"bj", "BJ"}) {
+		//	stockCode = strutil.ReplaceWithMap(stockCode, map[string]string{
+		//		"bj": "",
+		//		"BJ": "",
+		//	}) + ".BJ"
+		//}
 
 		return getSHSZStockPriceInfo(stockCode, crawlTimeOut)
 	}
@@ -893,90 +892,36 @@ func getHKStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 }
 
 func getSHSZStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
-	var messages []string
-	url := "https://www.cls.cn/stock?code=" + stockCode
-	// 创建一个 chromedp 上下文
-	timeoutCtx, timeoutCtxCancel := context.WithTimeout(context.Background(), time.Duration(crawlTimeOut)*time.Second)
-	defer timeoutCtxCancel()
-	var ctx context.Context
-	var cancel context.CancelFunc
-	path := getConfig().BrowserPath
-	logger.SugaredLogger.Infof("SearchStockPriceInfo BrowserPath:%s", path)
-	if path != "" {
-		pctx, pcancel := chromedp.NewExecAllocator(
-			timeoutCtx,
-			chromedp.ExecPath(path),
-			chromedp.Flag("headless", true),
-		)
-		defer pcancel()
-		ctx, cancel = chromedp.NewContext(
-			pctx,
-			chromedp.WithLogf(logger.SugaredLogger.Infof),
-			chromedp.WithErrorf(logger.SugaredLogger.Errorf),
-		)
-	} else {
-		ctx, cancel = chromedp.NewContext(
-			timeoutCtx,
-			chromedp.WithLogf(logger.SugaredLogger.Infof),
-			chromedp.WithErrorf(logger.SugaredLogger.Errorf),
-		)
+	url := "https://finance.sina.com.cn/realstock/company/" + stockCode + "/nc.shtml"
+	crawlerAPI := CrawlerApi{}
+	crawlerBaseInfo := CrawlerBaseInfo{
+		Name:        "TestCrawler",
+		Description: "Test Crawler Description",
+		BaseUrl:     "https://finance.sina.com.cn",
+		Headers:     map[string]string{"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"},
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(crawlTimeOut)*time.Second)
 	defer cancel()
-
-	var htmlContent string
-
-	var tasks chromedp.Tasks
-	tasks = append(tasks, chromedp.Navigate(url))
-	tasks = append(tasks, chromedp.WaitVisible("div.quote-change-box", chromedp.ByQuery))
-	tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
-		price, _ := FetchPrice(ctx)
-		logger.SugaredLogger.Infof("price:%s", price)
-		return nil
-	}))
-	tasks = append(tasks, chromedp.OuterHTML("html", &htmlContent, chromedp.ByQuery))
-
-	err := chromedp.Run(ctx, tasks)
+	crawlerAPI = crawlerAPI.NewCrawler(ctx, crawlerBaseInfo)
+	html, ok := crawlerAPI.GetHtml(url, "div#hqDetails table", true)
+	if !ok {
+		return &[]string{""}
+	}
+	document, err := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
-		return &[]string{}
-	}
-	document, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
-	if err != nil {
-		logger.SugaredLogger.Error(err.Error())
-		return &[]string{}
 	}
 
-	document.Find("div.quote-text-border,span.quote-price").Each(func(i int, selection *goquery.Selection) {
-		text := strutil.RemoveNonPrintable(selection.Text())
-		logger.SugaredLogger.Info(text)
-		messages = append(messages, text)
+	//price
+	price := strutil.RemoveWhiteSpace(document.Find("div#price").First().Text(), false)
+	hqTime := strutil.RemoveWhiteSpace(document.Find("div#hqTime").First().Text(), false)
 
-	})
-	return &messages
+	var markdown strings.Builder
+	markdown.WriteString(fmt.Sprintf("### 当前股价：%s 时间：%s\n", price, hqTime))
+	GetTableMarkdown(document, "div#hqDetails table", &markdown)
+	return &[]string{markdown.String()}
 }
-func FetchPrice(ctx context.Context) (string, error) {
-	var price string
-	timeout := time.After(10 * time.Second)   // 设置超时时间为10秒
-	ticker := time.NewTicker(1 * time.Second) // 每秒尝试一次
-	defer ticker.Stop()
 
-	for {
-		select {
-		case <-timeout:
-			return "", fmt.Errorf("timeout reached while fetching price")
-		case <-ticker.C:
-			err := chromedp.Run(ctx, chromedp.Text("span.quote-price", &price, chromedp.BySearch))
-			if err != nil {
-				logger.SugaredLogger.Errorf("failed to fetch price: %v", err)
-				continue
-			}
-			logger.SugaredLogger.Infof("price:%s", price)
-			if price != "" && validator.IsNumberStr(price) {
-				return price, nil
-			}
-		}
-	}
-}
 func SearchStockInfo(stock, msgType string, crawlTimeOut int64) *[]string {
 	crawler := CrawlerApi{
 		crawlerBaseInfo: CrawlerBaseInfo{

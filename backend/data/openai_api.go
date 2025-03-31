@@ -196,7 +196,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 			}
 			msg = append(msg, map[string]interface{}{
 				"role":    "user",
-				"content": stock + time.Now().Format(time.DateOnly) + "价格：" + price,
+				"content": "\n## " + stock + "股价数据：\n" + price,
 			})
 		}()
 

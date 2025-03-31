@@ -1,6 +1,8 @@
 package data
 
 import (
+	"github.com/PuerkitoBio/goquery"
+	"go-stock/backend/logger"
 	"regexp"
 	"strings"
 )
@@ -56,4 +58,30 @@ func ConvertTushareCodeToStockCode(stockCode string) string {
 	//提取非数字
 	stockCode = strings.ToLower(RemoveAllDigitChar(stockCode)) + RemoveAllNonDigitChar(stockCode)
 	return strings.ReplaceAll(stockCode, ".", "")
+}
+
+func GetTableMarkdown(document *goquery.Document, waitVisible string, markdown *strings.Builder) {
+	document.Find(waitVisible).First().Find("tr").Each(func(index int, item *goquery.Selection) {
+		row := ""
+		item.Find("th, td").Each(func(i int, cell *goquery.Selection) {
+			text := cell.Text()
+			row += "|" + text
+		})
+		row += "|"
+
+		if index == 0 {
+			// Header row
+			markdown.WriteString(row + "\n")
+			// Separator row
+			separator := ""
+			item.Find("th, td").Each(func(i int, cell *goquery.Selection) {
+				separator += "|---"
+			})
+			markdown.WriteString(separator + "|\n")
+		} else {
+			// Data row
+			markdown.WriteString(row + "\n")
+		}
+	})
+	logger.SugaredLogger.Infof("\n%s", markdown.String())
 }
