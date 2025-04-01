@@ -20,7 +20,7 @@ func Init(sqlitePath string) {
 			Colorful:                  false,
 			IgnoreRecordNotFoundError: true,
 			ParameterizedQueries:      false,
-			LogLevel:                  logger.Info,
+			LogLevel:                  logger.Warn,
 		},
 	)
 	var openDb *gorm.DB

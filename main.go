@@ -216,7 +216,7 @@ func initStockDataUS() {
 		var count int64
 		db.Dao.Model(&models.StockInfoUS{}).Where("code = ?", item.Code).Count(&count)
 		if count > 0 {
-			log.SugaredLogger.Infof("stock data us %s exist", item.Code)
+			//log.SugaredLogger.Infof("stock data us %s exist", item.Code)
 			continue
 		}
 		db.Dao.Model(&models.StockInfoUS{}).Create(&item)
@@ -235,7 +235,7 @@ func initStockDataHK() {
 		var count int64
 		db.Dao.Model(&models.StockInfoHK{}).Where("code = ?", item.Code).Count(&count)
 		if count > 0 {
-			log.SugaredLogger.Infof("stock data hk %s exist", item.Code)
+			//log.SugaredLogger.Infof("stock data hk %s exist", item.Code)
 			continue
 		}
 		db.Dao.Model(&models.StockInfoHK{}).Create(&item)
