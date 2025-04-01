@@ -46,6 +46,7 @@ import html2canvas from "html2canvas";
 import {asBlob} from 'html-docx-js-typescript';
 
 import vueDanmaku from 'vue3-danmaku'
+import {keys, pad} from "lodash";
 const danmus = ref([])
 const ws = ref(null)
 
@@ -116,7 +117,8 @@ const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/maste
 
 const sortedResults = computed(() => {
   //console.log("computed",sortedResults.value)
-  const sortedKeys =Object.keys(results.value).sort();
+  const sortedKeys =keys(results.value).sort();
+  //console.log("sortedKeys",sortedKeys)
   const sortedObject = {};
   sortedKeys.forEach(key => {
     sortedObject[key] = results.value[key];
@@ -141,7 +143,7 @@ onBeforeMount(()=>{
         followedStock.StockCode="gb_"+ followedStock.StockCode.replace("us", "").toLowerCase()
       }
       if (!stocks.value.includes(followedStock.StockCode)) {
-        console.log("followList",followedStock.StockCode)
+        //console.log("followList",followedStock.StockCode)
         stocks.value.push(followedStock.StockCode)
       }
     }
@@ -395,6 +397,7 @@ function removeMonitor(code,name,key) {
   })
 }
 
+
 function SendDanmu(){
   //danmus.value.push(data.name)
   console.log("SendDanmu",data.name)
@@ -491,7 +494,8 @@ async function updateData(result) {
       }
     }
 
-  result.key=GetSortKey(result.sort,result["股票代码"])
+  result.key=result.sort
+  //result.key=GetSortKey(result.sort,result["股票代码"])
   results.value[GetSortKey(result.sort,result["股票代码"])]=result
 }
 
@@ -505,13 +509,11 @@ async function monitor() {
   }
 }
 
-//数字长度不够前面补0
-function padZero(num, length) {
-  return (Array(length).join('0') + num).slice(-length);
-}
 
 function GetSortKey(sort,code){
-  return padZero(sort,6)+"_"+code
+  //let sortKey= pad(sort,6,'0')+"_"+code
+  //console.log("GetSortKey:",sortKey)
+  return sort
 }
 
 function onSelect(item) {
