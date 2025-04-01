@@ -1,6 +1,6 @@
 <script setup>
 
-import {computed, onMounted, ref} from "vue";
+import {computed, onBeforeUnmount, onMounted, ref} from "vue";
 import {
   AddPrompt, DelPrompt,
   ExportConfig,
@@ -86,9 +86,12 @@ onMounted(()=>{
     promptTemplates.value=res
   })
 })
-
+onBeforeUnmount(() => {
+  message.destroyAll()
+})
 
 function saveConfig(){
+
   let config= new data.Settings({
     ID:formValue.value.ID,
     dingPushEnable:formValue.value.dingPush.enable,
@@ -114,9 +117,11 @@ function saveConfig(){
     darkTheme:formValue.value.darkTheme
   })
 
- //console.log("Settings",config)
+
+  //console.log("Settings",config)
   UpdateConfig(config).then(res=>{
     message.success(res)
+    EventsEmit("updateSettings", config);
   })
 }
 
@@ -273,7 +278,7 @@ function deletePrompt(ID){
             </template>
           </n-input-number>
         </n-form-item-gi>
-        <n-form-item-gi  :span="5" label="暗黑主题(重启生效)：" path="darkTheme" >
+        <n-form-item-gi  :span="5" label="暗黑主题：" path="darkTheme" >
           <n-switch v-model:value="formValue.darkTheme" />
         </n-form-item-gi>
         <n-form-item-gi  :span="22" label="浏览器路径：" path="browserPath" >

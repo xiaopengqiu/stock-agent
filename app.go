@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/coocood/freecache"
@@ -65,12 +66,41 @@ func (a *App) startup(ctx context.Context) {
 	//}, func() {
 	//	onExit(a)
 	//})
+	runtime.EventsOn(ctx, "updateSettings", func(optionalData ...interface{}) {
+		logger.SugaredLogger.Infof("updateSettings : %v\n", optionalData)
+		config := &data.Settings{}
+		setMap := optionalData[0].(map[string]interface{})
 
-	systray.Run(func() {
+		// 将 map 转换为 JSON 字节切片
+		jsonData, err := json.Marshal(setMap)
+		if err != nil {
+			logger.SugaredLogger.Errorf("Marshal error:%s", err.Error())
+			return
+		}
+		// 将 JSON 字节切片解析到结构体中
+		err = json.Unmarshal(jsonData, config)
+		if err != nil {
+			logger.SugaredLogger.Errorf("Unmarshal error:%s", err.Error())
+			return
+		}
+
+		logger.SugaredLogger.Infof("updateSettings config:%+v", config)
+		if config.DarkTheme {
+			runtime.WindowSetBackgroundColour(ctx, 27, 38, 54, 1)
+			runtime.WindowSetDarkTheme(ctx)
+		} else {
+			runtime.WindowSetBackgroundColour(ctx, 255, 255, 255, 1)
+			runtime.WindowSetLightTheme(ctx)
+		}
+		runtime.WindowReloadApp(ctx)
+
+	})
+	systray.RunWithExternalLoop(func() {
 		onReady(a)
 	}, func() {
 		onExit(a)
 	})
+
 }
 
 func (a *App) CheckUpdate() {
@@ -816,7 +846,7 @@ func (a *App) UpdateConfig(settings *data.Settings) string {
 			a.cron.Remove(entryID)
 		}
 		id, _ := a.cron.AddFunc(fmt.Sprintf("@every %ds", settings.RefreshInterval), func() {
-			logger.SugaredLogger.Infof("MonitorStockPrices:%s", time.Now())
+			//logger.SugaredLogger.Infof("MonitorStockPrices:%s", time.Now())
 			MonitorStockPrices(a)
 		})
 		a.cronEntrys["MonitorStockPrices"] = id

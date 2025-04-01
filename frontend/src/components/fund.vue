@@ -89,6 +89,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   clearInterval(ticker.value)
   ws.value.close()
+  message.destroyAll()
 })
 
 

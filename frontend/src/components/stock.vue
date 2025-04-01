@@ -60,12 +60,9 @@ const mdPreviewRef = ref(null)
 const mdEditorRef =  ref(null)
 const tipsRef = ref(null)
 const message = useMessage()
-const modal = useModal()
 const notify = useNotification()
-const dialog = useDialog()
 const stocks=ref([])
 const results=ref({})
-//const ticker=ref({})
 const stockList=ref([])
 const followList=ref([])
 const options=ref([])
@@ -214,7 +211,8 @@ onBeforeUnmount(() => {
  // console.log(`the component is now unmounted.`)
   //clearInterval(ticker.value)
   ws.value.close()
-
+  message.destroyAll()
+  notify.destroyAll()
 })
 
 EventsOn("refresh",(data)=>{
@@ -865,7 +863,7 @@ function share(code,name){
     </vue-danmaku>
   <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
     <n-gi :id="result['股票代码']+'_gi'"  v-for="result in sortedResults" style="margin-left: 2px;" >
-         <n-card  :id="result['股票代码']"  :data-code="result['股票代码']" :bordered="true" :title="result['股票名称']+'_'+result.sort"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
+         <n-card  :data-sort="result.sort" :id="result['股票代码']"  :data-code="result['股票代码']" :bordered="true" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
            <n-grid :cols="1" :y-gap="6">
              <n-gi>
                <n-text :type="result.type" >
