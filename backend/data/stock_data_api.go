@@ -412,11 +412,13 @@ func (receiver StockDataApi) SetAlarmChangePercent(val, alarmPrice float64, stoc
 
 func (receiver StockDataApi) SetStockSort(sort int64, stockCode string) {
 	if strutil.HasPrefixAny(stockCode, []string{"gb_"}) {
-		stockCode = strings.ToUpper(stockCode)
+		stockCode = strings.ToLower(stockCode)
 		stockCode = strings.Replace(stockCode, "gb_", "us", 1)
-		stockCode = strings.Replace(stockCode, "GB_", "us", 1)
 	}
-	db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", strings.ToLower(stockCode)).Update("sort", sort)
+	err := db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", strings.ToLower(stockCode)).Update("sort", sort).Error
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+	}
 }
 func (receiver StockDataApi) SetStockAICron(cron string, stockCode string) {
 	if strutil.HasPrefixAny(stockCode, []string{"gb_"}) {

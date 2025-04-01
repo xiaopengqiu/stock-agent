@@ -115,34 +115,66 @@ func (a *App) domReady(ctx context.Context) {
 		if interval <= 0 {
 			interval = 1
 		}
-		ticker := time.NewTicker(time.Second * time.Duration(interval))
-		defer ticker.Stop()
-		for range ticker.C {
+		//ticker := time.NewTicker(time.Second * time.Duration(interval))
+		//defer ticker.Stop()
+		//for range ticker.C {
+		//	MonitorStockPrices(a)
+		//}
+		id, err := a.cron.AddFunc(fmt.Sprintf("@every %ds", interval), func() {
 			MonitorStockPrices(a)
+		})
+		if err != nil {
+			logger.SugaredLogger.Errorf("AddFunc error:%s", err.Error())
+		} else {
+			a.cronEntrys["MonitorStockPrices"] = id
 		}
+
 	}()
 
 	//刷新基金净值信息
 	go func() {
-		ticker := time.NewTicker(time.Second * time.Duration(60))
-		defer ticker.Stop()
-		for range ticker.C {
+		//ticker := time.NewTicker(time.Second * time.Duration(60))
+		//defer ticker.Stop()
+		//for range ticker.C {
+		//	MonitorFundPrices(a)
+		//}
+
+		id, err := a.cron.AddFunc(fmt.Sprintf("@every %ds", 60), func() {
 			MonitorFundPrices(a)
+		})
+		if err != nil {
+			logger.SugaredLogger.Errorf("AddFunc error:%s", err.Error())
+		} else {
+			a.cronEntrys["MonitorFundPrices"] = id
 		}
+
 	}()
 
 	if config.EnableNews {
-		go func() {
-			ticker := time.NewTicker(time.Second * time.Duration(60))
-			defer ticker.Stop()
-			for range ticker.C {
-				telegraph := refreshTelegraphList()
-				if telegraph != nil {
-					go runtime.EventsEmit(a.ctx, "telegraph", telegraph)
-				}
-			}
+		//go func() {
+		//	ticker := time.NewTicker(time.Second * time.Duration(60))
+		//	defer ticker.Stop()
+		//	for range ticker.C {
+		//		telegraph := refreshTelegraphList()
+		//		if telegraph != nil {
+		//			go runtime.EventsEmit(a.ctx, "telegraph", telegraph)
+		//		}
+		//	}
+		//
+		//}()
 
-		}()
+		id, err := a.cron.AddFunc(fmt.Sprintf("@every %ds", 60), func() {
+			telegraph := refreshTelegraphList()
+			if telegraph != nil {
+				go runtime.EventsEmit(a.ctx, "telegraph", telegraph)
+			}
+		})
+		if err != nil {
+			logger.SugaredLogger.Errorf("AddFunc error:%s", err.Error())
+		} else {
+			a.cronEntrys["refreshTelegraphList"] = id
+		}
+
 		go runtime.EventsEmit(a.ctx, "telegraph", refreshTelegraphList())
 	}
 	go MonitorStockPrices(a)
@@ -779,6 +811,17 @@ func onReady(a *App) {
 
 func (a *App) UpdateConfig(settings *data.Settings) string {
 	//logger.SugaredLogger.Infof("UpdateConfig:%+v", settings)
+	if settings.RefreshInterval > 0 {
+		if entryID, exists := a.cronEntrys["MonitorStockPrices"]; exists {
+			a.cron.Remove(entryID)
+		}
+		id, _ := a.cron.AddFunc(fmt.Sprintf("@every %ds", settings.RefreshInterval), func() {
+			logger.SugaredLogger.Infof("MonitorStockPrices:%s", time.Now())
+			MonitorStockPrices(a)
+		})
+		a.cronEntrys["MonitorStockPrices"] = id
+	}
+
 	return data.NewSettingsApi(settings).UpdateConfig()
 }
 
@@ -896,7 +939,9 @@ func (a *App) SetStockAICron(cronText, stockCode string) {
 		a.cron.Remove(entryID)
 	}
 	follow := data.NewStockDataApi().GetFollowedStockByStockCode(stockCode)
-	a.cron.AddFunc(cronText, a.AddCronTask(follow))
+	id, _ := a.cron.AddFunc(cronText, a.AddCronTask(follow))
+	a.cronEntrys[stockCode] = id
+
 }
 func OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceData) {
 	notification := toast.Notification{

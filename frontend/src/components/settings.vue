@@ -266,7 +266,7 @@ function deletePrompt(ID){
         <n-form-item-gi  :span="4" label="启动时更新A股/指数信息：" path="updateBasicInfoOnStart" >
           <n-switch v-model:value="formValue.updateBasicInfoOnStart" />
         </n-form-item-gi>
-        <n-form-item-gi  :span="5" label="数据刷新间隔(重启生效)：" path="refreshInterval" >
+        <n-form-item-gi  :span="5" label="数据刷新间隔：" path="refreshInterval" >
           <n-input-number v-model:value="formValue.refreshInterval" placeholder="请输入数据刷新间隔(秒)">
             <template #suffix>
               秒

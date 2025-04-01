@@ -46,7 +46,7 @@ import html2canvas from "html2canvas";
 import {asBlob} from 'html-docx-js-typescript';
 
 import vueDanmaku from 'vue3-danmaku'
-import {keys, pad} from "lodash";
+import {keys, pad, padStart} from "lodash";
 const danmus = ref([])
 const ws = ref(null)
 
@@ -118,7 +118,7 @@ const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/maste
 const sortedResults = computed(() => {
   //console.log("computed",sortedResults.value)
   const sortedKeys =keys(results.value).sort();
-  //console.log("sortedKeys",sortedKeys)
+  console.log("sortedKeys",sortedKeys)
   const sortedObject = {};
   sortedKeys.forEach(key => {
     sortedObject[key] = results.value[key];
@@ -494,8 +494,8 @@ async function updateData(result) {
       }
     }
 
-  result.key=result.sort
-  //result.key=GetSortKey(result.sort,result["股票代码"])
+  //result.key=result.sort
+  result.key=GetSortKey(result.sort,result["股票代码"])
   results.value[GetSortKey(result.sort,result["股票代码"])]=result
 }
 
@@ -511,9 +511,9 @@ async function monitor() {
 
 
 function GetSortKey(sort,code){
-  //let sortKey= pad(sort,6,'0')+"_"+code
-  //console.log("GetSortKey:",sortKey)
-  return sort
+  let sortKey= padStart(sort,8,'0')+"_"+code
+  console.log("GetSortKey:",sortKey)
+  return sortKey
 }
 
 function onSelect(item) {
@@ -865,7 +865,7 @@ function share(code,name){
     </vue-danmaku>
   <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
     <n-gi :id="result['股票代码']+'_gi'"  v-for="result in sortedResults" style="margin-left: 2px;" >
-         <n-card  :id="result['股票代码']"  :data-code="result['股票代码']" :bordered="true" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
+         <n-card  :id="result['股票代码']"  :data-code="result['股票代码']" :bordered="true" :title="result['股票名称']+'_'+result.sort"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
            <n-grid :cols="1" :y-gap="6">
              <n-gi>
                <n-text :type="result.type" >
