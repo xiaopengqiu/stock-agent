@@ -57,6 +57,21 @@ func TestSearchStockPriceInfo(t *testing.T) {
 
 }
 
+func TestGetKLineData(t *testing.T) {
+	db.Init("../../data/stock.db")
+	k := NewStockDataApi().GetKLineData("sh600171", "240", 30)
+	//for _, kline := range *k {
+	//	logger.SugaredLogger.Infof("%+#v", kline)
+	//}
+	jsonData, _ := json.Marshal(*k)
+	markdownTable, err := JSONToMarkdownTable(jsonData)
+	if err != nil {
+		logger.SugaredLogger.Errorf("json.Marshal error:%s", err.Error())
+	}
+	logger.SugaredLogger.Infof("markdownTable:\n%s", markdownTable)
+
+}
+
 func TestGetRealTimeStockPriceInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

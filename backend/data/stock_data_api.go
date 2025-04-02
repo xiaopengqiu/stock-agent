@@ -1075,3 +1075,73 @@ func CheckBrowserOnWindows() (string, bool) {
 	}
 	return path + "\\msedge.exe", true
 }
+
+func (receiver StockDataApi) GetKLineData(stockCode string, kLineType string, days int64) *[]KLineData {
+	url := fmt.Sprintf("http://quotes.sina.cn/cn/api/json_v2.php/CN_MarketDataService.getKLineData?symbol=%s&scale=%s&ma=yes&days=%d", stockCode, kLineType, days)
+	K := &[]KLineData{}
+	_, err := receiver.client.SetTimeout(time.Duration(receiver.config.CrawlTimeOut)*time.Second).R().
+		SetHeader("Host", "quotes.sina.cn").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0").
+		SetResult(K).
+		Get(url)
+	if err != nil {
+		logger.SugaredLogger.Errorf("err:%s", err.Error())
+		return K
+	}
+	return K
+}
+
+// JSONToMarkdownTable 将JSON数据转换为Markdown表格
+func JSONToMarkdownTable(jsonData []byte) (string, error) {
+	var data []map[string]interface{}
+	err := json.Unmarshal(jsonData, &data)
+	if err != nil {
+		return "", err
+	}
+
+	if len(data) == 0 {
+		return "", nil
+	}
+
+	// 获取表头
+	headers := []string{}
+	for key := range data[0] {
+		headers = append(headers, key)
+	}
+
+	// 构建表头行
+	headerRow := "|"
+	for _, header := range headers {
+		headerRow += fmt.Sprintf(" %s |", header)
+	}
+	headerRow += "\n"
+
+	// 构建分隔行
+	separatorRow := "|"
+	for range headers {
+		separatorRow += " --- |"
+	}
+	separatorRow += "\n"
+
+	// 构建数据行
+	bodyRows := ""
+	for _, rowData := range data {
+		bodyRow := "|"
+		for _, header := range headers {
+			value := rowData[header]
+			bodyRow += fmt.Sprintf(" %v |", value)
+		}
+		bodyRows += bodyRow + "\n"
+	}
+
+	return headerRow + separatorRow + bodyRows, nil
+}
+
+type KLineData struct {
+	Day    string `json:"day"`
+	Open   string `json:"open"`
+	High   string `json:"high"`
+	Low    string `json:"low"`
+	Close  string `json:"close"`
+	Volume string `json:"volume"`
+}

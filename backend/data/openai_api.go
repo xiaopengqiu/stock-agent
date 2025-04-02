@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/chromedp/chromedp"
+	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/go-resty/resty/v2"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -133,6 +134,15 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 			},
 		}
 
+		msg = append(msg, map[string]interface{}{
+			"role":    "user",
+			"content": "当前时间",
+		})
+		msg = append(msg, map[string]interface{}{
+			"role":    "assistant",
+			"content": "当前本地时间是:" + time.Now().Format("2006-01-02 15:04:05"),
+		})
+
 		question := ""
 		if userQuestion == "" {
 			replaceTemplates := map[string]string{
@@ -180,21 +190,49 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 
 		go func() {
 			defer wg.Done()
-			endDate := time.Now().Format("20060102")
-			startDate := time.Now().Add(-time.Hour * time.Duration(24*o.KDays)).Format("20060102")
-			code := stockCode
-			if strutil.HasPrefixAny(stockCode, []string{"hk", "sz", "sh"}) {
-				code = ConvertStockCodeToTushareCode(stockCode)
+			//endDate := time.Now().Format("20060102")
+			//startDate := time.Now().Add(-time.Hour * time.Duration(24*o.KDays)).Format("20060102")
+			//code := stockCode
+			//if strutil.HasPrefixAny(stockCode, []string{"hk"}) {
+			//	code = ConvertStockCodeToTushareCode(stockCode)
+			//	K := NewTushareApi(GetConfig()).GetDaily(code, startDate, endDate, o.CrawlTimeOut)
+			//	msg = append(msg, map[string]interface{}{
+			//		"role":    "user",
+			//		"content": stock + "日K数据",
+			//	})
+			//	msg = append(msg, map[string]interface{}{
+			//		"role":    "assistant",
+			//		"content": stock + "日K数据如下：\n" + K,
+			//	})
+			//}
+
+			if strutil.HasPrefixAny(stockCode, []string{"sz", "sh"}) {
+				K := NewStockDataApi().GetKLineData(stockCode, "240", o.KDays)
+				Kmap := &[]map[string]any{}
+				for _, kline := range *K {
+					mapk := make(map[string]any, 6)
+					mapk["日期"] = kline.Day
+					mapk["开盘价"] = kline.Open
+					mapk["最高价"] = kline.High
+					mapk["最低价"] = kline.Low
+					mapk["收盘价"] = kline.Close
+					Volume, _ := convertor.ToFloat(kline.Volume)
+					mapk["成交量(万手)"] = Volume / 10000.00 / 100.00
+					*Kmap = append(*Kmap, mapk)
+				}
+				jsonData, _ := json.Marshal(Kmap)
+				markdownTable, _ := JSONToMarkdownTable(jsonData)
+				msg = append(msg, map[string]interface{}{
+					"role":    "user",
+					"content": stock + "日K数据",
+				})
+				msg = append(msg, map[string]interface{}{
+					"role":    "assistant",
+					"content": "## " + stock + "日K数据如下：\n" + markdownTable,
+				})
+				logger.SugaredLogger.Infof("getKLineData=\n%s", markdownTable)
 			}
-			K := NewTushareApi(GetConfig()).GetDaily(code, startDate, endDate, o.CrawlTimeOut)
-			msg = append(msg, map[string]interface{}{
-				"role":    "user",
-				"content": stock + "日K数据",
-			})
-			msg = append(msg, map[string]interface{}{
-				"role":    "assistant",
-				"content": stock + "日K数据如下：\n" + K,
-			})
+
 		}()
 
 		go func() {
