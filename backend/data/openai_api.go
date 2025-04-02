@@ -143,29 +143,42 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 			"content": "当前本地时间是:" + time.Now().Format("2006-01-02 15:04:05"),
 		})
 
+		replaceTemplates := map[string]string{
+			"{{stockName}}": RemoveAllBlankChar(stock),
+			"{{stockCode}}": RemoveAllBlankChar(stockCode),
+			"{stockName}":   RemoveAllBlankChar(stock),
+			"{stockCode}":   RemoveAllBlankChar(stockCode),
+			"stockName":     RemoveAllBlankChar(stock),
+			"stockCode":     RemoveAllBlankChar(stockCode),
+		}
+		followedStock := NewStockDataApi().GetFollowedStockByStockCode(stockCode)
+		stockData, err := NewStockDataApi().GetStockCodeRealTimeData(stockCode)
+		if err == nil && len(*stockData) > 0 {
+			msg = append(msg, map[string]interface{}{
+				"role":    "user",
+				"content": fmt.Sprintf("当前%s[%s]价格是多少？", stock, stockCode),
+			})
+			msg = append(msg, map[string]interface{}{
+				"role":    "assistant",
+				"content": fmt.Sprintf("截止到%s,当前%s[%s]价格是%s", (*stockData)[0].Date+" "+(*stockData)[0].Time, stock, stockCode, (*stockData)[0].Price),
+			})
+		}
+		if followedStock.CostPrice > 0 {
+			replaceTemplates["{{costPrice}}"] = convertor.ToString(followedStock.CostPrice)
+			replaceTemplates["{costPrice}"] = convertor.ToString(followedStock.CostPrice)
+			replaceTemplates["costPrice"] = convertor.ToString(followedStock.CostPrice)
+		}
+
 		question := ""
 		if userQuestion == "" {
-			replaceTemplates := map[string]string{
-				"{{stockName}}": RemoveAllBlankChar(stock),
-				"{{stockCode}}": RemoveAllBlankChar(stockCode),
-			}
-
-			followedStock := &FollowedStock{
-				StockCode: stockCode,
-			}
-			db.Dao.Model(&followedStock).Where("stock_code = ?", stockCode).First(followedStock)
-			if followedStock.CostPrice > 0 {
-				replaceTemplates["{{costPrice}}"] = fmt.Sprintf("%.2f", followedStock.CostPrice)
-			}
 			question = strutil.ReplaceWithMap(o.QuestionTemplate, replaceTemplates)
 		} else {
 			question = userQuestion
+			question = strutil.ReplaceWithMap(userQuestion, replaceTemplates)
 		}
 
 		logger.SugaredLogger.Infof("NewChatStream stock:%s stockCode:%s", stock, stockCode)
 		logger.SugaredLogger.Infof("Prompt：%s", sysPrompt)
-		logger.SugaredLogger.Infof("User Prompt config:%v", o.QuestionTemplate)
-		logger.SugaredLogger.Infof("User question:%s", userQuestion)
 		logger.SugaredLogger.Infof("final question:%s", question)
 
 		wg := &sync.WaitGroup{}
@@ -413,7 +426,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 		})
 
 		//reqJson, _ := json.Marshal(msg)
-		//logger.SugaredLogger.Errorf("Stream request: \n%s", reqJson)
+		//logger.SugaredLogger.Errorf("Stream request: \n%s\n", reqJson)
 
 		client := resty.New()
 		client.SetBaseURL(strutil.Trim(o.BaseUrl))

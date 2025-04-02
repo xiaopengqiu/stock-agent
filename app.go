@@ -95,7 +95,7 @@ func (a *App) startup(ctx context.Context) {
 		runtime.WindowReloadApp(ctx)
 
 	})
-	systray.RunWithExternalLoop(func() {
+	go systray.Run(func() {
 		onReady(a)
 	}, func() {
 		onExit(a)
@@ -797,8 +797,8 @@ func getMsgTypeName(msgType int) string {
 func onExit(a *App) {
 	// 清理操作
 	logger.SugaredLogger.Infof("onExit")
-	systray.Quit()
-	runtime.Quit(a.ctx)
+	//systray.Quit()
+	//runtime.Quit(a.ctx)
 }
 
 func onReady(a *App) {
