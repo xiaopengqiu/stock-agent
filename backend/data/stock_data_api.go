@@ -768,7 +768,7 @@ func GetRealTimeStockPriceInfo(ctx context.Context, stockCode string) (price, pr
 	return price, priceTime
 }
 
-func SearchStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
+func SearchStockPriceInfo(stockName, stockCode string, crawlTimeOut int64) *[]string {
 
 	if strutil.HasPrefixAny(stockCode, []string{"SZ", "SH", "sh", "sz", "bj"}) {
 		//if strutil.HasPrefixAny(stockCode, []string{"bj", "BJ"}) {
@@ -778,7 +778,7 @@ func SearchStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 		//	}) + ".BJ"
 		//}
 
-		return getSHSZStockPriceInfo(stockCode, crawlTimeOut)
+		return getSHSZStockPriceInfo(stockName, stockCode, crawlTimeOut)
 	}
 	if strutil.HasPrefixAny(stockCode, []string{"HK", "hk"}) {
 		return getHKStockPriceInfo(stockCode, crawlTimeOut)
@@ -838,6 +838,7 @@ func getUSStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 		messages = append(messages, text)
 	})
 
+	logger.SugaredLogger.Infof("messages: %s", messages)
 	return &messages
 }
 
@@ -855,10 +856,12 @@ func getHKStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 	crawlerAPI = crawlerAPI.NewCrawler(ctx, crawlerBaseInfo)
 
 	url := fmt.Sprintf("https://stock.finance.sina.com.cn/hkstock/quotes/%s.html", strings.ReplaceAll(stockCode, "hk", ""))
-	htmlContent, ok := crawlerAPI.GetHtml(url, ".deta_hqContainer >.deta03 ", true)
+	logger.SugaredLogger.Infof("CrawlHKStockPriceInfo url:%s", url)
+	htmlContent, ok := crawlerAPI.GetHtml(url, "div.deta_hqContainer >.deta03>ul ", false)
 	if !ok {
 		return &[]string{}
 	}
+	//logger.SugaredLogger.Infof("CrawlHKStockPriceInfo htmlContent:%s", htmlContent)
 	document, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())
@@ -890,6 +893,7 @@ func getHKStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 		messages = append(messages, text)
 	})
 
+	logger.SugaredLogger.Infof("messages: %s", messages)
 	return &messages
 }
 
@@ -919,12 +923,12 @@ func getZSInfo(name, stockCode string, crawlTimeOut int64) string {
 	hqTime := strutil.RemoveWhiteSpace(document.Find("div#hqTime").First().Text(), false)
 
 	var markdown strings.Builder
-	markdown.WriteString(fmt.Sprintf("### %s：%s 时间：%s\n", name, price, hqTime))
+	markdown.WriteString(fmt.Sprintf("### 时间：%s %s：%s \n", hqTime, name, price))
 	GetTableMarkdown(document, "div#hqDetails table", &markdown)
 	return markdown.String()
 }
 
-func getSHSZStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
+func getSHSZStockPriceInfo(stockName, stockCode string, crawlTimeOut int64) *[]string {
 	url := "https://finance.sina.com.cn/realstock/company/" + stockCode + "/nc.shtml"
 	crawlerAPI := CrawlerApi{}
 	crawlerBaseInfo := CrawlerBaseInfo{
@@ -950,7 +954,7 @@ func getSHSZStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 	hqTime := strutil.RemoveWhiteSpace(document.Find("div#hqTime").First().Text(), false)
 
 	var markdown strings.Builder
-	markdown.WriteString(fmt.Sprintf("### 当前股价：%s 时间：%s\n", price, hqTime))
+	markdown.WriteString(fmt.Sprintf("### %s现价：%s 现价时间：%s\n", stockName, price, hqTime))
 	GetTableMarkdown(document, "div#hqDetails table", &markdown)
 	return &[]string{markdown.String()}
 }

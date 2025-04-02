@@ -199,7 +199,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 
 		go func() {
 			defer wg.Done()
-			messages := SearchStockPriceInfo(stockCode, o.CrawlTimeOut)
+			messages := SearchStockPriceInfo(stock, stockCode, o.CrawlTimeOut)
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股票价格失败")
 				//ch <- "***❗获取股票价格失败,分析结果可能不准确***<hr>"
@@ -223,6 +223,8 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 				"role":    "assistant",
 				"content": "\n## " + stock + "股价数据：\n" + price,
 			})
+			logger.SugaredLogger.Infof("SearchStockPriceInfo stock:%s stockCode:%s", stock, stockCode)
+			logger.SugaredLogger.Infof("SearchStockPriceInfo assistant:%s", "\n## "+stock+"股价数据：\n"+price)
 		}()
 
 		go func() {

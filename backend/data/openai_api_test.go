@@ -9,7 +9,7 @@ import (
 func TestNewDeepSeekOpenAiConfig(t *testing.T) {
 	db.Init("../../data/stock.db")
 	ai := NewDeepSeekOpenAi(context.TODO())
-	res := ai.NewChatStream("上海贝岭", "sh600171", "上海贝岭分析和总结", nil)
+	res := ai.NewChatStream("中信证券", "hk06030", "中信证券分析和总结", nil)
 	for {
 		select {
 		case msg := <-res:
