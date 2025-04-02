@@ -125,7 +125,7 @@ func (s SettingsApi) GetConfig() *Settings {
 		settings.BrowserPath, _ = CheckBrowserOnWindows()
 	}
 	if settings.BrowserPoolSize <= 0 {
-		settings.BrowserPoolSize = 3
+		settings.BrowserPoolSize = 1
 	}
 	return &settings
 }
