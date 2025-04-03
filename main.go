@@ -66,6 +66,13 @@ func main() {
 	db.Dao.AutoMigrate(&data.FollowedFund{})
 	db.Dao.AutoMigrate(&data.FundBasic{})
 	db.Dao.AutoMigrate(&models.PromptTemplate{})
+	db.Dao.AutoMigrate(&data.Group{})
+	db.Dao.AutoMigrate(&data.GroupStock{})
+
+	//db.Dao.Model(&data.Group{}).Where("id = ?", 0).FirstOrCreate(&data.Group{
+	//	Name: "默认分组",
+	//	Sort: 0,
+	//})
 
 	if stocksBin != nil && len(stocksBin) > 0 {
 		go initStockData()

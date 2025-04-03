@@ -259,36 +259,36 @@ function deletePrompt(ID){
 </script>
 
 <template>
-  <n-flex justify="left" style="margin-top: 12px;padding-left: 12px">
+  <n-flex justify="left" style="margin-top: 12px;padding-left: 12px;">
   <n-form ref="formRef"  :label-placement="'left'" :label-align="'left'" >
-      <n-grid :cols="24" :x-gap="24" style="text-align: left" >
+      <n-grid :cols="24" :x-gap="24" style="text-align: left" :layout-shift-disabled="true">
         <n-gi :span="24">
-          <n-text type="primary" style="font-size: 25px;font-weight: bold">基础设置</n-text>
+          <n-text type="success" style="font-size: 25px;font-weight: bold">基础设置</n-text>
         </n-gi>
-        <n-form-item-gi  :span="10" label="Tushare api token：" path="tushareToken"  >
+        <n-form-item-gi  :span="10" label="Tushare &nbsp;&nbsp;Token：" path="tushareToken"  >
           <n-input  type="text" placeholder="Tushare api token"  v-model:value="formValue.tushareToken" clearable />
         </n-form-item-gi>
         <n-form-item-gi  :span="4" label="启动时更新A股/指数信息：" path="updateBasicInfoOnStart" >
           <n-switch v-model:value="formValue.updateBasicInfoOnStart" />
         </n-form-item-gi>
-        <n-form-item-gi  :span="5" label="数据刷新间隔：" path="refreshInterval" >
+        <n-form-item-gi  :span="4" label="数据刷新间隔：" path="refreshInterval" >
           <n-input-number v-model:value="formValue.refreshInterval" placeholder="请输入数据刷新间隔(秒)">
             <template #suffix>
               秒
             </template>
           </n-input-number>
         </n-form-item-gi>
-        <n-form-item-gi  :span="5" label="暗黑主题：" path="darkTheme" >
+        <n-form-item-gi  :span="6" label="暗黑主题：" path="darkTheme" >
           <n-switch v-model:value="formValue.darkTheme" />
         </n-form-item-gi>
-        <n-form-item-gi  :span="22" label="浏览器路径：" path="browserPath" >
-          <n-input  type="text" placeholder="浏览器路径"  v-model:value="formValue.browserPath" clearable />
+        <n-form-item-gi  :span="10" label="浏览器安装路径：" path="browserPath" >
+          <n-input  type="text" placeholder="浏览器安装路径"  v-model:value="formValue.browserPath" clearable />
         </n-form-item-gi>
       </n-grid>
 
         <n-grid :cols="24" :x-gap="24" style="text-align: left">
           <n-gi :span="24">
-            <n-text type="primary" style="font-size: 25px;font-weight: bold">通知设置</n-text>
+            <n-text type="success" style="font-size: 25px;font-weight: bold">通知设置</n-text>
           </n-gi>
           <n-form-item-gi  :span="6" label="是否启用钉钉推送：" path="dingPush.enable" >
             <n-switch v-model:value="formValue.dingPush.enable" />
@@ -310,7 +310,7 @@ function deletePrompt(ID){
 
     <n-grid :cols="24" :x-gap="24" style="text-align: left;">
       <n-gi :span="24">
-        <n-text type="primary" style="font-size: 25px;font-weight: bold">OpenAI设置</n-text>
+        <n-text type="success" style="font-size: 25px;font-weight: bold">OpenAI设置</n-text>
       </n-gi>
       <n-form-item-gi  :span="3" label="是否启用AI诊股：" path="openAI.enable" >
         <n-switch v-model:value="formValue.openAI.enable" />

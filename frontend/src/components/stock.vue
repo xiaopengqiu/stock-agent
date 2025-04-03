@@ -15,7 +15,14 @@ import {
   SetCostPriceAndVolume,
   SetStockSort,
   UnFollow,
-  ShareAnalysis, SaveAsMarkdown, GetPromptTemplates, SetStockAICron
+  ShareAnalysis,
+  SaveAsMarkdown,
+  GetPromptTemplates,
+  SetStockAICron,
+  AddGroup,
+  GetGroupList,
+  AddStockGroup,
+  RemoveStockGroup, RemoveGroup
 } from '../../wailsjs/go/main/App'
 import {
   NAvatar,
@@ -47,15 +54,15 @@ import {asBlob} from 'html-docx-js-typescript';
 
 import vueDanmaku from 'vue3-danmaku'
 import {keys, pad, padStart} from "lodash";
+import {models} from "../../wailsjs/go/models";
 const danmus = ref([])
 const ws = ref(null)
-
+const dialog = useDialog()
 const toolbars = [0];
 const handleProgress = (progress) => {
   console.log(`Export progress: ${progress.ratio * 100}%`);
 };
 const  enableEditor= ref(false)
-
 const mdPreviewRef = ref(null)
 const mdEditorRef =  ref(null)
 const tipsRef = ref(null)
@@ -65,6 +72,7 @@ const stocks=ref([])
 const results=ref({})
 const stockList=ref([])
 const followList=ref([])
+const groupList=ref([])
 const options=ref([])
 const modalShow = ref(false)
 const modalShow2 = ref(false)
@@ -81,6 +89,7 @@ const formModel = ref({
   sort:999,
   cron:"",
 })
+
 const promptTemplates=ref([])
 const sysPromptOptions=ref([])
 const userPromptOptions=ref([])
@@ -101,7 +110,7 @@ const data = reactive({
   enableDanmu: false,
   darkTheme:false,
 })
-
+const currentGroupId=ref(0)
 const theme=computed(() => {
   return data.darkTheme ? 'dark' : 'light'
 })
@@ -115,15 +124,29 @@ const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/maste
 const sortedResults = computed(() => {
   //console.log("computed",sortedResults.value)
   const sortedKeys =keys(results.value).sort();
-  console.log("sortedKeys",sortedKeys)
+  //console.log("sortedKeys",sortedKeys)
   const sortedObject = {};
   sortedKeys.forEach(key => {
-    sortedObject[key] = results.value[key];
+      sortedObject[key] = results.value[key];
   });
   return sortedObject
 });
 
+const groupResults=computed(() => {
+  const group={}
+  for (const key  in sortedResults.value) {
+    if(stocks.value.includes(sortedResults.value[key]['股票代码'])){
+      group[key]=sortedResults.value[key]
+    }
+  }
+  return group
+})
+
 onBeforeMount(()=>{
+
+  GetGroupList().then(result => {
+    groupList.value=result
+  })
   GetStockList("").then(result => {
     stockList.value = result
     options.value=result.map(item => {
@@ -133,7 +156,7 @@ onBeforeMount(()=>{
       }
     })
   })
-  GetFollowList().then(result => {
+  GetFollowList(currentGroupId.value).then(result => {
     followList.value = result
     for (const followedStock of result) {
       if(followedStock.StockCode.startsWith("us")){
@@ -495,6 +518,8 @@ async function updateData(result) {
   //result.key=result.sort
   result.key=GetSortKey(result.sort,result["股票代码"])
   results.value[GetSortKey(result.sort,result["股票代码"])]=result
+
+  console.log("updateData",result)
 }
 
 
@@ -510,7 +535,7 @@ async function monitor() {
 
 function GetSortKey(sort,code){
   let sortKey= padStart(sort,8,'0')+"_"+code
-  console.log("GetSortKey:",sortKey)
+  //console.log("GetSortKey:",sortKey)
   return sortKey
 }
 
@@ -603,7 +628,7 @@ function updateCostPriceAndVolumeNew(code,price,volume,alarm,formModel){
   SetCostPriceAndVolume(code,price,volume).then(result => {
     modalShow.value=false
     message.success(result)
-    GetFollowList().then(result => {
+    GetFollowList(currentGroupId.value).then(result => {
       followList.value = result
       for (const followedStock of result) {
         if (!stocks.value.includes(followedStock.StockCode)) {
@@ -851,6 +876,73 @@ function share(code,name){
     })
   })
 }
+const addTabModel=ref({
+  name: '',
+  sort: 1,
+})
+const addTabPane=ref(false)
+function addTab(){
+  addTabPane.value=true
+}
+function saveTabPane(){
+  AddGroup(addTabModel.value).then(result => {
+    message.info(result)
+    addTabPane.value=false
+  })
+}
+function AddStockGroupInfo(groupId,code,name){
+  if(code.startsWith("gb_")){
+    code="us"+ code.replace("gb_", "").toLowerCase()
+  }
+  AddStockGroup(groupId,code).then(result => {
+    message.info(result)
+    GetGroupList().then(result => {
+      groupList.value=result
+    })
+  })
+
+}
+function updateTab(name){
+  currentGroupId.value=Number(name)
+  GetFollowList(currentGroupId.value).then(result => {
+    stocks.value=[]
+    console.log("GetFollowList",result)
+    followList.value = result
+    for (const followedStock of result) {
+      if(followedStock.StockCode.startsWith("us")){
+        followedStock.StockCode="gb_"+ followedStock.StockCode.replace("us", "").toLowerCase()
+      }
+        //console.log("followList",followedStock.StockCode)
+        stocks.value.push(followedStock.StockCode)
+    }
+    monitor()
+    message.destroyAll()
+  })
+}
+function delTab(name){
+  let infos=groupList.value=groupList.value.filter(item => item.ID === Number(name))
+  dialog.create({
+    title: '删除分组',
+    type: 'warning',
+    content: '确定要删除['+infos[0].name+']分组吗？分组数据将不能恢复哟！',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      RemoveGroup(name).then(result => {
+        message.info(result)
+        GetGroupList().then(result => {
+          groupList.value=result
+        })
+      })
+    }
+  })
+}
+function delStockGroup(code,name,groupId){
+  RemoveStockGroup(code,name,groupId).then(result => {
+    updateTab(groupId)
+    message.info(result)
+  })
+}
 </script>
 
 <template>
@@ -861,8 +953,10 @@ function share(code,name){
         </n-gradient-text>
       </template>
     </vue-danmaku>
-  <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
-    <n-gi :id="result['股票代码']+'_gi'"  v-for="result in sortedResults" style="margin-left: 2px;" >
+  <n-tabs  type="card" animated addable   @add="addTab"  @update-value="updateTab" placement="top"  @close="(key)=>{delTab(key)}">
+    <n-tab-pane name="0"  tab="全部">
+      <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
+        <n-gi :id="result['股票代码']+'_gi'"  v-for="result in sortedResults" style="margin-left: 2px;" >
          <n-card  :data-sort="result.sort" :id="result['股票代码']"  :data-code="result['股票代码']" :bordered="true" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
            <n-grid :cols="1" :y-gap="6">
              <n-gi>
@@ -916,11 +1010,82 @@ function share(code,name){
                <n-button size="tiny" type="success" @click="showFenshi(result['股票代码'],result['股票名称'])"> 分时 </n-button>
                <n-button size="tiny" type="error" @click="showK(result['股票代码'],result['股票名称'])"> 日K </n-button>
                <n-button size="tiny" type="warning" @click="search(result['股票代码'],result['股票名称'])"> 详情 </n-button>
+               <n-dropdown   trigger="click" :options="groupList" key-field="ID" label-field="name" @select="(groupId) => AddStockGroupInfo(groupId,result['股票代码'],result['股票名称'])">
+                 <n-button  type="success" size="tiny">设置分组</n-button>
+               </n-dropdown>
              </n-flex>
            </template>
-         </n-card >
-      </n-gi>
-    </n-grid>
+            </n-card >
+          </n-gi>
+        </n-grid>
+    </n-tab-pane>
+    <n-tab-pane  closable v-for="group in groupList" :group-id="group.ID" :name="group.ID" :tab="group.name">
+      <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
+        <n-gi :id="result['股票代码']+'_gi'"  v-for="result in groupResults" style="margin-left: 2px;" >
+          <n-card    :data-sort="result.sort" :id="result['股票代码']"  :data-code="result['股票代码']" :bordered="true" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
+            <n-grid :cols="1" :y-gap="6">
+              <n-gi>
+                <n-text :type="result.type" >
+                  <n-number-animation :duration="1000" :precision="2" :from="result['上次当前价格']" :to="Number(result['当前价格'])" />
+                  <n-tag size="small"  :type="result.type" :bordered="false"  v-if="result['盘前盘后']>0">({{result['盘前盘后']}} {{result['盘前盘后涨跌幅']}}%)</n-tag>
+                </n-text>
+                <n-text style="padding-left: 10px;" :type="result.type">
+                  <n-number-animation :duration="1000" :precision="3" :from="0" :to="result.changePercent" />%
+                </n-text>&nbsp;
+                <n-text size="small" v-if="result.costVolume>0" :type="result.type">
+                  <n-number-animation  :duration="1000" :precision="2" :from="0" :to="result.profitAmountToday" />
+                </n-text>
+              </n-gi>
+            </n-grid>
+            <n-grid :cols="2" :y-gap="4" :x-gap="4"  >
+              <n-gi>
+                <n-text :type="'info'">{{"最高 "+result["今日最高价"]+" "+result.highRate }}%</n-text>
+              </n-gi>
+              <n-gi>
+                <n-text :type="'info'">{{"最低 "+result["今日最低价"]+" "+result.lowRate }}%</n-text>
+              </n-gi>
+              <n-gi>
+                <n-text :type="'info'">{{"昨收 "+result["昨日收盘价"]}}</n-text>
+              </n-gi>
+              <n-gi>
+                <n-text :type="'info'">{{"今开 "+result["今日开盘价"]}}</n-text>
+              </n-gi>
+            </n-grid>
+            <template #header-extra>
+
+              <n-tag size="small" :bordered="false">{{result['股票代码']}}</n-tag>&nbsp;
+              <n-button size="tiny" secondary type="primary" @click="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
+                取消关注
+              </n-button>&nbsp;
+              <n-button size="tiny" v-if="data.openAiEnable" secondary type="warning" @click="aiCheckStock(result['股票名称'],result['股票代码'])">
+                AI分析
+              </n-button>&nbsp;
+              <n-button secondary type="error" size="tiny" @click="delStockGroup(result['股票代码'],result['股票名称'],group.ID)">移出分组</n-button>
+            </template>
+            <template #footer>
+              <n-flex justify="center">
+                <n-tag size="small" v-if="result.volume>0" :type="result.profitType">{{result.volume+"股"}}</n-tag>
+                <n-tag size="small" v-if="result.costPrice>0" :type="result.profitType">{{"成本:"+result.costPrice+"*"+result.costVolume+" "+result.profit+"%"+" ( "+result.profitAmount+" ¥ )"}}</n-tag>
+              </n-flex>
+            </template>
+            <template #action>
+              <n-flex justify="space-between">
+                <n-text :type="'info'">{{result["日期"]+" "+result["时间"]}}</n-text>
+                <n-button size="tiny" type="info" @click="setStock(result['股票代码'],result['股票名称'])"> 成本 </n-button>
+                <n-button size="tiny" type="success" @click="showFenshi(result['股票代码'],result['股票名称'])"> 分时 </n-button>
+                <n-button size="tiny" type="error" @click="showK(result['股票代码'],result['股票名称'])"> 日K </n-button>
+                <n-button size="tiny" type="warning" @click="search(result['股票代码'],result['股票名称'])"> 详情 </n-button>
+                <n-dropdown   trigger="click" :options="groupList" key-field="ID" label-field="name" @select="(groupId) => AddStockGroupInfo(groupId,result['股票代码'],result['股票名称'])">
+                  <n-button  type="success" size="tiny">设置分组</n-button>
+                </n-dropdown>
+
+              </n-flex>
+            </template>
+          </n-card >
+        </n-gi>
+      </n-grid>
+    </n-tab-pane>
+  </n-tabs>
   <div style="position: fixed;bottom: 18px;right:5px;z-index: 10;width: 400px">
 <!--    <n-card :bordered="false">-->
       <n-input-group >
@@ -991,6 +1156,31 @@ function share(code,name){
             </template>
       </n-modal>
 
+  <n-modal v-model:show="addTabPane" title="添加分组" style="width: 400px;text-align: left" :preset="'card'">
+    <n-form
+        :model="addTabModel"
+        size="medium"
+        label-placement="left"
+    > <n-grid :cols="2" >
+        <n-form-item-gi label="分组名称:" path="name" :span="5">
+          <n-input v-model:value="addTabModel.name"  style="width: 100%" placeholder="请输入分组名称" />
+        </n-form-item-gi>
+        <n-form-item-gi label="分组排序:" path="sort" :span="5">
+          <n-input-number v-model:value="addTabModel.sort" style="width: 100%"  min="0" placeholder="请输入分组排序值" ></n-input-number>
+        </n-form-item-gi>
+    </n-grid>
+    </n-form>
+    <template #footer>
+      <n-flex justify="end">
+        <n-button  type="primary" @click="saveTabPane">
+          保存
+        </n-button>
+        <n-button  type="warning" @click="addTabPane=false">
+          取消
+        </n-button>
+      </n-flex>
+    </template>
+  </n-modal>
   <n-modal v-model:show="modalShow2" :title="data.name" style="width: 600px" :preset="'card'">
     <n-image :src="data.fenshiURL" />
   </n-modal>

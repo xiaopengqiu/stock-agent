@@ -101,6 +101,7 @@ func (a *App) startup(ctx context.Context) {
 		onExit(a)
 	})
 
+	logger.SugaredLogger.Infof(" application startup Version:%s", Version)
 }
 
 func (a *App) CheckUpdate() {
@@ -237,18 +238,19 @@ func (a *App) domReady(ctx context.Context) {
 	//		logger.SugaredLogger.Infof("Edge浏览器已安装，路径为: %s", path)
 	//	}
 	//}()
-	followList := data.NewStockDataApi().GetFollowList()
+	followList := data.NewStockDataApi().GetFollowList(0)
 	for _, follow := range *followList {
-		if follow.Cron == "" {
+		if follow.Cron == nil || *follow.Cron == "" {
 			continue
 		}
-		entryID, err := a.cron.AddFunc(follow.Cron, a.AddCronTask(follow))
-		logger.SugaredLogger.Errorf("添加自动分析任务:%s cron=%s entryID:%v", follow.Name, follow.Cron, entryID)
-		a.cronEntrys[follow.StockCode] = entryID
+		entryID, err := a.cron.AddFunc(*follow.Cron, a.AddCronTask(follow))
 		if err != nil {
-			return
+			logger.SugaredLogger.Errorf("添加自动分析任务失败:%s cron=%s entryID:%v", follow.Name, *follow.Cron, entryID)
+			continue
 		}
+		a.cronEntrys[follow.StockCode] = entryID
 	}
+	logger.SugaredLogger.Infof("domReady-cronEntrys:%+v", a.cronEntrys)
 
 }
 
@@ -504,6 +506,7 @@ func addStockFollowData(follow data.FollowedStock, stockData *data.StockInfo) {
 	stockData.CostVolume = follow.Volume   //成本量
 	stockData.AlarmChangePercent = follow.AlarmChangePercent
 	stockData.AlarmPrice = follow.AlarmPrice
+	stockData.Groups = follow.Groups
 
 	//当前价格
 	price, _ := convertor.ToFloat(stockData.Price)
@@ -592,17 +595,19 @@ func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 	logger.SugaredLogger.Debugf("dialog:%s", dialog)
 	if dialog == "No" {
 		return true
+	} else {
+		systray.Quit()
+		a.cron.Stop()
+		return false
 	}
-	return false
 }
 
 // shutdown is called at application termination
 func (a *App) shutdown(ctx context.Context) {
 	defer PanicHandler()
 	// Perform your teardown here
-	systray.Quit()
-	a.cron.Stop()
-	os.Exit(0)
+	//os.Exit(0)
+	logger.SugaredLogger.Infof("application shutdown Version:%s", Version)
 }
 
 // Greet returns a greeting for the given name
@@ -612,7 +617,7 @@ func (a *App) Greet(stockCode string) *data.StockInfo {
 	follow := &data.FollowedStock{
 		StockCode: stockCode,
 	}
-	db.Dao.Model(follow).Where("stock_code = ?", stockCode).First(follow)
+	db.Dao.Model(follow).Where("stock_code = ?", stockCode).Preload("Groups").Preload("Groups.GroupInfo").First(follow)
 	stockInfo := getStockInfo(*follow)
 	return stockInfo
 }
@@ -625,8 +630,8 @@ func (a *App) UnFollow(stockCode string) string {
 	return data.NewStockDataApi().UnFollow(stockCode)
 }
 
-func (a *App) GetFollowList() *[]data.FollowedStock {
-	return data.NewStockDataApi().GetFollowList()
+func (a *App) GetFollowList(groupId int) *[]data.FollowedStock {
+	return data.NewStockDataApi().GetFollowList(groupId)
 }
 
 func (a *App) GetStockList(key string) []data.StockBasic {
@@ -796,7 +801,7 @@ func getMsgTypeName(msgType int) string {
 
 func onExit(a *App) {
 	// 清理操作
-	logger.SugaredLogger.Infof("onExit")
+	logger.SugaredLogger.Infof("systray onExit")
 	//systray.Quit()
 	//runtime.Quit(a.ctx)
 }
@@ -804,7 +809,7 @@ func onExit(a *App) {
 func onReady(a *App) {
 
 	// 初始化操作
-	logger.SugaredLogger.Infof("onReady")
+	logger.SugaredLogger.Infof("systray onReady")
 	systray.SetIcon(icon2)
 	systray.SetTitle("go-stock")
 	systray.SetTooltip("go-stock 股票行情实时获取")
@@ -987,4 +992,47 @@ func OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceData) {
 		logger.SugaredLogger.Error(err)
 	}
 	time.Sleep(time.Second * 3)
+}
+
+func (a *App) AddGroup(group data.Group) string {
+	ok := data.NewStockGroupApi(db.Dao).AddGroup(group)
+	if ok {
+		return "添加成功"
+	} else {
+		return "添加失败"
+	}
+}
+func (a *App) GetGroupList() []data.Group {
+	return data.NewStockGroupApi(db.Dao).GetGroupList()
+}
+
+func (a *App) GetGroupStockList(groupId int) []data.GroupStock {
+	return data.NewStockGroupApi(db.Dao).GetGroupStockByGroupId(groupId)
+}
+
+func (a *App) AddStockGroup(groupId int, stockCode string) string {
+	ok := data.NewStockGroupApi(db.Dao).AddStockGroup(groupId, stockCode)
+	if ok {
+		return "添加成功"
+	} else {
+		return "添加失败"
+	}
+}
+
+func (a *App) RemoveStockGroup(code, name string, groupId int) string {
+	ok := data.NewStockGroupApi(db.Dao).RemoveStockGroup(code, name, groupId)
+	if ok {
+		return "移除成功"
+	} else {
+		return "移除失败"
+	}
+}
+
+func (a *App) RemoveGroup(groupId int) string {
+	ok := data.NewStockGroupApi(db.Dao).RemoveGroup(groupId)
+	if ok {
+		return "移除成功"
+	} else {
+		return "移除失败"
+	}
 }

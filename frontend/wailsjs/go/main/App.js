@@ -6,8 +6,16 @@ export function AddCronTask(arg1) {
   return window['go']['main']['App']['AddCronTask'](arg1);
 }
 
+export function AddGroup(arg1) {
+  return window['go']['main']['App']['AddGroup'](arg1);
+}
+
 export function AddPrompt(arg1) {
   return window['go']['main']['App']['AddPrompt'](arg1);
+}
+
+export function AddStockGroup(arg1, arg2) {
+  return window['go']['main']['App']['AddStockGroup'](arg1, arg2);
 }
 
 export function CheckUpdate() {
@@ -38,12 +46,20 @@ export function GetConfig() {
   return window['go']['main']['App']['GetConfig']();
 }
 
-export function GetFollowList() {
-  return window['go']['main']['App']['GetFollowList']();
+export function GetFollowList(arg1) {
+  return window['go']['main']['App']['GetFollowList'](arg1);
 }
 
 export function GetFollowedFund() {
   return window['go']['main']['App']['GetFollowedFund']();
+}
+
+export function GetGroupList() {
+  return window['go']['main']['App']['GetGroupList']();
+}
+
+export function GetGroupStockList(arg1) {
+  return window['go']['main']['App']['GetGroupStockList'](arg1);
 }
 
 export function GetPromptTemplates(arg1, arg2) {
@@ -68,6 +84,14 @@ export function Greet(arg1) {
 
 export function NewChatStream(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['NewChatStream'](arg1, arg2, arg3, arg4);
+}
+
+export function RemoveGroup(arg1) {
+  return window['go']['main']['App']['RemoveGroup'](arg1);
+}
+
+export function RemoveStockGroup(arg1, arg2, arg3) {
+  return window['go']['main']['App']['RemoveStockGroup'](arg1, arg2, arg3);
 }
 
 export function SaveAIResponseResult(arg1, arg2, arg3, arg4, arg5) {

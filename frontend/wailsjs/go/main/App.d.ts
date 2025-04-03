@@ -5,7 +5,11 @@ import {models} from '../models';
 
 export function AddCronTask(arg1:data.FollowedStock):Promise<any>;
 
+export function AddGroup(arg1:data.Group):Promise<string>;
+
 export function AddPrompt(arg1:models.Prompt):Promise<string>;
+
+export function AddStockGroup(arg1:number,arg2:string):Promise<string>;
 
 export function CheckUpdate():Promise<void>;
 
@@ -21,9 +25,13 @@ export function GetAIResponseResult(arg1:string):Promise<models.AIResponseResult
 
 export function GetConfig():Promise<data.Settings>;
 
-export function GetFollowList():Promise<any>;
+export function GetFollowList(arg1:number):Promise<any>;
 
 export function GetFollowedFund():Promise<Array<data.FollowedFund>>;
+
+export function GetGroupList():Promise<Array<data.Group>>;
+
+export function GetGroupStockList(arg1:number):Promise<Array<data.GroupStock>>;
 
 export function GetPromptTemplates(arg1:string,arg2:string):Promise<any>;
 
@@ -36,6 +44,10 @@ export function GetfundList(arg1:string):Promise<Array<data.FundBasic>>;
 export function Greet(arg1:string):Promise<data.StockInfo>;
 
 export function NewChatStream(arg1:string,arg2:string,arg3:string,arg4:any):Promise<void>;
+
+export function RemoveGroup(arg1:number):Promise<string>;
+
+export function RemoveStockGroup(arg1:string,arg2:string,arg3:number):Promise<string>;
 
 export function SaveAIResponseResult(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<void>;
 

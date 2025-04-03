@@ -344,7 +344,7 @@ func (f *FundApi) CrawlFundNetEstimatedUnit(code string) {
 			//logger.SugaredLogger.Infof("基金净值信息:%s", htmlContent)
 			err := json.Unmarshal([]byte(htmlContent), &fundNetUnitValue)
 			if err != nil {
-				logger.SugaredLogger.Errorf("json.Unmarshal error:%s", err.Error())
+				//logger.SugaredLogger.Errorf("json.Unmarshal error:%s", err.Error())
 				return
 			}
 			fund := &FollowedFund{

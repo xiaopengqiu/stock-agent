@@ -16,6 +16,7 @@ import (
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/go-resty/resty/v2"
+	"github.com/samber/lo"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"go-stock/backend/models"
@@ -90,6 +91,8 @@ type StockInfo struct {
 	Sort               int64   `json:"sort"` //排序
 	AlarmChangePercent float64 `json:"alarmChangePercent"`
 	AlarmPrice         float64 `json:"alarmPrice"`
+
+	Groups []GroupStock `gorm:"-:all"`
 }
 
 func (receiver StockInfo) TableName() string {
@@ -162,8 +165,9 @@ type FollowedStock struct {
 	AlarmPrice         float64
 	Time               time.Time
 	Sort               int64
-	Cron               string
+	Cron               *string
 	IsDel              soft_delete.DeletedAt `gorm:"softDelete:flag"`
+	Groups             []GroupStock          `gorm:"foreignKey:StockCode;references:StockCode"`
 }
 
 func (receiver FollowedStock) TableName() string {
@@ -429,9 +433,20 @@ func (receiver StockDataApi) SetStockAICron(cron string, stockCode string) {
 	db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", strings.ToLower(stockCode)).Update("cron", cron)
 
 }
-func (receiver StockDataApi) GetFollowList() *[]FollowedStock {
+func (receiver StockDataApi) GetFollowList(groupId int) *[]FollowedStock {
+	logger.SugaredLogger.Infof("GetFollowList %d", groupId)
+
 	var result *[]FollowedStock
-	db.Dao.Model(&FollowedStock{}).Order("sort asc,time desc").Find(&result)
+	if groupId == 0 {
+		db.Dao.Model(&FollowedStock{}).Order("sort asc,time desc").Find(&result)
+	} else {
+		infos := NewStockGroupApi(db.Dao).GetGroupStockByGroupId(groupId)
+		codes := lo.FlatMap(infos, func(info GroupStock, idx int) []string {
+			return []string{info.StockCode}
+		})
+		db.Dao.Model(&FollowedStock{}).Where("stock_code in ?", codes).Order("sort asc,time desc").Find(&result)
+		logger.SugaredLogger.Infof("GetFollowList %+v", result)
+	}
 	return result
 }
 
