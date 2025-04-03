@@ -463,7 +463,7 @@ function blinkBorder(findId){
   const element = document.getElementById(findId);
   if (element) {
     // 滚动到该元素
-    element.scrollIntoView({ behavior: 'smooth' });
+    element.scrollIntoView({ behavior: 'smooth'});
     const pelement = document.getElementById(findId +'_gi');
     if(pelement){
       // 添加闪烁效果
@@ -888,6 +888,9 @@ function saveTabPane(){
   AddGroup(addTabModel.value).then(result => {
     message.info(result)
     addTabPane.value=false
+    GetGroupList().then(result => {
+      groupList.value=result
+    })
   })
 }
 function AddStockGroupInfo(groupId,code,name){
@@ -956,8 +959,8 @@ function delStockGroup(code,name,groupId){
   <n-tabs  type="card" animated addable   @add="addTab"  @update-value="updateTab" placement="top"  @close="(key)=>{delTab(key)}">
     <n-tab-pane name="0"  tab="全部">
       <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
-        <n-gi :id="result['股票代码']+'_gi'"  v-for="result in sortedResults" style="margin-left: 2px;" >
-         <n-card  :data-sort="result.sort" :id="result['股票代码']"  :data-code="result['股票代码']" :bordered="true" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
+        <n-gi   :id="result['股票代码']" v-for="result in sortedResults" style="margin-left: 2px;" >
+         <n-card  :data-sort="result.sort"  :id="result['股票代码']+'_card'"  :data-code="result['股票代码']" :bordered="true" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
            <n-grid :cols="1" :y-gap="6">
              <n-gi>
                <n-text :type="result.type" >
@@ -972,7 +975,7 @@ function delStockGroup(code,name,groupId){
                </n-text>
              </n-gi>
            </n-grid>
-             <n-grid :cols="2" :y-gap="4" :x-gap="4"  >
+             <n-grid :cols="2" :y-gap="4" :x-gap="4" >
                <n-gi>
                  <n-text :type="'info'">{{"最高 "+result["今日最高价"]+" "+result.highRate }}%</n-text>
                </n-gi>
