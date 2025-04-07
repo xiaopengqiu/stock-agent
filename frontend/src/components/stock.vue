@@ -518,6 +518,9 @@ async function updateData(result) {
   //result.key=result.sort
   result.key=GetSortKey(result.sort,result["股票代码"])
   results.value[GetSortKey(result.sort,result["股票代码"])]=result
+  if(!stocks.value.includes(result["股票代码"])) {
+    delete results.value[result.key]
+  }
 
   console.log("updateData",result)
 }
