@@ -321,6 +321,7 @@ export namespace data {
 	    enableNews: boolean;
 	    darkTheme: boolean;
 	    browserPoolSize: number;
+	    enableFund: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -355,6 +356,7 @@ export namespace data {
 	        this.enableNews = source["enableNews"];
 	        this.darkTheme = source["darkTheme"];
 	        this.browserPoolSize = source["browserPoolSize"];
+	        this.enableFund = source["enableFund"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

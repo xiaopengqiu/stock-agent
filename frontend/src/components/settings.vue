@@ -44,6 +44,7 @@ const formValue = ref({
   browserPath: '',
   enableNews:false,
   darkTheme:true,
+  enableFund:false,
 })
 const promptTemplates=ref([])
 onMounted(()=>{
@@ -76,6 +77,7 @@ onMounted(()=>{
     formValue.value.browserPath = res.browserPath
     formValue.value.enableNews = res.enableNews
     formValue.value.darkTheme = res.darkTheme
+    formValue.value.enableFund = res.enableFund
 
     console.log(res)
   })
@@ -114,7 +116,8 @@ function saveConfig(){
     enableDanmu:formValue.value.enableDanmu,
     browserPath:formValue.value.browserPath,
     enableNews:formValue.value.enableNews,
-    darkTheme:formValue.value.darkTheme
+    darkTheme:formValue.value.darkTheme,
+    enableFund:formValue.value.enableFund,
   })
 
 
@@ -191,6 +194,7 @@ function importConfig(){
       formValue.value.browserPath = config.browserPath
       formValue.value.enableNews = config.enableNews
       formValue.value.darkTheme = config.darkTheme
+      formValue.value.enableFund = config.enableFund
      // formRef.value.resetFields()
     };
     reader.readAsText(file);
@@ -283,6 +287,9 @@ function deletePrompt(ID){
         </n-form-item-gi>
         <n-form-item-gi  :span="10" label="浏览器安装路径：" path="browserPath" >
           <n-input  type="text" placeholder="浏览器安装路径"  v-model:value="formValue.browserPath" clearable />
+        </n-form-item-gi>
+        <n-form-item-gi  :span="6" label="是否启用指数基金：" path="enableFund" >
+          <n-switch v-model:value="formValue.enableFund" />
         </n-form-item-gi>
       </n-grid>
 

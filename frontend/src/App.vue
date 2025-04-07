@@ -20,7 +20,7 @@ import {
 import {GetConfig} from "../wailsjs/go/main/App";
 const enableNews= ref(false)
 const contentStyle =  ref("")
-const enableDarkTheme = ref(true)
+const enableFund = ref(false)
 const content = ref('数据来源于网络,仅供参考;投资有风险,入市需谨慎')
 const isFullscreen = ref(false)
 const activeKey = ref('')
@@ -65,6 +65,7 @@ const menuOptions = ref([
             },
             { default: () => '基金自选',}
         ),
+    show: enableFund.value,
     key: 'fund',
     icon: renderIcon(SparklesOutline),
     children:[
@@ -196,26 +197,15 @@ window.onerror = function (msg, source, lineno, colno, error) {
 };
 
 onBeforeMount(()=>{
-  // GetConfig().then((res)=>{
-  //   console.log(res)
-  //   if(res.darkTheme){
-  //     enableDarkTheme.value=darkTheme
-  //   }
-  //   if(res.enableNews){
-  //     enableNews.value=true
-  //   }
-  // })
+  GetConfig().then((res)=>{
+    console.log(res)
+    enableFund.value=res.enableFund
+  })
 })
 
 onMounted(()=>{
   contentStyle.value="max-height: calc(90vh);overflow: hidden"
   GetConfig().then((res)=>{
-    console.log(res)
-    if(res.darkTheme){
-      enableDarkTheme.value=darkTheme
-    }else{
-      enableDarkTheme.value=null
-    }
     if(res.enableNews){
       enableNews.value=true
     }

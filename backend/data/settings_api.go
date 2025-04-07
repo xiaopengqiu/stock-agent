@@ -33,6 +33,7 @@ type Settings struct {
 	EnableNews        bool    `json:"enableNews"`
 	DarkTheme         bool    `json:"darkTheme"`
 	BrowserPoolSize   int     `json:"browserPoolSize"`
+	EnableFund        bool    `json:"enableFund"`
 }
 
 func (receiver Settings) TableName() string {
@@ -76,6 +77,7 @@ func (s SettingsApi) UpdateConfig() string {
 			"browser_path":               s.Config.BrowserPath,
 			"enable_news":                s.Config.EnableNews,
 			"dark_theme":                 s.Config.DarkTheme,
+			"enable_fund":                s.Config.EnableFund,
 		})
 	} else {
 		logger.SugaredLogger.Infof("未找到配置，创建默认配置:%+v", s.Config)
@@ -102,6 +104,7 @@ func (s SettingsApi) UpdateConfig() string {
 			BrowserPath:            s.Config.BrowserPath,
 			EnableNews:             s.Config.EnableNews,
 			DarkTheme:              s.Config.DarkTheme,
+			EnableFund:             s.Config.EnableFund,
 		})
 	}
 	return "保存成功！"

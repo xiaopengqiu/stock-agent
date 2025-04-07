@@ -169,14 +169,15 @@ func (a *App) domReady(ctx context.Context) {
 		//for range ticker.C {
 		//	MonitorFundPrices(a)
 		//}
-
-		id, err := a.cron.AddFunc(fmt.Sprintf("@every %ds", 60), func() {
-			MonitorFundPrices(a)
-		})
-		if err != nil {
-			logger.SugaredLogger.Errorf("AddFunc error:%s", err.Error())
-		} else {
-			a.cronEntrys["MonitorFundPrices"] = id
+		if config.EnableFund {
+			id, err := a.cron.AddFunc(fmt.Sprintf("@every %ds", 60), func() {
+				MonitorFundPrices(a)
+			})
+			if err != nil {
+				logger.SugaredLogger.Errorf("AddFunc error:%s", err.Error())
+			} else {
+				a.cronEntrys["MonitorFundPrices"] = id
+			}
 		}
 
 	}()
@@ -209,8 +210,10 @@ func (a *App) domReady(ctx context.Context) {
 		go runtime.EventsEmit(a.ctx, "telegraph", refreshTelegraphList())
 	}
 	go MonitorStockPrices(a)
-	go MonitorFundPrices(a)
-	go data.NewFundApi().AllFund()
+	if config.EnableFund {
+		go MonitorFundPrices(a)
+		go data.NewFundApi().AllFund()
+	}
 	//检查新版本
 	go func() {
 		a.CheckUpdate()
