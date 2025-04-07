@@ -21,6 +21,7 @@ import {GetConfig} from "../wailsjs/go/main/App";
 const enableNews= ref(false)
 const contentStyle =  ref("")
 const enableFund = ref(false)
+const enableDarkTheme =  ref(null)
 const content = ref('数据来源于网络,仅供参考;投资有风险,入市需谨慎')
 const isFullscreen = ref(false)
 const activeKey = ref('')
@@ -200,6 +201,18 @@ onBeforeMount(()=>{
   GetConfig().then((res)=>{
     console.log(res)
     enableFund.value=res.enableFund
+
+    menuOptions.value.filter((item)=>{
+      if(item.key==='fund'){
+        item.show=res.enableFund
+      }
+    })
+
+    if(res.darkTheme){
+      enableDarkTheme.value=darkTheme
+    }else{
+      enableDarkTheme.value=null
+    }
   })
 })
 
@@ -209,6 +222,7 @@ onMounted(()=>{
     if(res.enableNews){
       enableNews.value=true
     }
+    enableFund.value=res.enableFund
   })
 })
 
