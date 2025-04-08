@@ -284,7 +284,6 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 			if checkIsIndexBasic(stock) {
 				return
 			}
-
 			messages := GetFinancialReportsByXUEQIU(stockCode, o.CrawlTimeOut)
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股票财报失败")
