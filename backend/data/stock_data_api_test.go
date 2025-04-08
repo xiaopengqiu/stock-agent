@@ -26,9 +26,13 @@ func TestGetTelegraph(t *testing.T) {
 }
 
 func TestGetFinancialReports(t *testing.T) {
+	db.Init("../../data/stock.db")
 	//GetFinancialReports("sz000802", 30)
 	//GetFinancialReports("hk00927", 30)
-	GetFinancialReports("gb_aapl", 30)
+	//GetFinancialReports("gb_aapl", 30)
+	GetFinancialReportsByXUEQIU("sz000802", 30)
+	GetFinancialReportsByXUEQIU("gb_aapl", 30)
+	GetFinancialReportsByXUEQIU("hk00927", 30)
 
 }
 
@@ -191,7 +195,7 @@ func TestReadFile(t *testing.T) {
 func TestFollowedList(t *testing.T) {
 	db.Init("../../data/stock.db")
 	stockDataApi := NewStockDataApi()
-	stockDataApi.GetFollowList()
+	stockDataApi.GetFollowList(1)
 
 }
 

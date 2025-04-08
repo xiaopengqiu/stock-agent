@@ -64,7 +64,13 @@ func GetTableMarkdown(document *goquery.Document, waitVisible string, markdown *
 	document.Find(waitVisible).First().Find("tr").Each(func(index int, item *goquery.Selection) {
 		row := ""
 		item.Find("th, td").Each(func(i int, cell *goquery.Selection) {
-			text := cell.Text()
+			text := cell.Children().FilterFunction(func(i int, s *goquery.Selection) bool {
+				return isVisible(s)
+			}).Text()
+			if text == "" {
+				text = cell.Text()
+			}
+
 			row += "|" + text
 		})
 		row += "|"
@@ -84,4 +90,22 @@ func GetTableMarkdown(document *goquery.Document, waitVisible string, markdown *
 		}
 	})
 	logger.SugaredLogger.Infof("\n%s", markdown.String())
+}
+
+// isVisible 函数用于判断元素是否可见
+func isVisible(s *goquery.Selection) bool {
+	// 检查 display 属性
+	display, _ := s.Attr("style")
+	if strings.Contains(strings.ToLower(display), "display: none") {
+		return false
+	}
+	// 检查 visibility 属性
+	if strings.Contains(strings.ToLower(display), "visibility: hidden") {
+		return false
+	}
+	// 检查 opacity 属性
+	if strings.Contains(strings.ToLower(display), "opacity: 0") {
+		return false
+	}
+	return true
 }

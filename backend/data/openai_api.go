@@ -285,7 +285,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 				return
 			}
 
-			messages := GetFinancialReports(stockCode, o.CrawlTimeOut)
+			messages := GetFinancialReportsByXUEQIU(stockCode, o.CrawlTimeOut)
 			if messages == nil || len(*messages) == 0 {
 				logger.SugaredLogger.Error("获取股票财报失败")
 				// "***❗获取股票财报失败,分析结果可能不准确***<hr>"
@@ -608,7 +608,41 @@ func SearchGuShiTongStockInfo(stock string, crawlTimeOut int64) *[]string {
 	}
 	return &messages
 }
+func GetFinancialReportsByXUEQIU(stockCode string, crawlTimeOut int64) *[]string {
+	if strutil.HasPrefixAny(stockCode, []string{"HK", "hk"}) {
+		stockCode = strings.ReplaceAll(stockCode, "hk", "")
+		stockCode = strings.ReplaceAll(stockCode, "HK", "")
+	}
+	if strutil.HasPrefixAny(stockCode, []string{"us", "gb_"}) {
+		stockCode = strings.ReplaceAll(stockCode, "us", "")
+		stockCode = strings.ReplaceAll(stockCode, "gb_", "")
+	}
+	url := fmt.Sprintf("https://xueqiu.com/snowman/S/%s/detail#/ZYCWZB", stockCode)
+	waitVisible := "div.tab-table-responsive table"
+	crawlerAPI := CrawlerApi{}
+	crawlerBaseInfo := CrawlerBaseInfo{
+		Name:        "TestCrawler",
+		Description: "Test Crawler Description",
+		BaseUrl:     "https://xueqiu.com",
+		Headers:     map[string]string{"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(crawlTimeOut)*time.Second)
+	defer cancel()
+	crawlerAPI = crawlerAPI.NewCrawler(ctx, crawlerBaseInfo)
 
+	var markdown strings.Builder
+	markdown.WriteString("\n## 财务数据：\n")
+	html, ok := crawlerAPI.GetHtml(url, waitVisible, true)
+	if !ok {
+		return &[]string{""}
+	}
+	document, err := goquery.NewDocumentFromReader(strings.NewReader(html))
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+	}
+	GetTableMarkdown(document, waitVisible, &markdown)
+	return &[]string{markdown.String()}
+}
 func GetFinancialReports(stockCode string, crawlTimeOut int64) *[]string {
 	url := "https://emweb.securities.eastmoney.com/pc_hsf10/pages/index.html?type=web&code=" + stockCode + "#/cwfx"
 	waitVisible := "div.report_table table"
