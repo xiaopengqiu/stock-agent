@@ -7,6 +7,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"go-stock/backend/data"
+	"go-stock/backend/db"
+	"go-stock/backend/logger"
+	"go-stock/backend/models"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/coocood/freecache"
 	"github.com/duke-git/lancet/v2/convertor"
@@ -19,14 +27,7 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
-	"go-stock/backend/data"
-	"go-stock/backend/db"
-	"go-stock/backend/logger"
-	"go-stock/backend/models"
 	"golang.org/x/sys/windows/registry"
-	"os"
-	"strings"
-	"time"
 )
 
 // App struct
@@ -565,7 +566,8 @@ func addStockFollowData(follow data.FollowedStock, stockData *data.StockInfo) {
 			//未开盘时当前价格为昨日收盘价
 			stockData.Profit = mathutil.RoundToFloat(mathutil.Div(preClosePrice-follow.CostPrice, follow.CostPrice)*100, 3)
 			stockData.ProfitAmount = mathutil.RoundToFloat((preClosePrice-follow.CostPrice)*float64(follow.Volume), 2)
-			stockData.ProfitAmountToday = mathutil.RoundToFloat((preClosePrice-preClosePrice)*float64(follow.Volume), 2)
+			// 未开盘时，今日盈亏为 0
+			stockData.ProfitAmountToday = 0
 		}
 
 	}
