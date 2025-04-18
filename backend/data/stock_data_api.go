@@ -1092,7 +1092,7 @@ func CheckBrowserOnWindows() (string, bool) {
 }
 
 func (receiver StockDataApi) GetKLineData(stockCode string, kLineType string, days int64) *[]KLineData {
-	url := fmt.Sprintf("http://quotes.sina.cn/cn/api/json_v2.php/CN_MarketDataService.getKLineData?symbol=%s&scale=%s&ma=yes&days=%d", stockCode, kLineType, days)
+	url := fmt.Sprintf("http://quotes.sina.cn/cn/api/json_v2.php/CN_MarketDataService.getKLineData?symbol=%s&scale=%s&ma=yes&datalen=%d", stockCode, kLineType, days)
 	K := &[]KLineData{}
 	_, err := receiver.client.SetTimeout(time.Duration(receiver.config.CrawlTimeOut)*time.Second).R().
 		SetHeader("Host", "quotes.sina.cn").
