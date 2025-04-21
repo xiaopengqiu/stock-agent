@@ -959,7 +959,7 @@ function delStockGroup(code,name,groupId){
         </n-gradient-text>
       </template>
     </vue-danmaku>
-  <n-tabs  type="card" animated addable   @add="addTab"  @update-value="updateTab" placement="top"  @close="(key)=>{delTab(key)}">
+  <n-tabs style="--wails-draggable:drag" type="card" animated addable   @add="addTab"  @update-value="updateTab" placement="top"  @close="(key)=>{delTab(key)}">
     <n-tab-pane name="0"  tab="全部">
       <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
         <n-gi   :id="result['股票代码']" v-for="result in sortedResults" style="margin-left: 2px;" >

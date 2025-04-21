@@ -219,8 +219,16 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 			//	})
 			//}
 
-			if strutil.HasPrefixAny(stockCode, []string{"sz", "sh"}) {
-				K := NewStockDataApi().GetKLineData(stockCode, "240", o.KDays)
+			logger.SugaredLogger.Infof("NewChatStream getKLineData stock:%s stockCode:%s", stock, stockCode)
+			if strutil.HasPrefixAny(stockCode, []string{"sz", "sh", "hk", "us", "gb_"}) {
+				K := &[]KLineData{}
+				logger.SugaredLogger.Infof("NewChatStream getKLineData stock:%s stockCode:%s", stock, stockCode)
+				if strutil.HasPrefixAny(stockCode, []string{"sz", "sh"}) {
+					K = NewStockDataApi().GetKLineData(stockCode, "240", o.KDays)
+				}
+				if strutil.HasPrefixAny(stockCode, []string{"hk", "us", "gb_"}) {
+					K = NewStockDataApi().GetHK_KLineData(stockCode, "day", o.KDays)
+				}
 				Kmap := &[]map[string]any{}
 				for _, kline := range *K {
 					mapk := make(map[string]any, 6)

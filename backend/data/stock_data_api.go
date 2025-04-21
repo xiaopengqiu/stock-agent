@@ -1105,6 +1105,59 @@ func (receiver StockDataApi) GetKLineData(stockCode string, kLineType string, da
 	}
 	return K
 }
+func (receiver StockDataApi) GetHK_KLineData(stockCode string, kLineType string, days int64) *[]KLineData {
+
+	logger.SugaredLogger.Infof("GetHK_KLineData stockCode:%s,kLineType:%s,days:%d", stockCode, kLineType, days)
+	if strutil.HasPrefixAny(stockCode, []string{"gb_", "GB_"}) {
+		stockCode = strings.Replace(stockCode, "gb_", "us", 1) + ".OQ"
+	}
+
+	url := fmt.Sprintf("https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=%s,%s,,,%d,qfq", stockCode, kLineType, days)
+	logger.SugaredLogger.Infof("url:%s", url)
+	K := &[]KLineData{}
+	res := make(map[string]interface{})
+	resp, err := receiver.client.SetTimeout(time.Duration(receiver.config.CrawlTimeOut)*time.Second).R().
+		SetHeader("Host", "web.ifzq.gtimg.cn").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0").
+		Get(url)
+	if err != nil {
+		logger.SugaredLogger.Errorf("err:%s", err.Error())
+		return K
+	}
+	//logger.SugaredLogger.Infof("resp:%s", resp.Body())
+	json.Unmarshal(resp.Body(), &res)
+	code, _ := convertor.ToInt(res["code"])
+	if code != 0 {
+		return K
+	}
+	if res["data"] != nil && code == 0 {
+		data := res["data"].(map[string]interface{})[stockCode].(map[string]interface{})
+		if data != nil {
+			var day []any
+			if data["qfqday"] != nil {
+				day = data["qfqday"].([]any)
+			}
+			if data["day"] != nil {
+				day = data["day"].([]any)
+			}
+			for _, v := range day {
+				if v != nil {
+					vv := v.([]any)
+					KLine := &KLineData{
+						Day:    convertor.ToString(vv[0]),
+						Open:   convertor.ToString(vv[1]),
+						Close:  convertor.ToString(vv[2]),
+						High:   convertor.ToString(vv[3]),
+						Low:    convertor.ToString(vv[4]),
+						Volume: convertor.ToString(vv[5]),
+					}
+					*K = append(*K, *KLine)
+				}
+			}
+		}
+	}
+	return K
+}
 
 // JSONToMarkdownTable 将JSON数据转换为Markdown表格
 func JSONToMarkdownTable(jsonData []byte) (string, error) {
