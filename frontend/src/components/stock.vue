@@ -69,7 +69,7 @@ const kLineChartRef = ref(null);
 
 
 const handleProgress = (progress) => {
-  console.log(`Export progress: ${progress.ratio * 100}%`);
+  //console.log(`Export progress: ${progress.ratio * 100}%`);
 };
 const  enableEditor= ref(false)
 const mdPreviewRef = ref(null)
@@ -131,9 +131,9 @@ const danmakuColor = computed(()=> {
 const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
 
 const sortedResults = computed(() => {
-  //console.log("computed",sortedResults.value)
+  ////console.log("computed",sortedResults.value)
   const sortedKeys =keys(results.value).sort();
-  //console.log("sortedKeys",sortedKeys)
+  ////console.log("sortedKeys",sortedKeys)
   const sortedObject = {};
   sortedKeys.forEach(key => {
       sortedObject[key] = results.value[key];
@@ -172,7 +172,7 @@ onBeforeMount(()=>{
         followedStock.StockCode="gb_"+ followedStock.StockCode.replace("us", "").toLowerCase()
       }
       if (!stocks.value.includes(followedStock.StockCode)) {
-        //console.log("followList",followedStock.StockCode)
+        ////console.log("followList",followedStock.StockCode)
         stocks.value.push(followedStock.StockCode)
       }
     }
@@ -196,15 +196,15 @@ onBeforeMount(()=>{
     sysPromptOptions.value=promptTemplates.value.filter(item => item.type === '模型系统Prompt')
     userPromptOptions.value=promptTemplates.value.filter(item => item.type === '模型用户Prompt')
 
-    console.log("userPromptOptions",userPromptOptions.value)
-    console.log("sysPromptOptions",sysPromptOptions.value)
+    //console.log("userPromptOptions",userPromptOptions.value)
+    //console.log("sysPromptOptions",sysPromptOptions.value)
   })
 
 })
 
 onMounted(() => {
   message.loading("Loading...")
- // console.log(`the component is now mounted.`)
+ // //console.log(`the component is now mounted.`)
 
     // ticker.value=setInterval(() => {
     //   if(isTradingTime()){
@@ -221,7 +221,7 @@ onMounted(() => {
   //ws.value = new WebSocket('ws://localhost:16688/ws'); // 替换为你的 WebSocket 服务器地址
 
   ws.value.onopen = () => {
-    console.log('WebSocket 连接已打开');
+    //console.log('WebSocket 连接已打开');
   };
 
   ws.value.onmessage = (event) => {
@@ -235,12 +235,12 @@ onMounted(() => {
   };
 
   ws.value.onclose = () => {
-    console.log('WebSocket 连接已关闭');
+    //console.log('WebSocket 连接已关闭');
   };
 })
 
 onBeforeUnmount(() => {
- // console.log(`the component is now unmounted.`)
+ // //console.log(`the component is now unmounted.`)
   //clearInterval(ticker.value)
   ws.value.close()
   message.destroyAll()
@@ -276,9 +276,9 @@ EventsOn("refreshFollowList",(data)=>{
 })
 
 EventsOn("newChatStream",async (msg) => {
-  //console.log("newChatStream:->",data.airesult)
+  ////console.log("newChatStream:->",data.airesult)
   data.loading = false
-  //console.log(msg)
+  ////console.log(msg)
   if (msg === "DONE") {
     SaveAIResponseResult(data.code, data.name, data.airesult, data.chatId,data.question)
     message.info("AI分析完成！")
@@ -317,8 +317,8 @@ EventsOn("updateVersion",async (msg) => {
 
   const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 
-  console.log("GitHub UTC 时间:", utcDate);
-  console.log("转换后的本地时间:", formattedDate);
+  //console.log("GitHub UTC 时间:", utcDate);
+  //console.log("转换后的本地时间:", formattedDate);
   notify.info({
     avatar: () =>
         h(NAvatar, {
@@ -414,13 +414,13 @@ function AddStock(){
 
 
 function removeMonitor(code,name,key) {
-  console.log("removeMonitor",name,code,key)
+  //console.log("removeMonitor",name,code,key)
   stocks.value.splice(stocks.value.indexOf(code),1)
-  console.log("removeMonitor-key",key)
-  console.log("removeMonitor-v",results.value[key])
+  //console.log("removeMonitor-key",key)
+  //console.log("removeMonitor-v",results.value[key])
 
   delete results.value[key]
-  console.log("removeMonitor-v",results.value[key])
+  //console.log("removeMonitor-v",results.value[key])
 
   UnFollow(code).then(result => {
     message.success(result)
@@ -430,8 +430,8 @@ function removeMonitor(code,name,key) {
 
 function SendDanmu(){
   //danmus.value.push(data.name)
-  console.log("SendDanmu",data.name)
-  console.log("SendDanmu-readyState", ws.value.readyState)
+  //console.log("SendDanmu",data.name)
+  //console.log("SendDanmu-readyState", ws.value.readyState)
   ws.value.send(data.name)
 }
 
@@ -439,7 +439,7 @@ function getStockList(value){
 
 
 
- // console.log("getStockList",value)
+ // //console.log("getStockList",value)
   let result;
   result=stockList.value.filter(item => item.name.includes(value)||item.ts_code.includes(value))
   options.value=result.map(item => {
@@ -452,7 +452,7 @@ function getStockList(value){
     data.code=value
   }
 
-  console.log("getStockList-options",data.code)
+  //console.log("getStockList-options",data.code)
 
   if(data.code){
     let findId=data.code
@@ -488,7 +488,7 @@ function blinkBorder(findId){
 }
 
 async function updateData(result) {
-  //console.log("stock_price",result['日期'],result['时间'],result['股票代码'],result['股票名称'],result['当前价格'],result['盘前盘后'])
+  ////console.log("stock_price",result['日期'],result['时间'],result['股票代码'],result['股票名称'],result['当前价格'],result['盘前盘后'])
 
   if(result["当前价格"]<=0){
     result["当前价格"]=result["卖一报价"]
@@ -531,13 +531,13 @@ async function updateData(result) {
     delete results.value[result.key]
   }
 
-  //console.log("updateData",result)
+  ////console.log("updateData",result)
 }
 
 
 async function monitor() {
   for (let code of stocks.value) {
-   // console.log(code)
+   // //console.log(code)
     Greet(code).then(result => {
       updateData(result)
     })
@@ -547,12 +547,12 @@ async function monitor() {
 
 function GetSortKey(sort,code){
   let sortKey= padStart(sort,8,'0')+"_"+code
-  //console.log("GetSortKey:",sortKey)
+  ////console.log("GetSortKey:",sortKey)
   return sortKey
 }
 
 function onSelect(item) {
-  //console.log("onSelect",item)
+  ////console.log("onSelect",item)
 
   if(item.indexOf("-")>0){
     item=item.split("-")[1].toLowerCase()
@@ -575,7 +575,7 @@ function search(code,name){
 }
 function setStock(code,name){
     let res=followList.value.filter(item => item.StockCode===code)
-    //console.log("res:",res)
+    ////console.log("res:",res)
     formModel.value.name=name
     formModel.value.code=code
     formModel.value.volume=res[0].Volume?res[0].Volume:0
@@ -619,14 +619,14 @@ function calculateMA(dayCount,values) {
 }
 function  handleKLine(){
   GetStockKLine(data.code,data.name,365).then(result => {
-    console.log("GetStockKLine",result)
+    //console.log("GetStockKLine",result)
     const chart = echarts.init(kLineChartRef.value);
     const categoryData = [];
     const values = [];
     const volumns=[];
     for (let i = 0; i < result.length; i++) {
       let resultElement=result[i]
-      console.log("resultElement:{}",resultElement)
+      //console.log("resultElement:{}",resultElement)
       categoryData.push(resultElement.day)
       let flag=resultElement.close>resultElement.open?1:-1
       values.push([
@@ -635,37 +635,68 @@ function  handleKLine(){
         resultElement.low,
         resultElement.high
       ])
-      volumns.push([i,resultElement.volume/100,flag])
+      volumns.push([i,resultElement.volume/10000,flag])
     }
-    //console.log("categoryData",categoryData)
-    //console.log("values",values)
+    ////console.log("categoryData",categoryData)
+    ////console.log("values",values)
     let option = {
-      backgroundColor: '#ffffff',
-      color:['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'],
+      darkMode: data.darkTheme,
+      //backgroundColor: '#1c1c1c',
+     // color:['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'],
       animation: false,
       legend: {
         bottom: 10,
         left: 'center',
-        data: ['日K', 'MA5', 'MA10', 'MA20', 'MA30']
+        data: ['日K', 'MA5', 'MA10', 'MA20', 'MA30'],
+        textStyle: {
+          color: data.darkTheme?'#ccc':'#456'
+        },
       },
       tooltip: {
         trigger: 'axis',
         axisPointer: {
-          type: 'cross'
+          type: 'cross',
+          lineStyle: {
+            color: '#376df4',
+            width: 1,
+            opacity: 1
+          }
         },
-        borderWidth: 1,
-        borderColor: '#ccc',
+        borderWidth: 2,
+        borderColor: data.darkTheme?'#456':'#ccc',
+        backgroundColor: data.darkTheme?'#456':'#fff',
         padding: 10,
         textStyle: {
-          color: '#000'
+          color: data.darkTheme?'#ccc':'#456'
         },
-        position: function (pos, params, el, elRect, size) {
-          const obj = {
-            top: 10
-          };
-          obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30;
-          return obj;
+        formatter: function (params) {//修改鼠标划过显示为中文
+          console.log("params",params)
+          let volum=params[5].data;//ma5的值
+          let ma5=params[1].data;//ma5的值
+          let ma10=params[2].data;//ma10的值
+          let ma20=params[3].data;//ma20的值
+          let ma30=params[4].data;//ma30的值
+          params = params[0];//开盘收盘最低最高数据汇总
+          let currentItemData = params.data;
+
+          return params.name + '<br>' +
+              '开盘:' + currentItemData[1] + '<br>' +
+              '收盘:' + currentItemData[2] + '<br>' +
+              '最低:' + currentItemData[3] + '<br>' +
+              '最高:' + currentItemData[4] + '<br>' +
+              '成交量(万手):' + volum[1] + '<br>' +
+              'MA5日均线:' + ma5 + '<br>' +
+              'MA10日均线:' + ma10 + '<br>' +
+              'MA20日均线:' + ma20 + '<br>' +
+              'MA30日均线:' + ma30
         }
+        // position: function (pos, params, el, elRect, size) {
+        //   const obj = {
+        //     top: 10
+        //   };
+        //   obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30;
+        //   return obj;
+        // }
         // extraCssText: 'width: 170px'
       },
       axisPointer: {
@@ -675,7 +706,7 @@ function  handleKLine(){
           }
         ],
         label: {
-          backgroundColor: '#777'
+          backgroundColor: '#888'
         }
       },
       visualMap: {
@@ -697,7 +728,7 @@ function  handleKLine(){
         {
           left: '10%',
           right: '8%',
-          height: '50%'
+          height: '50%',
         },
         {
           left: '10%',
@@ -860,7 +891,7 @@ function  handleKLine(){
           smooth: true,
           showSymbol: false,
           lineStyle: {
-            opacity: 0.5
+            opacity: 0.6
           }
         },
         {
@@ -870,7 +901,7 @@ function  handleKLine(){
           smooth: true,
           showSymbol: false,
           lineStyle: {
-            opacity: 0.5
+            opacity: 0.6
           }
         },
         {
@@ -880,7 +911,7 @@ function  handleKLine(){
           smooth: true,
           showSymbol: false,
           lineStyle: {
-            opacity: 0.5
+            opacity: 0.6
           }
         },
         {
@@ -890,7 +921,7 @@ function  handleKLine(){
           smooth: true,
           showSymbol: false,
           lineStyle: {
-            opacity: 0.5
+            opacity: 0.6
           }
         },
         {
@@ -1228,13 +1259,13 @@ function updateTab(name){
   currentGroupId.value=Number(name)
   GetFollowList(currentGroupId.value).then(result => {
     stocks.value=[]
-    console.log("GetFollowList",result)
+    //console.log("GetFollowList",result)
     followList.value = result
     for (const followedStock of result) {
       if(followedStock.StockCode.startsWith("us")){
         followedStock.StockCode="gb_"+ followedStock.StockCode.replace("us", "").toLowerCase()
       }
-        //console.log("followList",followedStock.StockCode)
+        ////console.log("followList",followedStock.StockCode)
         stocks.value.push(followedStock.StockCode)
     }
     monitor()
