@@ -77,7 +77,7 @@ func TestGetKLineData(t *testing.T) {
 }
 func TestGetHK_KLineData(t *testing.T) {
 	db.Init("../../data/stock.db")
-	k := NewStockDataApi().GetHK_KLineData("sh600171", "day", 30)
+	k := NewStockDataApi().GetHK_KLineData("hk01810", "day", 1)
 	jsonData, _ := json.Marshal(*k)
 	markdownTable, err := JSONToMarkdownTable(jsonData)
 	if err != nil {

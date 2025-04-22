@@ -66,6 +66,10 @@ export function GetPromptTemplates(arg1, arg2) {
   return window['go']['main']['App']['GetPromptTemplates'](arg1, arg2);
 }
 
+export function GetStockKLine(arg1, arg2, arg3) {
+  return window['go']['main']['App']['GetStockKLine'](arg1, arg2, arg3);
+}
+
 export function GetStockList(arg1) {
   return window['go']['main']['App']['GetStockList'](arg1);
 }

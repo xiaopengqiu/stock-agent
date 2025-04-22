@@ -1043,3 +1043,7 @@ func (a *App) RemoveGroup(groupId int) string {
 		return "移除失败"
 	}
 }
+
+func (a *App) GetStockKLine(stockCode, stockName string, days int64) *[]data.KLineData {
+	return data.NewStockDataApi().GetHK_KLineData(stockCode, "day", days)
+}

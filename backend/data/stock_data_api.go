@@ -1124,7 +1124,7 @@ func (receiver StockDataApi) GetHK_KLineData(stockCode string, kLineType string,
 		logger.SugaredLogger.Errorf("err:%s", err.Error())
 		return K
 	}
-	//logger.SugaredLogger.Infof("resp:%s", resp.Body())
+	logger.SugaredLogger.Infof("resp:%s", resp.Body())
 	json.Unmarshal(resp.Body(), &res)
 	code, _ := convertor.ToInt(res["code"])
 	if code != 0 {
