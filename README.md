@@ -53,6 +53,8 @@ QQ交流群：[点击链接加入群聊【go-stock交流群】：491605333](http
 | 不再强制依赖Chrome浏览器 | ✅  | 默认使用edge浏览器抓取新闻资讯                                                                                        |
 
 ## 👀 更新日志
+### 2025.04.22 优化K线图展示，支持拉伸放大，看得更舒服啦！
+### 2025.04.21 港股，美股K线数据获取优化
 ### 2025.04.01 优化部分设置选项，避免重启软件
 ### 2025.03.31 优化数据爬取
 ### 2025.03.30 AI自动定时分析功能
@@ -84,7 +86,7 @@ QQ交流群：[点击链接加入群聊【go-stock交流群】：491605333](http
 ### 成本设置
 ![img.png](build/screenshot/img_7.png)
 ### 日K
-![img_2.png](build/screenshot/img_8.png)
+![img_12.png](build/screenshot/img_12.png)
 ### 分时
 ![img_3.png](build/screenshot/img_9.png)
 ### 钉钉报警通知
