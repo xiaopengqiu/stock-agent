@@ -215,3 +215,37 @@ type Prompt struct {
 	Content string `json:"content"`
 	Type    string `json:"type"`
 }
+
+type Telegraph struct {
+	gorm.Model
+	Time          string          `json:"time"`
+	Content       string          `json:"content"`
+	SubjectTags   []string        `json:"subjects" gorm:"-:all"`
+	StocksTags    []string        `json:"stocks" gorm:"-:all"`
+	IsRed         bool            `json:"isRed"`
+	Url           string          `json:"url"`
+	TelegraphTags []TelegraphTags `json:"tags" gorm:"-:migration;foreignKey:TelegraphId"`
+}
+type TelegraphTags struct {
+	gorm.Model
+	TagId       uint `json:"tagId"`
+	TelegraphId uint `json:"telegraphId"`
+}
+
+func (t TelegraphTags) TableName() string {
+	return "telegraph_tags"
+}
+
+type Tags struct {
+	gorm.Model
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+
+func (p Tags) TableName() string {
+	return "tags"
+}
+
+func (p Telegraph) TableName() string {
+	return "telegraph_list"
+}

@@ -15,7 +15,7 @@ import {
   SettingsOutline,
   ReorderTwoOutline,
   ExpandOutline,
-  PowerOutline, LogoGithub, MoveOutline, WalletOutline, StarOutline, AlarmOutline, SparklesOutline,
+  PowerOutline, LogoGithub, MoveOutline, WalletOutline, StarOutline, AlarmOutline, SparklesOutline, NewspaperOutline,
 } from '@vicons/ionicons5'
 import {GetConfig} from "../wailsjs/go/main/App";
 const enableNews= ref(false)
@@ -52,6 +52,22 @@ const menuOptions = ref([
         icon: renderIcon(WalletOutline),
       },
     ]
+  },
+  {
+    label: () =>
+        h(
+            RouterLink,
+            {
+              to: {
+                name: 'market',
+                params: {
+                }
+              }
+            },
+            { default: () => '市场资讯' }
+        ),
+    key: 'market',
+    icon: renderIcon(NewspaperOutline),
   },
   {
     label: () =>
@@ -246,7 +262,7 @@ onMounted(()=>{
       :y-offset="150"
       :rotate="-15"
   >
-  <n-flex justify="center">
+  <n-flex>
         <n-grid x-gap="12" :cols="1">
 <!--
           <n-gi style="position: relative;top:1px;z-index: 19;width: 100%" v-if="telegraph.length>0">

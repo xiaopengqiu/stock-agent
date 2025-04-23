@@ -160,6 +160,15 @@ func (a *App) domReady(ctx context.Context) {
 		} else {
 			a.cronEntrys["MonitorStockPrices"] = id
 		}
+		entryID, err := a.cron.AddFunc(fmt.Sprintf("@every %ds", interval+10), func() {
+			news := data.GetNewTelegraph(30)
+			go runtime.EventsEmit(a.ctx, "newTelegraph", news)
+		})
+		if err != nil {
+			logger.SugaredLogger.Errorf("AddFunc error:%s", err.Error())
+		} else {
+			a.cronEntrys["GetNewTelegraph"] = entryID
+		}
 
 	}()
 
@@ -1046,4 +1055,9 @@ func (a *App) RemoveGroup(groupId int) string {
 
 func (a *App) GetStockKLine(stockCode, stockName string, days int64) *[]data.KLineData {
 	return data.NewStockDataApi().GetHK_KLineData(stockCode, "day", days)
+}
+
+func (a *App) GetTelegraphList() *[]*models.Telegraph {
+	telegraphs := data.NewMarketNewsApi().GetTelegraphList()
+	return telegraphs
 }

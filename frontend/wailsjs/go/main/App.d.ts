@@ -39,6 +39,8 @@ export function GetStockKLine(arg1:string,arg2:string,arg3:number):Promise<any>;
 
 export function GetStockList(arg1:string):Promise<Array<data.StockBasic>>;
 
+export function GetTelegraphList():Promise<any>;
+
 export function GetVersionInfo():Promise<models.VersionInfo>;
 
 export function GetfundList(arg1:string):Promise<Array<data.FundBasic>>;

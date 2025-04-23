@@ -74,6 +74,10 @@ export function GetStockList(arg1) {
   return window['go']['main']['App']['GetStockList'](arg1);
 }
 
+export function GetTelegraphList() {
+  return window['go']['main']['App']['GetTelegraphList']();
+}
+
 export function GetVersionInfo() {
   return window['go']['main']['App']['GetVersionInfo']();
 }

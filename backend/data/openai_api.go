@@ -716,6 +716,70 @@ func GetTelegraphList(crawlTimeOut int64) *[]string {
 	return &telegraph
 }
 
+func GetNewTelegraph(crawlTimeOut int64) *[]models.Telegraph {
+	url := "https://www.cls.cn/telegraph"
+	response, _ := resty.New().SetTimeout(time.Duration(crawlTimeOut)*time.Second).R().
+		SetHeader("Referer", "https://www.cls.cn/").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").
+		Get(fmt.Sprintf(url))
+	var telegraphs []models.Telegraph
+	//logger.SugaredLogger.Info(string(response.Body()))
+	document, _ := goquery.NewDocumentFromReader(strings.NewReader(string(response.Body())))
+
+	document.Find(".telegraph-list").Each(func(i int, selection *goquery.Selection) {
+		//logger.SugaredLogger.Info(selection.Text())
+		telegraph := models.Telegraph{}
+		spans := selection.Find("div.telegraph-content-box span")
+		if spans.Length() == 2 {
+			telegraph.Time = spans.First().Text()
+			telegraph.Content = spans.Last().Text()
+			if spans.Last().HasClass("c-de0422") {
+				telegraph.IsRed = true
+			}
+		}
+
+		labels := selection.Find("div a.label-item")
+		labels.Each(func(i int, selection *goquery.Selection) {
+			if selection.HasClass("link-label-item") {
+				telegraph.Url = selection.AttrOr("href", "")
+			} else {
+				tag := &models.Tags{
+					Name: selection.Text(),
+					Type: "subject",
+				}
+				db.Dao.Model(tag).Where("name=? and type=?", selection.Text(), "subject").FirstOrCreate(&tag)
+				telegraph.SubjectTags = append(telegraph.SubjectTags, selection.Text())
+			}
+		})
+		stocks := selection.Find("div.telegraph-stock-plate-box a")
+		stocks.Each(func(i int, selection *goquery.Selection) {
+			telegraph.StocksTags = append(telegraph.StocksTags, selection.Text())
+		})
+
+		//telegraph = append(telegraph, ReplaceSensitiveWords(selection.Text()))
+		if telegraph.Content != "" {
+			cnt := int64(0)
+			db.Dao.Model(telegraph).Where("time=?", telegraph.Time).Count(&cnt)
+			if cnt == 0 {
+				db.Dao.Create(&telegraph)
+				telegraphs = append(telegraphs, telegraph)
+				for _, tag := range telegraph.SubjectTags {
+					tagInfo := &models.Tags{}
+					db.Dao.Model(models.Tags{}).Where("name=? and type=?", tag, "subject").First(&tagInfo)
+					if tagInfo.ID > 0 {
+						db.Dao.Model(models.TelegraphTags{}).Where("telegraph_id=? and tag_id=?", telegraph.ID, tagInfo.ID).FirstOrCreate(&models.TelegraphTags{
+							TelegraphId: telegraph.ID,
+							TagId:       tagInfo.ID,
+						})
+					}
+				}
+			}
+
+		}
+	})
+	return &telegraphs
+}
+
 func GetTopNewsList(crawlTimeOut int64) *[]string {
 	url := "https://www.cls.cn"
 	response, err := resty.New().SetTimeout(time.Duration(crawlTimeOut)*time.Second).R().

@@ -68,26 +68,29 @@ func main() {
 	db.Dao.AutoMigrate(&models.PromptTemplate{})
 	db.Dao.AutoMigrate(&data.Group{})
 	db.Dao.AutoMigrate(&data.GroupStock{})
+	db.Dao.AutoMigrate(&models.Tags{})
+	db.Dao.AutoMigrate(&models.Telegraph{})
+	db.Dao.AutoMigrate(&models.TelegraphTags{})
 
 	//db.Dao.Model(&data.Group{}).Where("id = ?", 0).FirstOrCreate(&data.Group{
 	//	Name: "默认分组",
 	//	Sort: 0,
 	//})
 
-	if stocksBin != nil && len(stocksBin) > 0 {
-		go initStockData()
-	}
-	log.SugaredLogger.Infof("init stocksBinHK %d", len(stocksBinHK))
-
-	if stocksBinHK != nil && len(stocksBinHK) > 0 {
-		go initStockDataHK()
-	}
-	log.SugaredLogger.Infof("init stocksBinUS %d", len(stocksBinUS))
-
-	if stocksBinUS != nil && len(stocksBinUS) > 0 {
-		go initStockDataUS()
-	}
-	updateBasicInfo()
+	//if stocksBin != nil && len(stocksBin) > 0 {
+	//	go initStockData()
+	//}
+	//log.SugaredLogger.Infof("init stocksBinHK %d", len(stocksBinHK))
+	//
+	//if stocksBinHK != nil && len(stocksBinHK) > 0 {
+	//	go initStockDataHK()
+	//}
+	//log.SugaredLogger.Infof("init stocksBinUS %d", len(stocksBinUS))
+	//
+	//if stocksBinUS != nil && len(stocksBinUS) > 0 {
+	//	go initStockDataUS()
+	//}
+	//updateBasicInfo()
 
 	// Create an instance of the app structure
 	app := NewApp()

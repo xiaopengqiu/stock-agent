@@ -22,7 +22,16 @@ import (
 //-----------------------------------------------------------------------------------
 
 func TestGetTelegraph(t *testing.T) {
-	GetTelegraphList(30)
+	db.Init("../../data/stock.db")
+
+	//telegraphs := GetTelegraphList(30)
+	//for _, telegraph := range *telegraphs {
+	//	logger.SugaredLogger.Info(telegraph)
+	//}
+	list := GetNewTelegraph(30)
+	for _, telegraph := range *list {
+		logger.SugaredLogger.Infof("telegraph:%+v", telegraph)
+	}
 }
 
 func TestGetFinancialReports(t *testing.T) {
