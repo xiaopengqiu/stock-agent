@@ -77,20 +77,20 @@ func main() {
 	//	Sort: 0,
 	//})
 
-	//if stocksBin != nil && len(stocksBin) > 0 {
-	//	go initStockData()
-	//}
-	//log.SugaredLogger.Infof("init stocksBinHK %d", len(stocksBinHK))
-	//
-	//if stocksBinHK != nil && len(stocksBinHK) > 0 {
-	//	go initStockDataHK()
-	//}
-	//log.SugaredLogger.Infof("init stocksBinUS %d", len(stocksBinUS))
-	//
-	//if stocksBinUS != nil && len(stocksBinUS) > 0 {
-	//	go initStockDataUS()
-	//}
-	//updateBasicInfo()
+	if stocksBin != nil && len(stocksBin) > 0 {
+		go initStockData()
+	}
+	log.SugaredLogger.Infof("init stocksBinHK %d", len(stocksBinHK))
+
+	if stocksBinHK != nil && len(stocksBinHK) > 0 {
+		go initStockDataHK()
+	}
+	log.SugaredLogger.Infof("init stocksBinUS %d", len(stocksBinUS))
+
+	if stocksBinUS != nil && len(stocksBinUS) > 0 {
+		go initStockDataUS()
+	}
+	updateBasicInfo()
 
 	// Create an instance of the app structure
 	app := NewApp()
@@ -133,12 +133,12 @@ func main() {
 	//var width, height int
 	//var err error
 	//
-	//width, height, err = getScreenResolution()
-	//if err != nil {
-	//	log.SugaredLogger.Error("get screen resolution error")
-	//	width = 1456
-	//	height = 768
-	//}
+	width, height, err := getScreenResolution()
+	if err != nil {
+		log.SugaredLogger.Error("get screen resolution error")
+		width = 1456
+		height = 768
+	}
 
 	darkTheme := data.NewSettingsApi(&data.Settings{}).GetConfig().DarkTheme
 	backgroundColour := &options.RGBA{R: 255, G: 255, B: 255, A: 1}
@@ -147,12 +147,12 @@ func main() {
 	}
 
 	// Create application with options
-	err := wails.Run(&options.App{
-		Title: "go-stock",
-		//Width:     width * 4 / 5,
-		//Height:    height * 4 / 5,
+	err = wails.Run(&options.App{
+		Title:     "go-stock",
+		Width:     width * 4 / 5,
+		Height:    height * 4 / 5,
 		MinWidth:  1456,
-		MinHeight: 900,
+		MinHeight: 768,
 		//MaxWidth:                 width,
 		//MaxHeight:                height,
 		DisableResize:            false,

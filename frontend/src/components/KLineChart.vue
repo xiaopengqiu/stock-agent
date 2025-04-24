@@ -225,7 +225,7 @@ function  handleKLine(code,name){
             // borderColor0: downBorderColor
           },
           markPoint: {
-            symbol: 'none',
+            //symbol: 'none',
             label: {
               formatter: function (param) {
                 return param != null ? param.value + '' : '';
