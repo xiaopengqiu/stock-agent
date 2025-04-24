@@ -64,7 +64,7 @@ const menuOptions = ref([
                 }
               }
             },
-            { default: () => '市场资讯' }
+            { default: () => '市场行情' }
         ),
     key: 'market',
     icon: renderIcon(NewspaperOutline),

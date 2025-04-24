@@ -35,15 +35,19 @@ export function GetGroupStockList(arg1:number):Promise<Array<data.GroupStock>>;
 
 export function GetPromptTemplates(arg1:string,arg2:string):Promise<any>;
 
+export function GetStockCommonKLine(arg1:string,arg2:string,arg3:number):Promise<any>;
+
 export function GetStockKLine(arg1:string,arg2:string,arg3:number):Promise<any>;
 
 export function GetStockList(arg1:string):Promise<Array<data.StockBasic>>;
 
-export function GetTelegraphList():Promise<any>;
+export function GetTelegraphList(arg1:string):Promise<any>;
 
 export function GetVersionInfo():Promise<models.VersionInfo>;
 
 export function GetfundList(arg1:string):Promise<Array<data.FundBasic>>;
+
+export function GlobalStockIndexes():Promise<Record<string, any>>;
 
 export function Greet(arg1:string):Promise<data.StockInfo>;
 

@@ -224,6 +224,7 @@ type Telegraph struct {
 	StocksTags    []string        `json:"stocks" gorm:"-:all"`
 	IsRed         bool            `json:"isRed"`
 	Url           string          `json:"url"`
+	Source        string          `json:"source"`
 	TelegraphTags []TelegraphTags `json:"tags" gorm:"-:migration;foreignKey:TelegraphId"`
 }
 type TelegraphTags struct {

@@ -784,7 +784,7 @@ function  handleKLine(){
         {
           type: 'inside',
           xAxisIndex: [0, 1],
-          start: 50,
+          start: 86,
           end: 100
         },
         {
@@ -792,7 +792,7 @@ function  handleKLine(){
           xAxisIndex: [0, 1],
           type: 'slider',
           top: '85%',
-          start: 50,
+          start: 86,
           end: 100
         }
       ],

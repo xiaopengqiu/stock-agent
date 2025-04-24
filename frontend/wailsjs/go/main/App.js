@@ -66,6 +66,10 @@ export function GetPromptTemplates(arg1, arg2) {
   return window['go']['main']['App']['GetPromptTemplates'](arg1, arg2);
 }
 
+export function GetStockCommonKLine(arg1, arg2, arg3) {
+  return window['go']['main']['App']['GetStockCommonKLine'](arg1, arg2, arg3);
+}
+
 export function GetStockKLine(arg1, arg2, arg3) {
   return window['go']['main']['App']['GetStockKLine'](arg1, arg2, arg3);
 }
@@ -74,8 +78,8 @@ export function GetStockList(arg1) {
   return window['go']['main']['App']['GetStockList'](arg1);
 }
 
-export function GetTelegraphList() {
-  return window['go']['main']['App']['GetTelegraphList']();
+export function GetTelegraphList(arg1) {
+  return window['go']['main']['App']['GetTelegraphList'](arg1);
 }
 
 export function GetVersionInfo() {
@@ -84,6 +88,10 @@ export function GetVersionInfo() {
 
 export function GetfundList(arg1) {
   return window['go']['main']['App']['GetfundList'](arg1);
+}
+
+export function GlobalStockIndexes() {
+  return window['go']['main']['App']['GlobalStockIndexes']();
 }
 
 export function Greet(arg1) {

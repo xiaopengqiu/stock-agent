@@ -161,7 +161,7 @@ func (a *App) domReady(ctx context.Context) {
 			a.cronEntrys["MonitorStockPrices"] = id
 		}
 		entryID, err := a.cron.AddFunc(fmt.Sprintf("@every %ds", interval+10), func() {
-			news := data.GetNewTelegraph(30)
+			news := data.NewMarketNewsApi().GetNewTelegraph(30)
 			go runtime.EventsEmit(a.ctx, "newTelegraph", news)
 		})
 		if err != nil {
@@ -170,6 +170,15 @@ func (a *App) domReady(ctx context.Context) {
 			a.cronEntrys["GetNewTelegraph"] = entryID
 		}
 
+		entryIDSina, err := a.cron.AddFunc(fmt.Sprintf("@every %ds", interval+10), func() {
+			news := data.NewMarketNewsApi().GetSinaNews(30)
+			go runtime.EventsEmit(a.ctx, "newSinaNews", news)
+		})
+		if err != nil {
+			logger.SugaredLogger.Errorf("AddFunc error:%s", err.Error())
+		} else {
+			a.cronEntrys["newSinaNews"] = entryIDSina
+		}
 	}()
 
 	//刷新基金净值信息
@@ -1056,8 +1065,15 @@ func (a *App) RemoveGroup(groupId int) string {
 func (a *App) GetStockKLine(stockCode, stockName string, days int64) *[]data.KLineData {
 	return data.NewStockDataApi().GetHK_KLineData(stockCode, "day", days)
 }
+func (a *App) GetStockCommonKLine(stockCode, stockName string, days int64) *[]data.KLineData {
+	return data.NewStockDataApi().GetCommonKLineData(stockCode, "day", days)
+}
 
-func (a *App) GetTelegraphList() *[]*models.Telegraph {
-	telegraphs := data.NewMarketNewsApi().GetTelegraphList()
+func (a *App) GetTelegraphList(source string) *[]*models.Telegraph {
+	telegraphs := data.NewMarketNewsApi().GetTelegraphList(source)
 	return telegraphs
+}
+
+func (a *App) GlobalStockIndexes() map[string]any {
+	return data.NewMarketNewsApi().GlobalStockIndexes(30)
 }

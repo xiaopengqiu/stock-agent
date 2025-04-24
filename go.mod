@@ -13,6 +13,7 @@ require (
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-resty/resty/v2 v2.16.2
 	github.com/go-toast/toast v0.0.0-20190211030409-01e6764cf0a4
+	github.com/robertkrimen/otto v0.5.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/samber/lo v1.49.1
 	github.com/stretchr/testify v1.10.0
@@ -70,6 +71,7 @@ require (
 	golang.org/x/crypto v0.33.0 // indirect
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 // indirect
 	golang.org/x/net v0.35.0 // indirect
+	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.22.5 // indirect
 	modernc.org/mathutil v1.5.0 // indirect

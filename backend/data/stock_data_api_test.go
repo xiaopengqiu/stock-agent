@@ -28,7 +28,7 @@ func TestGetTelegraph(t *testing.T) {
 	//for _, telegraph := range *telegraphs {
 	//	logger.SugaredLogger.Info(telegraph)
 	//}
-	list := GetNewTelegraph(30)
+	list := NewMarketNewsApi().GetNewTelegraph(30)
 	for _, telegraph := range *list {
 		logger.SugaredLogger.Infof("telegraph:%+v", telegraph)
 	}
