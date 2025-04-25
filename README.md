@@ -78,6 +78,8 @@ QQ交流群：[点击链接加入群聊【go-stock交流群】：491605333](http
 
 ## 🦄 重大更新
 ### BIG NEWS !!! 重大更新！！！
+- 2025.04.25 市场资讯支持AI分析和总结：让AI帮你读市场！
+![img.png](img.png)
 - 2025.04.24 新增市场行情模块：即时掌握全球市场行情资讯/动态，从此再也不用偷摸去各大财经网站啦。go-stock一键帮你搞定！
 ![img.png](build/screenshot/img13.png)
 ![img_13.png](build/screenshot/img_13.png)
