@@ -192,7 +192,7 @@ async function copyToClipboard() {
   }
 }
 function saveAsMarkdown(){
-  SaveAsMarkdown('','市场资讯').then(result => {
+  SaveAsMarkdown('市场资讯','市场资讯').then(result => {
     message.success(result)
   })
 }
