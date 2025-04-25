@@ -146,6 +146,10 @@ export function ShareAnalysis(arg1, arg2) {
   return window['go']['main']['App']['ShareAnalysis'](arg1, arg2);
 }
 
+export function SummaryStockNews(arg1, arg2) {
+  return window['go']['main']['App']['SummaryStockNews'](arg1, arg2);
+}
+
 export function UnFollow(arg1) {
   return window['go']['main']['App']['UnFollow'](arg1);
 }

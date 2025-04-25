@@ -1077,3 +1077,11 @@ func (a *App) GetTelegraphList(source string) *[]*models.Telegraph {
 func (a *App) GlobalStockIndexes() map[string]any {
 	return data.NewMarketNewsApi().GlobalStockIndexes(30)
 }
+
+func (a *App) SummaryStockNews(question string, sysPromptId *int) {
+	msgs := data.NewDeepSeekOpenAi(a.ctx).NewSummaryStockNewsStream(question, sysPromptId)
+	for msg := range msgs {
+		runtime.EventsEmit(a.ctx, "summaryStockNews", msg)
+	}
+	runtime.EventsEmit(a.ctx, "summaryStockNews", "DONE")
+}

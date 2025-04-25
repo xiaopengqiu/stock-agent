@@ -133,11 +133,11 @@ func main() {
 	//var width, height int
 	//var err error
 	//
-	width, height, err := getScreenResolution()
+	width, _, err := getScreenResolution()
 	if err != nil {
 		log.SugaredLogger.Error("get screen resolution error")
 		width = 1456
-		height = 768
+		//height = 768
 	}
 
 	darkTheme := data.NewSettingsApi(&data.Settings{}).GetConfig().DarkTheme
@@ -150,7 +150,7 @@ func main() {
 	err = wails.Run(&options.App{
 		Title:     "go-stock",
 		Width:     width * 4 / 5,
-		Height:    height * 4 / 5,
+		Height:    900,
 		MinWidth:  1456,
 		MinHeight: 768,
 		//MaxWidth:                 width,
