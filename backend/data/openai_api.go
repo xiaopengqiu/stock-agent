@@ -564,7 +564,7 @@ func AskAi(o OpenAi, err error, messages []map[string]interface{}, ch chan map[s
 		}
 		return
 	}
-	location, _ := time.LoadLocation("Asia/Shanghai")
+	//location, _ := time.LoadLocation("Asia/Shanghai")
 
 	scanner := bufio.NewScanner(body)
 	for scanner.Scan() {
@@ -598,7 +598,7 @@ func AskAi(o OpenAi, err error, messages []map[string]interface{}, ch chan map[s
 							"chatId":   streamResponse.Id,
 							"model":    streamResponse.Model,
 							"content":  content,
-							"time":     time.Now().In(location).Format(time.DateTime),
+							"time":     time.Now().Format(time.DateTime),
 						}
 
 						//logger.SugaredLogger.Infof("Content data: %s", content)
@@ -611,7 +611,7 @@ func AskAi(o OpenAi, err error, messages []map[string]interface{}, ch chan map[s
 							"chatId":   streamResponse.Id,
 							"model":    streamResponse.Model,
 							"content":  reasoningContent,
-							"time":     time.Now().In(location).Format(time.DateTime),
+							"time":     time.Now().Format(time.DateTime),
 						}
 
 						//logger.SugaredLogger.Infof("ReasoningContent data: %s", reasoningContent)
