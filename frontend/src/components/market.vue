@@ -326,6 +326,10 @@ function share(){
             <k-line-chart code="usYINN.AM" :chart-height="panelHeight" name="富时中国三倍做多" :k-days="20"
                           :dark-theme="true"></k-line-chart>
           </n-tab-pane>
+          <n-tab-pane name="VIX恐慌指数" tab="VIX恐慌指数">
+            <k-line-chart code="usUVXY.AM" :chart-height="panelHeight" name="VIX恐慌指数" :k-days="20"
+                          :dark-theme="true"></k-line-chart>
+          </n-tab-pane>
         </n-tabs>
       </n-tab-pane>
     </n-tabs>
