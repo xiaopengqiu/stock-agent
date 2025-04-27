@@ -105,7 +105,7 @@ window.onresize = () => {
 function getAreaName(code){
   switch (code) {
     case "america":
-      return "美国"
+      return "美洲"
     case "europe":
       return "欧洲"
     case "asia":
