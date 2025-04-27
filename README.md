@@ -1,4 +1,4 @@
-# go-stock : 基于大预言模型的AI赋能股票分析工具
+# go-stock : 基于大语言模型的AI赋能股票分析工具
 ## ![go-stock](./build/appicon.png)
 ![GitHub Release](https://img.shields.io/github/v/release/ArvinLovegood/go-stock?link=https%3A%2F%2Fgithub.com%2FArvinLovegood%2Fgo-stock%2Freleases&link=https%3A%2F%2Fgithub.com%2FArvinLovegood%2Fgo-stock%2Freleases)
 [![GitHub Repo stars](https://img.shields.io/github/stars/ArvinLovegood/go-stock?link=https%3A%2F%2Fgithub.com%2FArvinLovegood%2Fgo-stock)](https://github.com/ArvinLovegood/go-stock)
