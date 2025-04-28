@@ -1,4 +1,7 @@
 <script setup>
+import {ReFleshTelegraphList} from "../../wailsjs/go/main/App";
+import {RefreshCircle, RefreshCircleSharp, RefreshOutline} from "@vicons/ionicons5";
+
 const { headerTitle,newsList } = defineProps({
   headerTitle: {
     type: String,
@@ -7,14 +10,23 @@ const { headerTitle,newsList } = defineProps({
   newsList: {
     type: Array,
     default: () => []
-  }
+  },
 })
+
+const emits = defineEmits(['update:message'])
+
+const updateMessage = () => {
+  emits('update:message', headerTitle)
+}
 </script>
 
 <template>
   <n-list bordered>
     <template #header>
-      {{ headerTitle }}
+      <n-flex justify="space-between">
+        <n-tag :bordered="false" size="large" type="success" >{{ headerTitle }}</n-tag>
+        <n-button  :bordered="false" @click="updateMessage"><n-icon color="#409EFF" size="25" :component="RefreshCircleSharp"/></n-button>
+      </n-flex>
     </template>
     <n-list-item v-for="item in newsList">
       <n-space justify="start">

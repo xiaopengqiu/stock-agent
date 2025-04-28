@@ -102,6 +102,10 @@ export function NewChatStream(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['NewChatStream'](arg1, arg2, arg3, arg4);
 }
 
+export function ReFleshTelegraphList(arg1) {
+  return window['go']['main']['App']['ReFleshTelegraphList'](arg1);
+}
+
 export function RemoveGroup(arg1) {
   return window['go']['main']['App']['RemoveGroup'](arg1);
 }

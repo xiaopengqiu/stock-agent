@@ -1074,6 +1074,13 @@ func (a *App) GetTelegraphList(source string) *[]*models.Telegraph {
 	return telegraphs
 }
 
+func (a *App) ReFleshTelegraphList(source string) *[]*models.Telegraph {
+	data.NewMarketNewsApi().GetNewTelegraph(30)
+	data.NewMarketNewsApi().GetSinaNews(30)
+	telegraphs := data.NewMarketNewsApi().GetTelegraphList(source)
+	return telegraphs
+}
+
 func (a *App) GlobalStockIndexes() map[string]any {
 	return data.NewMarketNewsApi().GlobalStockIndexes(30)
 }

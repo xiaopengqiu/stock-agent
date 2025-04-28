@@ -53,6 +53,8 @@ export function Greet(arg1:string):Promise<data.StockInfo>;
 
 export function NewChatStream(arg1:string,arg2:string,arg3:string,arg4:any):Promise<void>;
 
+export function ReFleshTelegraphList(arg1:string):Promise<any>;
+
 export function RemoveGroup(arg1:number):Promise<string>;
 
 export function RemoveStockGroup(arg1:string,arg2:string,arg3:number):Promise<string>;

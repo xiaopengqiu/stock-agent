@@ -4,7 +4,7 @@ import {
   GetAIResponseResult,
   GetConfig, GetPromptTemplates,
   GetTelegraphList,
-  GlobalStockIndexes,
+  GlobalStockIndexes, ReFleshTelegraphList,
   SaveAIResponseResult, SaveAsMarkdown, ShareAnalysis,
   SummaryStockNews
 } from "../../wailsjs/go/main/App";
@@ -219,6 +219,18 @@ function share(){
     })
   })
 }
+
+function ReFlesh(source){
+  console.log("ReFlesh:",source)
+  ReFleshTelegraphList(source).then(res => {
+    if(source==="财联社电报"){
+      telegraphList.value = res
+    }
+    if(source==="新浪财经"){
+      sinaNewsList.value = res
+    }
+  })
+}
 </script>
 
 <template>
@@ -227,10 +239,10 @@ function share(){
       <n-tab-pane name="市场快讯" tab="市场快讯"  >
         <n-grid :cols="2" :y-gap="0">
           <n-gi>
-            <news-list :newsList="telegraphList" :header-title="'财联社电报'"></news-list>
+            <news-list :newsList="telegraphList" :header-title="'财联社电报'" @update:message="ReFlesh"></news-list>
           </n-gi>
           <n-gi>
-            <news-list :newsList="sinaNewsList" :header-title="'新浪财经'"></news-list>
+            <news-list :newsList="sinaNewsList" :header-title="'新浪财经'" @update:message="ReFlesh"></news-list>
           </n-gi>
         </n-grid>
       </n-tab-pane>
