@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/chromedp/chromedp"
@@ -309,15 +308,14 @@ func (receiver StockDataApi) GetStockCodeRealTimeData(StockCodes ...string) (*[]
 			SetHeader("Referer", "https://gu.qq.com/").
 			SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0").
 			Get(url)
+		logger.SugaredLogger.Infof("GetStockCodeRealTimeData %s", url)
 		if err != nil {
 			logger.SugaredLogger.Error(err.Error())
 			return &[]StockInfo{}, err
 		}
 		str := GB18030ToUTF8(resp.Body())
 		dataStr := strutil.SplitAndTrim(strings.Trim(str, "\n"), ";")
-		if len(dataStr) == 0 {
-			return &[]StockInfo{}, errors.New("获取股票信息失败,请检查股票代码是否正确")
-		}
+
 		for _, data := range dataStr {
 			stockData, err := ParseTxStockData(data)
 			if err != nil {
@@ -365,9 +363,7 @@ func (receiver StockDataApi) GetStockCodeRealTimeData(StockCodes ...string) (*[]
 
 	str := GB18030ToUTF8(resp.Body())
 	dataStr := strutil.SplitEx(str, "\n", true)
-	if len(dataStr) == 0 {
-		return &[]StockInfo{}, errors.New("获取股票信息失败,请检查股票代码是否正确")
-	}
+
 	for _, data := range dataStr {
 		//logger.SugaredLogger.Info(data)
 		stockData, err := ParseFullSingleStockData(data)

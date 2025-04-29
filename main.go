@@ -222,14 +222,18 @@ func initStockDataUS() {
 		return
 	}
 	log.SugaredLogger.Infof("init stock data us %d", len(v))
-	for _, item := range v {
-		var count int64
-		db.Dao.Model(&models.StockInfoUS{}).Where("code = ?", item.Code).Count(&count)
-		if count > 0 {
-			//log.SugaredLogger.Infof("stock data us %s exist", item.Code)
-			continue
+	var total int64
+	db.Dao.Model(&models.StockInfoUS{}).Count(&total)
+	if total != int64(len(v)) {
+		for _, item := range v {
+			var count int64
+			db.Dao.Model(&models.StockInfoUS{}).Where("code = ?", item.Code).Count(&count)
+			if count > 0 {
+				//log.SugaredLogger.Infof("stock data us %s exist", item.Code)
+				continue
+			}
+			db.Dao.Model(&models.StockInfoUS{}).Create(&item)
 		}
-		db.Dao.Model(&models.StockInfoUS{}).Create(&item)
 	}
 }
 
@@ -241,15 +245,20 @@ func initStockDataHK() {
 		return
 	}
 	log.SugaredLogger.Infof("init stock data hk %d", len(v))
-	for _, item := range v {
-		var count int64
-		db.Dao.Model(&models.StockInfoHK{}).Where("code = ?", item.Code).Count(&count)
-		if count > 0 {
-			//log.SugaredLogger.Infof("stock data hk %s exist", item.Code)
-			continue
+	var total int64
+	db.Dao.Model(&models.StockInfoHK{}).Count(&total)
+	if total != int64(len(v)) {
+		for _, item := range v {
+			var count int64
+			db.Dao.Model(&models.StockInfoHK{}).Where("code = ?", item.Code).Count(&count)
+			if count > 0 {
+				//log.SugaredLogger.Infof("stock data hk %s exist", item.Code)
+				continue
+			}
+			db.Dao.Model(&models.StockInfoHK{}).Create(&item)
 		}
-		db.Dao.Model(&models.StockInfoHK{}).Create(&item)
 	}
+
 }
 
 func updateBasicInfo() {
