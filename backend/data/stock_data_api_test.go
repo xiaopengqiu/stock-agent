@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/duke-git/lancet/v2/convertor"
+	"github.com/duke-git/lancet/v2/random"
 	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/go-resty/resty/v2"
 	"go-stock/backend/db"
@@ -94,6 +95,18 @@ func TestGetHK_KLineData(t *testing.T) {
 	}
 	logger.SugaredLogger.Infof("markdownTable:\n%s", markdownTable)
 
+}
+
+func TestGetHKStockInfo(t *testing.T) {
+	db.Init("../../data/stock.db")
+	//NewStockDataApi().GetHKStockInfo(200)
+	//NewStockDataApi().GetSinaHKStockInfo()
+	//m:105,m:106,m:107  //美股
+	//m:128+t:3,m:128+t:4,m:128+t:1,m:128+t:2 //港股
+	for i := 1; i <= 592; i++ {
+		NewStockDataApi().getDCStockInfo("us", i, 20)
+		time.Sleep(time.Duration(random.RandInt(1, 3)) * time.Second)
+	}
 }
 
 func TestGetRealTimeStockPriceInfo(t *testing.T) {

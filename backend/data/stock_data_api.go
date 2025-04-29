@@ -16,6 +16,7 @@ import (
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/go-resty/resty/v2"
+	"github.com/robertkrimen/otto"
 	"github.com/samber/lo"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
@@ -1157,6 +1158,192 @@ func (receiver StockDataApi) GetHK_KLineData(stockCode string, kLineType string,
 		}
 	}
 	return K
+}
+func (receiver StockDataApi) GetSinaHKStockInfo() {
+
+	pageSize := 500
+	for i := 1; i <= 3060/pageSize; i++ {
+		infos := getSinaStockInfo(receiver, i, pageSize)
+		for i, info := range *infos {
+			logger.SugaredLogger.Infof("infos:%d,%s:%s", i, info.Symbol, info.Name)
+		}
+	}
+
+}
+
+func getSinaStockInfo(receiver StockDataApi, page, pageSize int) *[]models.SinaStockInfo {
+	infos := &[]models.SinaStockInfo{}
+	url := "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHKStockData?page=%d&num=%d&sort=symbol&asc=1&node=qbgg_hk&_s_r_a=init"
+	_, err := receiver.client.SetTimeout(time.Duration(receiver.config.CrawlTimeOut)*time.Second).SetProxy("http://localhost:10809").R().
+		SetHeader("Host", "vip.stock.finance.sina.com.cn").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0").
+		SetResult(infos).
+		Get(fmt.Sprintf(url, page, pageSize))
+
+	if err != nil {
+		logger.SugaredLogger.Errorf("err:%s", err.Error())
+	}
+	return infos
+}
+
+func (receiver StockDataApi) getDCStockInfo(market string, page, pageSize int) {
+	//m:105,m:106,m:107  //美股
+	//m:128+t:3,m:128+t:4,m:128+t:1,m:128+t:2 //港股
+	fs := ""
+	switch market {
+	case "hk":
+		fs = "m:128+t:3,m:128+t:4,m:128+t:1,m:128+t:2"
+	case "us":
+		fs = "m:105,m:106,m:107"
+	}
+
+	url := "https://push2.eastmoney.com/api/qt/clist/get?cb=jQuery371047843066631541353_1745889398012&fs=%s&fields=f12,f13,f14,f19,f1,f2,f4,f3,f152,f17,f18,f15,f16,f5,f6&fid=f3&pn=%d&pz=%d&po=1&dect=1"
+	resp, err := receiver.client.SetTimeout(time.Duration(receiver.config.CrawlTimeOut)*time.Second).R().
+		SetHeader("Host", "push2.eastmoney.com").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0").
+		Get(fmt.Sprintf(url, fs, page, pageSize))
+	if err != nil {
+		logger.SugaredLogger.Errorf("err:%s", err.Error())
+		return
+	}
+	body := string(resp.Body())
+	body = strutil.ReplaceWithMap(body, map[string]string{
+		"jQuery371047843066631541353_1745889398012(": "",
+		");": "",
+	})
+	js := "var d=" + body
+	vm := otto.New()
+	_, err = vm.Run(js)
+	_, err = vm.Run("var data = JSON.stringify(d);")
+	value, err := vm.Get("data")
+	data := make(map[string]any)
+	err = json.Unmarshal([]byte(value.String()), &data)
+	if err != nil {
+		logger.SugaredLogger.Errorf("json:%s", value.String())
+		logger.SugaredLogger.Errorf("json.Unmarshal error:%v", err.Error())
+	}
+	logger.SugaredLogger.Infof("resp:%s", data)
+	if data["data"] != nil {
+		datas := data["data"].(map[string]any)
+		total := datas["total"].(float64)
+		diff := datas["diff"].(map[string]any)
+		logger.SugaredLogger.Infof("total:%d", int(total))
+		for k, item := range diff {
+			stock := item.(map[string]any)
+			logger.SugaredLogger.Infof("k:%s,%s:%s", k, stock["f14"], stock["f12"])
+
+			if market == "hk" {
+				stockInfo := &models.StockInfoHK{
+					Code: strutil.PadStart(stock["f12"].(string), 5, "0") + ".HK",
+					Name: stock["f14"].(string),
+				}
+				db.Dao.Model(&models.StockInfoHK{}).Where("code = ?", stockInfo.Code).First(stockInfo)
+				logger.SugaredLogger.Infof("stockInfo:%+v", stockInfo)
+				if stockInfo.ID == 0 {
+					db.Dao.Model(&models.StockInfoHK{}).Create(stockInfo)
+				}
+			}
+
+			if market == "us" {
+				stockInfo := &models.StockInfoUS{
+					Code: strutil.PadStart(stock["f12"].(string), 5, "0") + ".US",
+					Name: stock["f14"].(string),
+				}
+				db.Dao.Model(&models.StockInfoUS{}).Where("code = ?", stockInfo.Code).First(stockInfo)
+				logger.SugaredLogger.Infof("stockInfo:%+v", stockInfo)
+				if stockInfo.ID == 0 {
+					db.Dao.Model(&models.StockInfoUS{}).Create(stockInfo)
+				}
+			}
+
+		}
+
+	}
+}
+
+func (receiver StockDataApi) GetHKStockInfo(pageSize int) {
+	url := "https://stock.gtimg.cn/data/hk_rank.php?board=main_all&metric=price&pageSize=%d&reqPage=1&order=desc&var_name=list_data"
+	resp, err := receiver.client.SetTimeout(time.Duration(receiver.config.CrawlTimeOut)*time.Second).R().
+		SetHeader("Host", "stock.gtimg.cn").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0").
+		Get(fmt.Sprintf(url, pageSize))
+	if err != nil {
+		logger.SugaredLogger.Errorf("err:%s", err.Error())
+		return
+	}
+	js := "var " + string(resp.Body())
+	vm := otto.New()
+	_, err = vm.Run(js)
+	_, err = vm.Run("var data = JSON.stringify(list_data);")
+	if err != nil {
+		return
+	}
+	value, err := vm.Get("data")
+	data := make(map[string]any)
+	err = json.Unmarshal([]byte(value.String()), &data)
+	if err != nil {
+		logger.SugaredLogger.Errorf("json.Unmarshal error:%v", err.Error())
+	}
+	logger.SugaredLogger.Infof("resp:%s", data)
+	if data["code"] != nil && data["code"].(float64) == 0 {
+		d := data["data"].(map[string]any)
+		saveHKStockInfo(d)
+
+		page_count := int64(d["page_count"].(float64))
+		logger.SugaredLogger.Infof("page_count:%d", page_count)
+		page := int64(1)
+		for page > page_count {
+			urlx := fmt.Sprintf("https://stock.gtimg.cn/data/hk_rank.php?board=main_all&metric=price&pageSize=%d&reqPage=%d&order=desc&var_name=list_data", pageSize, page)
+			logger.SugaredLogger.Infof("url:%s", urlx)
+			resp, err = receiver.client.SetTimeout(time.Duration(receiver.config.CrawlTimeOut)*time.Second).R().
+				SetHeader("Host", "stock.gtimg.cn").
+				SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0").
+				Get(urlx)
+			if err != nil {
+				logger.SugaredLogger.Errorf("err:%s", err.Error())
+				break
+			}
+			js = "var " + string(resp.Body())
+			_, err = vm.Run(js)
+			_, err = vm.Run("var data = JSON.stringify(list_data);")
+			if err != nil {
+				return
+			}
+			value, err = vm.Get("data")
+			data = make(map[string]any)
+			err = json.Unmarshal([]byte(value.String()), &data)
+			if err != nil {
+				logger.SugaredLogger.Errorf("json.Unmarshal error:%v", err.Error())
+			}
+			logger.SugaredLogger.Infof("resp:%s", data)
+			if data != nil && data["code"] != nil && data["code"].(float64) == 0 {
+				if data["data"] != nil {
+					d = data["data"].(map[string]any)
+					saveHKStockInfo(d)
+				}
+			}
+			page++
+		}
+		//
+	}
+
+}
+
+func saveHKStockInfo(d map[string]any) {
+	for _, v := range d["page_data"].([]any) {
+		vv := v.(string)
+		splits := strings.Split(vv, "~")
+		stock := &models.StockInfoHK{
+			Code: strutil.PadStart(splits[0], 5, "0") + ".HK",
+			Name: splits[1],
+		}
+		logger.SugaredLogger.Infof("vv:%s", vv)
+		db.Dao.Model(stock).Where("code = ?", stock.Code).First(stock)
+		if stock.ID == 0 {
+			logger.SugaredLogger.Infof("stock:%+v", stock)
+			db.Dao.Model(&models.StockInfoHK{}).Create(stock)
+		}
+	}
 }
 
 func (receiver StockDataApi) GetCommonKLineData(stockCode string, kLineType string, days int64) *[]KLineData {
