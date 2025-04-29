@@ -109,6 +109,12 @@ func TestGetHKStockInfo(t *testing.T) {
 	}
 }
 
+func TestParseTxStockData(t *testing.T) {
+	str := "v_r_hk09660=\"100~地平线机器人-W~09660~6.340~5.690~5.800~210980204.0~0~0~6.340~0~0~0~0~0~0~0~0~0~6.340~0~0~0~0~0~0~0~0~0~210980204.0~2025/04/29\n14:14:52~0.650~11.42~6.450~5.710~6.340~210980204.0~1295585259.040~0~33.03~~0~0~13.01~702.2123~836.8986~HORIZONROBOT-W~0.00~10.380~3.320~1.00~-53.74~0~0~0~0~0~33.03~6.50~1.90~600~76.11~19.85~GP~19.70~11.51~0.63~-17.23~46.76~13200293682.00~11075904412.00~33.03~0.000~6.141~58.90~HKD~1~30\";"
+	info, _ := ParseTxStockData(str)
+	logger.SugaredLogger.Infof("%+#v", info)
+}
+
 func TestGetRealTimeStockPriceInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -167,7 +173,7 @@ func TestParseFullSingleStockData(t *testing.T) {
 func TestNewStockDataApi(t *testing.T) {
 	db.Init("../../data/stock.db")
 	stockDataApi := NewStockDataApi()
-	datas, _ := stockDataApi.GetStockCodeRealTimeData("sh600859", "sh600745", "gb_tsla")
+	datas, _ := stockDataApi.GetStockCodeRealTimeData("sh600859", "sh600745", "gb_tsla", "hk09660", "hk00700")
 	for _, data := range *datas {
 		t.Log(data)
 	}
