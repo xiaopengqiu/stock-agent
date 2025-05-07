@@ -70,7 +70,12 @@ func TestSearchStockPriceInfo(t *testing.T) {
 	//getZSInfo("沪深300指数", "sh000300", 30)
 
 }
-
+func TestGetStockMinutePriceData(t *testing.T) {
+	db.Init("../../data/stock.db")
+	data, date := NewStockDataApi().GetStockMinutePriceData("usTSLA.OQ")
+	logger.SugaredLogger.Infof("date:%s", date)
+	logger.SugaredLogger.Infof("%+#v", *data)
+}
 func TestGetKLineData(t *testing.T) {
 	db.Init("../../data/stock.db")
 	k := NewStockDataApi().GetKLineData("sh600171", "240", 30)

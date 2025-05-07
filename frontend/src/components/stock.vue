@@ -23,7 +23,7 @@ import {
   AddGroup,
   GetGroupList,
   AddStockGroup,
-  RemoveStockGroup, RemoveGroup,GetStockKLine
+  RemoveStockGroup, RemoveGroup, GetStockKLine, GetStockMinutePriceLineData
 } from '../../wailsjs/go/main/App'
 import {
   NAvatar,
@@ -66,6 +66,7 @@ const upBorderColor = '';
 const downColor = '#00da3c';
 const downBorderColor = '';
 const kLineChartRef = ref(null);
+const kLineChartRef2 = ref(null);
 
 
 const handleProgress = (progress) => {
@@ -600,6 +601,103 @@ function showFenshi(code,name){
   }
 
   modalShow2.value=true
+
+  GetStockMinutePriceLineData(code,name).then(result => {
+    console.log("GetStockMinutePriceLineData",result)
+    const priceData=result.priceData
+    const chart = echarts.init(kLineChartRef2.value);
+    let category=[]
+    let price=[]
+    let volume=[]
+    let min=0
+    let max=0
+    for (let i = 0; i < priceData.length; i++) {
+      category.push(priceData[i].time)
+      price.push(priceData[i].price)
+      if(min===0||min>priceData[i].price){
+        min=priceData[i].price
+      }
+      if(max<priceData[i].price){
+        max=priceData[i].price
+      }
+      if(i>0){
+        volume.push(priceData[i].volume-priceData[i-1].volume)
+      }else{
+        volume.push(priceData[i].volume)
+      }
+    }
+
+    let option = {
+      title: {
+        text: result.date,
+        left: 'center',
+        textStyle: {
+          color: data.darkTheme?'#ccc':'#456'
+        }
+      },
+      legend: {
+        data: ['股价', '成交量'],
+        textStyle: {
+          color: data.darkTheme?'#ccc':'#456'
+        },
+        right: 20,
+      },
+      darkMode: data.darkTheme,
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'cross',
+          animation: false,
+          label: {
+            backgroundColor: '#505765'
+          }
+        }
+      },
+      xAxis: {
+        type: 'category',
+        data: category
+      },
+      yAxis: [
+          {
+            name:"股价",
+            min: min-1,
+            max: max+1,
+            minInterval:0.01,
+            type: 'value'
+          },
+        {
+          name:"成交量",
+          type: 'value',
+        }
+      ],
+      series: [
+        {
+          name:"股价",
+          data: price,
+          type: 'line',
+          smooth: false,
+          showSymbol: false,
+          markPoint: {
+            data: [
+              { type: 'max', name: 'Max' },
+              { type: 'min', name: 'Min' }
+            ]
+          },
+          markLine: {
+            data: [{ type: 'average', name: 'Avg' }]
+          }
+        },
+        {
+          yAxisIndex: 1,
+          name:"成交量",
+          data: volume,
+          type: 'bar',
+        }
+      ]
+    };
+    chart.setOption(option);
+  })
+
 }
 
 function calculateMA(dayCount,values) {
@@ -670,7 +768,7 @@ function  handleKLine(){
           color: data.darkTheme?'#ccc':'#456'
         },
         formatter: function (params) {//修改鼠标划过显示为中文
-          console.log("params",params)
+          //console.log("params",params)
           let volum=params[5].data;//ma5的值
           let ma5=params[1].data;//ma5的值
           let ma10=params[2].data;//ma10的值
@@ -937,6 +1035,9 @@ function  handleKLine(){
       ]
     };
     chart.setOption(option);
+    chart.on('click',{seriesName:'日K'}, function(params) {
+      console.log("click:",params);
+    });
   })
 }
 function showK(code,name){
@@ -1534,8 +1635,9 @@ function delStockGroup(code,name,groupId){
       </n-flex>
     </template>
   </n-modal>
-  <n-modal v-model:show="modalShow2" :title="data.name" style="width: 600px" :preset="'card'">
-    <n-image :src="data.fenshiURL" />
+  <n-modal v-model:show="modalShow2" :title="data.name" style="width: 900px" :preset="'card'">
+<!--    <n-image :src="data.fenshiURL" />-->
+    <div ref="kLineChartRef2" style="width: 850px; height: 500px;"></div>
   </n-modal>
   <n-modal v-model:show="modalShow3" :title="data.name" style="width: 900px" :preset="'card'" @after-enter="handleKLine">
 <!--    <n-image :src="data.kURL" />-->

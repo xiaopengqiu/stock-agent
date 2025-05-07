@@ -78,6 +78,10 @@ export function GetStockList(arg1) {
   return window['go']['main']['App']['GetStockList'](arg1);
 }
 
+export function GetStockMinutePriceLineData(arg1, arg2) {
+  return window['go']['main']['App']['GetStockMinutePriceLineData'](arg1, arg2);
+}
+
 export function GetTelegraphList(arg1) {
   return window['go']['main']['App']['GetTelegraphList'](arg1);
 }

@@ -1235,6 +1235,66 @@ func CheckBrowserOnWindows() (string, bool) {
 	return path + "\\msedge.exe", true
 }
 
+// 分时数据
+func (receiver StockDataApi) GetStockMinutePriceData(stockCode string) (*[]MinuteData, string) {
+	url := fmt.Sprintf("https://web.ifzq.gtimg.cn/appstock/app/minute/query?code=%s", stockCode)
+	if strutil.HasPrefixAny(stockCode, []string{"gb_", "GB_"}) {
+		stockCode = strings.Replace(strings.ToUpper(stockCode), "GB_", "us", 1) + ".OQ"
+	}
+	if strutil.HasPrefixAny(stockCode, []string{"us", "US"}) {
+		url = fmt.Sprintf("https://web.ifzq.gtimg.cn/appstock/app/UsMinute/query?code=%s", stockCode)
+	}
+	logger.SugaredLogger.Infof("GetStockMinutePriceData url:%s", url)
+	res := make(map[string]interface{})
+	resp, err := receiver.client.SetTimeout(time.Duration(receiver.config.CrawlTimeOut)*time.Second).R().
+		SetHeader("Host", "web.ifzq.gtimg.cn").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0").
+		Get(url)
+
+	date := ""
+	minuteDatas := &[]MinuteData{}
+
+	if err != nil {
+		logger.SugaredLogger.Errorf("err:%s", err.Error())
+		return minuteDatas, date
+	}
+	//logger.SugaredLogger.Infof("resp:%s", resp.Body())
+	json.Unmarshal(resp.Body(), &res)
+	code, _ := convertor.ToInt(res["code"])
+	if res["data"] != nil && code == 0 {
+		data := res["data"].(map[string]interface{})
+		if stockData, ok := data[stockCode]; ok {
+			m := stockData.(map[string]interface{})
+			if d, ok := m["data"]; ok {
+				if m2, ok := d.(map[string]any); ok {
+					minutePriceData := m2["data"]
+					datas := minutePriceData.([]any)
+					for _, item := range datas {
+						minuteDataSplit := strutil.SplitEx(strutil.ReplaceWithMap(item.(string), map[string]string{
+							"\r\n": " ",
+						}), " ", true)
+						price, _ := convertor.ToFloat(minuteDataSplit[1])
+						volume, _ := convertor.ToFloat(minuteDataSplit[2])
+						amount := float64(0)
+						if len(minuteDataSplit) >= 4 {
+							amount, _ = convertor.ToFloat(minuteDataSplit[3])
+						}
+						minuteData := &MinuteData{
+							Time:   minuteDataSplit[0][0:2] + ":" + minuteDataSplit[0][2:4],
+							Price:  price,
+							Volume: volume,
+							Amount: amount,
+						}
+						*minuteDatas = append(*minuteDatas, *minuteData)
+					}
+					date = m2["date"].(string)
+				}
+			}
+		}
+	}
+	return minuteDatas, date
+}
+
 func (receiver StockDataApi) GetKLineData(stockCode string, kLineType string, days int64) *[]KLineData {
 	url := fmt.Sprintf("http://quotes.sina.cn/cn/api/json_v2.php/CN_MarketDataService.getKLineData?symbol=%s&scale=%s&ma=yes&datalen=%d", stockCode, kLineType, days)
 	K := &[]KLineData{}
@@ -1591,4 +1651,11 @@ type KLineData struct {
 	Low    string `json:"low"`
 	Close  string `json:"close"`
 	Volume string `json:"volume"`
+}
+
+type MinuteData struct {
+	Time   string  `json:"time"`
+	Price  float64 `json:"price"`
+	Volume float64 `json:"volume"`
+	Amount float64 `json:"amount"`
 }

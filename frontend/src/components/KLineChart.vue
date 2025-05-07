@@ -96,7 +96,7 @@ function  handleKLine(code,name){
           color: darkTheme?'#ccc':'#456'
         },
         formatter: function (params) {//修改鼠标划过显示为中文
-          console.log("params",params)
+          //console.log("params",params)
           let currentItemData =  _.filter(params,  (param) => param.seriesIndex === 0)[0].data;
           let ma5=_.filter(params,  (param) => param.seriesIndex === 1)[0].data;//ma5的值
           let ma10=_.filter(params,  (param) => param.seriesIndex === 2)[0].data;//ma10的值
@@ -354,6 +354,10 @@ function  handleKLine(code,name){
       ]
     };
     chart.setOption(option);
+
+    chart.on('click',{seriesName:'日K'}, function(params) {
+      console.log("click:",params);
+    });
   })
 }
 function calculateMA(dayCount,values) {

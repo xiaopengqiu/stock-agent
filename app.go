@@ -1065,6 +1065,17 @@ func (a *App) RemoveGroup(groupId int) string {
 func (a *App) GetStockKLine(stockCode, stockName string, days int64) *[]data.KLineData {
 	return data.NewStockDataApi().GetHK_KLineData(stockCode, "day", days)
 }
+
+func (a *App) GetStockMinutePriceLineData(stockCode, stockName string) map[string]any {
+	res := make(map[string]any, 4)
+	priceData, date := data.NewStockDataApi().GetStockMinutePriceData(stockCode)
+	res["priceData"] = priceData
+	res["date"] = date
+	res["stockName"] = stockName
+	res["stockCode"] = stockCode
+	return res
+}
+
 func (a *App) GetStockCommonKLine(stockCode, stockName string, days int64) *[]data.KLineData {
 	return data.NewStockDataApi().GetCommonKLineData(stockCode, "day", days)
 }
