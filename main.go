@@ -55,22 +55,7 @@ var VersionCommit string
 func main() {
 	checkDir("data")
 	db.Init("")
-	db.Dao.AutoMigrate(&data.StockInfo{})
-	db.Dao.AutoMigrate(&data.StockBasic{})
-	db.Dao.AutoMigrate(&data.FollowedStock{})
-	db.Dao.AutoMigrate(&data.IndexBasic{})
-	db.Dao.AutoMigrate(&data.Settings{})
-	db.Dao.AutoMigrate(&models.AIResponseResult{})
-	db.Dao.AutoMigrate(&models.StockInfoHK{})
-	db.Dao.AutoMigrate(&models.StockInfoUS{})
-	db.Dao.AutoMigrate(&data.FollowedFund{})
-	db.Dao.AutoMigrate(&data.FundBasic{})
-	db.Dao.AutoMigrate(&models.PromptTemplate{})
-	db.Dao.AutoMigrate(&data.Group{})
-	db.Dao.AutoMigrate(&data.GroupStock{})
-	db.Dao.AutoMigrate(&models.Tags{})
-	db.Dao.AutoMigrate(&models.Telegraph{})
-	db.Dao.AutoMigrate(&models.TelegraphTags{})
+	go AutoMigrate()
 
 	//db.Dao.Model(&data.Group{}).Where("id = ?", 0).FirstOrCreate(&data.Group{
 	//	Name: "默认分组",
@@ -212,6 +197,25 @@ func main() {
 		log.SugaredLogger.Fatal(err)
 	}
 
+}
+
+func AutoMigrate() {
+	db.Dao.AutoMigrate(&data.StockInfo{})
+	db.Dao.AutoMigrate(&data.StockBasic{})
+	db.Dao.AutoMigrate(&data.FollowedStock{})
+	db.Dao.AutoMigrate(&data.IndexBasic{})
+	db.Dao.AutoMigrate(&data.Settings{})
+	db.Dao.AutoMigrate(&models.AIResponseResult{})
+	db.Dao.AutoMigrate(&models.StockInfoHK{})
+	db.Dao.AutoMigrate(&models.StockInfoUS{})
+	db.Dao.AutoMigrate(&data.FollowedFund{})
+	db.Dao.AutoMigrate(&data.FundBasic{})
+	db.Dao.AutoMigrate(&models.PromptTemplate{})
+	db.Dao.AutoMigrate(&data.Group{})
+	db.Dao.AutoMigrate(&data.GroupStock{})
+	db.Dao.AutoMigrate(&models.Tags{})
+	db.Dao.AutoMigrate(&models.Telegraph{})
+	db.Dao.AutoMigrate(&models.TelegraphTags{})
 }
 
 func initStockDataUS() {

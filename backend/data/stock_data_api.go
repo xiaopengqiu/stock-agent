@@ -295,12 +295,16 @@ func (receiver StockDataApi) GetStockCodeRealTimeData(StockCodes ...string) (*[]
 	stockInfos := make([]StockInfo, 0)
 
 	hkcodes := slice.Filter(StockCodes, func(i int, s string) bool {
-		return strutil.HasPrefixAny(s, []string{"hk", "HK"})
+		return strutil.HasPrefixAny(s, []string{"hk", "HK", "sh", "sz"})
 	})
 
 	if hkcodes != nil && len(hkcodes) > 0 {
 		hkcodesStr := slice.JoinFunc(hkcodes, ",", func(s string) string {
-			return "r_" + strings.ToLower(s)
+			if strutil.HasPrefixAny(s, []string{"hk", "HK"}) {
+				return "r_" + strings.ToLower(s)
+			} else {
+				return strings.ToLower(s)
+			}
 		})
 		url := fmt.Sprintf(txStockUrl, time.Now().Unix(), hkcodesStr)
 		resp, err := receiver.client.R().
@@ -336,7 +340,7 @@ func (receiver StockDataApi) GetStockCodeRealTimeData(StockCodes ...string) (*[]
 	}
 
 	szzsusCodes := slice.Filter(StockCodes, func(i int, s string) bool {
-		return !strutil.HasPrefixAny(s, []string{"hk", "HK"})
+		return !strutil.HasPrefixAny(s, []string{"hk", "HK", "sh", "sz"})
 	})
 
 	codes := slice.JoinFunc(szzsusCodes, ",", func(s string) string {
@@ -556,13 +560,16 @@ func GB18030ToUTF8(bs []byte) string {
 func ParseTxStockData(data string) (*StockInfo, error) {
 	//v_r_hk09660="100~地平线机器人-W~09660~6.240~5.690~5.800~192659034.0~0~0~6.240~0~0~0~0~0~0~0~0~0~6.240~0~0~0~0~0~0~0~0~0~192659034.0~2025/04/29
 	//13:41:04~0.550~9.67~6.450~5.710~6.240~192659034.0~1180471843.140~0~32.51~~0~0~13.01~691.1364~823.6983~HORIZONROBOT-W~0.00~10.380~3.320~1.07~-16.03~0~0~0~0~0~32.51~6.40~1.74~600~73.33~17.96~GP~19.70~11.51~-0.95~-18.54~44.44~13200293682.00~11075904412.00~32.51~0.000~6.127~56.39~HKD~1~30";
+	//v_sz002241="51~歌尔股份~002241~22.26~22.27~0.00~0~0~0~22.26~1004~0.00~0~0.00~0~0.00~0~0.00~0~22.26~1004~0.00~558~0.00~0~0.00~0~0.00~0~~20250509092233~-0.01~-0.04~0.00~0.00~22.26/0/0~0~0~0.00~28.21~~0.00~0.00~0.00~686.46~777.09~2.31~24.50~20.04~0.00~-558~0.00~41.44~29.16~~~1.24~0.0000~0.0000~0~
+	//~GP-A~-13.75~6.76~1.09~8.18~3.39~30.63~15.70~6.87~17.47~-23.95~3083811231~3490989083~-21.75~12.02~3083811231~~~39.36~-0.04~~CNY~0~~0.00~0";
+
 	datas := strutil.SplitAndTrim(data, "=", "\"")
 	if len(datas) < 2 {
 		return nil, fmt.Errorf("invalid data format")
 	}
 	var result map[string]string
 	var err error
-	if strutil.ContainsAny(datas[0], []string{"v_r_hk", "v_hk"}) {
+	if strutil.ContainsAny(datas[0], []string{"v_r_hk", "v_hk", "v_sz", "v_sh"}) {
 		result, err = ParseTxHKStockData(datas)
 	}
 
@@ -640,12 +647,50 @@ func ParseTxHKStockData(datas []string) (map[string]string, error) {
 
 	result["今日最高价"] = parts[33]
 	result["今日最低价"] = parts[34]
-	timestr := strutil.ReplaceWithMap(parts[30], map[string]string{
-		"/": "-",
-	})
+
+	if strutil.HasPrefixAny(stockCode, []string{"sz", "sh"}) {
+		result["买一报价"] = parts[9]
+		result["买一申报"] = parts[10]
+		result["买二报价"] = parts[11]
+		result["买二申报"] = parts[12]
+		result["买三报价"] = parts[13]
+		result["买三申报"] = parts[14]
+		result["买四报价"] = parts[15]
+		result["买四申报"] = parts[16]
+		result["买五报价"] = parts[17]
+		result["买五申报"] = parts[18]
+
+		result["卖一报价"] = parts[19]
+		result["卖一申报"] = parts[20]
+		result["卖二报价"] = parts[21]
+		result["卖二申报"] = parts[22]
+		result["卖三报价"] = parts[23]
+		result["卖三申报"] = parts[24]
+		result["卖四报价"] = parts[25]
+		result["卖四申报"] = parts[26]
+		result["卖五报价"] = parts[27]
+		result["卖五申报"] = parts[28]
+
+	}
+
+	timestr := ""
+
+	if strutil.ContainsAny(parts[30], []string{"/"}) {
+		timestr = strutil.ReplaceWithMap(parts[30], map[string]string{
+			"/":  "-",
+			"\n": " ",
+		})
+		result["日期"] = strutil.SplitAndTrim(timestr, " ", "")[0]
+		result["时间"] = strutil.SplitAndTrim(timestr, " ", "")[1]
+	} else {
+		result["日期"] = strutil.Trim(parts[29])[0:4] + "-" + strutil.Trim(parts[29])[4:6] + "-" + strutil.Trim(parts[29])[6:8]
+		result["时间"] = strutil.Trim(parts[29])[8:10] + ":" + strutil.Trim(parts[29])[10:12] + ":" + strutil.Trim(parts[29])[12:14]
+		result["今日最高价"] = parts[32]
+		result["今日最低价"] = parts[33]
+	}
+	//logger.SugaredLogger.Infof("股票数据解析完成 %s %s 时间: %s,%s", parts[1], parts[3], parts[29], parts[30])
+
 	//logger.SugaredLogger.Infof("股票数据解析完成 时间: %v", timestr)
-	result["日期"] = strutil.SplitAndTrim(timestr, " ", "")[0]
-	result["时间"] = strutil.SplitAndTrim(timestr, " ", "")[1]
 
 	//logger.SugaredLogger.Infof("股票数据解析完成: %v", result)
 

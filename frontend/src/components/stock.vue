@@ -632,7 +632,7 @@ function showFsChart(code, name) {
 
     let option = {
       title: {
-        subtext: "["+result.date+"] 开盘:"+openprice+" 收盘:"+closeprice+" 最高:"+max+" 最低:"+min,
+        subtext: "["+result.date+"] 开盘:"+openprice+" 最新:"+closeprice+" 最高:"+max+" 最低:"+min,
         left: 'center',
         top: '10',
         textStyle: {
@@ -1585,6 +1585,52 @@ function delStockGroup(code,name,groupId){
                  <n-text :type="'info'">{{"今开 "+result["今日开盘价"]}}</n-text>
                </n-gi>
              </n-grid>
+           <n-collapse accordion v-if="result['买一报价']>0">
+             <n-collapse-item title="盘口" name="1" v-if="result['买一报价']>0">
+               <template #header-extra>
+                 <n-flex justify="space-between">
+                   <n-text :type="'info'">{{"买一 "+result["买一报价"]+'('+result["买一申报"]+")"}}</n-text>
+                   <n-text :type="'info'">{{"卖一 "+result["卖一报价"]+'('+result["卖一申报"]+")"}}</n-text>
+                 </n-flex>
+               </template>
+               <n-grid :cols="2" :y-gap="4" :x-gap="4" >
+               <n-gi v-if="result['买一报价']>0">
+                 <n-text :type="'info'">{{"买一 "+result["买一报价"]+'('+result["买一申报"]+")"}}</n-text>
+               </n-gi>
+               <n-gi v-if="result['卖一报价']>0">
+                 <n-text :type="'info'">{{"卖一 "+result["卖一报价"]+'('+result["卖一申报"]+")"}}</n-text>
+               </n-gi>
+
+               <n-gi v-if="result['买二报价']>0">
+                 <n-text :type="'info'">{{"买二 "+result["买二报价"]+'('+result["买二申报"]+")"}}</n-text>
+               </n-gi>
+               <n-gi v-if="result['卖二报价']>0">
+                 <n-text :type="'info'">{{"卖二 "+result["卖二报价"]+'('+result["卖二申报"]+")"}}</n-text>
+               </n-gi>
+
+               <n-gi v-if="result['买三报价']>0">
+                 <n-text :type="'info'">{{"买三 "+result["买三报价"]+'('+result["买三申报"]+")"}}</n-text>
+               </n-gi>
+               <n-gi v-if="result['卖三报价']>0">
+                 <n-text :type="'info'">{{"买三 "+result["卖三报价"]+'('+result["卖三申报"]+")"}}</n-text>
+               </n-gi>
+
+               <n-gi v-if="result['买四报价']>0">
+                 <n-text :type="'info'">{{"买四 "+result["买四报价"]+'('+result["买四申报"]+")"}}</n-text>
+               </n-gi>
+               <n-gi v-if="result['卖四报价']>0">
+                 <n-text :type="'info'">{{"卖四 "+result["卖四报价"]+'('+result["卖四申报"]+")"}}</n-text>
+               </n-gi>
+
+               <n-gi v-if="result['买五报价']>0">
+                 <n-text :type="'info'">{{"买五 "+result["买五报价"]+'('+result["买五申报"]+")"}}</n-text>
+               </n-gi>
+               <n-gi v-if="result['卖五报价']>0">
+                 <n-text :type="'info'">{{"卖五 "+result["卖五报价"]+'('+result["卖五申报"]+")"}}</n-text>
+               </n-gi>
+               </n-grid>
+             </n-collapse-item>
+           </n-collapse>
            <template #header-extra>
 
              <n-tag size="small" :bordered="false">{{result['股票代码']}}</n-tag>&nbsp;
@@ -1650,6 +1696,52 @@ function delStockGroup(code,name,groupId){
                 <n-text :type="'info'">{{"今开 "+result["今日开盘价"]}}</n-text>
               </n-gi>
             </n-grid>
+            <n-collapse accordion v-if="result['买一报价']>0">
+              <n-collapse-item title="盘口" name="1" v-if="result['买一报价']>0">
+                <template #header-extra>
+                  <n-flex justify="space-between">
+                    <n-text :type="'info'">{{"买一 "+result["买一报价"]+'('+result["买一申报"]+")"}}</n-text>
+                    <n-text :type="'info'">{{"卖一 "+result["卖一报价"]+'('+result["卖一申报"]+")"}}</n-text>
+                  </n-flex>
+                </template>
+                <n-grid :cols="2" :y-gap="4" :x-gap="4" >
+                  <n-gi v-if="result['买一报价']>0">
+                    <n-text :type="'info'">{{"买一 "+result["买一报价"]+'('+result["买一申报"]+")"}}</n-text>
+                  </n-gi>
+                  <n-gi v-if="result['卖一报价']>0">
+                    <n-text :type="'info'">{{"卖一 "+result["卖一报价"]+'('+result["卖一申报"]+")"}}</n-text>
+                  </n-gi>
+
+                  <n-gi v-if="result['买二报价']>0">
+                    <n-text :type="'info'">{{"买二 "+result["买二报价"]+'('+result["买二申报"]+")"}}</n-text>
+                  </n-gi>
+                  <n-gi v-if="result['卖二报价']>0">
+                    <n-text :type="'info'">{{"卖二 "+result["卖二报价"]+'('+result["卖二申报"]+")"}}</n-text>
+                  </n-gi>
+
+                  <n-gi v-if="result['买三报价']>0">
+                    <n-text :type="'info'">{{"买三 "+result["买三报价"]+'('+result["买三申报"]+")"}}</n-text>
+                  </n-gi>
+                  <n-gi v-if="result['卖三报价']>0">
+                    <n-text :type="'info'">{{"买三 "+result["卖三报价"]+'('+result["卖三申报"]+")"}}</n-text>
+                  </n-gi>
+
+                  <n-gi v-if="result['买四报价']>0">
+                    <n-text :type="'info'">{{"买四 "+result["买四报价"]+'('+result["买四申报"]+")"}}</n-text>
+                  </n-gi>
+                  <n-gi v-if="result['卖四报价']>0">
+                    <n-text :type="'info'">{{"卖四 "+result["卖四报价"]+'('+result["卖四申报"]+")"}}</n-text>
+                  </n-gi>
+
+                  <n-gi v-if="result['买五报价']>0">
+                    <n-text :type="'info'">{{"买五 "+result["买五报价"]+'('+result["买五申报"]+")"}}</n-text>
+                  </n-gi>
+                  <n-gi v-if="result['卖五报价']>0">
+                    <n-text :type="'info'">{{"卖五 "+result["卖五报价"]+'('+result["卖五申报"]+")"}}</n-text>
+                  </n-gi>
+                </n-grid>
+              </n-collapse-item>
+            </n-collapse>
             <template #header-extra>
 
               <n-tag size="small" :bordered="false">{{result['股票代码']}}</n-tag>&nbsp;
