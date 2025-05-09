@@ -56,6 +56,10 @@ import {asBlob} from 'html-docx-js-typescript';
 import vueDanmaku from 'vue3-danmaku'
 import {keys, pad, padStart} from "lodash";
 import {models} from "../../wailsjs/go/models";
+import {RouterLink} from "vue-router";
+import { useRoute } from 'vue-router'
+const route = useRoute()
+
 const danmus = ref([])
 const ws = ref(null)
 const dialog = useDialog()
@@ -122,7 +126,12 @@ const data = reactive({
   changePercent:0
 })
 const  feishiInterval= ref(null)
+
+
 const currentGroupId=ref(0)
+
+
+
 const theme=computed(() => {
   return data.darkTheme ? 'dark' : 'light'
 })
@@ -155,9 +164,13 @@ const groupResults=computed(() => {
 })
 
 onBeforeMount(()=>{
-
   GetGroupList().then(result => {
     groupList.value=result
+    if(route.query.groupId){
+      message.success("切换分组:"+route.query.groupName)
+      currentGroupId.value=Number(route.query.groupId)
+      console.log("route.params",route.query)
+    }
   })
   GetStockList("").then(result => {
     stockList.value = result
@@ -302,6 +315,12 @@ EventsOn("newChatStream",async (msg) => {
       }
 
   }
+})
+
+EventsOn("changeTab" ,async (msg) => {
+  //console.log("changeTab",msg)
+  currentGroupId.value=msg.ID
+  updateTab(currentGroupId.value)
 })
 
 
@@ -473,7 +492,8 @@ function getStockList(value){
 
 function blinkBorder(findId){
   // 获取要滚动到的元素
-  const element = document.getElementById(findId);
+  let element = document.getElementById(findId);
+  console.log("blinkBorder",findId,element)
   if (element) {
     // 滚动到该元素
     element.scrollIntoView({ behavior: 'smooth'});
@@ -1552,11 +1572,11 @@ function delStockGroup(code,name,groupId){
         </n-gradient-text>
       </template>
     </vue-danmaku>
-  <n-tabs style="--wails-draggable:drag" type="card" animated addable   @add="addTab"  @update-value="updateTab" placement="top"  @close="(key)=>{delTab(key)}">
-    <n-tab-pane name="0"  tab="全部">
+  <n-tabs style="--wails-draggable:drag" type="card" animated addable :data-currentGroupId="currentGroupId" :value="currentGroupId"   @add="addTab"  @update-value="updateTab" placement="top"  @close="(key)=>{delTab(key)}">
+    <n-tab-pane :name="0"  :tab="'全部'">
       <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
-        <n-gi   :id="result['股票代码']" v-for="result in sortedResults" style="margin-left: 2px;" >
-         <n-card  :data-sort="result.sort"  :id="result['股票代码']+'_card'"  :data-code="result['股票代码']" :bordered="true" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
+        <n-gi   :id="result['股票代码']+'_gi'" v-for="result in sortedResults" style="margin-left: 2px;" >
+         <n-card  :data-sort="result.sort"  :id="result['股票代码']"  :data-code="result['股票代码']" :bordered="true" :title="result['股票名称']"   :closable="false" @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
            <n-grid :cols="1" :y-gap="6">
              <n-gi>
                <n-text :type="result.type" >

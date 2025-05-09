@@ -10,14 +10,17 @@ import {
 } from '../wailsjs/runtime'
 import {h, onBeforeMount, onMounted, ref} from "vue";
 import { RouterLink } from 'vue-router'
-import {darkTheme, NGradientText, NIcon, NText,} from 'naive-ui'
+import {darkTheme, NButton, NGradientText, NIcon, NText,} from 'naive-ui'
 import {
   SettingsOutline,
   ReorderTwoOutline,
   ExpandOutline,
   PowerOutline, LogoGithub, MoveOutline, WalletOutline, StarOutline, AlarmOutline, SparklesOutline, NewspaperOutline,
 } from '@vicons/ionicons5'
-import {GetConfig} from "../wailsjs/go/main/App";
+import {GetConfig, GetGroupList} from "../wailsjs/go/main/App";
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
 const enableNews= ref(false)
 const contentStyle =  ref("")
 const enableFund = ref(false)
@@ -28,6 +31,7 @@ const activeKey = ref('')
 const containerRef= ref({})
 const realtimeProfit= ref(0)
 const telegraph= ref([])
+const groupList=ref([])
 const menuOptions = ref([
   {
     label: () =>
@@ -36,6 +40,10 @@ const menuOptions = ref([
             {
               to: {
                 name: 'stock',
+                query: {
+                  groupName: '全部',
+                  groupId: 0,
+                },
                 params: {
                 },
               }
@@ -46,12 +54,36 @@ const menuOptions = ref([
     icon: renderIcon(StarOutline),
     children:[
       {
-        label: ()=> h(NText, {type:realtimeProfit.value>0?'error':'success'},{ default: () => '当日盈亏 '+realtimeProfit.value+"¥"}),
-        key: 'realtimeProfit',
-        show: realtimeProfit.value,
-        icon: renderIcon(WalletOutline),
-      },
-    ]
+        label: () =>
+            h(
+                'a',
+                {
+                  href: '#',
+                  type: 'info',
+                  onClick: ()=>{
+                    //console.log("push",item)
+                    router.push({
+                      name: 'stock',
+                      query: {
+                        groupName: '全部',
+                        groupId: 0,
+                      },
+                    })
+                    EventsEmit("changeTab",  {ID:0,name:'全部'})
+                  },
+                  to: {
+                    name: 'stock',
+                    query: {
+                      groupName: '全部',
+                      groupId: 0,
+                    },
+                  }
+                },
+                { default: () => '全部',}
+            ),
+        key: 0,
+      }
+    ],
   },
   {
     label: () =>
@@ -214,8 +246,53 @@ window.onerror = function (msg, source, lineno, colno, error) {
 };
 
 onBeforeMount(()=>{
+  GetGroupList().then(result => {
+    groupList.value=result
+    menuOptions.value.map((item)=>{
+      //console.log(item)
+      if(item.key==='stock'){
+        item.children.push(...groupList.value.map(item=>{
+          return {
+            label: () =>
+                h(
+                    'a',
+                    {
+                      href: '#',
+                      type: 'info',
+                      onClick: ()=>{
+                        //console.log("push",item)
+                        router.push({
+                          name: 'stock',
+                          query: {
+                            groupName: item.name,
+                            groupId: item.ID,
+                          },
+                        })
+                        setTimeout(()=>{
+                          EventsEmit("changeTab",  item)
+                        },100)
+                      },
+                      to: {
+                        name: 'stock',
+                        query: {
+                          groupName: item.name,
+                          groupId: item.ID,
+                        },
+                      }
+                    },
+                    { default: () => item.name,}
+                ),
+            key: item.ID,
+          }
+        }))
+      }
+    })
+  })
+
+
+
   GetConfig().then((res)=>{
-    console.log(res)
+    //console.log(res)
     enableFund.value=res.enableFund
 
     menuOptions.value.filter((item)=>{
