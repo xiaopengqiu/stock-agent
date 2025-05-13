@@ -38,7 +38,14 @@ import {
   useModal,
   useNotification
 } from 'naive-ui'
-import {EventsEmit, EventsOn, WindowFullscreen, WindowReload, WindowUnfullscreen} from '../../wailsjs/runtime'
+import {
+  EventsEmit,
+  EventsOff,
+  EventsOn,
+  WindowFullscreen,
+  WindowReload,
+  WindowUnfullscreen
+} from '../../wailsjs/runtime'
 import {
   Add,
   ChatboxOutline,
@@ -262,6 +269,15 @@ onBeforeUnmount(() => {
   message.destroyAll()
   notify.destroyAll()
   clearInterval(feishiInterval.value)
+
+  EventsOff("refresh")
+  EventsOff("showSearch")
+  EventsOff("stock_price")
+  EventsOff("refreshFollowList")
+  EventsOff("newChatStream")
+  EventsOff("changeTab")
+  EventsOff("updateVersion")
+  EventsOff("warnMsg")
 })
 
 EventsOn("refresh",(data)=>{
@@ -1572,7 +1588,7 @@ function delStockGroup(code,name,groupId){
         </n-gradient-text>
       </template>
     </vue-danmaku>
-  <n-tabs style="--wails-draggable:drag" type="card" animated addable :data-currentGroupId="currentGroupId" :value="currentGroupId"   @add="addTab"  @update-value="updateTab" placement="top"  @close="(key)=>{delTab(key)}">
+  <n-tabs  type="card"  style="--wails-draggable:drag" animated addable :data-currentGroupId="currentGroupId" :value="currentGroupId"   @add="addTab"  @update-value="updateTab" placement="top"  @close="(key)=>{delTab(key)}">
     <n-tab-pane :name="0"  :tab="'全部'">
       <n-grid :x-gap="8" :cols="3"  :y-gap="8" >
         <n-gi   :id="result['股票代码']+'_gi'" v-for="result in sortedResults" style="margin-left: 2px;" >

@@ -1,20 +1,22 @@
 <script setup>
-import {computed, h, onBeforeMount, ref} from 'vue'
+import {computed, h, onBeforeMount, onBeforeUnmount, ref} from 'vue'
 import {
   GetAIResponseResult,
-  GetConfig, GetPromptTemplates,
+  GetConfig, GetIndustryRank, GetPromptTemplates,
   GetTelegraphList,
   GlobalStockIndexes, ReFleshTelegraphList,
   SaveAIResponseResult, SaveAsMarkdown, ShareAnalysis,
   SummaryStockNews
 } from "../../wailsjs/go/main/App";
-import {EventsOn} from "../../wailsjs/runtime";
+import {EventsOff, EventsOn} from "../../wailsjs/runtime";
 import NewsList from "./newsList.vue";
 import KLineChart from "./KLineChart.vue";
-import {Add, ChatboxOutline, PulseOutline,} from "@vicons/ionicons5";
+import {Add, CaretDown, CaretUp, ChatboxOutline, PulseOutline,} from "@vicons/ionicons5";
 import {NAvatar, NButton, NFlex, NText, useMessage, useNotification} from "naive-ui";
 import {ExportPDF} from "@vavt/v3-extension";
 import {MdEditor, MdPreview} from "md-editor-v3";
+import { useRoute } from 'vue-router'
+const route = useRoute()
 const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
 
 const message = useMessage()
@@ -46,7 +48,10 @@ const loading=ref(true)
 const sysPromptOptions=ref([])
 const userPromptOptions=ref([])
 const promptTemplates=ref([])
-
+const industryRanks=ref([])
+const sort = ref("")
+const sortIcon= ref(h(CaretDown))
+const nowTab=ref("市场快讯")
 function getIndex() {
   GlobalStockIndexes().then((res) => {
     globalStockIndexes.value = res
@@ -59,6 +64,7 @@ function getIndex() {
 }
 
 onBeforeMount(() => {
+  nowTab.value=route.query.name
   GetConfig().then(result => {
       summaryBTN.value= result.openAiEnable
       darkTheme.value = result.darkTheme
@@ -76,13 +82,27 @@ onBeforeMount(() => {
     sinaNewsList.value = res
   })
   getIndex();
-
+  industryRank();
   setInterval(() => {
     getIndex()
   }, 3000)
+
+  setInterval(() => {
+    industryRank()
+  },1000*10)
 })
 
+onBeforeUnmount(() => {
+  EventsOff("changeMarketTab")
+  EventsOff("newTelegraph")
+  EventsOff("newSinaNews")
+  EventsOff("summaryStockNews")
+})
 
+EventsOn("changeMarketTab" ,async (msg) => {
+  //message.info(msg.name)
+  updateTab(msg.name)
+})
 
 EventsOn("newTelegraph", (data) => {
   for (let i = 0; i < data.length; i++) {
@@ -116,6 +136,22 @@ function getAreaName(code){
       return "其他"
   }
 }
+function industryRank(){
+  if(sort.value==="0"){
+    sort.value="1"
+  }else{
+    sort.value="0"
+  }
+  GetIndustryRank(sort.value,150).then(result => {
+    if(result.length>0){
+      console.log(result)
+      industryRanks.value = result
+    }else{
+      message.info("暂无数据")
+    }
+  })
+}
+
 function reAiSummary(){
   aiSummary.value=""
   summaryModal.value = true
@@ -151,6 +187,7 @@ function getAiSummary(){
 
 function updateTab(name) {
   summaryBTN.value = (name === "市场快讯");
+  nowTab.value = name
 }
 
 EventsOn("summaryStockNews",async (msg) => {
@@ -235,7 +272,7 @@ function ReFlesh(source){
 
 <template>
   <n-card>
-    <n-tabs type="line" animated @update-value="updateTab">
+    <n-tabs type="line" animated @update-value="updateTab" :value="nowTab" >
       <n-tab-pane name="市场快讯" tab="市场快讯"  >
         <n-grid :cols="2" :y-gap="0">
           <n-gi>
@@ -343,6 +380,32 @@ function ReFlesh(source){
                           :dark-theme="true"></k-line-chart>
           </n-tab-pane>
         </n-tabs>
+      </n-tab-pane>
+      <n-tab-pane name="行业排名" tab="行业排名">
+        <n-table striped>
+          <n-thead>
+            <n-tr>
+              <n-th>行业名称</n-th>
+              <n-th @click="industryRank">行业涨幅<n-icon v-if="sort==='0'" :component="CaretDown"/><n-icon  v-if="sort==='1'" :component="CaretUp"/></n-th>
+              <n-th>行业5日涨幅</n-th>
+              <n-th>行业20日涨幅</n-th>
+              <n-th>领涨股</n-th>
+              <n-th>涨幅</n-th>
+              <n-th>最新价</n-th>
+            </n-tr>
+          </n-thead>
+          <n-tbody>
+            <n-tr v-for="item in industryRanks" :key="item.bd_code">
+              <n-td><n-tag :bordered=false type="info">{{ item.bd_name }}</n-tag></n-td>
+              <n-td><n-text :type="item.bd_zdf>0?'error':'success'">{{item.bd_zdf}}%</n-text></n-td>
+              <n-td><n-text :type="item.bd_zdf5>0?'error':'success'">{{item.bd_zdf5}}%</n-text></n-td>
+              <n-td><n-text :type="item.bd_zdf20>0?'error':'success'">{{item.bd_zdf20}}%</n-text></n-td>
+              <n-td><n-text :type="item.nzg_zdf>0?'error':'success'">{{item.nzg_name}}</n-text></n-td>
+              <n-td><n-text :type="item.nzg_zdf>0?'error':'success'"> {{item.nzg_zdf}}%</n-text></n-td>
+              <n-td> <n-text :type="item.nzg_zdf>0?'error':'success'">{{item.nzg_zxj}}</n-text></n-td>
+            </n-tr>
+          </n-tbody>
+        </n-table>
       </n-tab-pane>
     </n-tabs>
   </n-card>

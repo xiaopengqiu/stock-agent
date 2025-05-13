@@ -224,3 +224,16 @@ func (m MarketNewsApi) GlobalStockIndexes(crawlTimeOut uint) map[string]any {
 	json.Unmarshal([]byte(js), &res)
 	return res["data"].(map[string]any)
 }
+
+func (m MarketNewsApi) GetIndustryRank(sort string, cnt int) map[string]any {
+
+	url := fmt.Sprintf("https://proxy.finance.qq.com/ifzqgtimg/appstock/app/mktHs/rank?l=%d&p=1&t=01/averatio&ordertype=&o=%s", cnt, sort)
+	response, _ := resty.New().SetTimeout(time.Duration(5)*time.Second).R().
+		SetHeader("Referer", "https://stockapp.finance.qq.com/").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").
+		Get(url)
+	js := string(response.Body())
+	res := make(map[string]any)
+	json.Unmarshal([]byte(js), &res)
+	return res
+}

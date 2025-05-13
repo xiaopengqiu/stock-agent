@@ -15,7 +15,15 @@ import {
   SettingsOutline,
   ReorderTwoOutline,
   ExpandOutline,
-  PowerOutline, LogoGithub, MoveOutline, WalletOutline, StarOutline, AlarmOutline, SparklesOutline, NewspaperOutline,
+  PowerOutline,
+  LogoGithub,
+  MoveOutline,
+  WalletOutline,
+  StarOutline,
+  AlarmOutline,
+  SparklesOutline,
+  NewspaperOutline,
+  AnalyticsOutline, BarChartSharp, NewspaperSharp, Flame,
 } from '@vicons/ionicons5'
 import {GetConfig, GetGroupList} from "../wailsjs/go/main/App";
 import { useRouter } from 'vue-router'
@@ -90,16 +98,106 @@ const menuOptions = ref([
         h(
             RouterLink,
             {
+              href: '#',
               to: {
                 name: 'market',
                 params: {
                 }
-              }
+              },
+              onClick: ()=>{
+                EventsEmit("changeMarketTab",  {ID:0,name:'市场快讯'})
+              },
             },
             { default: () => '市场行情' }
         ),
     key: 'market',
     icon: renderIcon(NewspaperOutline),
+    children:[
+      {
+        label: () =>
+            h(
+                RouterLink,
+                {
+                  href: '#',
+                  to: {
+                    name: 'market',
+                    query: {
+                      name:"市场快讯",
+                    }
+                  },
+                  onClick: ()=>{
+                    EventsEmit("changeMarketTab",  {ID:0,name:'市场快讯'})
+                  },
+                },
+                { default: () => '市场快讯',}
+            ),
+        key: 'market1',
+        icon: renderIcon(NewspaperSharp),
+      },
+      {
+        label: () =>
+            h(
+                RouterLink,
+                {
+                  href: '#',
+                  to: {
+                    name: 'market',
+                    query: {
+                      name:"全球股指",
+                    },
+                  },
+                  onClick: ()=>{
+                    EventsEmit("changeMarketTab",  {ID:0,name:'全球股指'})
+                  },
+                },
+                { default: () => '全球股指',}
+            ),
+        key: 'market2',
+        icon: renderIcon(BarChartSharp),
+      },
+      {
+        label: () =>
+            h(
+                RouterLink,
+                {
+                  href: '#',
+                  to: {
+                    name: 'market',
+                    query: {
+                      name:"指标行情",
+                    }
+                  },
+                  onClick: ()=>{
+                    EventsEmit("changeMarketTab",  {ID:0,name:'指标行情'})
+                  },
+                },
+                { default: () => '指标行情',}
+            ),
+        key: 'market3',
+        icon: renderIcon(AnalyticsOutline),
+      },
+      {
+        label: () =>
+            h(
+                RouterLink,
+                {
+                  href: '#',
+                  to: {
+                    name: 'market',
+                    query: {
+                      name:"行业排名",
+                    }
+                  },
+                  onClick: ()=>{
+                    EventsEmit("changeMarketTab",  {ID:0,name:'行业排名'})
+                  },
+                },
+                { default: () => '行业排名',}
+            ),
+        key: 'market4',
+        icon: renderIcon(Flame),
+      }
+    ]
   },
   {
     label: () =>

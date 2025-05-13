@@ -1103,3 +1103,7 @@ func (a *App) SummaryStockNews(question string, sysPromptId *int) {
 	}
 	runtime.EventsEmit(a.ctx, "summaryStockNews", "DONE")
 }
+func (a *App) GetIndustryRank(sort string, cnt int) []any {
+	res := data.NewMarketNewsApi().GetIndustryRank(sort, cnt)
+	return res["data"].([]any)
+}

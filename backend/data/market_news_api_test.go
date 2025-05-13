@@ -27,3 +27,11 @@ func TestGlobalStockIndexes(t *testing.T) {
 	}
 	logger.SugaredLogger.Debugf("resp: %+v", string(bytes))
 }
+
+func TestGetIndustryRank(t *testing.T) {
+	res := NewMarketNewsApi().GetIndustryRank("0", 10)
+	for s, a := range res["data"].([]any) {
+		logger.SugaredLogger.Debugf("key: %+v, value: %+v", s, a)
+
+	}
+}
