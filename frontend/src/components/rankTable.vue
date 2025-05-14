@@ -4,6 +4,7 @@ import {CaretDown, CaretUp} from "@vicons/ionicons5";
 import {NText} from "naive-ui";
 import {onMounted, ref} from "vue";
 import {GetMoneyRankSina} from "../../wailsjs/go/main/App";
+import KLineChart from "./KLineChart.vue";
 
 const props = defineProps({
   headerTitle: {
@@ -60,8 +61,15 @@ function GetMoneyRankSinaData(){
     <n-tbody>
       <n-tr v-for="item in dataList" :key="item.symbol">
         <n-td><n-tag :bordered=false type="info">{{ item.symbol }}</n-tag></n-td>
-        <n-td><n-tag :bordered=false type="info">{{ item.name }}</n-tag></n-td>
-        <n-td><n-text :type="item.trade>0?'error':'success'">{{item.trade}}</n-text></n-td>
+        <n-td>
+          <n-popover trigger="hover" placement="right">
+            <template #trigger>
+              <n-button tag="a"  text :type="item.changeratio>0?'error':'success'" :bordered=false >{{ item.name }}</n-button>
+            </template>
+            <k-line-chart style="width: 800px" :code="item.symbol" :chart-height="500" :name="item.name" :k-days="20" :dark-theme="true"></k-line-chart>
+          </n-popover>
+        </n-td>
+        <n-td><n-text :type="item.changeratio>0?'error':'success'">{{item.trade}}</n-text></n-td>
         <n-td><n-text :type="item.changeratio>0?'error':'success'">{{(item.changeratio*100).toFixed(2)}}%</n-text></n-td>
         <n-td><n-text :type="item.turnover>500?'error':'info'">{{(item.turnover/100).toFixed(2)}}%</n-text></n-td>
         <n-td><n-text type="info">{{(item.amount/10000).toFixed(2)}}</n-text></n-td>
