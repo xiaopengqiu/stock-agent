@@ -1107,3 +1107,11 @@ func (a *App) GetIndustryRank(sort string, cnt int) []any {
 	res := data.NewMarketNewsApi().GetIndustryRank(sort, cnt)
 	return res["data"].([]any)
 }
+func (a *App) GetIndustryMoneyRankSina(fenlei string) []map[string]any {
+	res := data.NewMarketNewsApi().GetIndustryMoneyRankSina(fenlei)
+	return res
+}
+func (a *App) GetMoneyRankSina(sort string) []map[string]any {
+	res := data.NewMarketNewsApi().GetMoneyRankSina(sort)
+	return res
+}

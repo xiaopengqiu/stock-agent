@@ -237,3 +237,41 @@ func (m MarketNewsApi) GetIndustryRank(sort string, cnt int) map[string]any {
 	json.Unmarshal([]byte(js), &res)
 	return res
 }
+
+func (m MarketNewsApi) GetIndustryMoneyRankSina(fenlei string) []map[string]any {
+	url := fmt.Sprintf("https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/MoneyFlow.ssl_bkzj_bk?page=1&num=20&sort=netamount&asc=0&fenlei=%s", fenlei)
+
+	response, _ := resty.New().SetTimeout(time.Duration(5)*time.Second).R().
+		SetHeader("Host", "vip.stock.finance.sina.com.cn").
+		SetHeader("Referer", "https://finance.sina.com.cn").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").
+		Get(url)
+	js := string(response.Body())
+	res := &[]map[string]any{}
+	err := json.Unmarshal([]byte(js), &res)
+	if err != nil {
+		logger.SugaredLogger.Error(err)
+		return *res
+	}
+	return *res
+}
+
+func (m MarketNewsApi) GetMoneyRankSina(sort string) []map[string]any {
+	if sort == "" {
+		sort = "netamount"
+	}
+	url := fmt.Sprintf("https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/MoneyFlow.ssl_bkzj_ssggzj?page=1&num=20&sort=%s&asc=0&bankuai=&shichang=", sort)
+	response, _ := resty.New().SetTimeout(time.Duration(5)*time.Second).R().
+		SetHeader("Host", "vip.stock.finance.sina.com.cn").
+		SetHeader("Referer", "https://finance.sina.com.cn").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").
+		Get(url)
+	js := string(response.Body())
+	res := &[]map[string]any{}
+	err := json.Unmarshal([]byte(js), &res)
+	if err != nil {
+		logger.SugaredLogger.Error(err)
+		return *res
+	}
+	return *res
+}

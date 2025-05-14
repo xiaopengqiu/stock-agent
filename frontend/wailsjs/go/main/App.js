@@ -62,8 +62,16 @@ export function GetGroupStockList(arg1) {
   return window['go']['main']['App']['GetGroupStockList'](arg1);
 }
 
+export function GetIndustryMoneyRankSina(arg1) {
+  return window['go']['main']['App']['GetIndustryMoneyRankSina'](arg1);
+}
+
 export function GetIndustryRank(arg1, arg2) {
   return window['go']['main']['App']['GetIndustryRank'](arg1, arg2);
+}
+
+export function GetMoneyRankSina(arg1) {
+  return window['go']['main']['App']['GetMoneyRankSina'](arg1);
 }
 
 export function GetPromptTemplates(arg1, arg2) {

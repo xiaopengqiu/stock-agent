@@ -23,7 +23,7 @@ import {
   AlarmOutline,
   SparklesOutline,
   NewspaperOutline,
-  AnalyticsOutline, BarChartSharp, NewspaperSharp, Flame,
+  AnalyticsOutline, BarChartSharp, NewspaperSharp, Flame, BarChartOutline, Wallet,
 } from '@vicons/ionicons5'
 import {GetConfig, GetGroupList} from "../wailsjs/go/main/App";
 import { useRouter } from 'vue-router'
@@ -196,6 +196,27 @@ const menuOptions = ref([
             ),
         key: 'market4',
         icon: renderIcon(Flame),
+      },
+      {
+        label: () =>
+            h(
+                RouterLink,
+                {
+                  href: '#',
+                  to: {
+                    name: 'market',
+                    query: {
+                      name:"个股资金流向",
+                    }
+                  },
+                  onClick: ()=>{
+                    EventsEmit("changeMarketTab",  {ID:0,name:'个股资金流向'})
+                  },
+                },
+                { default: () => '个股资金流向',}
+            ),
+        key: 'market5',
+        icon: renderIcon(Wallet),
       }
     ]
   },
