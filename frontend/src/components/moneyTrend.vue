@@ -34,10 +34,11 @@ onMounted(
 )
 const handleLine = (code, days) => {
   GetStockMoneyTrendByDay(code, days).then(result => {
-    console.log("GetStockMoneyTrendByDay", result)
+    //console.log("GetStockMoneyTrendByDay", result)
     const chart = echarts.init(LineChartRef.value);
     const categoryData = [];
     const netamount_values = [];
+    const r0_net_values = [];
     const trades_values = [];
     let volume = []
 
@@ -50,6 +51,7 @@ const handleLine = (code, days) => {
       netamount_values.push(netamount)
       let price = Number(resultElement.trade);
       trades_values.push(price)
+      r0_net_values.push((resultElement.r0_net / 10000).toFixed(2))
 
       if (min === 0 || min > price) {
         min = price
@@ -92,9 +94,10 @@ const handleLine = (code, days) => {
       },
       legend: {
         show: true,
-        data: ['当日净流入','累计净流入', '股价'],
+        data: ['当日净流入','主力当日净流入','累计净流入', '股价'],
         selected: {
           '当日净流入': true,
+          '主力当日净流入': false,
           '累计净流入': false,
           '股价': true,
         },
@@ -162,7 +165,7 @@ const handleLine = (code, days) => {
             symbolSize: [10, 20],
             symbolOffset: [10, 0],
             itemStyle: {
-              color: '#FC290D'
+              color: '#0d7dfc'
             },
             label: {
               position: 'right',
@@ -178,7 +181,45 @@ const handleLine = (code, days) => {
                 type: 'average',
                 name: 'Average',
                 lineStyle: {
-                  color: '#ff001e',
+                  color: '#0077ff',
+                  width: 0.5
+                },
+              },
+            ]
+          },
+          type: 'line'
+        },
+        {
+          name: '主力当日净流入',
+          data: r0_net_values,
+          smooth: true,
+          showSymbol: false,
+          lineStyle: {
+            width: 2
+          },
+          markPoint: {
+            symbol: 'arrow',
+            symbolRotate: 90,
+            symbolSize: [10, 20],
+            symbolOffset: [10, 0],
+            itemStyle: {
+              color: '#0d7dfc'
+            },
+            label: {
+              position: 'right',
+            },
+            data: [
+              {type: 'max', name: 'Max'},
+              {type: 'min', name: 'Min'}
+            ]
+          },
+          markLine: {
+            data: [
+              {
+                type: 'average',
+                name: 'Average',
+                lineStyle: {
+                  color: '#0077ff',
                   width: 0.5
                 },
               },
@@ -200,7 +241,7 @@ const handleLine = (code, days) => {
             symbolSize: [10, 20],
             symbolOffset: [10, 0],
             itemStyle: {
-              color: '#FC290D'
+              color: '#0059ff'
             },
             label: {
               position: 'right',
@@ -216,7 +257,7 @@ const handleLine = (code, days) => {
                 type: 'average',
                 name: 'Average',
                 lineStyle: {
-                  color: '#ff001e',
+                  color: '#0059ff',
                   width: 0.5
                 },
               },
@@ -240,7 +281,7 @@ const handleLine = (code, days) => {
             symbolSize: [10, 20],
             symbolOffset: [10, 0],
             itemStyle: {
-              color: '#0940f3'
+              color: '#f39509'
             },
             label: {
               position: 'right',
@@ -256,7 +297,7 @@ const handleLine = (code, days) => {
                 type: 'average',
                 name: 'Average',
                 lineStyle: {
-                  color: '#0940f3',
+                  color: '#f39509',
                   width: 0.5
                 },
               },

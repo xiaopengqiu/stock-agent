@@ -1134,5 +1134,6 @@ func (a *App) GetMoneyRankSina(sort string) []map[string]any {
 
 func (a *App) GetStockMoneyTrendByDay(stockCode string, days int) []map[string]any {
 	res := data.NewMarketNewsApi().GetStockMoneyTrendByDay(stockCode, days)
+	slice.Reverse(res)
 	return res
 }

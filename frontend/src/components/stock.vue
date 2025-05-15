@@ -2001,7 +2001,7 @@ function delStockGroup(code,name,groupId){
     </template>
   </n-modal>
   <n-modal v-model:show="modalShow5" :title="data.name+'资金趋势'" style="width: 1000px" :preset="'card'" @after-enter="getMoneyTrendLine">
-    <money-trend :code="data.code" :name="data.name" :days="365" :dark-theme="data.darkTheme" :chart-height="500"></money-trend>
+    <money-trend :code="data.code" :name="data.name" :days="360" :dark-theme="data.darkTheme" :chart-height="500"></money-trend>
   </n-modal>
 </template>
 
