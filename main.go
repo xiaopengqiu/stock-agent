@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -61,21 +62,6 @@ func main() {
 	//	Name: "默认分组",
 	//	Sort: 0,
 	//})
-
-	if stocksBin != nil && len(stocksBin) > 0 {
-		go initStockData()
-	}
-	log.SugaredLogger.Infof("init stocksBinHK %d", len(stocksBinHK))
-
-	if stocksBinHK != nil && len(stocksBinHK) > 0 {
-		go initStockDataHK()
-	}
-	log.SugaredLogger.Infof("init stocksBinUS %d", len(stocksBinUS))
-
-	if stocksBinUS != nil && len(stocksBinUS) > 0 {
-		go initStockDataUS()
-	}
-	updateBasicInfo()
 
 	// Create an instance of the app structure
 	app := NewApp()
@@ -218,7 +204,10 @@ func AutoMigrate() {
 	db.Dao.AutoMigrate(&models.TelegraphTags{})
 }
 
-func initStockDataUS() {
+func initStockDataUS(ctx context.Context) {
+	defer func() {
+		go runtime.EventsEmit(ctx, "loadingMsg", "done")
+	}()
 	var v []models.StockInfoUS
 	err := json.Unmarshal(stocksBinUS, &v)
 	if err != nil {
@@ -241,7 +230,10 @@ func initStockDataUS() {
 	}
 }
 
-func initStockDataHK() {
+func initStockDataHK(ctx context.Context) {
+	defer func() {
+		go runtime.EventsEmit(ctx, "loadingMsg", "done")
+	}()
 	var v []models.StockInfoHK
 	err := json.Unmarshal(stocksBinHK, &v)
 	if err != nil {
@@ -274,7 +266,11 @@ func updateBasicInfo() {
 	}
 }
 
-func initStockData() {
+func initStockData(ctx context.Context) {
+	defer func() {
+		go runtime.EventsEmit(ctx, "loadingMsg", "done")
+	}()
+
 	log.SugaredLogger.Info("init stock data")
 	res := &data.TushareStockBasicResponse{}
 	err := json.Unmarshal(stocksBin, res)

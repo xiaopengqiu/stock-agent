@@ -849,6 +849,6 @@ func (o OpenAi) SaveAIResponseResult(stockCode, stockName, result, chatId, quest
 
 func (o OpenAi) GetAIResponseResult(stock string) *models.AIResponseResult {
 	var result models.AIResponseResult
-	db.Dao.Where("stock_code = ?", stock).Order("id desc").Limit(1).First(&result)
+	db.Dao.Where("stock_code = ?", stock).Order("id desc").Limit(1).Find(&result)
 	return &result
 }

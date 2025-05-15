@@ -53,6 +53,9 @@ const industryRanks=ref([])
 const sort = ref("")
 const sortIcon= ref(h(CaretDown))
 const nowTab=ref("市场快讯")
+const indexInterval= ref(null)
+const indexIndustryRank= ref(null)
+
 function getIndex() {
   GlobalStockIndexes().then((res) => {
     globalStockIndexes.value = res
@@ -84,11 +87,11 @@ onBeforeMount(() => {
   })
   getIndex();
   industryRank();
-  setInterval(() => {
+  indexInterval.value=setInterval(() => {
     getIndex()
   }, 3000)
 
-  setInterval(() => {
+  indexIndustryRank.value=setInterval(() => {
     industryRank()
   },1000*10)
 })
@@ -98,6 +101,8 @@ onBeforeUnmount(() => {
   EventsOff("newTelegraph")
   EventsOff("newSinaNews")
   EventsOff("summaryStockNews")
+  clearInterval(indexInterval.value)
+  clearInterval(indexIndustryRank.value)
 })
 
 EventsOn("changeMarketTab" ,async (msg) => {

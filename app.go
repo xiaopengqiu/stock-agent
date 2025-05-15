@@ -139,6 +139,22 @@ func (a *App) CheckUpdate() {
 func (a *App) domReady(ctx context.Context) {
 	defer PanicHandler()
 
+	if stocksBin != nil && len(stocksBin) > 0 {
+		go runtime.EventsEmit(a.ctx, "loadingMsg", "检查A股基础信息...")
+		go initStockData(a.ctx)
+	}
+
+	if stocksBinHK != nil && len(stocksBinHK) > 0 {
+		go runtime.EventsEmit(a.ctx, "loadingMsg", "检查港股基础信息...")
+		go initStockDataHK(a.ctx)
+	}
+
+	if stocksBinUS != nil && len(stocksBinUS) > 0 {
+		go runtime.EventsEmit(a.ctx, "loadingMsg", "检查美股基础信息...")
+		go initStockDataUS(a.ctx)
+	}
+	updateBasicInfo()
+
 	// Add your action here
 	//定时更新数据
 	config := data.NewSettingsApi(&data.Settings{}).GetConfig()

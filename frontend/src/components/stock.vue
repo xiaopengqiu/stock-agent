@@ -62,10 +62,9 @@ import {asBlob} from 'html-docx-js-typescript';
 
 import vueDanmaku from 'vue3-danmaku'
 import {keys, pad, padStart} from "lodash";
-import {models} from "../../wailsjs/go/models";
-import {RouterLink} from "vue-router";
-import { useRoute } from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 const route = useRoute()
+const router = useRouter()
 
 const danmus = ref([])
 const ws = ref(null)
@@ -169,6 +168,7 @@ const groupResults=computed(() => {
   }
   return group
 })
+const showPopover=ref(false)
 
 onBeforeMount(()=>{
   GetGroupList().then(result => {
@@ -187,20 +187,6 @@ onBeforeMount(()=>{
         value: item.ts_code
       }
     })
-  })
-  GetFollowList(currentGroupId.value).then(result => {
-    followList.value = result
-    for (const followedStock of result) {
-      if(followedStock.StockCode.startsWith("us")){
-        followedStock.StockCode="gb_"+ followedStock.StockCode.replace("us", "").toLowerCase()
-      }
-      if (!stocks.value.includes(followedStock.StockCode)) {
-        ////console.log("followList",followedStock.StockCode)
-        stocks.value.push(followedStock.StockCode)
-      }
-    }
-    monitor()
-    message.destroyAll()
   })
   GetConfig().then(result => {
     if (result.openAiEnable) {
@@ -235,6 +221,23 @@ onMounted(() => {
     //     //data.fenshiURL='http://image.sinajs.cn/newchart/min/n/'+data.code+'.gif'+"?t="+Date.now()
     //   }
     // }, 3500)
+
+  GetFollowList(currentGroupId.value).then(result => {
+
+    followList.value = result
+    for (const followedStock of result) {
+      if(followedStock.StockCode.startsWith("us")){
+        followedStock.StockCode="gb_"+ followedStock.StockCode.replace("us", "").toLowerCase()
+      }
+      if (!stocks.value.includes(followedStock.StockCode)) {
+        ////console.log("followList",followedStock.StockCode)
+        stocks.value.push(followedStock.StockCode)
+      }
+    }
+    monitor()
+    message.destroyAll()
+  })
+
 
   GetVersionInfo().then((res) => {
     icon.value = res.icon;
@@ -278,6 +281,19 @@ onBeforeUnmount(() => {
   EventsOff("changeTab")
   EventsOff("updateVersion")
   EventsOff("warnMsg")
+})
+
+EventsOn("loadingDone",(data)=>{
+  message.loading("刷新股票基础数据...")
+  GetStockList("").then(result => {
+    stockList.value = result
+    options.value=result.map(item => {
+      return {
+        label: item.name+" - "+item.ts_code,
+        value: item.ts_code
+      }
+    })
+  })
 })
 
 EventsOn("refresh",(data)=>{
@@ -576,6 +592,9 @@ async function updateData(result) {
 
 
 async function monitor() {
+  if(stocks.value&&stocks.value.length===0){
+    showPopover.value=true
+  }
   for (let code of stocks.value) {
    // //console.log(code)
     Greet(code).then(result => {
@@ -1825,9 +1844,16 @@ function delStockGroup(code,name,groupId){
                          :options="options"
                          placeholder="股票指数名称/代码/弹幕"
                          clearable @update-value="getStockList" :on-select="onSelect"/>
-        <n-button type="primary" @click="AddStock"  v-if="addBTN">
-          <n-icon :component="Add"/> &nbsp;关注
-        </n-button>
+
+        <n-popover trigger="manual" :show="showPopover">
+          <template #trigger>
+            <n-button type="primary" @click="AddStock"  v-if="addBTN">
+              <n-icon :component="Add"/> &nbsp;关注
+            </n-button>
+          </template>
+          <span>输入股票名称/代码关键词开始吧~~~</span>
+        </n-popover>
+
         <n-button type="info" @click="SendDanmu" v-if="data.enableDanmu">
           <n-icon :component="ChatboxOutline"/> &nbsp;发送弹幕
         </n-button>

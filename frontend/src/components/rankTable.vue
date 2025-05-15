@@ -1,8 +1,8 @@
 <script setup>
 
-import {CaretDown, CaretUp} from "@vicons/ionicons5";
-import {NText} from "naive-ui";
-import {onMounted, ref} from "vue";
+import {CaretDown, CaretUp, RefreshCircleOutline} from "@vicons/ionicons5";
+import {NText,useMessage} from "naive-ui";
+import {onBeforeUnmount, onMounted, onUnmounted, ref} from "vue";
 import {GetMoneyRankSina} from "../../wailsjs/go/main/App";
 import KLineChart from "./KLineChart.vue";
 
@@ -16,16 +16,22 @@ const props = defineProps({
     default: 'netamount'
   },
 })
+const message = useMessage()
 const dataList= ref([])
 const sort = ref(props.sort)
+const interval = ref(null)
 onMounted(()=>{
   sort.value=props.sort
   GetMoneyRankSinaData()
-  setInterval(()=>{
+  interval.value=setInterval(()=>{
     GetMoneyRankSinaData()
   },1000*60)
 })
+onBeforeUnmount(()=>{
+  clearInterval(interval.value)
+})
 function GetMoneyRankSinaData(){
+  message.loading("正在刷新数据...")
   GetMoneyRankSina(sort.value).then(result => {
     if(result.length>0){
       dataList.value = result
