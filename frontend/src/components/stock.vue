@@ -281,6 +281,7 @@ onBeforeUnmount(() => {
   EventsOff("changeTab")
   EventsOff("updateVersion")
   EventsOff("warnMsg")
+  EventsOff("loadingDone")
 })
 
 EventsOn("loadingDone",(data)=>{
