@@ -63,6 +63,7 @@ import {asBlob} from 'html-docx-js-typescript';
 import vueDanmaku from 'vue3-danmaku'
 import {keys, pad, padStart} from "lodash";
 import {useRoute, useRouter} from 'vue-router'
+import MoneyTrend from "./moneyTrend.vue";
 const route = useRoute()
 const router = useRouter()
 
@@ -98,6 +99,7 @@ const modalShow = ref(false)
 const modalShow2 = ref(false)
 const modalShow3 = ref(false)
 const modalShow4 = ref(false)
+const modalShow5 = ref(false)
 const addBTN = ref(true)
 const formModel = ref({
   name: "",
@@ -1241,6 +1243,12 @@ function  handleKLine(){
     });
   })
 }
+function showMoney(code,name){
+  data.code=code
+  data.name=name
+  modalShow5.value=true
+}
+
 function showK(code,name){
   data.code=code
   data.name=name
@@ -1710,6 +1718,8 @@ function delStockGroup(code,name,groupId){
                <n-button size="tiny" type="info" @click="setStock(result['股票代码'],result['股票名称'])"> 成本 </n-button>
                <n-button size="tiny" type="success" @click="showFenshi(result['股票代码'],result['股票名称'])"> 分时 </n-button>
                <n-button size="tiny" type="error" @click="showK(result['股票代码'],result['股票名称'])"> 日K </n-button>
+               <n-button size="tiny" type="error" v-if="result['买一报价']>0" @click="showMoney(result['股票代码'],result['股票名称'])"> 资金 </n-button>
+
                <n-button size="tiny" type="warning" @click="search(result['股票代码'],result['股票名称'])"> 详情 </n-button>
                <n-dropdown   trigger="click" :options="groupList" key-field="ID" label-field="name" @select="(groupId) => AddStockGroupInfo(groupId,result['股票代码'],result['股票名称'])">
                  <n-button  type="success" size="tiny">设置分组</n-button>
@@ -1821,6 +1831,8 @@ function delStockGroup(code,name,groupId){
                 <n-button size="tiny" type="info" @click="setStock(result['股票代码'],result['股票名称'])"> 成本 </n-button>
                 <n-button size="tiny" type="success" @click="showFenshi(result['股票代码'],result['股票名称'],result.changePercent)"> 分时 </n-button>
                 <n-button size="tiny" type="error" @click="showK(result['股票代码'],result['股票名称'])"> 日K </n-button>
+                <n-button size="tiny" type="error" v-if="result['买一报价']>0" @click="showMoney(result['股票代码'],result['股票名称'])"> 资金 </n-button>
+
                 <n-button size="tiny" type="warning" @click="search(result['股票代码'],result['股票名称'])"> 详情 </n-button>
                 <n-dropdown   trigger="click" :options="groupList" key-field="ID" label-field="name" @select="(groupId) => AddStockGroupInfo(groupId,result['股票代码'],result['股票名称'])">
                   <n-button  type="success" size="tiny">设置分组</n-button>
@@ -1987,6 +1999,9 @@ function delStockGroup(code,name,groupId){
         <n-button size="tiny" type="error" @click="share(data.code,data.name)">分享到项目社区</n-button>
       </n-flex>
     </template>
+  </n-modal>
+  <n-modal v-model:show="modalShow5" :title="data.name+'资金趋势'" style="width: 1000px" :preset="'card'" @after-enter="getMoneyTrendLine">
+    <money-trend :code="data.code" :name="data.name" :days="365" :dark-theme="data.darkTheme" :chart-height="500"></money-trend>
   </n-modal>
 </template>
 

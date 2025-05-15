@@ -446,7 +446,7 @@ onBeforeMount(() => {
 })
 
 onMounted(() => {
-  contentStyle.value = "max-height: calc(90vh);overflow: hidden"
+  contentStyle.value = "max-height: calc(92vh);overflow: hidden"
   GetConfig().then((res) => {
     if (res.enableNews) {
       enableNews.value = true
@@ -488,6 +488,7 @@ onMounted(() => {
                         </n-tag>
                       </n-marquee>
                       <n-scrollbar :style="contentStyle">
+                        <n-skeleton v-if="loading" height="calc(100vh)" />
                         <RouterView/>
                       </n-scrollbar>
                     </n-spin>

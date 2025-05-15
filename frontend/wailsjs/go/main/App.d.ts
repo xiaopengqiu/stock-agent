@@ -49,6 +49,8 @@ export function GetStockList(arg1:string):Promise<Array<data.StockBasic>>;
 
 export function GetStockMinutePriceLineData(arg1:string,arg2:string):Promise<Record<string, any>>;
 
+export function GetStockMoneyTrendByDay(arg1:string,arg2:number):Promise<Array<Record<string, any>>>;
+
 export function GetTelegraphList(arg1:string):Promise<any>;
 
 export function GetVersionInfo():Promise<models.VersionInfo>;

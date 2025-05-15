@@ -1,0 +1,279 @@
+<script setup lang="ts">
+import {onMounted, ref} from "vue";
+import {GetStockMoneyTrendByDay} from "../../wailsjs/go/main/App";
+import * as echarts from "echarts";
+
+const {code, name, darkTheme, days, chartHeight} = defineProps({
+  code: {
+    type: String,
+    default: ''
+  },
+  name: {
+    type: String,
+    default: ''
+  },
+  days: {
+    type: Number,
+    default: 14
+  },
+  chartHeight: {
+    type: Number,
+    default: 500
+  },
+  darkTheme: {
+    type: Boolean,
+    default: false
+  }
+})
+const LineChartRef = ref(null);
+
+onMounted(
+    () => {
+      handleLine(code, days)
+    }
+)
+const handleLine = (code, days) => {
+  GetStockMoneyTrendByDay(code, days).then(result => {
+    console.log("GetStockMoneyTrendByDay", result)
+    const chart = echarts.init(LineChartRef.value);
+    const categoryData = [];
+    const netamount_values = [];
+    const trades_values = [];
+    let volume = []
+
+    let min = 0
+    let max = 0
+    for (let i = 0; i < result.length; i++) {
+      let resultElement = result[i]
+      categoryData.push(resultElement.opendate)
+      let netamount = (resultElement.netamount / 10000).toFixed(2);
+      netamount_values.push(netamount)
+      let price = Number(resultElement.trade);
+      trades_values.push(price)
+
+      if (min === 0 || min > price) {
+        min = price
+      }
+      if (max < price) {
+        max = price
+      }
+
+      if (i > 0) {
+        let b=(result[i].netamount - result[i - 1].netamount)/10000
+        volume.push(b)
+      } else {
+        volume.push(result[i].netamount/10000)
+      }
+
+    }
+    console.log("trades_values", trades_values)
+
+    let option = {
+      darkMode: darkTheme,
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'cross',
+          animation: false,
+          label: {
+            backgroundColor: '#505765'
+          }
+        }
+      },
+      axisPointer: {
+        link: [
+          {
+            xAxisIndex: 'all'
+          }
+        ],
+        label: {
+          backgroundColor: '#888'
+        }
+      },
+      legend: {
+        show: true,
+        data: ['当日净流入','累计净流入', '股价'],
+        selected: {
+          '当日净流入': true,
+          '累计净流入': false,
+          '股价': true,
+        },
+        //orient: 'vertical',
+        textStyle: {
+          color: darkTheme ? '#ccc' : '#456'
+        },
+        right: 150,
+      },
+      dataZoom: [
+        {
+          show: true,
+          realtime: true,
+          start: 70,
+          end: 100
+        },
+        {
+          type: 'inside',
+          realtime: true,
+          start: 86,
+          end: 100
+        }
+      ],
+      xAxis: {
+        type: 'category',
+        data: categoryData
+      },
+      yAxis: [
+        {
+          name: '净流入',
+          type: 'value',
+          axisLine: {
+            show: true
+          },
+          splitLine: {
+            show: false
+          },
+        },
+        {
+          name: '股价',
+          type: 'value',
+          min: min - 1,
+          max: max + 1,
+          minInterval: 0.01,
+          axisLine: {
+            show: true
+          },
+          splitLine: {
+            show: false
+          },
+        }
+      ],
+      series: [
+        {
+          name: '当日净流入',
+          data: netamount_values,
+          smooth: true,
+          showSymbol: false,
+          lineStyle: {
+            width: 2
+          },
+          markPoint: {
+            symbol: 'arrow',
+            symbolRotate: 90,
+            symbolSize: [10, 20],
+            symbolOffset: [10, 0],
+            itemStyle: {
+              color: '#FC290D'
+            },
+            label: {
+              position: 'right',
+            },
+            data: [
+              {type: 'max', name: 'Max'},
+              {type: 'min', name: 'Min'}
+            ]
+          },
+          markLine: {
+            data: [
+              {
+                type: 'average',
+                name: 'Average',
+                lineStyle: {
+                  color: '#ff001e',
+                  width: 0.5
+                },
+              },
+            ]
+          },
+          type: 'line'
+        },
+        {
+          name: '累计净流入',
+          data: volume,
+          smooth: true,
+          showSymbol: false,
+          lineStyle: {
+            width: 2
+          },
+          markPoint: {
+            symbol: 'arrow',
+            symbolRotate: 90,
+            symbolSize: [10, 20],
+            symbolOffset: [10, 0],
+            itemStyle: {
+              color: '#FC290D'
+            },
+            label: {
+              position: 'right',
+            },
+            data: [
+              {type: 'max', name: 'Max'},
+              {type: 'min', name: 'Min'}
+            ]
+          },
+          markLine: {
+            data: [
+              {
+                type: 'average',
+                name: 'Average',
+                lineStyle: {
+                  color: '#ff001e',
+                  width: 0.5
+                },
+              },
+            ]
+          },
+          type: 'line'
+        },
+        {
+          name: '股价',
+          type: 'line',
+          data: trades_values,
+          yAxisIndex: 1,
+          smooth: true,
+          showSymbol: false,
+          lineStyle: {
+            width: 3
+          },
+          markPoint: {
+            symbol: 'arrow',
+            symbolRotate: 90,
+            symbolSize: [10, 20],
+            symbolOffset: [10, 0],
+            itemStyle: {
+              color: '#0940f3'
+            },
+            label: {
+              position: 'right',
+            },
+            data: [
+              {type: 'max', name: 'Max'},
+              {type: 'min', name: 'Min'}
+            ]
+          },
+          markLine: {
+            data: [
+              {
+                type: 'average',
+                name: 'Average',
+                lineStyle: {
+                  color: '#0940f3',
+                  width: 0.5
+                },
+              },
+            ]
+          },
+        }
+      ]
+    };
+    chart.setOption(option);
+  })
+}
+</script>
+
+<template>
+  <div ref="LineChartRef" style="width: 100%;height: auto;" :style="{height:chartHeight+'px'}"></div>
+</template>
+
+<style scoped>
+
+</style>

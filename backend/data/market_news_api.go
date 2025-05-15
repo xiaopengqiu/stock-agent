@@ -275,3 +275,21 @@ func (m MarketNewsApi) GetMoneyRankSina(sort string) []map[string]any {
 	}
 	return *res
 }
+
+func (m MarketNewsApi) GetStockMoneyTrendByDay(stockCode string, days int) []map[string]any {
+	url := fmt.Sprintf("http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/MoneyFlow.ssl_qsfx_zjlrqs?page=1&num=%d&sort=opendate&asc=0&daima=%s", days, stockCode)
+
+	response, _ := resty.New().SetTimeout(time.Duration(5)*time.Second).R().
+		SetHeader("Host", "vip.stock.finance.sina.com.cn").
+		SetHeader("Referer", "https://finance.sina.com.cn").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").Get(url)
+	js := string(response.Body())
+	res := &[]map[string]any{}
+	err := json.Unmarshal([]byte(js), &res)
+	if err != nil {
+		logger.SugaredLogger.Error(err)
+		return *res
+	}
+	return *res
+
+}
