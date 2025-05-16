@@ -61,26 +61,34 @@ const handleLine = (code, days) => {
       }
 
       if (i > 0) {
-        let b=(result[i].netamount - result[i - 1].netamount)/10000
-        volume.push(b)
+        let b = Number(Number(result[i].netamount) + Number(result[i - 1].netamount)) / 10000
+        volume.push(b.toFixed(2))
       } else {
-        volume.push(result[i].netamount/10000)
+        volume.push((Number(result[i].netamount) / 10000).toFixed(2))
       }
 
     }
-    console.log("trades_values", trades_values)
-
+    console.log("volume", volume)
+    const upColor = '#ec0000';
+    const downColor = '#00da3c';
     let option = {
-      darkMode: darkTheme,
       tooltip: {
         trigger: 'axis',
         axisPointer: {
           type: 'cross',
-          animation: false,
-          label: {
-            backgroundColor: '#505765'
+          lineStyle: {
+            color: '#376df4',
+            width: 1,
+            opacity: 1
           }
-        }
+        },
+        borderWidth: 2,
+        borderColor: darkTheme?'#456':'#ccc',
+        backgroundColor: darkTheme?'#456':'#fff',
+        padding: 10,
+        textStyle: {
+          color: darkTheme?'#ccc':'#456'
+        },
       },
       axisPointer: {
         link: [
@@ -94,40 +102,76 @@ const handleLine = (code, days) => {
       },
       legend: {
         show: true,
-        data: ['当日净流入','主力当日净流入','累计净流入', '股价'],
+        data: ['当日净流入', '主力当日净流入','累计净流入',  '股价'],
         selected: {
           '当日净流入': true,
-          '主力当日净流入': false,
-          '累计净流入': false,
+          '主力当日净流入': true,
+          '累计净流入': true,
           '股价': true,
         },
         //orient: 'vertical',
         textStyle: {
-          color: darkTheme ? '#ccc' : '#456'
+          color: darkTheme ? 'rgb(253,252,252)' : '#456'
         },
         right: 150,
       },
       dataZoom: [
         {
-          show: true,
-          realtime: true,
-          start: 70,
+          type: 'inside',
+          xAxisIndex: [0, 1],
+          start: 86,
           end: 100
         },
         {
-          type: 'inside',
-          realtime: true,
+          show: true,
+          xAxisIndex: [0, 1],
+          type: 'slider',
+          top: '90%',
           start: 86,
           end: 100
         }
       ],
-      xAxis: {
-        type: 'category',
-        data: categoryData
-      },
+      grid: [
+        {
+          left: '8%',
+          right: '8%',
+          height: '50%',
+        },
+        {
+          left: '8%',
+          right: '8%',
+          top: '74%',
+          height: '15%'
+        },
+      ],
+      xAxis: [
+        {
+          type: 'category',
+          data: categoryData,
+          axisPointer: {
+            z: 100
+          },
+
+          boundaryGap: false,
+          axisLine: { onZero: false },
+          splitLine: { show: false },
+          min: 'dataMin',
+          max: 'dataMax',
+
+
+        },
+        {
+          gridIndex: 1,
+          type: 'category',
+          data: categoryData,
+          axisLabel: {
+            show: false
+          },
+        }
+      ],
       yAxis: [
         {
-          name: '净流入',
+          name: '当日净流入/万',
           type: 'value',
           axisLine: {
             show: true
@@ -148,13 +192,25 @@ const handleLine = (code, days) => {
           splitLine: {
             show: false
           },
-        }
+        },
+        {
+          gridIndex: 1,
+          name: '累计净流入/万',
+          type: 'value',
+          axisLine: {
+            show: true
+          },
+          splitLine: {
+            show: false
+          },
+        },
       ],
       series: [
         {
+          yAxisIndex: 0,
           name: '当日净流入',
           data: netamount_values,
-          smooth: true,
+          smooth: false,
           showSymbol: false,
           lineStyle: {
             width: 2
@@ -190,86 +246,49 @@ const handleLine = (code, days) => {
           type: 'line'
         },
         {
+          yAxisIndex: 0,
           name: '主力当日净流入',
           data: r0_net_values,
-          smooth: true,
+          smooth: false,
           showSymbol: false,
           lineStyle: {
             width: 2
           },
-          markPoint: {
-            symbol: 'arrow',
-            symbolRotate: 90,
-            symbolSize: [10, 20],
-            symbolOffset: [10, 0],
-            itemStyle: {
-              color: '#0d7dfc'
-            },
-            label: {
-              position: 'right',
-            },
-            data: [
-              {type: 'max', name: 'Max'},
-              {type: 'min', name: 'Min'}
-            ]
-          },
-          markLine: {
-            data: [
-              {
-                type: 'average',
-                name: 'Average',
-                lineStyle: {
-                  color: '#0077ff',
-                  width: 0.5
-                },
-              },
-            ]
-          },
-          type: 'line'
+          // markPoint: {
+          //   symbol: 'arrow',
+          //   symbolRotate: 90,
+          //   symbolSize: [10, 20],
+          //   symbolOffset: [10, 0],
+          //   itemStyle: {
+          //     color: '#0d7dfc'
+          //   },
+          //   label: {
+          //     position: 'right',
+          //   },
+          //   data: [
+          //     {type: 'max', name: 'Max'},
+          //     {type: 'min', name: 'Min'}
+          //   ]
+          // },
+          // markLine: {
+          //   data: [
+          //     {
+          //       type: 'average',
+          //       name: 'Average',
+          //       lineStyle: {
+          //         color: '#0077ff',
+          //         width: 0.5
+          //       },
+          //     },
+          //   ]
+          // },
+          type: 'bar'
         },
         {
-          name: '累计净流入',
-          data: volume,
-          smooth: true,
-          showSymbol: false,
-          lineStyle: {
-            width: 2
-          },
-          markPoint: {
-            symbol: 'arrow',
-            symbolRotate: 90,
-            symbolSize: [10, 20],
-            symbolOffset: [10, 0],
-            itemStyle: {
-              color: '#0059ff'
-            },
-            label: {
-              position: 'right',
-            },
-            data: [
-              {type: 'max', name: 'Max'},
-              {type: 'min', name: 'Min'}
-            ]
-          },
-          markLine: {
-            data: [
-              {
-                type: 'average',
-                name: 'Average',
-                lineStyle: {
-                  color: '#0059ff',
-                  width: 0.5
-                },
-              },
-            ]
-          },
-          type: 'line'
-        },
-        {
+          yAxisIndex: 1,
           name: '股价',
           type: 'line',
           data: trades_values,
-          yAxisIndex: 1,
           smooth: true,
           showSymbol: false,
           lineStyle: {
@@ -303,7 +322,35 @@ const handleLine = (code, days) => {
               },
             ]
           },
-        }
+        },
+        {
+          type: 'bar',
+          xAxisIndex: 1,
+          yAxisIndex: 2,
+          name: '累计净流入',
+          data: volume,
+          smooth: true,
+          showSymbol: false,
+          lineStyle: {
+            width: 2
+          },
+          markPoint: {
+            symbol: 'arrow',
+            symbolRotate: 90,
+            symbolSize: [10, 20],
+            symbolOffset: [10, 0],
+            // itemStyle: {
+            //   color: '#f39509'
+            // },
+            label: {
+              position: 'right',
+            },
+            data: [
+              {type: 'max', name: 'Max'},
+              {type: 'min', name: 'Min'}
+            ]
+          },
+        },
       ]
     };
     chart.setOption(option);
