@@ -19,7 +19,8 @@ func TestNewDeepSeekOpenAiConfig(t *testing.T) {
 }
 
 func TestGetTopNewsList(t *testing.T) {
-	GetTopNewsList(30)
+	news := GetTopNewsList(30)
+	t.Log(news)
 }
 
 func TestSearchGuShiTongStockInfo(t *testing.T) {

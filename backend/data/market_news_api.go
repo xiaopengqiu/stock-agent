@@ -37,7 +37,7 @@ func (m MarketNewsApi) GetNewTelegraph(crawlTimeOut int64) *[]models.Telegraph {
 	//logger.SugaredLogger.Info(string(response.Body()))
 	document, _ := goquery.NewDocumentFromReader(strings.NewReader(string(response.Body())))
 
-	document.Find(".telegraph-list").Each(func(i int, selection *goquery.Selection) {
+	document.Find(".telegraph-content-box").Each(func(i int, selection *goquery.Selection) {
 		//logger.SugaredLogger.Info(selection.Text())
 		telegraph := models.Telegraph{Source: "财联社电报"}
 		spans := selection.Find("div.telegraph-content-box span")
