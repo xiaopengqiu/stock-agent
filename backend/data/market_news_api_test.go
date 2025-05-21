@@ -46,7 +46,6 @@ func TestGetMoneyRankSina(t *testing.T) {
 	res := NewMarketNewsApi().GetMoneyRankSina("r3_net")
 	for i, re := range res {
 		logger.SugaredLogger.Debugf("key: %+v, value: %+v", i, re)
-
 	}
 }
 
@@ -55,4 +54,7 @@ func TestGetStockMoneyTrendByDay(t *testing.T) {
 	for i, re := range res {
 		logger.SugaredLogger.Debugf("key: %+v, value: %+v", i, re)
 	}
+}
+func TestTopStocksRankingList(t *testing.T) {
+	NewMarketNewsApi().TopStocksRankingList("2025-05-19")
 }

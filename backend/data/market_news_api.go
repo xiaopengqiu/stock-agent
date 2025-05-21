@@ -1,9 +1,11 @@
 package data
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/go-resty/resty/v2"
 	"github.com/robertkrimen/otto"
@@ -291,5 +293,28 @@ func (m MarketNewsApi) GetStockMoneyTrendByDay(stockCode string, days int) []map
 		return *res
 	}
 	return *res
+
+}
+
+func (m MarketNewsApi) TopStocksRankingList(date string) {
+	url := fmt.Sprintf("http://vip.stock.finance.sina.com.cn/q/go.php/vInvestConsult/kind/lhb/index.phtml?tradedate=%s", date)
+	response, _ := resty.New().SetTimeout(time.Duration(5)*time.Second).R().
+		SetHeader("Host", "vip.stock.finance.sina.com.cn").
+		SetHeader("Referer", "https://finance.sina.com.cn").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").Get(url)
+
+	html, _ := (convertor.GbkToUtf8(response.Body()))
+	//logger.SugaredLogger.Infof("html:%s", html)
+	document, err := goquery.NewDocumentFromReader(bytes.NewReader(html))
+	if err != nil {
+		return
+	}
+	document.Find("table.list_table").Each(func(i int, s *goquery.Selection) {
+		title := strutil.Trim(s.Find("tr:first-child").First().Text())
+		logger.SugaredLogger.Infof("title:%s", title)
+		s.Find("tr:not(:first-child)").Each(func(i int, s *goquery.Selection) {
+			logger.SugaredLogger.Infof("s:%s", strutil.RemoveNonPrintable(s.Text()))
+		})
+	})
 
 }
