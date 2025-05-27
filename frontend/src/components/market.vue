@@ -449,6 +449,9 @@ function ReFlesh(source){
           <n-tab-pane name="行业资金排名(净流入)" tab="行业资金排名">
             <industryMoneyRank :fenlei="'0'" :header-title="'行业资金排名(净流入)'" :sort="'netamount'"/>
           </n-tab-pane>
+          <n-tab-pane name="证监会行业资金排名(净流入)" tab="证监会行业资金排名">
+            <industryMoneyRank :fenlei="'2'" :header-title="'证监会行业资金排名(净流入)'" :sort="'netamount'"/>
+          </n-tab-pane>
           <n-tab-pane name="概念板块资金排名(净流入)" tab="概念板块资金排名">
             <industryMoneyRank :fenlei="'1'" :header-title="'概念板块资金排名(净流入)'" :sort="'netamount'"/>
           </n-tab-pane>
