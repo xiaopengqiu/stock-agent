@@ -17,6 +17,7 @@ import {ExportPDF} from "@vavt/v3-extension";
 import {MdEditor, MdPreview} from "md-editor-v3";
 import { useRoute } from 'vue-router'
 import RankTable from "./rankTable.vue";
+import IndustryMoneyRank from "./industryMoneyRank.vue";
 const route = useRoute()
 const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
 
@@ -50,7 +51,8 @@ const sysPromptOptions=ref([])
 const userPromptOptions=ref([])
 const promptTemplates=ref([])
 const industryRanks=ref([])
-const sort = ref("")
+const industryMoneyRankSina=ref([])
+const sort = ref("0")
 const sortIcon= ref(h(CaretDown))
 const nowTab=ref("市场快讯")
 const indexInterval= ref(null)
@@ -142,12 +144,17 @@ function getAreaName(code){
       return "其他"
   }
 }
-function industryRank(){
+function changeIndustryRankSort() {
   if(sort.value==="0"){
     sort.value="1"
   }else{
     sort.value="0"
   }
+  industryRank()
+}
+
+function industryRank(){
+
   GetIndustryRank(sort.value,150).then(result => {
     if(result.length>0){
       console.log(result)
@@ -388,30 +395,64 @@ function ReFlesh(source){
         </n-tabs>
       </n-tab-pane>
       <n-tab-pane name="行业排名" tab="行业排名">
-        <n-table striped>
-          <n-thead>
-            <n-tr>
-              <n-th>行业名称</n-th>
-              <n-th @click="industryRank">行业涨幅<n-icon v-if="sort==='0'" :component="CaretDown"/><n-icon  v-if="sort==='1'" :component="CaretUp"/></n-th>
-              <n-th>行业5日涨幅</n-th>
-              <n-th>行业20日涨幅</n-th>
-              <n-th>领涨股</n-th>
-              <n-th>涨幅</n-th>
-              <n-th>最新价</n-th>
-            </n-tr>
-          </n-thead>
-          <n-tbody>
-            <n-tr v-for="item in industryRanks" :key="item.bd_code">
-              <n-td><n-tag :bordered=false type="info">{{ item.bd_name }}</n-tag></n-td>
-              <n-td><n-text :type="item.bd_zdf>0?'error':'success'">{{item.bd_zdf}}%</n-text></n-td>
-              <n-td><n-text :type="item.bd_zdf5>0?'error':'success'">{{item.bd_zdf5}}%</n-text></n-td>
-              <n-td><n-text :type="item.bd_zdf20>0?'error':'success'">{{item.bd_zdf20}}%</n-text></n-td>
-              <n-td><n-text :type="item.nzg_zdf>0?'error':'success'"> {{item.nzg_name}} <n-text  type="info">{{item.nzg_code}}</n-text></n-text></n-td>
-              <n-td><n-text :type="item.nzg_zdf>0?'error':'success'"> {{item.nzg_zdf}}%</n-text></n-td>
-              <n-td> <n-text :type="item.nzg_zdf>0?'error':'success'">{{item.nzg_zxj}}</n-text></n-td>
-            </n-tr>
-          </n-tbody>
-        </n-table>
+        <n-tabs type="card" animated>
+          <n-tab-pane name="行业涨幅排名" tab="行业涨幅排名">
+            <n-table striped>
+              <n-thead>
+                <n-tr>
+                  <n-th>行业名称</n-th>
+                  <n-th @click="changeIndustryRankSort">行业涨幅<n-icon v-if="sort==='0'" :component="CaretDown"/><n-icon  v-if="sort==='1'" :component="CaretUp"/></n-th>
+                  <n-th>行业5日涨幅</n-th>
+                  <n-th>行业20日涨幅</n-th>
+                  <n-th>领涨股</n-th>
+                  <n-th>涨幅</n-th>
+                  <n-th>最新价</n-th>
+                </n-tr>
+              </n-thead>
+              <n-tbody>
+                <n-tr v-for="item in industryRanks" :key="item.bd_code">
+                  <n-td><n-tag :bordered=false type="info">{{ item.bd_name }}</n-tag></n-td>
+                  <n-td><n-text :type="item.bd_zdf>0?'error':'success'">{{item.bd_zdf}}%</n-text></n-td>
+                  <n-td><n-text :type="item.bd_zdf5>0?'error':'success'">{{item.bd_zdf5}}%</n-text></n-td>
+                  <n-td><n-text :type="item.bd_zdf20>0?'error':'success'">{{item.bd_zdf20}}%</n-text></n-td>
+                  <n-td><n-text :type="item.nzg_zdf>0?'error':'success'"> {{item.nzg_name}} <n-text  type="info">{{item.nzg_code}}</n-text></n-text></n-td>
+                  <n-td><n-text :type="item.nzg_zdf>0?'error':'success'"> {{item.nzg_zdf}}%</n-text></n-td>
+                  <n-td> <n-text :type="item.nzg_zdf>0?'error':'success'">{{item.nzg_zxj}}</n-text></n-td>
+                </n-tr>
+              </n-tbody>
+            </n-table>
+            <n-table striped>
+              <n-thead>
+                <n-tr>
+                  <n-th>行业名称</n-th>
+                  <n-th @click="changeIndustryRankSort">行业涨幅<n-icon v-if="sort==='0'" :component="CaretDown"/><n-icon  v-if="sort==='1'" :component="CaretUp"/></n-th>
+                  <n-th>行业5日涨幅</n-th>
+                  <n-th>行业20日涨幅</n-th>
+                  <n-th>领涨股</n-th>
+                  <n-th>涨幅</n-th>
+                  <n-th>最新价</n-th>
+                </n-tr>
+              </n-thead>
+              <n-tbody>
+                <n-tr v-for="item in industryRanks" :key="item.bd_code">
+                  <n-td><n-tag :bordered=false type="info">{{ item.bd_name }}</n-tag></n-td>
+                  <n-td><n-text :type="item.bd_zdf>0?'error':'success'">{{item.bd_zdf}}%</n-text></n-td>
+                  <n-td><n-text :type="item.bd_zdf5>0?'error':'success'">{{item.bd_zdf5}}%</n-text></n-td>
+                  <n-td><n-text :type="item.bd_zdf20>0?'error':'success'">{{item.bd_zdf20}}%</n-text></n-td>
+                  <n-td><n-text :type="item.nzg_zdf>0?'error':'success'"> {{item.nzg_name}} <n-text  type="info">{{item.nzg_code}}</n-text></n-text></n-td>
+                  <n-td><n-text :type="item.nzg_zdf>0?'error':'success'"> {{item.nzg_zdf}}%</n-text></n-td>
+                  <n-td> <n-text :type="item.nzg_zdf>0?'error':'success'">{{item.nzg_zxj}}</n-text></n-td>
+                </n-tr>
+              </n-tbody>
+            </n-table>
+          </n-tab-pane>
+          <n-tab-pane name="行业资金排名(净流入)" tab="行业资金排名">
+            <industryMoneyRank :fenlei="'0'" :header-title="'行业资金排名(净流入)'" :sort="'netamount'"/>
+          </n-tab-pane>
+          <n-tab-pane name="概念板块资金排名(净流入)" tab="概念板块资金排名">
+            <industryMoneyRank :fenlei="'1'" :header-title="'概念板块资金排名(净流入)'" :sort="'netamount'"/>
+          </n-tab-pane>
+        </n-tabs>
       </n-tab-pane>
       <n-tab-pane name="个股资金流向" tab="个股资金流向">
         <n-tabs type="card" animated>

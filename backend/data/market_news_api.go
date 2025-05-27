@@ -240,8 +240,8 @@ func (m MarketNewsApi) GetIndustryRank(sort string, cnt int) map[string]any {
 	return res
 }
 
-func (m MarketNewsApi) GetIndustryMoneyRankSina(fenlei string) []map[string]any {
-	url := fmt.Sprintf("https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/MoneyFlow.ssl_bkzj_bk?page=1&num=20&sort=netamount&asc=0&fenlei=%s", fenlei)
+func (m MarketNewsApi) GetIndustryMoneyRankSina(fenlei, sort string) []map[string]any {
+	url := fmt.Sprintf("https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/MoneyFlow.ssl_bkzj_bk?page=1&num=20&sort=%s&asc=0&fenlei=%s", sort, fenlei)
 
 	response, _ := resty.New().SetTimeout(time.Duration(5)*time.Second).R().
 		SetHeader("Host", "vip.stock.finance.sina.com.cn").
