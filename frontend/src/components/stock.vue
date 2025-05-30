@@ -1716,7 +1716,7 @@ function delStockGroup(code,name,groupId){
              <n-flex justify="space-between">
                <n-text :type="'info'">{{result["日期"]+" "+result["时间"]}}</n-text>
                <n-button size="tiny" type="info" @click="setStock(result['股票代码'],result['股票名称'])"> 成本 </n-button>
-               <n-button size="tiny" type="success" @click="showFenshi(result['股票代码'],result['股票名称'],result.changePercent))"> 分时 </n-button>
+               <n-button size="tiny" type="success" @click="showFenshi(result['股票代码'],result['股票名称'],result.changePercent)"> 分时 </n-button>
                <n-button size="tiny" type="error" @click="showK(result['股票代码'],result['股票名称'])"> 日K </n-button>
                <n-button size="tiny" type="error" v-if="result['买一报价']>0" @click="showMoney(result['股票代码'],result['股票名称'])"> 资金 </n-button>
 
