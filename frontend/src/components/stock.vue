@@ -762,8 +762,8 @@ function showFsChart(code, name) {
             show: false
           },
           name: "股价",
-          min: min - 1,
-          max: max + 1,
+          min: (min - min*0.01).toFixed(2),
+          max: (max + max*0.01).toFixed(2),
           minInterval: 0.01,
           type: 'value'
         },
@@ -1947,7 +1947,7 @@ function delStockGroup(code,name,groupId){
       </n-flex>
     </template>
   </n-modal>
-  <n-modal v-model:show="modalShow2" :title="data.name" style="width: 1000px" :preset="'card'" @after-enter="handleFeishi" @after-leave="clearFeishi">
+  <n-modal v-model:show="modalShow2" :title="data.name+' '+ data.changePercent+'%'" style="width: 1000px" :preset="'card'" @after-enter="handleFeishi" @after-leave="clearFeishi">
 <!--    <n-image :src="data.fenshiURL" />-->
     <div ref="kLineChartRef2" style="width: 1000px; height: 500px;"></div>
   </n-modal>
