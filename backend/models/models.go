@@ -291,11 +291,11 @@ type LongTigerRankData struct {
 	EXPLAIN          string  `json:"EXPLAIN"`
 	EXPLANATION      string  `json:"EXPLANATION"`
 	FREEMARKETCAP    float64 `json:"FREE_MARKET_CAP"`
-	SECUCODE         string  `json:"SECUCODE"`
+	SECUCODE         string  `json:"SECUCODE" gorm:"index"`
 	SECURITYCODE     string  `json:"SECURITY_CODE"`
 	SECURITYNAMEABBR string  `json:"SECURITY_NAME_ABBR"`
 	SECURITYTYPECODE string  `json:"SECURITY_TYPE_CODE"`
-	TRADEDATE        string  `json:"TRADE_DATE"`
+	TRADEDATE        string  `json:"TRADE_DATE" gorm:"index"`
 	TURNOVERRATE     float64 `json:"TURNOVERRATE"`
 }
 

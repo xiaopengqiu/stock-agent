@@ -365,6 +365,15 @@ func (m MarketNewsApi) LongTiger(date string) *[]models.LongTigerRankData {
 		logger.SugaredLogger.Error(err)
 		return ranks
 	}
-	db.Dao.Create(*ranks)
+	for _, rankData := range *ranks {
+		temp := &models.LongTigerRankData{}
+		db.Dao.Model(temp).Where(&models.LongTigerRankData{
+			TRADEDATE: rankData.TRADEDATE,
+			SECUCODE:  rankData.SECUCODE,
+		}).First(temp)
+		if temp.SECURITYTYPECODE == "" {
+			db.Dao.Model(temp).Create(&rankData)
+		}
+	}
 	return ranks
 }

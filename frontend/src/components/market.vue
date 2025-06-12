@@ -65,6 +65,7 @@ const nowTab = ref("市场快讯")
 const indexInterval = ref(null)
 const indexIndustryRank = ref(null)
 const drawerShow=  ref(false)
+const EXPLANATIONs = ref([])
 
 const today = new Date();
 const year = today.getFullYear();
@@ -76,6 +77,7 @@ const formattedDate = `${year}-${month}-${day}`;
 
 const SearchForm=  ref({
   dateValue:  formattedDate,
+  EXPLANATION:null,
 })
 
 function getIndex() {
@@ -102,7 +104,27 @@ function longTiger(date) {
     if (res.length === 0) {
       message.info("暂无数据,请切换日期")
     }
+    EXPLANATIONs.value=_.uniqBy(_.map(lhbList.value,function (item){
+      return {
+        label: item['EXPLANATION'],
+        value: item['EXPLANATION'],
+      }
+    }),'label');
   })
+}
+
+function handleEXPLANATION(value, option){
+  SearchForm.value.EXPLANATION = value
+  if(value){
+    LongTigerRank(SearchForm.value.dateValue).then(res => {
+      lhbList.value=_.filter(res, function(o) { return o['EXPLANATION']===value; });
+      if (res.length === 0) {
+        message.info("暂无数据,请切换日期")
+      }
+    })
+  }else{
+    longTiger(SearchForm.value.dateValue)
+  }
 }
 
 function sortLongTigerRank(e){
@@ -580,11 +602,16 @@ function ReFlesh(source) {
       </n-tab-pane>
       <n-tab-pane name="龙虎榜" tab="龙虎榜">
           <n-form :model="SearchForm" >
-            <n-form-item-gi  label="日期" path="dateValue" label-placement="left">
-              <n-date-picker    v-model:formatted-value="SearchForm.dateValue"
+            <n-grid :cols="24" :x-gap="24">
+            <n-form-item-gi  :span="4" label="日期" path="dateValue" label-placement="left">
+              <n-date-picker   v-model:formatted-value="SearchForm.dateValue"
                              value-format="yyyy-MM-dd"  type="date"  :on-update:value="(v,v2)=>longTiger(v2)"/>
-            </n-form-item-gi>
 
+            </n-form-item-gi>
+            <n-form-item-gi :span="8" label="上榜原因" path="EXPLANATION" label-placement="left">
+              <n-select  clearable placeholder="上榜原因过滤" v-model:value="SearchForm.EXPLANATION" :options="EXPLANATIONs" :on-update:value="handleEXPLANATION"/>
+            </n-form-item-gi>
+            </n-grid>
           </n-form>
           <n-table :single-line="false" striped>
             <n-thead>
