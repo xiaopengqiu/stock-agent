@@ -118,6 +118,10 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+export function LongTigerRank(arg1) {
+  return window['go']['main']['App']['LongTigerRank'](arg1);
+}
+
 export function NewChatStream(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['NewChatStream'](arg1, arg2, arg3, arg4);
 }

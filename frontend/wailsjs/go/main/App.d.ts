@@ -61,6 +61,8 @@ export function GlobalStockIndexes():Promise<Record<string, any>>;
 
 export function Greet(arg1:string):Promise<data.StockInfo>;
 
+export function LongTigerRank(arg1:string):Promise<any>;
+
 export function NewChatStream(arg1:string,arg2:string,arg3:string,arg4:any):Promise<void>;
 
 export function ReFleshTelegraphList(arg1:string):Promise<any>;

@@ -10,6 +10,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/robertkrimen/otto"
 	"github.com/samber/lo"
+	"github.com/tidwall/gjson"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"go-stock/backend/models"
@@ -317,4 +318,53 @@ func (m MarketNewsApi) TopStocksRankingList(date string) {
 		})
 	})
 
+}
+
+func (m MarketNewsApi) LongTiger(date string) *[]models.LongTigerRankData {
+	ranks := &[]models.LongTigerRankData{}
+	url := "https://datacenter-web.eastmoney.com/api/data/v1/get"
+	logger.SugaredLogger.Infof("url:%s", url)
+	params := make(map[string]string)
+	params["callback"] = "callback"
+	params["sortColumns"] = "TURNOVERRATE,TRADE_DATE,SECURITY_CODE"
+	params["sortTypes"] = "-1,-1,1"
+	params["pageSize"] = "500"
+	params["pageNumber"] = "1"
+	params["reportName"] = "RPT_DAILYBILLBOARD_DETAILSNEW"
+	params["columns"] = "SECURITY_CODE,SECUCODE,SECURITY_NAME_ABBR,TRADE_DATE,EXPLAIN,CLOSE_PRICE,CHANGE_RATE,BILLBOARD_NET_AMT,BILLBOARD_BUY_AMT,BILLBOARD_SELL_AMT,BILLBOARD_DEAL_AMT,ACCUM_AMOUNT,DEAL_NET_RATIO,DEAL_AMOUNT_RATIO,TURNOVERRATE,FREE_MARKET_CAP,EXPLANATION,D1_CLOSE_ADJCHRATE,D2_CLOSE_ADJCHRATE,D5_CLOSE_ADJCHRATE,D10_CLOSE_ADJCHRATE,SECURITY_TYPE_CODE"
+	params["source"] = "WEB"
+	params["client"] = "WEB"
+	params["filter"] = fmt.Sprintf("(TRADE_DATE<='%s')(TRADE_DATE>='%s')", date, date)
+	resp, err := resty.New().SetTimeout(time.Duration(15)*time.Second).R().
+		SetHeader("Host", "datacenter-web.eastmoney.com").
+		SetHeader("Referer", "https://data.eastmoney.com/stock/tradedetail.html").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		SetQueryParams(params).
+		Get(url)
+	if err != nil {
+		return ranks
+	}
+	js := string(resp.Body())
+	logger.SugaredLogger.Infof("resp:%s", js)
+
+	js = strutil.ReplaceWithMap(js,
+		map[string]string{
+			"callback(": "var data=",
+			");":        ";",
+		})
+	//logger.SugaredLogger.Info(js)
+	vm := otto.New()
+	_, err = vm.Run(js)
+	_, err = vm.Run("var data = JSON.stringify(data);")
+	value, err := vm.Get("data")
+	logger.SugaredLogger.Infof("resp-json:%s", value.String())
+	data := gjson.Get(value.String(), "result.data")
+	logger.SugaredLogger.Infof("resp:%v", data)
+	err = json.Unmarshal([]byte(data.String()), ranks)
+	if err != nil {
+		logger.SugaredLogger.Error(err)
+		return ranks
+	}
+	db.Dao.Create(*ranks)
+	return ranks
 }

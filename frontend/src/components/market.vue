@@ -1,23 +1,30 @@
 <script setup>
 import {computed, h, onBeforeMount, onBeforeUnmount, ref} from 'vue'
+import _ from "lodash";
 import {
   GetAIResponseResult,
-  GetConfig, GetIndustryRank, GetPromptTemplates,
+  GetConfig,
+  GetIndustryRank,
+  GetPromptTemplates,
   GetTelegraphList,
-  GlobalStockIndexes, ReFleshTelegraphList,
-  SaveAIResponseResult, SaveAsMarkdown, ShareAnalysis,
+  GlobalStockIndexes, LongTigerRank,
+  ReFleshTelegraphList,
+  SaveAIResponseResult,
+  SaveAsMarkdown,
+  ShareAnalysis,
   SummaryStockNews
 } from "../../wailsjs/go/main/App";
 import {EventsOff, EventsOn} from "../../wailsjs/runtime";
 import NewsList from "./newsList.vue";
 import KLineChart from "./KLineChart.vue";
-import {Add, CaretDown, CaretUp, ChatboxOutline, PulseOutline,} from "@vicons/ionicons5";
+import {ArrowDownOutline, CaretDown, CaretUp, PulseOutline,} from "@vicons/ionicons5";
 import {NAvatar, NButton, NFlex, NText, useMessage, useNotification} from "naive-ui";
-import {ExportPDF} from "@vavt/v3-extension";
-import {MdEditor, MdPreview} from "md-editor-v3";
-import { useRoute } from 'vue-router'
+import {MdPreview} from "md-editor-v3";
+import {useRoute} from 'vue-router'
 import RankTable from "./rankTable.vue";
 import IndustryMoneyRank from "./industryMoneyRank.vue";
+import MoneyTrend from "./moneyTrend.vue";
+
 const route = useRoute()
 const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
 
@@ -27,36 +34,49 @@ const panelHeight = ref(window.innerHeight - 240)
 
 const telegraphList = ref([])
 const sinaNewsList = ref([])
-
+const lhbList=  ref([])
 const common = ref([])
 const america = ref([])
 const europe = ref([])
 const asia = ref([])
 const other = ref([])
 const globalStockIndexes = ref(null)
-const summaryModal= ref(false)
-const summaryBTN= ref(true)
-const darkTheme= ref(false)
-const theme=computed(() => {
+const summaryModal = ref(false)
+const summaryBTN = ref(true)
+const darkTheme = ref(false)
+const theme = computed(() => {
   return darkTheme ? 'dark' : 'light'
 })
-const aiSummary=ref(``)
-const aiSummaryTime=ref("")
-const modelName=ref("")
-const chatId=ref("")
-const question=ref(``)
-const sysPromptId=ref(0)
-const loading=ref(true)
-const sysPromptOptions=ref([])
-const userPromptOptions=ref([])
-const promptTemplates=ref([])
-const industryRanks=ref([])
-const industryMoneyRankSina=ref([])
+const aiSummary = ref(``)
+const aiSummaryTime = ref("")
+const modelName = ref("")
+const chatId = ref("")
+const question = ref(``)
+const sysPromptId = ref(0)
+const loading = ref(true)
+const sysPromptOptions = ref([])
+const userPromptOptions = ref([])
+const promptTemplates = ref([])
+const industryRanks = ref([])
+const industryMoneyRankSina = ref([])
 const sort = ref("0")
-const sortIcon= ref(h(CaretDown))
-const nowTab=ref("市场快讯")
-const indexInterval= ref(null)
-const indexIndustryRank= ref(null)
+const sortIcon = ref(h(CaretDown))
+const nowTab = ref("市场快讯")
+const indexInterval = ref(null)
+const indexIndustryRank = ref(null)
+const drawerShow=  ref(false)
+
+const today = new Date();
+const year = today.getFullYear();
+const month = String(today.getMonth() + 1).padStart(2, '0'); // 月份从0开始，需要+1
+const day = String(today.getDate()).padStart(2, '0');
+
+// 常见格式：YYYY-MM-DD
+const formattedDate = `${year}-${month}-${day}`;
+
+const SearchForm=  ref({
+  dateValue:  formattedDate,
+})
 
 function getIndex() {
   GlobalStockIndexes().then((res) => {
@@ -69,16 +89,38 @@ function getIndex() {
   })
 }
 
-onBeforeMount(() => {
-  nowTab.value=route.query.name
-  GetConfig().then(result => {
-      summaryBTN.value= result.openAiEnable
-      darkTheme.value = result.darkTheme
+function longTiger(date) {
+  if(date) {
+    SearchForm.value.dateValue = date
+  }
+  let loading1=message.loading("正在获取龙虎榜数据...",{
+    duration: 0,
   })
-  GetPromptTemplates("","").then(res=>{
-    promptTemplates.value=res
-    sysPromptOptions.value=promptTemplates.value.filter(item => item.type === '模型系统Prompt')
-    userPromptOptions.value=promptTemplates.value.filter(item => item.type === '模型用户Prompt')
+  LongTigerRank(date).then(res => {
+    lhbList.value = res
+    loading1.destroy()
+    if (res.length === 0) {
+      message.info("暂无数据,请切换日期")
+    }
+  })
+}
+
+function sortLongTigerRank(e){
+  console.log(e.target.dataset)
+  // let field= e.target.dataset.field;
+  // lhbList.value= _.sortBy(lhbList.value, function(o) { return o[field]; });
+}
+
+onBeforeMount(() => {
+  nowTab.value = route.query.name
+  GetConfig().then(result => {
+    summaryBTN.value = result.openAiEnable
+    darkTheme.value = result.darkTheme
+  })
+  GetPromptTemplates("", "").then(res => {
+    promptTemplates.value = res
+    sysPromptOptions.value = promptTemplates.value.filter(item => item.type === '模型系统Prompt')
+    userPromptOptions.value = promptTemplates.value.filter(item => item.type === '模型用户Prompt')
   })
 
   GetTelegraphList("财联社电报").then((res) => {
@@ -89,13 +131,14 @@ onBeforeMount(() => {
   })
   getIndex();
   industryRank();
-  indexInterval.value=setInterval(() => {
+  indexInterval.value = setInterval(() => {
     getIndex()
   }, 3000)
 
-  indexIndustryRank.value=setInterval(() => {
+  indexIndustryRank.value = setInterval(() => {
     industryRank()
-  },1000*10)
+  }, 1000 * 10)
+  longTiger(formattedDate);
 })
 
 onBeforeUnmount(() => {
@@ -107,7 +150,7 @@ onBeforeUnmount(() => {
   clearInterval(indexIndustryRank.value)
 })
 
-EventsOn("changeMarketTab" ,async (msg) => {
+EventsOn("changeMarketTab", async (msg) => {
   //message.info(msg.name)
   updateTab(msg.name)
 })
@@ -130,7 +173,7 @@ window.onresize = () => {
   panelHeight.value = window.innerHeight - 240
 }
 
-function getAreaName(code){
+function getAreaName(code) {
   switch (code) {
     case "america":
       return "美洲"
@@ -144,40 +187,42 @@ function getAreaName(code){
       return "其他"
   }
 }
+
 function changeIndustryRankSort() {
-  if(sort.value==="0"){
-    sort.value="1"
-  }else{
-    sort.value="0"
+  if (sort.value === "0") {
+    sort.value = "1"
+  } else {
+    sort.value = "0"
   }
   industryRank()
 }
 
-function industryRank(){
+function industryRank() {
 
-  GetIndustryRank(sort.value,150).then(result => {
-    if(result.length>0){
+  GetIndustryRank(sort.value, 150).then(result => {
+    if (result.length > 0) {
       console.log(result)
       industryRanks.value = result
-    }else{
+    } else {
       message.info("暂无数据")
     }
   })
 }
 
-function reAiSummary(){
-  aiSummary.value=""
+function reAiSummary() {
+  aiSummary.value = ""
   summaryModal.value = true
   loading.value = true
-  SummaryStockNews(question.value,sysPromptId.value)
+  SummaryStockNews(question.value, sysPromptId.value)
 }
-function getAiSummary(){
+
+function getAiSummary() {
   summaryModal.value = true
   loading.value = true
   GetAIResponseResult("市场资讯").then(result => {
-    if(result.content){
-      aiSummary.value=result.content
-      question.value=result.question
+    if (result.content) {
+      aiSummary.value = result.content
+      question.value = result.question
       loading.value = false
 
       const date = new Date(result.CreatedAt);
@@ -187,13 +232,13 @@ function getAiSummary(){
       const hours = String(date.getHours()).padStart(2, '0');
       const minutes = String(date.getMinutes()).padStart(2, '0');
       const seconds = String(date.getSeconds()).padStart(2, '0');
-      aiSummaryTime.value=`${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
-      modelName.value=result.modelName
-    }else{
-      aiSummaryTime.value=""
-      aiSummary.value=""
-      modelName.value=""
-      SummaryStockNews(question.value,sysPromptId.value)
+      aiSummaryTime.value = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+      modelName.value = result.modelName
+    } else {
+      aiSummaryTime.value = ""
+      aiSummary.value = ""
+      modelName.value = ""
+      SummaryStockNews(question.value, sysPromptId.value)
     }
   })
 }
@@ -203,31 +248,31 @@ function updateTab(name) {
   nowTab.value = name
 }
 
-EventsOn("summaryStockNews",async (msg) => {
+EventsOn("summaryStockNews", async (msg) => {
   loading.value = false
   ////console.log(msg)
   if (msg === "DONE") {
-    SaveAIResponseResult("市场资讯","市场资讯", aiSummary.value, chatId.value,question.value)
+    SaveAIResponseResult("市场资讯", "市场资讯", aiSummary.value, chatId.value, question.value)
     message.info("AI分析完成！")
     message.destroyAll()
 
   } else {
-    if(msg.chatId){
+    if (msg.chatId) {
       chatId.value = msg.chatId
     }
-    if(msg.question){
+    if (msg.question) {
       question.value = msg.question
     }
-    if(msg.content){
-      aiSummary.value =aiSummary.value + msg.content
+    if (msg.content) {
+      aiSummary.value = aiSummary.value + msg.content
     }
-    if(msg.extraContent){
+    if (msg.extraContent) {
       aiSummary.value = aiSummary.value + msg.extraContent
     }
-    if(msg.model){
-      modelName.value=msg.model
+    if (msg.model) {
+      modelName.value = msg.model
     }
-    if(msg.time){
+    if (msg.time) {
       aiSummaryTime.value = msg.time
     }
   }
@@ -241,13 +286,15 @@ async function copyToClipboard() {
     message.error('复制失败: ' + err);
   }
 }
-function saveAsMarkdown(){
-  SaveAsMarkdown('市场资讯','市场资讯').then(result => {
+
+function saveAsMarkdown() {
+  SaveAsMarkdown('市场资讯', '市场资讯').then(result => {
     message.success(result)
   })
 }
-function share(){
-  ShareAnalysis('市场资讯','市场资讯').then(msg => {
+
+function share() {
+  ShareAnalysis('市场资讯', '市场资讯').then(msg => {
     //message.info(msg)
     notify.info({
       avatar: () =>
@@ -257,26 +304,26 @@ function share(){
             src: icon.value
           }),
       title: '分享到社区',
-      duration:1000*30,
+      duration: 1000 * 30,
       content: () => {
         return h('div', {
           style: {
             'text-align': 'left',
             'font-size': '14px',
           }
-        }, { default: () => msg })
+        }, {default: () => msg})
       },
     })
   })
 }
 
-function ReFlesh(source){
-  console.log("ReFlesh:",source)
+function ReFlesh(source) {
+  console.log("ReFlesh:", source)
   ReFleshTelegraphList(source).then(res => {
-    if(source==="财联社电报"){
+    if (source === "财联社电报") {
       telegraphList.value = res
     }
-    if(source==="新浪财经"){
+    if (source === "新浪财经") {
       sinaNewsList.value = res
     }
   })
@@ -285,8 +332,8 @@ function ReFlesh(source){
 
 <template>
   <n-card>
-    <n-tabs type="line" animated @update-value="updateTab" :value="nowTab" >
-      <n-tab-pane name="市场快讯" tab="市场快讯"  >
+    <n-tabs type="line" animated @update-value="updateTab" :value="nowTab">
+      <n-tab-pane name="市场快讯" tab="市场快讯">
         <n-grid :cols="2" :y-gap="0">
           <n-gi>
             <news-list :newsList="telegraphList" :header-title="'财联社电报'" @update:message="ReFlesh"></news-list>
@@ -309,11 +356,16 @@ function ReFlesh(source){
                     <n-grid :cols="3" :y-gap="0">
                       <n-gi>
 
-                        <n-text :type="item.zdf>0?'error':'success'"><n-image :src="item.img"  width="20"/> &nbsp;{{ item.name }}</n-text>
+                        <n-text :type="item.zdf>0?'error':'success'">
+                          <n-image :src="item.img" width="20"/> &nbsp;{{ item.name }}
+                        </n-text>
                       </n-gi>
                       <n-gi>
                         <n-text :type="item.zdf>0?'error':'success'">{{ item.zxj }}</n-text>&nbsp;
-                        <n-text :type="item.zdf>0?'error':'success'"><n-number-animation :precision="2" :from="0" :to="item.zdf" />%</n-text>
+                        <n-text :type="item.zdf>0?'error':'success'">
+                          <n-number-animation :precision="2" :from="0" :to="item.zdf"/>
+                          %
+                        </n-text>
 
                       </n-gi>
                       <n-gi>
@@ -401,7 +453,10 @@ function ReFlesh(source){
               <n-thead>
                 <n-tr>
                   <n-th>行业名称</n-th>
-                  <n-th @click="changeIndustryRankSort">行业涨幅<n-icon v-if="sort==='0'" :component="CaretDown"/><n-icon  v-if="sort==='1'" :component="CaretUp"/></n-th>
+                  <n-th @click="changeIndustryRankSort">行业涨幅
+                    <n-icon v-if="sort==='0'" :component="CaretDown"/>
+                    <n-icon v-if="sort==='1'" :component="CaretUp"/>
+                  </n-th>
                   <n-th>行业5日涨幅</n-th>
                   <n-th>行业20日涨幅</n-th>
                   <n-th>领涨股</n-th>
@@ -411,13 +466,29 @@ function ReFlesh(source){
               </n-thead>
               <n-tbody>
                 <n-tr v-for="item in industryRanks" :key="item.bd_code">
-                  <n-td><n-tag :bordered=false type="info">{{ item.bd_name }}</n-tag></n-td>
-                  <n-td><n-text :type="item.bd_zdf>0?'error':'success'">{{item.bd_zdf}}%</n-text></n-td>
-                  <n-td><n-text :type="item.bd_zdf5>0?'error':'success'">{{item.bd_zdf5}}%</n-text></n-td>
-                  <n-td><n-text :type="item.bd_zdf20>0?'error':'success'">{{item.bd_zdf20}}%</n-text></n-td>
-                  <n-td><n-text :type="item.nzg_zdf>0?'error':'success'"> {{item.nzg_name}} <n-text  type="info">{{item.nzg_code}}</n-text></n-text></n-td>
-                  <n-td><n-text :type="item.nzg_zdf>0?'error':'success'"> {{item.nzg_zdf}}%</n-text></n-td>
-                  <n-td> <n-text :type="item.nzg_zdf>0?'error':'success'">{{item.nzg_zxj}}</n-text></n-td>
+                  <n-td>
+                    <n-tag :bordered=false type="info">{{ item.bd_name }}</n-tag>
+                  </n-td>
+                  <n-td>
+                    <n-text :type="item.bd_zdf>0?'error':'success'">{{ item.bd_zdf }}%</n-text>
+                  </n-td>
+                  <n-td>
+                    <n-text :type="item.bd_zdf5>0?'error':'success'">{{ item.bd_zdf5 }}%</n-text>
+                  </n-td>
+                  <n-td>
+                    <n-text :type="item.bd_zdf20>0?'error':'success'">{{ item.bd_zdf20 }}%</n-text>
+                  </n-td>
+                  <n-td>
+                    <n-text :type="item.nzg_zdf>0?'error':'success'"> {{ item.nzg_name }}
+                      <n-text type="info">{{ item.nzg_code }}</n-text>
+                    </n-text>
+                  </n-td>
+                  <n-td>
+                    <n-text :type="item.nzg_zdf>0?'error':'success'"> {{ item.nzg_zdf }}%</n-text>
+                  </n-td>
+                  <n-td>
+                    <n-text :type="item.nzg_zdf>0?'error':'success'">{{ item.nzg_zxj }}</n-text>
+                  </n-td>
                 </n-tr>
               </n-tbody>
             </n-table>
@@ -425,7 +496,10 @@ function ReFlesh(source){
               <n-thead>
                 <n-tr>
                   <n-th>行业名称</n-th>
-                  <n-th @click="changeIndustryRankSort">行业涨幅<n-icon v-if="sort==='0'" :component="CaretDown"/><n-icon  v-if="sort==='1'" :component="CaretUp"/></n-th>
+                  <n-th @click="changeIndustryRankSort">行业涨幅
+                    <n-icon v-if="sort==='0'" :component="CaretDown"/>
+                    <n-icon v-if="sort==='1'" :component="CaretUp"/>
+                  </n-th>
                   <n-th>行业5日涨幅</n-th>
                   <n-th>行业20日涨幅</n-th>
                   <n-th>领涨股</n-th>
@@ -435,13 +509,29 @@ function ReFlesh(source){
               </n-thead>
               <n-tbody>
                 <n-tr v-for="item in industryRanks" :key="item.bd_code">
-                  <n-td><n-tag :bordered=false type="info">{{ item.bd_name }}</n-tag></n-td>
-                  <n-td><n-text :type="item.bd_zdf>0?'error':'success'">{{item.bd_zdf}}%</n-text></n-td>
-                  <n-td><n-text :type="item.bd_zdf5>0?'error':'success'">{{item.bd_zdf5}}%</n-text></n-td>
-                  <n-td><n-text :type="item.bd_zdf20>0?'error':'success'">{{item.bd_zdf20}}%</n-text></n-td>
-                  <n-td><n-text :type="item.nzg_zdf>0?'error':'success'"> {{item.nzg_name}} <n-text  type="info">{{item.nzg_code}}</n-text></n-text></n-td>
-                  <n-td><n-text :type="item.nzg_zdf>0?'error':'success'"> {{item.nzg_zdf}}%</n-text></n-td>
-                  <n-td> <n-text :type="item.nzg_zdf>0?'error':'success'">{{item.nzg_zxj}}</n-text></n-td>
+                  <n-td>
+                    <n-tag :bordered=false type="info">{{ item.bd_name }}</n-tag>
+                  </n-td>
+                  <n-td>
+                    <n-text :type="item.bd_zdf>0?'error':'success'">{{ item.bd_zdf }}%</n-text>
+                  </n-td>
+                  <n-td>
+                    <n-text :type="item.bd_zdf5>0?'error':'success'">{{ item.bd_zdf5 }}%</n-text>
+                  </n-td>
+                  <n-td>
+                    <n-text :type="item.bd_zdf20>0?'error':'success'">{{ item.bd_zdf20 }}%</n-text>
+                  </n-td>
+                  <n-td>
+                    <n-text :type="item.nzg_zdf>0?'error':'success'"> {{ item.nzg_name }}
+                      <n-text type="info">{{ item.nzg_code }}</n-text>
+                    </n-text>
+                  </n-td>
+                  <n-td>
+                    <n-text :type="item.nzg_zdf>0?'error':'success'"> {{ item.nzg_zdf }}%</n-text>
+                  </n-td>
+                  <n-td>
+                    <n-text :type="item.nzg_zdf>0?'error':'success'">{{ item.nzg_zxj }}</n-text>
+                  </n-td>
                 </n-tr>
               </n-tbody>
             </n-table>
@@ -488,28 +578,130 @@ function ReFlesh(source){
           </n-tab-pane>
         </n-tabs>
       </n-tab-pane>
+      <n-tab-pane name="龙虎榜" tab="龙虎榜">
+          <n-form :model="SearchForm" >
+            <n-form-item-gi  label="日期" path="dateValue" label-placement="left">
+              <n-date-picker    v-model:formatted-value="SearchForm.dateValue"
+                             value-format="yyyy-MM-dd"  type="date"  :on-update:value="(v,v2)=>longTiger(v2)"/>
+            </n-form-item-gi>
+
+          </n-form>
+          <n-table :single-line="false" striped>
+            <n-thead>
+              <n-tr>
+                <n-th>代码</n-th>
+<!--                <n-th width="90px">日期</n-th>-->
+                <n-th width="60px">名称</n-th>
+                <n-th>收盘价</n-th>
+                <n-th width="60px">涨跌幅</n-th>
+                <n-th>龙虎榜净买额(万)</n-th>
+                <n-th>龙虎榜买入额(万)</n-th>
+                <n-th>龙虎榜卖出额(万)</n-th>
+                <n-th>龙虎榜成交额(万)</n-th>
+<!--                <n-th>市场总成交额(万)</n-th>-->
+<!--                <n-th>净买额占总成交比</n-th>-->
+<!--                <n-th>成交额占总成交比</n-th>-->
+                <n-th width="60px"  data-field="TURNOVERRATE" @click="sortLongTigerRank">换手率<n-icon :component="ArrowDownOutline" /></n-th>
+                <n-th>流通市值(亿)</n-th>
+                <n-th>上榜原因</n-th>
+<!--                <n-th>解读</n-th>-->
+              </n-tr>
+            </n-thead>
+            <n-tbody>
+              <n-tr v-for="(item, index) in lhbList" :key="index">
+                <n-td>
+                  <n-tag :bordered=false type="info">{{ item.SECUCODE.split('.')[1].toLowerCase()+item.SECUCODE.split('.')[0] }}</n-tag>
+                </n-td>
+<!--                <n-td>
+                  {{item.TRADE_DATE.substring(0,10)}}
+                </n-td>-->
+                <n-td>
+<!--                  <n-text :type="item.CHANGE_RATE>0?'error':'success'">{{ item.SECURITY_NAME_ABBR }}</n-text>-->
+                  <n-popover trigger="hover" placement="right">
+                    <template #trigger>
+                      <n-button tag="a"  text :type="item.CHANGE_RATE>0?'error':'success'" :bordered=false >{{ item.SECURITY_NAME_ABBR }}</n-button>
+                    </template>
+                    <k-line-chart style="width: 800px" :code="item.SECUCODE.split('.')[1].toLowerCase()+item.SECUCODE.split('.')[0]" :chart-height="500" :name="item.SECURITY_NAME_ABBR" :k-days="20" :dark-theme="true"></k-line-chart>
+                  </n-popover>
+                </n-td>
+                <n-td>
+                  <n-text :type="item.CHANGE_RATE>0?'error':'success'">{{ item.CLOSE_PRICE }}</n-text>
+                </n-td>
+                <n-td>
+                  <n-text :type="item.CHANGE_RATE>0?'error':'success'">{{ (item.CHANGE_RATE).toFixed(2) }}%</n-text>
+                </n-td>
+                <n-td>
+<!--                  <n-text :type="item.BILLBOARD_NET_AMT>0?'error':'success'">{{ (item.BILLBOARD_NET_AMT/10000).toFixed(2) }}</n-text>-->
+
+
+                  <n-popover trigger="hover" placement="right">
+                    <template #trigger>
+                      <n-button tag="a"  text :type="item.BILLBOARD_NET_AMT>0?'error':'success'" :bordered=false >{{ (item.BILLBOARD_NET_AMT/10000).toFixed(2) }}</n-button>
+                    </template>
+                    <money-trend :code="item.SECUCODE.split('.')[1].toLowerCase()+item.SECUCODE.split('.')[0]" :name="item.SECURITY_NAME_ABBR" :days="360" :dark-theme="true" :chart-height="500" style="width: 800px"></money-trend>
+                  </n-popover>
+
+                </n-td>
+                <n-td>
+                  <n-text :type="'error'">{{ (item.BILLBOARD_BUY_AMT/10000).toFixed(2) }}</n-text>
+                </n-td>
+                <n-td>
+                  <n-text :type="'success'">{{ (item.BILLBOARD_SELL_AMT/10000).toFixed(2) }}</n-text>
+                </n-td>
+                <n-td>
+                  <n-text :type="'info'">{{ (item.BILLBOARD_DEAL_AMT/10000).toFixed(2) }}</n-text>
+                </n-td>
+<!--                <n-td>-->
+<!--                  <n-text :type="'info'">{{ (item.ACCUM_AMOUNT/10000).toFixed(2) }}</n-text>-->
+<!--                </n-td>-->
+<!--                <n-td>-->
+<!--                  <n-text :type="item.DEAL_NET_RATIO>0?'error':'success'">{{ (item.DEAL_NET_RATIO).toFixed(2) }}%</n-text>-->
+<!--                </n-td>-->
+<!--                <n-td>-->
+<!--                  <n-text :type="'info'">{{ (item.DEAL_AMOUNT_RATIO).toFixed(2) }}%</n-text>-->
+<!--                </n-td>-->
+                <n-td>
+                  <n-text :type="'info'">{{ (item.TURNOVERRATE).toFixed(2) }}%</n-text>
+                </n-td>
+                <n-td>
+                  <n-text :type="'info'">{{ (item.FREE_MARKET_CAP/100000000).toFixed(2) }}</n-text>
+                </n-td>
+                <n-td>
+                  <n-text :type="'info'">{{ item.EXPLANATION }}</n-text>
+                </n-td>
+<!--                <n-td>
+                  <n-text :type="item.CHANGE_RATE>0?'error':'success'">{{ item.EXPLAIN }}</n-text>
+                </n-td>-->
+              </n-tr>
+            </n-tbody>
+          </n-table>
+      </n-tab-pane>
+
     </n-tabs>
   </n-card>
-  <n-modal transform-origin="center" v-model:show="summaryModal"  preset="card" style="width: 800px;" :title="'AI市场资讯总结'" >
+  <n-modal transform-origin="center" v-model:show="summaryModal" preset="card" style="width: 800px;"
+           :title="'AI市场资讯总结'">
     <n-spin size="small" :show="loading">
-      <MdPreview   style="height: 440px;text-align: left" :modelValue="aiSummary" :theme="theme"/>
+      <MdPreview style="height: 440px;text-align: left" :modelValue="aiSummary" :theme="theme"/>
     </n-spin>
     <template #footer>
       <n-flex justify="space-between" ref="tipsRef">
-        <n-text type="info" v-if="aiSummaryTime" >
-          <n-tag v-if="modelName" type="warning" round :title="chatId" :bordered="false">{{modelName}}</n-tag>
-          {{aiSummaryTime}}
+        <n-text type="info" v-if="aiSummaryTime">
+          <n-tag v-if="modelName" type="warning" round :title="chatId" :bordered="false">{{ modelName }}</n-tag>
+          {{ aiSummaryTime }}
         </n-text>
-        <n-text type="error" >*AI分析结果仅供参考，请以实际行情为准。投资需谨慎，风险自担。</n-text>
+        <n-text type="error">*AI分析结果仅供参考，请以实际行情为准。投资需谨慎，风险自担。</n-text>
       </n-flex>
     </template>
     <template #action>
       <n-flex justify="space-between" style="margin-bottom: 10px">
-        <n-select style="width: 49%" v-model:value="sysPromptId" label-field="name" value-field="ID" :options="sysPromptOptions" placeholder="请选择系统提示词" />
-        <n-select style="width: 49%" v-model:value="question" label-field="name" value-field="content" :options="userPromptOptions" placeholder="请选择用户提示词" />
+        <n-select style="width: 49%" v-model:value="sysPromptId" label-field="name" value-field="ID"
+                  :options="sysPromptOptions" placeholder="请选择系统提示词"/>
+        <n-select style="width: 49%" v-model:value="question" label-field="name" value-field="content"
+                  :options="userPromptOptions" placeholder="请选择用户提示词"/>
       </n-flex>
       <n-flex justify="right">
-        <n-input v-model:value="question" style="text-align: left"  clearable
+        <n-input v-model:value="question" style="text-align: left" clearable
                  type="textarea"
                  :show-count="true"
                  placeholder="请输入您的问题:例如 总结和分析股票市场新闻中的投资机会"
@@ -518,7 +710,7 @@ function ReFlesh(source){
               maxRows: 5
             }"
         />
-        <n-button size="tiny"  type="warning" @click="reAiSummary">再次总结</n-button>
+        <n-button size="tiny" type="warning" @click="reAiSummary">再次总结</n-button>
         <n-button size="tiny" type="success" @click="copyToClipboard">复制到剪切板</n-button>
         <n-button size="tiny" type="primary" @click="saveAsMarkdown">保存为Markdown文件</n-button>
         <n-button size="tiny" type="error" @click="share">分享到项目社区</n-button>
@@ -527,12 +719,18 @@ function ReFlesh(source){
   </n-modal>
 
   <div style="position: fixed;bottom: 18px;right:25px;z-index: 10;" v-if="summaryBTN">
-    <n-input-group >
+    <n-input-group>
       <n-button type="primary" @click="getAiSummary">
         <n-icon :component="PulseOutline"/> &nbsp;AI总结
       </n-button>
     </n-input-group>
   </div>
+
+  <n-drawer v-model:show="drawerShow" :width="502">
+    <n-drawer-content title="斯通纳" closable>
+      《斯通纳》是美国作家约翰·威廉姆斯在 1965 年出版的小说。
+    </n-drawer-content>
+  </n-drawer>
 
 </template>
 <style scoped>

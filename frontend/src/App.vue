@@ -10,19 +10,19 @@ import {
 } from '../wailsjs/runtime'
 import {h, onBeforeMount, onBeforeUnmount, onMounted, ref} from "vue";
 import {RouterLink, useRouter} from 'vue-router'
-import {darkTheme, NIcon, NText,} from 'naive-ui'
+import {darkTheme, NIcon, NText,dateZhCN,zhCN} from 'naive-ui'
 import {
   AlarmOutline,
   AnalyticsOutline,
-  BarChartSharp,
-  ExpandOutline,
-  Flame,
+  BarChartSharp, EaselSharp,
+  ExpandOutline, Flag,
+  Flame, FlameSharp,
   LogoGithub,
   NewspaperOutline,
   NewspaperSharp,
-  PowerOutline,
+  PowerOutline, Pulse,
   ReorderTwoOutline,
-  SettingsOutline,
+  SettingsOutline, Skull, SkullOutline, SkullSharp,
   SparklesOutline,
   StarOutline,
   Wallet,
@@ -196,7 +196,7 @@ const menuOptions = ref([
                 {default: () => '行业排名',}
             ),
         key: 'market4',
-        icon: renderIcon(Flame),
+        icon: renderIcon(Flag),
       },
       {
         label: () =>
@@ -217,8 +217,29 @@ const menuOptions = ref([
                 {default: () => '个股资金流向',}
             ),
         key: 'market5',
-        icon: renderIcon(Wallet),
-      }
+        icon: renderIcon(Pulse),
+      },
+      {
+        label: () =>
+            h(
+                RouterLink,
+                {
+                  href: '#',
+                  to: {
+                    name: 'market',
+                    query: {
+                      name: "龙虎榜",
+                    }
+                  },
+                  onClick: () => {
+                    EventsEmit("changeMarketTab", {ID: 0, name: '龙虎榜'})
+                  },
+                },
+                {default: () => '龙虎榜',}
+            ),
+        key: 'market6',
+        icon: renderIcon(Skull),
+      },
     ]
   },
   {
@@ -457,7 +478,7 @@ onMounted(() => {
 
 </script>
 <template>
-  <n-config-provider ref="containerRef" :theme="enableDarkTheme">
+  <n-config-provider ref="containerRef" :theme="enableDarkTheme" :locale="zhCN" :date-locale="dateZhCN">
     <n-message-provider>
       <n-notification-provider>
         <n-modal-provider>

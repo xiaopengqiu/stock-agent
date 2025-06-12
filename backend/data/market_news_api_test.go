@@ -58,3 +58,9 @@ func TestGetStockMoneyTrendByDay(t *testing.T) {
 func TestTopStocksRankingList(t *testing.T) {
 	NewMarketNewsApi().TopStocksRankingList("2025-05-19")
 }
+
+func TestLongTiger(t *testing.T) {
+	db.Init("../../data/stock.db")
+
+	NewMarketNewsApi().LongTiger("2025-06-08")
+}

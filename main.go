@@ -202,6 +202,7 @@ func AutoMigrate() {
 	db.Dao.AutoMigrate(&models.Tags{})
 	db.Dao.AutoMigrate(&models.Telegraph{})
 	db.Dao.AutoMigrate(&models.TelegraphTags{})
+	db.Dao.AutoMigrate(&models.LongTigerRankData{})
 }
 
 func initStockDataUS(ctx context.Context) {

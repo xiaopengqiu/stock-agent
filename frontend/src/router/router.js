@@ -12,6 +12,7 @@ const routes = [
     { path: '/settings', component: settingsView,name: 'settings' },
     { path: '/about', component: about,name: 'about' },
     { path: '/market', component: market,name: 'market' },
+
 ]
 
 const router = createRouter({

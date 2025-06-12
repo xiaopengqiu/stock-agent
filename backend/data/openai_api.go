@@ -161,7 +161,7 @@ func (o OpenAi) NewSummaryStockNewsStream(userQuestion string, sysPromptId *int)
 		}()
 		wg.Wait()
 
-		news := NewMarketNewsApi().GetNewsList("财联社电报", 100)
+		news := NewMarketNewsApi().GetNewsList("新浪财经", 100)
 		messageText := strings.Builder{}
 		for _, telegraph := range *news {
 			messageText.WriteString("## " + telegraph.Time + ":" + "\n")

@@ -277,3 +277,28 @@ type SinaStockInfo struct {
 	MarketValue   string `json:"market_value"`
 	PeRatio       string `json:"pe_ratio"`
 }
+
+type LongTigerRankData struct {
+	ACCUMAMOUNT      float64 `json:"ACCUM_AMOUNT"`
+	BILLBOARDBUYAMT  float64 `json:"BILLBOARD_BUY_AMT"`
+	BILLBOARDDEALAMT float64 `json:"BILLBOARD_DEAL_AMT"`
+	BILLBOARDNETAMT  float64 `json:"BILLBOARD_NET_AMT"`
+	BILLBOARDSELLAMT float64 `json:"BILLBOARD_SELL_AMT"`
+	CHANGERATE       float64 `json:"CHANGE_RATE"`
+	CLOSEPRICE       float64 `json:"CLOSE_PRICE"`
+	DEALAMOUNTRATIO  float64 `json:"DEAL_AMOUNT_RATIO"`
+	DEALNETRATIO     float64 `json:"DEAL_NET_RATIO"`
+	EXPLAIN          string  `json:"EXPLAIN"`
+	EXPLANATION      string  `json:"EXPLANATION"`
+	FREEMARKETCAP    float64 `json:"FREE_MARKET_CAP"`
+	SECUCODE         string  `json:"SECUCODE"`
+	SECURITYCODE     string  `json:"SECURITY_CODE"`
+	SECURITYNAMEABBR string  `json:"SECURITY_NAME_ABBR"`
+	SECURITYTYPECODE string  `json:"SECURITY_TYPE_CODE"`
+	TRADEDATE        string  `json:"TRADE_DATE"`
+	TURNOVERRATE     float64 `json:"TURNOVERRATE"`
+}
+
+func (l LongTigerRankData) TableName() string {
+	return "long_tiger_rank"
+}
