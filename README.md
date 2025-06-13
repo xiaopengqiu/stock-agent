@@ -10,7 +10,7 @@
 
 ### 📈 交流群
 - QQ交流群2：[点击链接加入群聊【go-stock交流群2】：892666282](https://qm.qq.com/q/5mYiy6Yxh0)
-- QQ交流群：[点击链接加入群聊【go-stock交流群】：491605333(已满)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0YQ8qD3exahsD4YLNhzQTWe5ssstWC89&authKey=usOMMRFtIQDC%2FYcatHYapcxQbJ7PwXPHK9OypTXWzNjAq%2FRVvQu9bj2lRgb%2BSZ3p&noverify=0&group_code=491605333)
+- QQ交流群：[点击链接加入群聊【go-stock交流群】：491605333(已满会定期清理，随缘入群)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0YQ8qD3exahsD4YLNhzQTWe5ssstWC89&authKey=usOMMRFtIQDC%2FYcatHYapcxQbJ7PwXPHK9OypTXWzNjAq%2FRVvQu9bj2lRgb%2BSZ3p&noverify=0&group_code=491605333)
 
 ###  ✨ 简介
 - 本项目基于Wails和NaiveUI开发，结合AI大模型构建的股票分析工具。
