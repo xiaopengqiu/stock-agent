@@ -226,7 +226,7 @@ onMounted(() => {
 
   GetFollowList(currentGroupId.value).then(result => {
 
-    followList.value = result
+    followList.value = result 
     for (const followedStock of result) {
       if(followedStock.StockCode.startsWith("us")){
         followedStock.StockCode="gb_"+ followedStock.StockCode.replace("us", "").toLowerCase()
@@ -459,6 +459,9 @@ function AddStock(){
         if(result==="关注成功"){
           stocks.value.push(data.code)
           message.success(result)
+          GetFollowList(currentGroupId.value).then(result => {
+            followList.value = result
+          })
           monitor();
         }else{
           message.error(result)
