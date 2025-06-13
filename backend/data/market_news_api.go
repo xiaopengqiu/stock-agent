@@ -377,3 +377,50 @@ func (m MarketNewsApi) LongTiger(date string) *[]models.LongTigerRankData {
 	}
 	return ranks
 }
+
+func (m MarketNewsApi) StockResearchReport(days int) []any {
+
+	type Req struct {
+		BeginTime    string      `json:"beginTime"`
+		EndTime      string      `json:"endTime"`
+		IndustryCode string      `json:"industryCode"`
+		RatingChange string      `json:"ratingChange"`
+		Rating       string      `json:"rating"`
+		OrgCode      interface{} `json:"orgCode"`
+		Code         string      `json:"code"`
+		Rcode        string      `json:"rcode"`
+		PageSize     int         `json:"pageSize"`
+		PageNo       int         `json:"pageNo"`
+		P            int         `json:"p"`
+		PageNum      int         `json:"pageNum"`
+		PageNumber   int         `json:"pageNumber"`
+	}
+
+	url := "https://reportapi.eastmoney.com/report/list2"
+	beginDate := time.Now().Add(-time.Duration(days) * 24 * time.Hour).Format("2006-01-02")
+	endDate := time.Now().Format("2006-01-02")
+	logger.SugaredLogger.Infof("beginDate:%s endDate:%s", beginDate, endDate)
+	resp, err := resty.New().SetTimeout(time.Duration(15)*time.Second).R().
+		SetHeader("Host", "reportapi.eastmoney.com").
+		SetHeader("Origin", "https://data.eastmoney.com").
+		SetHeader("Referer", "https://data.eastmoney.com/report/stock.jshtml").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		SetHeader("Content-Type", "application/json").
+		SetBody(&Req{
+			BeginTime:  beginDate,
+			EndTime:    endDate,
+			PageNo:     1,
+			PageSize:   50,
+			P:          1,
+			PageNum:    1,
+			PageNumber: 1,
+		}).Post(url)
+	respMap := map[string]any{}
+
+	if err != nil {
+		return []any{}
+	}
+	json.Unmarshal(resp.Body(), &respMap)
+	//logger.SugaredLogger.Infof("resp:%+v", respMap["data"])
+	return respMap["data"].([]any)
+}

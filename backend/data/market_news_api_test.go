@@ -64,3 +64,11 @@ func TestLongTiger(t *testing.T) {
 
 	NewMarketNewsApi().LongTiger("2025-06-08")
 }
+
+func TestStockResearchReport(t *testing.T) {
+	db.Init("../../data/stock.db")
+	resp := NewMarketNewsApi().StockResearchReport(7)
+	for _, a := range resp {
+		logger.SugaredLogger.Debugf("value: %+v", a)
+	}
+}

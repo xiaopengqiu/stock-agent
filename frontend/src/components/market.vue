@@ -24,6 +24,7 @@ import {useRoute} from 'vue-router'
 import RankTable from "./rankTable.vue";
 import IndustryMoneyRank from "./industryMoneyRank.vue";
 import MoneyTrend from "./moneyTrend.vue";
+import StockResearchReportList from "./StockResearchReportList.vue";
 
 const route = useRoute()
 const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
@@ -702,6 +703,9 @@ function ReFlesh(source) {
               </n-tr>
             </n-tbody>
           </n-table>
+      </n-tab-pane>
+      <n-tab-pane name="个股研报" tab="个股研报">
+        <StockResearchReportList/>
       </n-tab-pane>
 
     </n-tabs>

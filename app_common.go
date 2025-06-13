@@ -13,3 +13,7 @@ import (
 func (a *App) LongTigerRank(date string) *[]models.LongTigerRankData {
 	return data.NewMarketNewsApi().LongTiger(date)
 }
+
+func (a *App) StockResearchReport() []any {
+	return data.NewMarketNewsApi().StockResearchReport(7)
+}
