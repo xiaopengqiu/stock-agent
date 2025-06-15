@@ -27,7 +27,7 @@
     "html-docx-js-typescript": "^0.1.5",
     "naive-ui": "^2.41.0",
     "vfonts": "^0.0.3",
-    "vite": "^5.4.19"
+    "vite": "^6.3.5"
   },
   "keywords": [
     "AI赋能股票分析",
