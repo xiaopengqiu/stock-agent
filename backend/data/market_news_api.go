@@ -378,7 +378,15 @@ func (m MarketNewsApi) LongTiger(date string) *[]models.LongTigerRankData {
 	return ranks
 }
 
-func (m MarketNewsApi) StockResearchReport(days int) []any {
+func (m MarketNewsApi) StockResearchReport(stockCode string, days int) []any {
+	beginDate := time.Now().Add(-time.Duration(days) * 24 * time.Hour).Format("2006-01-02")
+	endDate := time.Now().Format("2006-01-02")
+	if strutil.ContainsAny(stockCode, []string{"."}) {
+		stockCode = strings.Split(stockCode, ".")[0]
+		beginDate = time.Now().Add(-time.Duration(days) * 365 * time.Hour).Format("2006-01-02")
+	}
+
+	logger.SugaredLogger.Infof("StockResearchReport-stockCode:%s", stockCode)
 
 	type Req struct {
 		BeginTime    string      `json:"beginTime"`
@@ -397,8 +405,7 @@ func (m MarketNewsApi) StockResearchReport(days int) []any {
 	}
 
 	url := "https://reportapi.eastmoney.com/report/list2"
-	beginDate := time.Now().Add(-time.Duration(days) * 24 * time.Hour).Format("2006-01-02")
-	endDate := time.Now().Format("2006-01-02")
+
 	logger.SugaredLogger.Infof("beginDate:%s endDate:%s", beginDate, endDate)
 	resp, err := resty.New().SetTimeout(time.Duration(15)*time.Second).R().
 		SetHeader("Host", "reportapi.eastmoney.com").
@@ -407,13 +414,15 @@ func (m MarketNewsApi) StockResearchReport(days int) []any {
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
 		SetHeader("Content-Type", "application/json").
 		SetBody(&Req{
-			BeginTime:  beginDate,
-			EndTime:    endDate,
-			PageNo:     1,
-			PageSize:   50,
-			P:          1,
-			PageNum:    1,
-			PageNumber: 1,
+			Code:         stockCode,
+			IndustryCode: "*",
+			BeginTime:    beginDate,
+			EndTime:      endDate,
+			PageNo:       1,
+			PageSize:     50,
+			P:            1,
+			PageNum:      1,
+			PageNumber:   1,
 		}).Post(url)
 	respMap := map[string]any{}
 
