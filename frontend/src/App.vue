@@ -240,6 +240,27 @@ const menuOptions = ref([
         key: 'market6',
         icon: renderIcon(Skull),
       },
+      {
+        label: () =>
+            h(
+                RouterLink,
+                {
+                  href: '#',
+                  to: {
+                    name: 'market',
+                    query: {
+                      name: "个股研报",
+                    }
+                  },
+                  onClick: () => {
+                    EventsEmit("changeMarketTab", {ID: 0, name: '个股研报'})
+                  },
+                },
+                {default: () => '个股研报',}
+            ),
+        key: 'market7',
+        icon: renderIcon(NewspaperSharp),
+      },
     ]
   },
   {
