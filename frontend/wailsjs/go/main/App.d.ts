@@ -89,7 +89,7 @@ export function SetStockSort(arg1:number,arg2:string):Promise<void>;
 
 export function ShareAnalysis(arg1:string,arg2:string):Promise<string>;
 
-export function StockResearchReport():Promise<Array<any>>;
+export function StockResearchReport(arg1:string):Promise<Array<any>>;
 
 export function SummaryStockNews(arg1:string,arg2:any):Promise<void>;
 
