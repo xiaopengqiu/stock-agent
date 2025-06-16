@@ -15,7 +15,7 @@ const options =  ref([])
 
 function getStockResearchReport(value) {
   StockResearchReport(value).then(result => {
-    console.log(result)
+    //console.log(result)
     list.value = result
   })
 }
@@ -97,7 +97,7 @@ function handleSearch(value) {
     <n-tbody>
       <n-tr v-for="item in list" :key="item.infoCode">
 <!--        <n-td>{{item.stockCode}}</n-td>-->
-        <n-td>
+        <n-td :title="item.stockCode">
           <n-popover trigger="hover" placement="right">
             <template #trigger>
               <n-tag type="info"  :bordered="false">{{item.stockName}}</n-tag>

@@ -17,3 +17,6 @@ func (a *App) LongTigerRank(date string) *[]models.LongTigerRankData {
 func (a *App) StockResearchReport(stockCode string) []any {
 	return data.NewMarketNewsApi().StockResearchReport(stockCode, 7)
 }
+func (a *App) StockNotice(stockCode string) []any {
+	return data.NewMarketNewsApi().StockNotice(stockCode)
+}
