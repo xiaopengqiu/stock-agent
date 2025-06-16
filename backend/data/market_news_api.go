@@ -433,3 +433,28 @@ func (m MarketNewsApi) StockResearchReport(stockCode string, days int) []any {
 	//logger.SugaredLogger.Infof("resp:%+v", respMap["data"])
 	return respMap["data"].([]any)
 }
+
+func (m MarketNewsApi) StockNotice(stock_list string) []any {
+	var stockCodes []string
+	for _, stockCode := range strings.Split(stock_list, ",") {
+		if strutil.ContainsAny(stockCode, []string{"."}) {
+			stockCode = strings.Split(stockCode, ".")[0]
+			stockCodes = append(stockCodes, stockCode)
+		}
+	}
+
+	url := "https://np-anotice-stock.eastmoney.com/api/security/ann?page_size=50&page_index=1&ann_type=SHA%2CCYB%2CSZA%2CBJA%2CINV&client_source=web&f_node=0&stock_list=" + strings.Join(stockCodes, ",")
+	resp, err := resty.New().SetTimeout(time.Duration(15)*time.Second).R().
+		SetHeader("Host", "np-anotice-stock.eastmoney.com").
+		SetHeader("Referer", "https://data.eastmoney.com/notices/hsa/5.html").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		Get(url)
+	respMap := map[string]any{}
+
+	if err != nil {
+		return []any{}
+	}
+	json.Unmarshal(resp.Body(), &respMap)
+	//logger.SugaredLogger.Infof("resp:%+v", respMap["data"])
+	return (respMap["data"].(map[string]any))["list"].([]any)
+}

@@ -72,3 +72,12 @@ func TestStockResearchReport(t *testing.T) {
 		logger.SugaredLogger.Debugf("value: %+v", a)
 	}
 }
+
+func TestStockNotice(t *testing.T) {
+	db.Init("../../data/stock.db")
+	resp := NewMarketNewsApi().StockNotice("600584,600900")
+	for _, a := range resp {
+		logger.SugaredLogger.Debugf("value: %+v", a)
+	}
+
+}
