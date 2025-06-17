@@ -4,6 +4,8 @@ import {GetStockList, StockNotice} from "../../wailsjs/go/main/App";
 import {BrowserOpenURL} from "../../wailsjs/runtime";
 import {RefreshCircleSharp} from "@vicons/ionicons5";
 import _ from "lodash";
+import KLineChart from "./KLineChart.vue";
+import MoneyTrend from "./moneyTrend.vue";
 
 
 const list  = ref([])
@@ -66,7 +68,19 @@ function getTypeColor(name){
   return "info"
 
 }
-
+function getmMarketCode(market,code) {
+  if(market==="0"){
+    return "sz"+code
+  }else if(market==="1"){
+    return "sh"+code
+  }else if(market==="2"){
+    return "bj"+code
+  }else if(market==="3"){
+    return "hk"+code
+  }else{
+    return code
+  }
+}
 </script>
 
 <template>
@@ -87,10 +101,20 @@ function getTypeColor(name){
     <n-tbody>
       <n-tr v-for="item in list" :key="item.art_code">
         <n-td>
-          <n-tag type="info">{{item.codes[0].stock_code }}</n-tag>
+          <n-popover trigger="hover" placement="right">
+            <template #trigger>
+              <n-tag type="info"  :bordered="false">{{item.codes[0].stock_code }}</n-tag>
+            </template>
+            <money-trend style="width: 800px" :code="getmMarketCode(item.codes[0].market_code,item.codes[0].stock_code)" :name="item.codes[0].short_name"  :days="360" :dark-theme="true" :chart-height="500"></money-trend>
+          </n-popover>
         </n-td>
         <n-td>
-          <n-tag type="info">{{item.codes[0].short_name }}</n-tag>
+          <n-popover trigger="hover" placement="right">
+            <template #trigger>
+              <n-tag type="info"  :bordered="false">{{item.codes[0].short_name }}</n-tag>
+            </template>
+            <k-line-chart style="width: 800px" :code="getmMarketCode(item.codes[0].market_code,item.codes[0].stock_code)" :chart-height="500" :name="item.codes[0].short_name" :k-days="20" :dark-theme="true"></k-line-chart>
+          </n-popover>
         </n-td>
         <n-td>
           <n-a type="info"  @click="openWin(item.art_code)"><n-text  :type="getTypeColor(item.columns[0].column_name)"> {{item.title}}</n-text></n-a>
