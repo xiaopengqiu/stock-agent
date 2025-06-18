@@ -2,6 +2,7 @@ package data
 
 import (
 	"encoding/json"
+	"github.com/coocood/freecache"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"testing"
@@ -93,7 +94,7 @@ func TestStockNotice(t *testing.T) {
 
 func TestEMDictCode(t *testing.T) {
 	db.Init("../../data/stock.db")
-	resp := NewMarketNewsApi().EMDictCode("016")
+	resp := NewMarketNewsApi().EMDictCode("016", freecache.NewCache(100))
 	for _, a := range resp {
 		logger.SugaredLogger.Debugf("value: %+v", a)
 	}
