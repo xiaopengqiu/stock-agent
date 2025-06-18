@@ -20,3 +20,10 @@ func (a *App) StockResearchReport(stockCode string) []any {
 func (a *App) StockNotice(stockCode string) []any {
 	return data.NewMarketNewsApi().StockNotice(stockCode)
 }
+
+func (a *App) IndustryResearchReport(industryCode string) []any {
+	return data.NewMarketNewsApi().IndustryResearchReport(industryCode, 7)
+}
+func (a App) EMDictCode(code string) []any {
+	return data.NewMarketNewsApi().EMDictCode(code, a.cache)
+}

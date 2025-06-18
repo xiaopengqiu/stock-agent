@@ -25,6 +25,7 @@ import IndustryMoneyRank from "./industryMoneyRank.vue";
 import StockResearchReportList from "./StockResearchReportList.vue";
 import StockNoticeList from "./StockNoticeList.vue";
 import LongTigerRankList from "./LongTigerRankList.vue";
+import IndustryResearchReportList from "./IndustryResearchReportList.vue";
 
 const route = useRoute()
 const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
@@ -551,6 +552,10 @@ function ReFlesh(source) {
       <n-tab-pane name="公司公告" tab="公司公告 ">
         <StockNoticeList/>
       </n-tab-pane>
+      <n-tab-pane name="行业研究" tab="行业研究 ">
+        <IndustryResearchReportList/>
+      </n-tab-pane>
+
 
     </n-tabs>
   </n-card>

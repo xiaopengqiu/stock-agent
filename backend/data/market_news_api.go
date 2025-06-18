@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/coocood/freecache"
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/go-resty/resty/v2"
@@ -141,11 +142,10 @@ func (m MarketNewsApi) GetSinaNews(crawlTimeOut uint) *[]models.Telegraph {
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").
 		Get("https://zhibo.sina.com.cn/api/zhibo/feed?callback=callback&page=1&page_size=20&zhibo_id=152&tag_id=0&dire=f&dpc=1&pagesize=20&id=4161089&type=0&_=" + strconv.FormatInt(time.Now().Unix(), 10))
 	js := string(response.Body())
-	js = strutil.ReplaceWithMap(js,
-		map[string]string{
-			"try{callback(":  "var data=",
-			");}catch(e){};": ";",
-		})
+	js = strutil.ReplaceWithMap(js, map[string]string{
+		"try{callback(":  "var data=",
+		");}catch(e){};": ";",
+	})
 	//logger.SugaredLogger.Info(js)
 	vm := otto.New()
 	_, err := vm.Run(js)
@@ -304,7 +304,7 @@ func (m MarketNewsApi) TopStocksRankingList(date string) {
 		SetHeader("Referer", "https://finance.sina.com.cn").
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").Get(url)
 
-	html, _ := (convertor.GbkToUtf8(response.Body()))
+	html, _ := convertor.GbkToUtf8(response.Body())
 	//logger.SugaredLogger.Infof("html:%s", html)
 	document, err := goquery.NewDocumentFromReader(bytes.NewReader(html))
 	if err != nil {
@@ -347,11 +347,10 @@ func (m MarketNewsApi) LongTiger(date string) *[]models.LongTigerRankData {
 	js := string(resp.Body())
 	logger.SugaredLogger.Infof("resp:%s", js)
 
-	js = strutil.ReplaceWithMap(js,
-		map[string]string{
-			"callback(": "var data=",
-			");":        ";",
-		})
+	js = strutil.ReplaceWithMap(js, map[string]string{
+		"callback(": "var data=",
+		");":        ";",
+	})
 	//logger.SugaredLogger.Info(js)
 	vm := otto.New()
 	_, err = vm.Run(js)
@@ -378,6 +377,46 @@ func (m MarketNewsApi) LongTiger(date string) *[]models.LongTigerRankData {
 	return ranks
 }
 
+func (m MarketNewsApi) IndustryResearchReport(industryCode string, days int) []any {
+	beginDate := time.Now().Add(-time.Duration(days) * 24 * time.Hour).Format("2006-01-02")
+	endDate := time.Now().Format("2006-01-02")
+	if strutil.Trim(industryCode) != "" {
+		beginDate = time.Now().Add(-time.Duration(days) * 365 * time.Hour).Format("2006-01-02")
+	}
+
+	logger.SugaredLogger.Infof("IndustryResearchReport-name:%s", industryCode)
+	params := map[string]string{
+		"industry":     "*",
+		"industryCode": industryCode,
+		"beginTime":    beginDate,
+		"endTime":      endDate,
+		"pageNo":       "1",
+		"pageSize":     "50",
+		"p":            "1",
+		"pageNum":      "1",
+		"pageNumber":   "1",
+		"qType":        "1",
+	}
+
+	url := "https://reportapi.eastmoney.com/report/list"
+
+	logger.SugaredLogger.Infof("beginDate:%s endDate:%s", beginDate, endDate)
+	resp, err := resty.New().SetTimeout(time.Duration(15)*time.Second).R().
+		SetHeader("Host", "reportapi.eastmoney.com").
+		SetHeader("Origin", "https://data.eastmoney.com").
+		SetHeader("Referer", "https://data.eastmoney.com/report/stock.jshtml").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		SetHeader("Content-Type", "application/json").
+		SetQueryParams(params).Get(url)
+	respMap := map[string]any{}
+
+	if err != nil {
+		return []any{}
+	}
+	json.Unmarshal(resp.Body(), &respMap)
+	//logger.SugaredLogger.Infof("resp:%+v", respMap["data"])
+	return respMap["data"].([]any)
+}
 func (m MarketNewsApi) StockResearchReport(stockCode string, days int) []any {
 	beginDate := time.Now().Add(-time.Duration(days) * 24 * time.Hour).Format("2006-01-02")
 	endDate := time.Now().Format("2006-01-02")
@@ -457,4 +496,35 @@ func (m MarketNewsApi) StockNotice(stock_list string) []any {
 	json.Unmarshal(resp.Body(), &respMap)
 	//logger.SugaredLogger.Infof("resp:%+v", respMap["data"])
 	return (respMap["data"].(map[string]any))["list"].([]any)
+}
+
+func (m MarketNewsApi) EMDictCode(code string, cache *freecache.Cache) []any {
+	respMap := map[string]any{}
+
+	d, _ := cache.Get([]byte(code))
+	if d != nil {
+		json.Unmarshal(d, &respMap)
+		return respMap["data"].([]any)
+	}
+
+	url := "https://reportapi.eastmoney.com/report/bk"
+
+	params := map[string]string{
+		"bkCode": code,
+	}
+	resp, err := resty.New().SetTimeout(time.Duration(15)*time.Second).R().
+		SetHeader("Host", "reportapi.eastmoney.com").
+		SetHeader("Origin", "https://data.eastmoney.com").
+		SetHeader("Referer", "https://data.eastmoney.com/report/industry.jshtml").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		SetHeader("Content-Type", "application/json").
+		SetQueryParams(params).Get(url)
+
+	if err != nil {
+		return []any{}
+	}
+	json.Unmarshal(resp.Body(), &respMap)
+	//logger.SugaredLogger.Infof("resp:%+v", respMap["data"])
+	cache.Set([]byte(code), resp.Body(), 60*60*24)
+	return respMap["data"].([]any)
 }

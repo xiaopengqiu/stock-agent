@@ -26,6 +26,10 @@ export function DelPrompt(arg1) {
   return window['go']['main']['App']['DelPrompt'](arg1);
 }
 
+export function EMDictCode(arg1) {
+  return window['go']['main']['App']['EMDictCode'](arg1);
+}
+
 export function ExportConfig() {
   return window['go']['main']['App']['ExportConfig']();
 }
@@ -116,6 +120,10 @@ export function GlobalStockIndexes() {
 
 export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
+}
+
+export function IndustryResearchReport(arg1) {
+  return window['go']['main']['App']['IndustryResearchReport'](arg1);
 }
 
 export function LongTigerRank(arg1) {

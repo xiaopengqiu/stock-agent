@@ -15,6 +15,8 @@ export function CheckUpdate():Promise<void>;
 
 export function DelPrompt(arg1:number):Promise<string>;
 
+export function EMDictCode(arg1:string):Promise<Array<any>>;
+
 export function ExportConfig():Promise<string>;
 
 export function Follow(arg1:string):Promise<string>;
@@ -60,6 +62,8 @@ export function GetfundList(arg1:string):Promise<Array<data.FundBasic>>;
 export function GlobalStockIndexes():Promise<Record<string, any>>;
 
 export function Greet(arg1:string):Promise<data.StockInfo>;
+
+export function IndustryResearchReport(arg1:string):Promise<Array<any>>;
 
 export function LongTigerRank(arg1:string):Promise<any>;
 
