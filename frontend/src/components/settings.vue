@@ -45,6 +45,7 @@ const formValue = ref({
   enableNews:false,
   darkTheme:true,
   enableFund:false,
+  enablePushNews:false,
 })
 const promptTemplates=ref([])
 onMounted(()=>{
@@ -78,6 +79,7 @@ onMounted(()=>{
     formValue.value.enableNews = res.enableNews
     formValue.value.darkTheme = res.darkTheme
     formValue.value.enableFund = res.enableFund
+    formValue.value.enablePushNews = res.enablePushNews
 
     //console.log(res)
   })
@@ -118,6 +120,7 @@ function saveConfig(){
     enableNews:formValue.value.enableNews,
     darkTheme:formValue.value.darkTheme,
     enableFund:formValue.value.enableFund,
+    enablePushNews:formValue.value.enablePushNews
   })
 
 
@@ -195,6 +198,7 @@ function importConfig(){
       formValue.value.enableNews = config.enableNews
       formValue.value.darkTheme = config.darkTheme
       formValue.value.enableFund = config.enableFund
+      formValue.value.enablePushNews = config.enablePushNews
      // formRef.value.resetFields()
     };
     reader.readAsText(file);
@@ -288,7 +292,7 @@ function deletePrompt(ID){
         <n-form-item-gi  :span="10" label="浏览器安装路径：" path="browserPath" >
           <n-input  type="text" placeholder="浏览器安装路径"  v-model:value="formValue.browserPath" clearable />
         </n-form-item-gi>
-        <n-form-item-gi  :span="6" label="是否启用指数基金：" path="enableFund" >
+        <n-form-item-gi  :span="6" label="指数基金：" path="enableFund" >
           <n-switch v-model:value="formValue.enableFund" />
         </n-form-item-gi>
       </n-grid>
@@ -297,17 +301,20 @@ function deletePrompt(ID){
           <n-gi :span="24">
             <n-text type="success" style="font-size: 25px;font-weight: bold">通知设置</n-text>
           </n-gi>
-          <n-form-item-gi  :span="6" label="是否启用钉钉推送：" path="dingPush.enable" >
+          <n-form-item-gi  :span="4" label="钉钉推送：" path="dingPush.enable" >
             <n-switch v-model:value="formValue.dingPush.enable" />
           </n-form-item-gi>
-          <n-form-item-gi  :span="6" label="是否启用本地推送：" path="localPush.enable"  >
+          <n-form-item-gi  :span="4" label="本地推送：" path="localPush.enable"  >
             <n-switch v-model:value="formValue.localPush.enable" />
           </n-form-item-gi>
-          <n-form-item-gi  :span="5" label="弹幕功能：" path="enableDanmu" >
+          <n-form-item-gi  :span="4" label="弹幕功能：" path="enableDanmu" >
             <n-switch v-model:value="formValue.enableDanmu" />
           </n-form-item-gi>
-          <n-form-item-gi  :span="5" label="是否显示滚动快讯(重启生效)：" path="enableNews" >
+          <n-form-item-gi  :span="4" label="显示滚动快讯：" path="enableNews" >
             <n-switch v-model:value="formValue.enableNews" />
+          </n-form-item-gi>
+          <n-form-item-gi  :span="4" label="市场资讯提醒：" path="enablePushNews" >
+            <n-switch v-model:value="formValue.enablePushNews" />
           </n-form-item-gi>
           <n-form-item-gi :span="22"  v-if="formValue.dingPush.enable" label="钉钉机器人接口地址：" path="dingPush.dingRobot" >
             <n-input  placeholder="请输入钉钉机器人接口地址"  v-model:value="formValue.dingPush.dingRobot"/>
@@ -319,7 +326,7 @@ function deletePrompt(ID){
       <n-gi :span="24">
         <n-text type="success" style="font-size: 25px;font-weight: bold">OpenAI设置</n-text>
       </n-gi>
-      <n-form-item-gi  :span="3" label="是否启用AI诊股：" path="openAI.enable" >
+      <n-form-item-gi  :span="3" label="AI诊股：" path="openAI.enable" >
         <n-switch v-model:value="formValue.openAI.enable" />
       </n-form-item-gi>
       <n-form-item-gi :span="9"  v-if="formValue.openAI.enable" label="openAI 接口地址：" path="openAI.baseUrl" >

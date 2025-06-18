@@ -65,6 +65,8 @@ export function LongTigerRank(arg1:string):Promise<any>;
 
 export function NewChatStream(arg1:string,arg2:string,arg3:string,arg4:any):Promise<void>;
 
+export function NewsPush(arg1:any):Promise<void>;
+
 export function ReFleshTelegraphList(arg1:string):Promise<any>;
 
 export function RemoveGroup(arg1:number):Promise<string>;

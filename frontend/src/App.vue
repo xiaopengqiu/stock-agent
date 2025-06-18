@@ -10,7 +10,7 @@ import {
 } from '../wailsjs/runtime'
 import {h, onBeforeMount, onBeforeUnmount, onMounted, ref} from "vue";
 import {RouterLink, useRouter} from 'vue-router'
-import {darkTheme, NIcon, NText,dateZhCN,zhCN} from 'naive-ui'
+import {createDiscreteApi,darkTheme,lightTheme , NIcon, NText,dateZhCN,zhCN} from 'naive-ui'
 import {
   AlarmOutline,
   AnalyticsOutline,
@@ -28,6 +28,9 @@ import {
   Wallet,
 } from '@vicons/ionicons5'
 import {GetConfig, GetGroupList} from "../wailsjs/go/main/App";
+
+
+
 
 const router = useRouter()
 const loading = ref(true)
@@ -430,6 +433,7 @@ onBeforeUnmount(() => {
   EventsOff("realtime_profit")
   EventsOff("loadingMsg")
   EventsOff("telegraph")
+  EventsOff("newsPush")
 })
 
 window.onerror = function (msg, source, lineno, colno, error) {
@@ -515,9 +519,17 @@ onMounted(() => {
       enableNews.value = true
     }
     enableFund.value = res.enableFund
+    const {notification } =createDiscreteApi(["notification"], {
+      configProviderProps: {
+        theme: enableDarkTheme.value ? darkTheme : lightTheme ,
+        max: 3,
+      },
+    })
+    EventsOn("newsPush", (data) => {
+      notification.create({ title: data.time, content: data.content,duration:1000*60 })
+    })
   })
 })
-
 </script>
 <template>
   <n-config-provider ref="containerRef" :theme="enableDarkTheme" :locale="zhCN" :date-locale="dateZhCN">
