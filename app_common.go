@@ -27,3 +27,7 @@ func (a *App) IndustryResearchReport(industryCode string) []any {
 func (a App) EMDictCode(code string) []any {
 	return data.NewMarketNewsApi().EMDictCode(code, a.cache)
 }
+
+func (a App) AnalyzeSentiment(text string) data.SentimentResult {
+	return data.AnalyzeSentiment(text)
+}

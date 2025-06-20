@@ -218,14 +218,15 @@ type Prompt struct {
 
 type Telegraph struct {
 	gorm.Model
-	Time          string          `json:"time"`
-	Content       string          `json:"content"`
-	SubjectTags   []string        `json:"subjects" gorm:"-:all"`
-	StocksTags    []string        `json:"stocks" gorm:"-:all"`
-	IsRed         bool            `json:"isRed"`
-	Url           string          `json:"url"`
-	Source        string          `json:"source"`
-	TelegraphTags []TelegraphTags `json:"tags" gorm:"-:migration;foreignKey:TelegraphId"`
+	Time            string          `json:"time"`
+	Content         string          `json:"content"`
+	SubjectTags     []string        `json:"subjects" gorm:"-:all"`
+	StocksTags      []string        `json:"stocks" gorm:"-:all"`
+	IsRed           bool            `json:"isRed"`
+	Url             string          `json:"url"`
+	Source          string          `json:"source"`
+	TelegraphTags   []TelegraphTags `json:"tags" gorm:"-:migration;foreignKey:TelegraphId"`
+	SentimentResult string          `json:"sentimentResult" gorm:"-:all"`
 }
 type TelegraphTags struct {
 	gorm.Model

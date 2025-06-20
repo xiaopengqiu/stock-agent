@@ -17,6 +17,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/gjson v1.14.2
 	github.com/wailsapp/wails/v2 v2.10.1
+	github.com/yanyiwu/gojieba v1.4.6
 	go.uber.org/zap v1.27.0
 	golang.org/x/sys v0.31.0
 	golang.org/x/text v0.23.0

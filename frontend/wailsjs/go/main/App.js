@@ -18,6 +18,10 @@ export function AddStockGroup(arg1, arg2) {
   return window['go']['main']['App']['AddStockGroup'](arg1, arg2);
 }
 
+export function AnalyzeSentiment(arg1) {
+  return window['go']['main']['App']['AnalyzeSentiment'](arg1);
+}
+
 export function CheckUpdate() {
   return window['go']['main']['App']['CheckUpdate']();
 }

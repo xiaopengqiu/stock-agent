@@ -16,18 +16,18 @@ import {
   AnalyticsOutline,
   BarChartSharp, EaselSharp,
   ExpandOutline, Flag,
-  Flame, FlameSharp,
+  Flame, FlameSharp, InformationOutline,
   LogoGithub,
   NewspaperOutline,
-  NewspaperSharp,
+  NewspaperSharp, Notifications,
   PowerOutline, Pulse,
   ReorderTwoOutline,
   SettingsOutline, Skull, SkullOutline, SkullSharp,
   SparklesOutline,
   StarOutline,
-  Wallet,
+  Wallet, WarningOutline,
 } from '@vicons/ionicons5'
-import {GetConfig, GetGroupList} from "../wailsjs/go/main/App";
+import {AnalyzeSentiment, GetConfig, GetGroupList} from "../wailsjs/go/main/App";
 
 
 
@@ -547,7 +547,26 @@ onMounted(() => {
       },
     })
     EventsOn("newsPush", (data) => {
-      notification.create({ title: data.time, content: data.content,duration:1000*60 })
+      //console.log(data)
+      if(data.isRed){
+        notification.create({
+          //type:"error",
+         // avatar: () => h(NIcon,{component:Notifications,color:"red"}),
+          title: data.time,
+          content: () => h(NText,{type:"error"}, { default: () => data.content }),
+          meta: () => h(NText,{type:"warning"}, { default: () => data.source}),
+          duration:1000*40,
+        })
+      }else{
+        notification.create({
+          //type:"info",
+          //avatar: () => h(NIcon,{component:Notifications}),
+          title: data.time,
+          content: () => h(NText,{type:"info"}, { default: () => data.content }),
+          meta: () => h(NText,{type:"warning"}, { default: () => data.source}),
+          duration:1000*30 ,
+        })
+      }
     })
   })
 })

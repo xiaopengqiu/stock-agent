@@ -73,6 +73,7 @@ func (m MarketNewsApi) GetNewTelegraph(crawlTimeOut int64) *[]models.Telegraph {
 
 		//telegraph = append(telegraph, ReplaceSensitiveWords(selection.Text()))
 		if telegraph.Content != "" {
+			telegraph.SentimentResult = AnalyzeSentiment(telegraph.Content).Description
 			cnt := int64(0)
 			db.Dao.Model(telegraph).Where("time=? and source=?", telegraph.Time, telegraph.Source).Count(&cnt)
 			if cnt == 0 {
@@ -192,6 +193,7 @@ func (m MarketNewsApi) GetSinaNews(crawlTimeOut uint) *[]models.Telegraph {
 			logger.SugaredLogger.Infof("telegraph.SubjectTags:%v %s", telegraph.SubjectTags, telegraph.Content)
 
 			if telegraph.Content != "" {
+				telegraph.SentimentResult = AnalyzeSentiment(telegraph.Content).Description
 				cnt := int64(0)
 				db.Dao.Model(telegraph).Where("time=? and source=?", telegraph.Time, telegraph.Source).Count(&cnt)
 				if cnt == 0 {
