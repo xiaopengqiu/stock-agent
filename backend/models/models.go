@@ -303,3 +303,17 @@ type LongTigerRankData struct {
 func (l LongTigerRankData) TableName() string {
 	return "long_tiger_rank"
 }
+
+type TVNews struct {
+	Id         string `json:"id"`
+	Title      string `json:"title"`
+	Published  int    `json:"published"`
+	Urgency    int    `json:"urgency"`
+	Permission string `json:"permission"`
+	StoryPath  string `json:"storyPath"`
+	Provider   struct {
+		Id     string `json:"id"`
+		Name   string `json:"name"`
+		LogoId string `json:"logo_id"`
+	} `json:"provider"`
+}

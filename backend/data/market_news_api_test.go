@@ -100,3 +100,11 @@ func TestEMDictCode(t *testing.T) {
 	}
 
 }
+
+func TestTradingViewNews(t *testing.T) {
+	db.Init("../../data/stock.db")
+	resp := NewMarketNewsApi().TradingViewNews()
+	for _, a := range *resp {
+		logger.SugaredLogger.Debugf("value: %+v", a)
+	}
+}

@@ -425,6 +425,15 @@ func (m MarketNewsApi) StockResearchReport(stockCode string, days int) []any {
 	if strutil.ContainsAny(stockCode, []string{"."}) {
 		stockCode = strings.Split(stockCode, ".")[0]
 		beginDate = time.Now().Add(-time.Duration(days) * 365 * time.Hour).Format("2006-01-02")
+	} else {
+		stockCode = strutil.ReplaceWithMap(stockCode, map[string]string{
+			"sh":  "",
+			"sz":  "",
+			"gb_": "",
+			"us":  "",
+			"us_": "",
+		})
+		beginDate = time.Now().Add(-time.Duration(days) * 365 * time.Hour).Format("2006-01-02")
 	}
 
 	logger.SugaredLogger.Infof("StockResearchReport-stockCode:%s", stockCode)
@@ -481,6 +490,15 @@ func (m MarketNewsApi) StockNotice(stock_list string) []any {
 		if strutil.ContainsAny(stockCode, []string{"."}) {
 			stockCode = strings.Split(stockCode, ".")[0]
 			stockCodes = append(stockCodes, stockCode)
+		} else {
+			stockCode = strutil.ReplaceWithMap(stockCode, map[string]string{
+				"sh":  "",
+				"sz":  "",
+				"gb_": "",
+				"us":  "",
+				"us_": "",
+			})
+			stockCodes = append(stockCodes, stockCode)
 		}
 	}
 
@@ -529,4 +547,30 @@ func (m MarketNewsApi) EMDictCode(code string, cache *freecache.Cache) []any {
 	//logger.SugaredLogger.Infof("resp:%+v", respMap["data"])
 	cache.Set([]byte(code), resp.Body(), 60*60*24)
 	return respMap["data"].([]any)
+}
+
+func (m MarketNewsApi) TradingViewNews() *[]models.TVNews {
+	TVNews := &[]models.TVNews{}
+	url := "https://news-mediator.tradingview.com/news-flow/v2/news?filter=lang:zh-Hans&filter=provider:panews,reuters&client=screener&streaming=false"
+	resp, err := resty.New().SetProxy("http://127.0.0.1:10809").SetTimeout(time.Duration(30)*time.Second).R().
+		SetHeader("Host", "news-mediator.tradingview.com").
+		SetHeader("Origin", "https://cn.tradingview.com").
+		SetHeader("Referer", "https://cn.tradingview.com/").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		Get(url)
+	if err != nil {
+		logger.SugaredLogger.Errorf("TradingViewNews err:%s", err.Error())
+		return TVNews
+	}
+	respMap := map[string]any{}
+	err = json.Unmarshal(resp.Body(), &respMap)
+	if err != nil {
+		return TVNews
+	}
+	items, err := json.Marshal(respMap["items"])
+	if err != nil {
+		return TVNews
+	}
+	json.Unmarshal(items, TVNews)
+	return TVNews
 }

@@ -63,6 +63,7 @@ const sort = ref("0")
 const nowTab = ref("市场快讯")
 const indexInterval = ref(null)
 const indexIndustryRank = ref(null)
+const stockCode= ref('')
 
 function getIndex() {
   GlobalStockIndexes().then((res) => {
@@ -79,6 +80,7 @@ function getIndex() {
 
 onBeforeMount(() => {
   nowTab.value = route.query.name
+  stockCode.value = route.query.stockCode
   GetConfig().then(result => {
     summaryBTN.value = result.openAiEnable
     darkTheme.value = result.darkTheme
@@ -547,10 +549,10 @@ function ReFlesh(source) {
         <LongTigerRankList />
       </n-tab-pane>
       <n-tab-pane name="个股研报" tab="个股研报">
-        <StockResearchReportList/>
+        <StockResearchReportList :stock-code="stockCode"/>
       </n-tab-pane>
       <n-tab-pane name="公司公告" tab="公司公告 ">
-        <StockNoticeList/>
+        <StockNoticeList :stock-code="stockCode" />
       </n-tab-pane>
       <n-tab-pane name="行业研究" tab="行业研究 ">
         <IndustryResearchReportList/>

@@ -1609,6 +1609,25 @@ function delStockGroup(code,name,groupId){
     message.info(result)
   })
 }
+
+function searchNotice(stockCode){
+  router.push({
+    name: 'market',
+    query: {
+      name: '公司公告',
+      stockCode: stockCode,
+    },
+  })
+}
+function searchStockReport(stockCode){
+  router.push({
+    name: 'market',
+    query: {
+      name: '个股研报',
+      stockCode: stockCode,
+    },
+  })
+}
 </script>
 
 <template>
@@ -1711,22 +1730,25 @@ function delStockGroup(code,name,groupId){
            </template>
            <template #footer>
              <n-flex justify="center">
+               <n-text :type="'info'">{{result["日期"]+" "+result["时间"]}}</n-text>
                <n-tag size="small" v-if="result.volume>0" :type="result.profitType">{{result.volume+"股"}}</n-tag>
               <n-tag size="small" v-if="result.costPrice>0" :type="result.profitType">{{"成本:"+result.costPrice+"*"+result.costVolume+" "+result.profit+"%"+" ( "+result.profitAmount+" ¥ )"}}</n-tag>
              </n-flex>
            </template>
            <template #action>
-             <n-flex justify="space-between">
-               <n-text :type="'info'">{{result["日期"]+" "+result["时间"]}}</n-text>
-               <n-button size="tiny" type="info" @click="setStock(result['股票代码'],result['股票名称'])"> 成本 </n-button>
-               <n-button size="tiny" type="success" @click="showFenshi(result['股票代码'],result['股票名称'],result.changePercent)"> 分时 </n-button>
+             <n-flex justify="left">
+               <n-button size="tiny" type="warning" @click="setStock(result['股票代码'],result['股票名称'])"> 成本 </n-button>
+               <n-button size="tiny" type="error" @click="showFenshi(result['股票代码'],result['股票名称'],result.changePercent)"> 分时 </n-button>
                <n-button size="tiny" type="error" @click="showK(result['股票代码'],result['股票名称'])"> 日K </n-button>
                <n-button size="tiny" type="error" v-if="result['买一报价']>0" @click="showMoney(result['股票代码'],result['股票名称'])"> 资金 </n-button>
-
-               <n-button size="tiny" type="warning" @click="search(result['股票代码'],result['股票名称'])"> 详情 </n-button>
-               <n-dropdown   trigger="click" :options="groupList" key-field="ID" label-field="name" @select="(groupId) => AddStockGroupInfo(groupId,result['股票代码'],result['股票名称'])">
-                 <n-button  type="success" size="tiny">设置分组</n-button>
-               </n-dropdown>
+               <n-button size="tiny" type="success" @click="search(result['股票代码'],result['股票名称'])"> 详情 </n-button>
+               <n-button   v-if="result['买一报价']>0" size="tiny" type="success" @click="searchNotice(result['股票代码'])"> 公告 </n-button>
+               <n-button   v-if="result['买一报价']>0" size="tiny" type="success" @click="searchStockReport(result['股票代码'])"> 研报 </n-button>
+               <n-flex justify="right">
+                 <n-dropdown   trigger="click" :options="groupList" key-field="ID" label-field="name" @select="(groupId) => AddStockGroupInfo(groupId,result['股票代码'],result['股票名称'])">
+                   <n-button  type="warning" size="tiny">设置分组</n-button>
+                 </n-dropdown>
+               </n-flex>
              </n-flex>
            </template>
             </n-card >
@@ -1824,23 +1846,25 @@ function delStockGroup(code,name,groupId){
             </template>
             <template #footer>
               <n-flex justify="center">
+                <n-text :type="'info'">{{result["日期"]+" "+result["时间"]}}</n-text>
                 <n-tag size="small" v-if="result.volume>0" :type="result.profitType">{{result.volume+"股"}}</n-tag>
                 <n-tag size="small" v-if="result.costPrice>0" :type="result.profitType">{{"成本:"+result.costPrice+"*"+result.costVolume+" "+result.profit+"%"+" ( "+result.profitAmount+" ¥ )"}}</n-tag>
               </n-flex>
             </template>
             <template #action>
-              <n-flex justify="space-between">
-                <n-text :type="'info'">{{result["日期"]+" "+result["时间"]}}</n-text>
-                <n-button size="tiny" type="info" @click="setStock(result['股票代码'],result['股票名称'])"> 成本 </n-button>
-                <n-button size="tiny" type="success" @click="showFenshi(result['股票代码'],result['股票名称'],result.changePercent)"> 分时 </n-button>
+              <n-flex justify="left">
+                <n-button size="tiny" type="warning" @click="setStock(result['股票代码'],result['股票名称'])"> 成本 </n-button>
+                <n-button size="tiny" type="error" @click="showFenshi(result['股票代码'],result['股票名称'],result.changePercent)"> 分时 </n-button>
                 <n-button size="tiny" type="error" @click="showK(result['股票代码'],result['股票名称'])"> 日K </n-button>
                 <n-button size="tiny" type="error" v-if="result['买一报价']>0" @click="showMoney(result['股票代码'],result['股票名称'])"> 资金 </n-button>
-
-                <n-button size="tiny" type="warning" @click="search(result['股票代码'],result['股票名称'])"> 详情 </n-button>
-                <n-dropdown   trigger="click" :options="groupList" key-field="ID" label-field="name" @select="(groupId) => AddStockGroupInfo(groupId,result['股票代码'],result['股票名称'])">
-                  <n-button  type="success" size="tiny">设置分组</n-button>
-                </n-dropdown>
-
+                <n-button size="tiny" type="success" @click="search(result['股票代码'],result['股票名称'])"> 详情 </n-button>
+                <n-button  v-if="result['买一报价']>0" size="tiny" type="success" @click="searchNotice(result['股票代码'])"> 公告 </n-button>
+                <n-button   v-if="result['买一报价']>0" size="tiny" type="success" @click="searchStockReport(result['股票代码'])"> 研报 </n-button>
+                <n-flex justify="right">
+                  <n-dropdown   trigger="click" :options="groupList" key-field="ID" label-field="name" @select="(groupId) => AddStockGroupInfo(groupId,result['股票代码'],result['股票名称'])">
+                    <n-button  type="warning" size="tiny">设置分组</n-button>
+                  </n-dropdown>
+                </n-flex>
               </n-flex>
             </template>
           </n-card >

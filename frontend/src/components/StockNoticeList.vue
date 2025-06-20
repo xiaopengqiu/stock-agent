@@ -6,11 +6,20 @@ import {RefreshCircleSharp} from "@vicons/ionicons5";
 import _ from "lodash";
 import KLineChart from "./KLineChart.vue";
 import MoneyTrend from "./moneyTrend.vue";
+import {useMessage} from "naive-ui";
 
+const {stockCode}=defineProps(
+    {
+      stockCode: {
+        type: String,
+        default: ''
+      }
+    }
+)
 
 const list  = ref([])
 const options =  ref([])
-
+const message=useMessage()
 function getNotice(stockCodes) {
   StockNotice(stockCodes).then(result => {
     console.log(result)
@@ -19,7 +28,8 @@ function getNotice(stockCodes) {
 }
 
 onBeforeMount (()=>{
-  getNotice('');
+  //message.info("正在获取数据"+stockCode)
+  getNotice(stockCode);
 })
 
 function findStockList(query){
