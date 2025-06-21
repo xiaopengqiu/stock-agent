@@ -10,24 +10,27 @@ import {
 } from '../wailsjs/runtime'
 import {h, onBeforeMount, onBeforeUnmount, onMounted, ref} from "vue";
 import {RouterLink, useRouter} from 'vue-router'
-import {darkTheme, NIcon, NText,dateZhCN,zhCN} from 'naive-ui'
+import {createDiscreteApi,darkTheme,lightTheme , NIcon, NText,dateZhCN,zhCN} from 'naive-ui'
 import {
   AlarmOutline,
   AnalyticsOutline,
   BarChartSharp, EaselSharp,
   ExpandOutline, Flag,
-  Flame, FlameSharp,
+  Flame, FlameSharp, InformationOutline,
   LogoGithub,
   NewspaperOutline,
-  NewspaperSharp,
+  NewspaperSharp, Notifications,
   PowerOutline, Pulse,
   ReorderTwoOutline,
   SettingsOutline, Skull, SkullOutline, SkullSharp,
   SparklesOutline,
   StarOutline,
-  Wallet,
+  Wallet, WarningOutline,
 } from '@vicons/ionicons5'
-import {GetConfig, GetGroupList} from "../wailsjs/go/main/App";
+import {AnalyzeSentiment, GetConfig, GetGroupList} from "../wailsjs/go/main/App";
+
+
+
 
 const router = useRouter()
 const loading = ref(true)
@@ -282,6 +285,27 @@ const menuOptions = ref([
         key: 'market8',
         icon: renderIcon(NewspaperSharp),
       },
+      {
+        label: () =>
+            h(
+                RouterLink,
+                {
+                  href: '#',
+                  to: {
+                    name: 'market',
+                    query: {
+                      name: "行业研究",
+                    }
+                  },
+                  onClick: () => {
+                    EventsEmit("changeMarketTab", {ID: 0, name: '行业研究'})
+                  },
+                },
+                {default: () => '行业研究',}
+            ),
+        key: 'market9',
+        icon: renderIcon(NewspaperSharp),
+      },
     ]
   },
   {
@@ -430,6 +454,7 @@ onBeforeUnmount(() => {
   EventsOff("realtime_profit")
   EventsOff("loadingMsg")
   EventsOff("telegraph")
+  EventsOff("newsPush")
 })
 
 window.onerror = function (msg, source, lineno, colno, error) {
@@ -515,9 +540,36 @@ onMounted(() => {
       enableNews.value = true
     }
     enableFund.value = res.enableFund
+    const {notification } =createDiscreteApi(["notification"], {
+      configProviderProps: {
+        theme: enableDarkTheme.value ? darkTheme : lightTheme ,
+        max: 3,
+      },
+    })
+    EventsOn("newsPush", (data) => {
+      //console.log(data)
+      if(data.isRed){
+        notification.create({
+          //type:"error",
+         // avatar: () => h(NIcon,{component:Notifications,color:"red"}),
+          title: data.time,
+          content: () => h(NText,{type:"error"}, { default: () => data.content }),
+          meta: () => h(NText,{type:"warning"}, { default: () => data.source}),
+          duration:1000*40,
+        })
+      }else{
+        notification.create({
+          //type:"info",
+          //avatar: () => h(NIcon,{component:Notifications}),
+          title: data.time,
+          content: () => h(NText,{type:"info"}, { default: () => data.content }),
+          meta: () => h(NText,{type:"warning"}, { default: () => data.source}),
+          duration:1000*30 ,
+        })
+      }
+    })
   })
 })
-
 </script>
 <template>
   <n-config-provider ref="containerRef" :theme="enableDarkTheme" :locale="zhCN" :date-locale="dateZhCN">

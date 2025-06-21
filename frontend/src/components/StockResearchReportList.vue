@@ -8,6 +8,15 @@ import MoneyTrend from "./moneyTrend.vue";
 import {useMessage} from "naive-ui";
 import {BrowserOpenURL} from "../../wailsjs/runtime";
 
+const {stockCode}=defineProps(
+    {
+      stockCode: {
+        type: String,
+        default: ''
+      }
+    }
+)
+
 const message=useMessage()
 const list  = ref([])
 
@@ -21,7 +30,7 @@ function getStockResearchReport(value) {
 }
 
 onBeforeMount(()=>{
-  getStockResearchReport('');
+  getStockResearchReport(stockCode);
 })
 
 function ratingChangeName(ratingChange){

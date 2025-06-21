@@ -18,12 +18,20 @@ export function AddStockGroup(arg1, arg2) {
   return window['go']['main']['App']['AddStockGroup'](arg1, arg2);
 }
 
+export function AnalyzeSentiment(arg1) {
+  return window['go']['main']['App']['AnalyzeSentiment'](arg1);
+}
+
 export function CheckUpdate() {
   return window['go']['main']['App']['CheckUpdate']();
 }
 
 export function DelPrompt(arg1) {
   return window['go']['main']['App']['DelPrompt'](arg1);
+}
+
+export function EMDictCode(arg1) {
+  return window['go']['main']['App']['EMDictCode'](arg1);
 }
 
 export function ExportConfig() {
@@ -118,12 +126,20 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+export function IndustryResearchReport(arg1) {
+  return window['go']['main']['App']['IndustryResearchReport'](arg1);
+}
+
 export function LongTigerRank(arg1) {
   return window['go']['main']['App']['LongTigerRank'](arg1);
 }
 
 export function NewChatStream(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['NewChatStream'](arg1, arg2, arg3, arg4);
+}
+
+export function NewsPush(arg1) {
+  return window['go']['main']['App']['NewsPush'](arg1);
 }
 
 export function ReFleshTelegraphList(arg1) {

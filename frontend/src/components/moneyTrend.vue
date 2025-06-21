@@ -72,6 +72,13 @@ const handleLine = (code, days) => {
     const upColor = '#ec0000';
     const downColor = '#00da3c';
     let option = {
+      title: {
+        text: name,
+        left: '20px',
+        textStyle: {
+          color: darkTheme?'#ccc':'#456'
+        }
+      },
       tooltip: {
         trigger: 'axis',
         axisPointer: {

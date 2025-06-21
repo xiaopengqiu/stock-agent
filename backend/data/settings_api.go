@@ -34,6 +34,7 @@ type Settings struct {
 	DarkTheme         bool    `json:"darkTheme"`
 	BrowserPoolSize   int     `json:"browserPoolSize"`
 	EnableFund        bool    `json:"enableFund"`
+	EnablePushNews    bool    `json:"enablePushNews"`
 }
 
 func (receiver Settings) TableName() string {
@@ -78,6 +79,7 @@ func (s SettingsApi) UpdateConfig() string {
 			"enable_news":                s.Config.EnableNews,
 			"dark_theme":                 s.Config.DarkTheme,
 			"enable_fund":                s.Config.EnableFund,
+			"enable_push_news":           s.Config.EnablePushNews,
 		})
 	} else {
 		logger.SugaredLogger.Infof("未找到配置，创建默认配置:%+v", s.Config)
@@ -105,6 +107,7 @@ func (s SettingsApi) UpdateConfig() string {
 			EnableNews:             s.Config.EnableNews,
 			DarkTheme:              s.Config.DarkTheme,
 			EnableFund:             s.Config.EnableFund,
+			EnablePushNews:         s.Config.EnablePushNews,
 		})
 	}
 	return "保存成功！"

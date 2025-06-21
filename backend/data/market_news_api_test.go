@@ -2,6 +2,7 @@ package data
 
 import (
 	"encoding/json"
+	"github.com/coocood/freecache"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"testing"
@@ -73,6 +74,15 @@ func TestStockResearchReport(t *testing.T) {
 	}
 }
 
+func TestIndustryResearchReport(t *testing.T) {
+	db.Init("../../data/stock.db")
+	resp := NewMarketNewsApi().IndustryResearchReport("", 7)
+	for _, a := range resp {
+		logger.SugaredLogger.Debugf("value: %+v", a)
+	}
+
+}
+
 func TestStockNotice(t *testing.T) {
 	db.Init("../../data/stock.db")
 	resp := NewMarketNewsApi().StockNotice("600584,600900")
@@ -80,4 +90,21 @@ func TestStockNotice(t *testing.T) {
 		logger.SugaredLogger.Debugf("value: %+v", a)
 	}
 
+}
+
+func TestEMDictCode(t *testing.T) {
+	db.Init("../../data/stock.db")
+	resp := NewMarketNewsApi().EMDictCode("016", freecache.NewCache(100))
+	for _, a := range resp {
+		logger.SugaredLogger.Debugf("value: %+v", a)
+	}
+
+}
+
+func TestTradingViewNews(t *testing.T) {
+	db.Init("../../data/stock.db")
+	resp := NewMarketNewsApi().TradingViewNews()
+	for _, a := range *resp {
+		logger.SugaredLogger.Debugf("value: %+v", a)
+	}
 }
