@@ -3,13 +3,16 @@ package data
 import (
 	"bufio"
 	"fmt"
-	"github.com/yanyiwu/gojieba"
+	"github.com/go-ego/gse"
+	"go-stock/backend/logger"
 	"os"
 	"strings"
 )
 
 // 金融情感词典，包含股票市场相关的专业词汇
 var (
+	seg gse.Segmenter
+
 	// 正面金融词汇及其权重
 	positiveFinanceWords = map[string]float64{
 		"上涨": 2.0, "涨停": 3.0, "牛市": 3.0, "反弹": 2.0, "新高": 2.5,
@@ -49,6 +52,14 @@ var (
 		"但是": {}, "然而": {}, "不过": {}, "却": {}, "可是": {},
 	}
 )
+
+func init() {
+	// 加载默认词典
+	err := seg.LoadDict()
+	if err != nil {
+		logger.SugaredLogger.Error(err.Error())
+	}
+}
 
 // SentimentResult 情感分析结果类型
 type SentimentResult struct {
@@ -228,10 +239,7 @@ func calculateScore(words []string) (float64, int, int) {
 
 // 简单的分词函数，考虑了中文和英文
 func splitWords(text string) []string {
-	x := gojieba.NewJieba()
-	defer x.Free()
-
-	return x.Cut(text, true)
+	return seg.Cut(text, true)
 }
 
 // GetSentimentDescription 获取情感类别的文本描述
