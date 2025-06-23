@@ -26,6 +26,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/plugin/soft_delete"
 	"io"
+	"io/ioutil"
 	"strings"
 	"time"
 )
@@ -247,7 +248,7 @@ func (receiver StockDataApi) GetIndexBasic() {
 func (receiver StockDataApi) GetStockBaseInfo() {
 	res := &TushareStockBasicResponse{}
 	fields := "ts_code,symbol,name,area,industry,cnspell,market,list_date,act_name,act_ent_type,fullname,exchange,list_status,curr_type,enname,delist_date,is_hs"
-	_, err := receiver.client.R().
+	resp, err := receiver.client.R().
 		SetHeader("content-type", "application/json").
 		SetBody(&TushareRequest{
 			ApiName: "stock_basic",
@@ -258,8 +259,7 @@ func (receiver StockDataApi) GetStockBaseInfo() {
 		SetResult(res).
 		Post(tushareApiUrl)
 	//logger.SugaredLogger.Infof("GetStockBaseInfo %s", string(resp.Body()))
-	//resp.Body()写入文件
-	//ioutil.WriteFile("stock_basic.json", resp.Body(), 0666)
+	ioutil.WriteFile("stock_basic.json", resp.Body(), 0666)
 	//logger.SugaredLogger.Infof("GetStockBaseInfo %+v", res)
 	if err != nil {
 		logger.SugaredLogger.Error(err.Error())

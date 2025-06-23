@@ -11,9 +11,13 @@ export function AddPrompt(arg1:models.Prompt):Promise<string>;
 
 export function AddStockGroup(arg1:number,arg2:string):Promise<string>;
 
+export function AnalyzeSentiment(arg1:string):Promise<data.SentimentResult>;
+
 export function CheckUpdate():Promise<void>;
 
 export function DelPrompt(arg1:number):Promise<string>;
+
+export function EMDictCode(arg1:string):Promise<Array<any>>;
 
 export function ExportConfig():Promise<string>;
 
@@ -61,9 +65,13 @@ export function GlobalStockIndexes():Promise<Record<string, any>>;
 
 export function Greet(arg1:string):Promise<data.StockInfo>;
 
+export function IndustryResearchReport(arg1:string):Promise<Array<any>>;
+
 export function LongTigerRank(arg1:string):Promise<any>;
 
 export function NewChatStream(arg1:string,arg2:string,arg3:string,arg4:any):Promise<void>;
+
+export function NewsPush(arg1:any):Promise<void>;
 
 export function ReFleshTelegraphList(arg1:string):Promise<any>;
 
@@ -89,7 +97,9 @@ export function SetStockSort(arg1:number,arg2:string):Promise<void>;
 
 export function ShareAnalysis(arg1:string,arg2:string):Promise<string>;
 
-export function StockResearchReport():Promise<Array<any>>;
+export function StockNotice(arg1:string):Promise<Array<any>>;
+
+export function StockResearchReport(arg1:string):Promise<Array<any>>;
 
 export function SummaryStockNews(arg1:string,arg2:any):Promise<void>;
 

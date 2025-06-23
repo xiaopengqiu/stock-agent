@@ -1,13 +1,12 @@
 <script setup>
 import {computed, h, onBeforeMount, onBeforeUnmount, ref} from 'vue'
-import _ from "lodash";
 import {
   GetAIResponseResult,
   GetConfig,
   GetIndustryRank,
   GetPromptTemplates,
   GetTelegraphList,
-  GlobalStockIndexes, LongTigerRank,
+  GlobalStockIndexes,
   ReFleshTelegraphList,
   SaveAIResponseResult,
   SaveAsMarkdown,
@@ -17,14 +16,16 @@ import {
 import {EventsOff, EventsOn} from "../../wailsjs/runtime";
 import NewsList from "./newsList.vue";
 import KLineChart from "./KLineChart.vue";
-import {ArrowDownOutline, CaretDown, CaretUp, PulseOutline,} from "@vicons/ionicons5";
+import { CaretDown, CaretUp, PulseOutline,} from "@vicons/ionicons5";
 import {NAvatar, NButton, NFlex, NText, useMessage, useNotification} from "naive-ui";
 import {MdPreview} from "md-editor-v3";
 import {useRoute} from 'vue-router'
 import RankTable from "./rankTable.vue";
 import IndustryMoneyRank from "./industryMoneyRank.vue";
-import MoneyTrend from "./moneyTrend.vue";
 import StockResearchReportList from "./StockResearchReportList.vue";
+import StockNoticeList from "./StockNoticeList.vue";
+import LongTigerRankList from "./LongTigerRankList.vue";
+import IndustryResearchReportList from "./IndustryResearchReportList.vue";
 
 const route = useRoute()
 const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
@@ -35,7 +36,6 @@ const panelHeight = ref(window.innerHeight - 240)
 
 const telegraphList = ref([])
 const sinaNewsList = ref([])
-const lhbList=  ref([])
 const common = ref([])
 const america = ref([])
 const europe = ref([])
@@ -59,27 +59,11 @@ const sysPromptOptions = ref([])
 const userPromptOptions = ref([])
 const promptTemplates = ref([])
 const industryRanks = ref([])
-const industryMoneyRankSina = ref([])
 const sort = ref("0")
-const sortIcon = ref(h(CaretDown))
 const nowTab = ref("市场快讯")
 const indexInterval = ref(null)
 const indexIndustryRank = ref(null)
-const drawerShow=  ref(false)
-const EXPLANATIONs = ref([])
-
-const today = new Date();
-const year = today.getFullYear();
-const month = String(today.getMonth() + 1).padStart(2, '0'); // 月份从0开始，需要+1
-const day = String(today.getDate()).padStart(2, '0');
-
-// 常见格式：YYYY-MM-DD
-const formattedDate = `${year}-${month}-${day}`;
-
-const SearchForm=  ref({
-  dateValue:  formattedDate,
-  EXPLANATION:null,
-})
+const stockCode= ref('')
 
 function getIndex() {
   GlobalStockIndexes().then((res) => {
@@ -92,50 +76,11 @@ function getIndex() {
   })
 }
 
-function longTiger(date) {
-  if(date) {
-    SearchForm.value.dateValue = date
-  }
-  let loading1=message.loading("正在获取龙虎榜数据...",{
-    duration: 0,
-  })
-  LongTigerRank(date).then(res => {
-    lhbList.value = res
-    loading1.destroy()
-    if (res.length === 0) {
-      message.info("暂无数据,请切换日期")
-    }
-    EXPLANATIONs.value=_.uniqBy(_.map(lhbList.value,function (item){
-      return {
-        label: item['EXPLANATION'],
-        value: item['EXPLANATION'],
-      }
-    }),'label');
-  })
-}
 
-function handleEXPLANATION(value, option){
-  SearchForm.value.EXPLANATION = value
-  if(value){
-    LongTigerRank(SearchForm.value.dateValue).then(res => {
-      lhbList.value=_.filter(res, function(o) { return o['EXPLANATION']===value; });
-      if (res.length === 0) {
-        message.info("暂无数据,请切换日期")
-      }
-    })
-  }else{
-    longTiger(SearchForm.value.dateValue)
-  }
-}
-
-function sortLongTigerRank(e){
-  console.log(e.target.dataset)
-  // let field= e.target.dataset.field;
-  // lhbList.value= _.sortBy(lhbList.value, function(o) { return o[field]; });
-}
 
 onBeforeMount(() => {
   nowTab.value = route.query.name
+  stockCode.value = route.query.stockCode
   GetConfig().then(result => {
     summaryBTN.value = result.openAiEnable
     darkTheme.value = result.darkTheme
@@ -161,7 +106,6 @@ onBeforeMount(() => {
   indexIndustryRank.value = setInterval(() => {
     industryRank()
   }, 1000 * 10)
-  longTiger(formattedDate);
 })
 
 onBeforeUnmount(() => {
@@ -224,7 +168,7 @@ function industryRank() {
 
   GetIndustryRank(sort.value, 150).then(result => {
     if (result.length > 0) {
-      console.log(result)
+      //console.log(result)
       industryRanks.value = result
     } else {
       message.info("暂无数据")
@@ -341,7 +285,7 @@ function share() {
 }
 
 function ReFlesh(source) {
-  console.log("ReFlesh:", source)
+  //console.log("ReFlesh:", source)
   ReFleshTelegraphList(source).then(res => {
     if (source === "财联社电报") {
       telegraphList.value = res
@@ -602,111 +546,18 @@ function ReFlesh(source) {
         </n-tabs>
       </n-tab-pane>
       <n-tab-pane name="龙虎榜" tab="龙虎榜">
-          <n-form :model="SearchForm" >
-            <n-grid :cols="24" :x-gap="24">
-            <n-form-item-gi  :span="4" label="日期" path="dateValue" label-placement="left">
-              <n-date-picker   v-model:formatted-value="SearchForm.dateValue"
-                             value-format="yyyy-MM-dd"  type="date"  :on-update:value="(v,v2)=>longTiger(v2)"/>
-
-            </n-form-item-gi>
-            <n-form-item-gi :span="8" label="上榜原因" path="EXPLANATION" label-placement="left">
-              <n-select  clearable placeholder="上榜原因过滤" v-model:value="SearchForm.EXPLANATION" :options="EXPLANATIONs" :on-update:value="handleEXPLANATION"/>
-            </n-form-item-gi>
-            </n-grid>
-          </n-form>
-          <n-table :single-line="false" striped>
-            <n-thead>
-              <n-tr>
-                <n-th>代码</n-th>
-<!--                <n-th width="90px">日期</n-th>-->
-                <n-th width="60px">名称</n-th>
-                <n-th>收盘价</n-th>
-                <n-th width="60px">涨跌幅</n-th>
-                <n-th>龙虎榜净买额(万)</n-th>
-                <n-th>龙虎榜买入额(万)</n-th>
-                <n-th>龙虎榜卖出额(万)</n-th>
-                <n-th>龙虎榜成交额(万)</n-th>
-<!--                <n-th>市场总成交额(万)</n-th>-->
-<!--                <n-th>净买额占总成交比</n-th>-->
-<!--                <n-th>成交额占总成交比</n-th>-->
-                <n-th width="60px"  data-field="TURNOVERRATE" @click="sortLongTigerRank">换手率<n-icon :component="ArrowDownOutline" /></n-th>
-                <n-th>流通市值(亿)</n-th>
-                <n-th>上榜原因</n-th>
-<!--                <n-th>解读</n-th>-->
-              </n-tr>
-            </n-thead>
-            <n-tbody>
-              <n-tr v-for="(item, index) in lhbList" :key="index">
-                <n-td>
-                  <n-tag :bordered=false type="info">{{ item.SECUCODE.split('.')[1].toLowerCase()+item.SECUCODE.split('.')[0] }}</n-tag>
-                </n-td>
-<!--                <n-td>
-                  {{item.TRADE_DATE.substring(0,10)}}
-                </n-td>-->
-                <n-td>
-<!--                  <n-text :type="item.CHANGE_RATE>0?'error':'success'">{{ item.SECURITY_NAME_ABBR }}</n-text>-->
-                  <n-popover trigger="hover" placement="right">
-                    <template #trigger>
-                      <n-button tag="a"  text :type="item.CHANGE_RATE>0?'error':'success'" :bordered=false >{{ item.SECURITY_NAME_ABBR }}</n-button>
-                    </template>
-                    <k-line-chart style="width: 800px" :code="item.SECUCODE.split('.')[1].toLowerCase()+item.SECUCODE.split('.')[0]" :chart-height="500" :name="item.SECURITY_NAME_ABBR" :k-days="20" :dark-theme="true"></k-line-chart>
-                  </n-popover>
-                </n-td>
-                <n-td>
-                  <n-text :type="item.CHANGE_RATE>0?'error':'success'">{{ item.CLOSE_PRICE }}</n-text>
-                </n-td>
-                <n-td>
-                  <n-text :type="item.CHANGE_RATE>0?'error':'success'">{{ (item.CHANGE_RATE).toFixed(2) }}%</n-text>
-                </n-td>
-                <n-td>
-<!--                  <n-text :type="item.BILLBOARD_NET_AMT>0?'error':'success'">{{ (item.BILLBOARD_NET_AMT/10000).toFixed(2) }}</n-text>-->
-
-
-                  <n-popover trigger="hover" placement="right">
-                    <template #trigger>
-                      <n-button tag="a"  text :type="item.BILLBOARD_NET_AMT>0?'error':'success'" :bordered=false >{{ (item.BILLBOARD_NET_AMT/10000).toFixed(2) }}</n-button>
-                    </template>
-                    <money-trend :code="item.SECUCODE.split('.')[1].toLowerCase()+item.SECUCODE.split('.')[0]" :name="item.SECURITY_NAME_ABBR" :days="360" :dark-theme="true" :chart-height="500" style="width: 800px"></money-trend>
-                  </n-popover>
-
-                </n-td>
-                <n-td>
-                  <n-text :type="'error'">{{ (item.BILLBOARD_BUY_AMT/10000).toFixed(2) }}</n-text>
-                </n-td>
-                <n-td>
-                  <n-text :type="'success'">{{ (item.BILLBOARD_SELL_AMT/10000).toFixed(2) }}</n-text>
-                </n-td>
-                <n-td>
-                  <n-text :type="'info'">{{ (item.BILLBOARD_DEAL_AMT/10000).toFixed(2) }}</n-text>
-                </n-td>
-<!--                <n-td>-->
-<!--                  <n-text :type="'info'">{{ (item.ACCUM_AMOUNT/10000).toFixed(2) }}</n-text>-->
-<!--                </n-td>-->
-<!--                <n-td>-->
-<!--                  <n-text :type="item.DEAL_NET_RATIO>0?'error':'success'">{{ (item.DEAL_NET_RATIO).toFixed(2) }}%</n-text>-->
-<!--                </n-td>-->
-<!--                <n-td>-->
-<!--                  <n-text :type="'info'">{{ (item.DEAL_AMOUNT_RATIO).toFixed(2) }}%</n-text>-->
-<!--                </n-td>-->
-                <n-td>
-                  <n-text :type="'info'">{{ (item.TURNOVERRATE).toFixed(2) }}%</n-text>
-                </n-td>
-                <n-td>
-                  <n-text :type="'info'">{{ (item.FREE_MARKET_CAP/100000000).toFixed(2) }}</n-text>
-                </n-td>
-                <n-td>
-                  <n-text :type="'info'">{{ item.EXPLANATION }}</n-text>
-                </n-td>
-<!--                <n-td>
-                  <n-text :type="item.CHANGE_RATE>0?'error':'success'">{{ item.EXPLAIN }}</n-text>
-                </n-td>-->
-              </n-tr>
-            </n-tbody>
-          </n-table>
+        <LongTigerRankList />
       </n-tab-pane>
       <n-tab-pane name="个股研报" tab="个股研报">
-        <StockResearchReportList/>
+        <StockResearchReportList :stock-code="stockCode"/>
       </n-tab-pane>
+      <n-tab-pane name="公司公告" tab="公司公告 ">
+        <StockNoticeList :stock-code="stockCode" />
+      </n-tab-pane>
+      <n-tab-pane name="行业研究" tab="行业研究 ">
+        <IndustryResearchReportList/>
+      </n-tab-pane>
+
 
     </n-tabs>
   </n-card>
@@ -757,11 +608,7 @@ function ReFlesh(source) {
     </n-input-group>
   </div>
 
-  <n-drawer v-model:show="drawerShow" :width="502">
-    <n-drawer-content title="斯通纳" closable>
-      《斯通纳》是美国作家约翰·威廉姆斯在 1965 年出版的小说。
-    </n-drawer-content>
-  </n-drawer>
+
 
 </template>
 <style scoped>

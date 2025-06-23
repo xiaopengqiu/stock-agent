@@ -9,6 +9,7 @@ require (
 	github.com/duke-git/lancet/v2 v2.3.4
 	github.com/energye/systray v1.0.2
 	github.com/glebarez/sqlite v1.11.0
+	github.com/go-ego/gse v0.80.3
 	github.com/go-resty/resty/v2 v2.16.2
 	github.com/go-toast/toast v0.0.0-20190211030409-01e6764cf0a4
 	github.com/robertkrimen/otto v0.5.1
@@ -66,6 +67,7 @@ require (
 	github.com/tkrajina/go-reflector v0.5.8 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
+	github.com/vcaesar/cedar v0.20.2 // indirect
 	github.com/wailsapp/go-webview2 v1.0.19 // indirect
 	github.com/wailsapp/mimetype v1.4.1 // indirect
 	go.uber.org/multierr v1.10.0 // indirect

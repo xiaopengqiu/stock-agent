@@ -218,14 +218,15 @@ type Prompt struct {
 
 type Telegraph struct {
 	gorm.Model
-	Time          string          `json:"time"`
-	Content       string          `json:"content"`
-	SubjectTags   []string        `json:"subjects" gorm:"-:all"`
-	StocksTags    []string        `json:"stocks" gorm:"-:all"`
-	IsRed         bool            `json:"isRed"`
-	Url           string          `json:"url"`
-	Source        string          `json:"source"`
-	TelegraphTags []TelegraphTags `json:"tags" gorm:"-:migration;foreignKey:TelegraphId"`
+	Time            string          `json:"time"`
+	Content         string          `json:"content"`
+	SubjectTags     []string        `json:"subjects" gorm:"-:all"`
+	StocksTags      []string        `json:"stocks" gorm:"-:all"`
+	IsRed           bool            `json:"isRed"`
+	Url             string          `json:"url"`
+	Source          string          `json:"source"`
+	TelegraphTags   []TelegraphTags `json:"tags" gorm:"-:migration;foreignKey:TelegraphId"`
+	SentimentResult string          `json:"sentimentResult" gorm:"-:all"`
 }
 type TelegraphTags struct {
 	gorm.Model
@@ -301,4 +302,18 @@ type LongTigerRankData struct {
 
 func (l LongTigerRankData) TableName() string {
 	return "long_tiger_rank"
+}
+
+type TVNews struct {
+	Id         string `json:"id"`
+	Title      string `json:"title"`
+	Published  int    `json:"published"`
+	Urgency    int    `json:"urgency"`
+	Permission string `json:"permission"`
+	StoryPath  string `json:"storyPath"`
+	Provider   struct {
+		Id     string `json:"id"`
+		Name   string `json:"name"`
+		LogoId string `json:"logo_id"`
+	} `json:"provider"`
 }
