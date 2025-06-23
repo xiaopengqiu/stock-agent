@@ -47,6 +47,7 @@ func TestGetFinancialReports(t *testing.T) {
 }
 
 func TestGetTelegraphSearch(t *testing.T) {
+	db.Init("../../data/stock.db")
 	//url := "https://www.cls.cn/searchPage?keyword=%E9%97%BB%E6%B3%B0%E7%A7%91%E6%8A%80&type=telegram"
 	messages := SearchStockInfo("谷歌", "telegram", 30)
 	for _, message := range *messages {
@@ -56,16 +57,17 @@ func TestGetTelegraphSearch(t *testing.T) {
 	//https://www.cls.cn/stock?code=sh600745
 }
 func TestSearchStockInfoByCode(t *testing.T) {
+	db.Init("../../data/stock.db")
 	SearchStockInfoByCode("sh600745")
 }
 
 func TestSearchStockPriceInfo(t *testing.T) {
 	db.Init("../../data/stock.db")
 	//SearchStockPriceInfo("中信证券", "hk06030", 30)
-	//SearchStockPriceInfo("上海贝岭", "sh600171", 30)
-	SearchStockPriceInfo("苹果公司", "gb_aapl", 30)
+	SearchStockPriceInfo("上海贝岭", "sh600171", 30)
+	//SearchStockPriceInfo("苹果公司", "gb_aapl", 30)
 	//SearchStockPriceInfo("微创光电", "bj430198", 30)
-	getZSInfo("创业板指数", "sz399006", 30)
+	//getZSInfo("创业板指数", "sz399006", 30)
 	//getZSInfo("上证综合指数", "sh000001", 30)
 	//getZSInfo("沪深300指数", "sh000300", 30)
 

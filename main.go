@@ -5,7 +5,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
-	"github.com/duke-git/lancet/v2/convertor"
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/menu"
@@ -21,6 +21,7 @@ import (
 	"os"
 	goruntime "runtime"
 	"runtime/debug"
+	"strings"
 	"time"
 )
 
@@ -271,7 +272,7 @@ func initStockData(ctx context.Context) {
 	defer func() {
 		go runtime.EventsEmit(ctx, "loadingMsg", "done")
 	}()
-
+	fields := "ts_code,symbol,name,area,industry,cnspell,market,list_date,act_name,act_ent_type,fullname,exchange,list_status,curr_type,enname,delist_date,is_hs"
 	log.SugaredLogger.Info("init stock data")
 	res := &data.TushareStockBasicResponse{}
 	err := json.Unmarshal(stocksBin, res)
@@ -279,26 +280,24 @@ func initStockData(ctx context.Context) {
 		log.SugaredLogger.Error(err.Error())
 		return
 	}
+
 	for _, item := range res.Data.Items {
 		stock := &data.StockBasic{}
-		stock.Exchange = convertor.ToString(item[0])
-		stock.IsHs = convertor.ToString(item[1])
-		stock.Name = convertor.ToString(item[2])
-		stock.Industry = convertor.ToString(item[3])
-		stock.ListStatus = convertor.ToString(item[4])
-		stock.ActName = convertor.ToString(item[5])
-		stock.ID = uint(item[6].(float64))
-		stock.CurrType = convertor.ToString(item[7])
-		stock.Area = convertor.ToString(item[8])
-		stock.ListDate = convertor.ToString(item[9])
-		stock.DelistDate = convertor.ToString(item[10])
-		stock.ActEntType = convertor.ToString(item[11])
-		stock.TsCode = convertor.ToString(item[12])
-		stock.Symbol = convertor.ToString(item[13])
-		stock.Cnspell = convertor.ToString(item[14])
-		stock.Fullname = convertor.ToString(item[20])
-		stock.Ename = convertor.ToString(item[21])
-
+		stockData := map[string]any{}
+		for _, field := range strings.Split(fields, ",") {
+			//logger.SugaredLogger.Infof("field: %s", field)
+			idx := slice.IndexOf(res.Data.Fields, field)
+			if idx == -1 {
+				continue
+			}
+			stockData[field] = item[idx]
+		}
+		jsonData, _ := json.Marshal(stockData)
+		err := json.Unmarshal(jsonData, stock)
+		if err != nil {
+			continue
+		}
+		stock.ID = 0
 		var count int64
 		db.Dao.Model(&data.StockBasic{}).Where("ts_code = ?", stock.TsCode).Count(&count)
 		if count > 0 {
@@ -306,7 +305,38 @@ func initStockData(ctx context.Context) {
 		} else {
 			db.Dao.Create(stock)
 		}
+
+		//db.Dao.Model(&data.StockBasic{}).FirstOrCreate(stock, &data.StockBasic{TsCode: stock.TsCode}).Where("ts_code = ?", stock.TsCode).Updates(stock)
 	}
+
+	//for _, item := range res.Data.Items {
+	//	stock := &data.StockBasic{}
+	//	stock.Exchange = convertor.ToString(item[0])
+	//	stock.IsHs = convertor.ToString(item[1])
+	//	stock.Name = convertor.ToString(item[2])
+	//	stock.Industry = convertor.ToString(item[3])
+	//	stock.ListStatus = convertor.ToString(item[4])
+	//	stock.ActName = convertor.ToString(item[5])
+	//	stock.ID = uint(item[6].(float64))
+	//	stock.CurrType = convertor.ToString(item[7])
+	//	stock.Area = convertor.ToString(item[8])
+	//	stock.ListDate = convertor.ToString(item[9])
+	//	stock.DelistDate = convertor.ToString(item[10])
+	//	stock.ActEntType = convertor.ToString(item[11])
+	//	stock.TsCode = convertor.ToString(item[12])
+	//	stock.Symbol = convertor.ToString(item[13])
+	//	stock.Cnspell = convertor.ToString(item[14])
+	//	stock.Fullname = convertor.ToString(item[20])
+	//	stock.Ename = convertor.ToString(item[21])
+	//
+	//	var count int64
+	//	db.Dao.Model(&data.StockBasic{}).Where("ts_code = ?", stock.TsCode).Count(&count)
+	//	if count > 0 {
+	//		continue
+	//	} else {
+	//		db.Dao.Create(stock)
+	//	}
+	//}
 }
 
 func checkDir(dir string) {

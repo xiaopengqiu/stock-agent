@@ -178,6 +178,9 @@ func (a *App) domReady(ctx context.Context) {
 		}
 		entryID, err := a.cron.AddFunc(fmt.Sprintf("@every %ds", interval+10), func() {
 			news := data.NewMarketNewsApi().GetNewTelegraph(30)
+			if config.EnablePushNews {
+				go a.NewsPush(news)
+			}
 			go runtime.EventsEmit(a.ctx, "newTelegraph", news)
 		})
 		if err != nil {
@@ -188,6 +191,9 @@ func (a *App) domReady(ctx context.Context) {
 
 		entryIDSina, err := a.cron.AddFunc(fmt.Sprintf("@every %ds", interval+10), func() {
 			news := data.NewMarketNewsApi().GetSinaNews(30)
+			if config.EnablePushNews {
+				go a.NewsPush(news)
+			}
 			go runtime.EventsEmit(a.ctx, "newSinaNews", news)
 		})
 		if err != nil {
@@ -290,6 +296,15 @@ func (a *App) domReady(ctx context.Context) {
 	}
 	logger.SugaredLogger.Infof("domReady-cronEntrys:%+v", a.cronEntrys)
 
+}
+
+func (a *App) NewsPush(news *[]models.Telegraph) {
+	for _, telegraph := range *news {
+		//if telegraph.IsRed {
+		go runtime.EventsEmit(a.ctx, "newsPush", telegraph)
+		go data.NewAlertWindowsApi("go-stock", telegraph.Source+" "+telegraph.Time, telegraph.Content, string(icon)).SendNotification()
+		//}
+	}
 }
 
 func (a *App) AddCronTask(follow data.FollowedStock) func() {

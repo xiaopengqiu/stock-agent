@@ -290,6 +290,26 @@ export namespace data {
 	
 	
 	
+	export class SentimentResult {
+	    Score: number;
+	    Category: number;
+	    PositiveCount: number;
+	    NegativeCount: number;
+	    Description: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new SentimentResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Score = source["Score"];
+	        this.Category = source["Category"];
+	        this.PositiveCount = source["PositiveCount"];
+	        this.NegativeCount = source["NegativeCount"];
+	        this.Description = source["Description"];
+	    }
+	}
 	export class Settings {
 	    ID: number;
 	    // Go type: time
@@ -322,6 +342,7 @@ export namespace data {
 	    darkTheme: boolean;
 	    browserPoolSize: number;
 	    enableFund: boolean;
+	    enablePushNews: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -357,6 +378,7 @@ export namespace data {
 	        this.darkTheme = source["darkTheme"];
 	        this.browserPoolSize = source["browserPoolSize"];
 	        this.enableFund = source["enableFund"];
+	        this.enablePushNews = source["enablePushNews"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
