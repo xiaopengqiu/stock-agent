@@ -226,7 +226,8 @@ onMounted(() => {
 
   GetFollowList(currentGroupId.value).then(result => {
 
-    followList.value = result 
+    followList.value = result
+    console.log("onMounted",result)
     for (const followedStock of result) {
       if(followedStock.StockCode.startsWith("us")){
         followedStock.StockCode="gb_"+ followedStock.StockCode.replace("us", "").toLowerCase()
@@ -1273,8 +1274,10 @@ function showK(code,name){
 function updateCostPriceAndVolumeNew(code,price,volume,alarm,formModel){
 
   if(formModel.sort){
+    console.log("sort:",formModel.sort)
     SetStockSort(formModel.sort,code).then(result => {
       //message.success(result)
+      console.log("sort result:",result)
     })
   }
   if(formModel.cron){
