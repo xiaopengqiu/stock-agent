@@ -151,7 +151,6 @@ const danmakuColor = computed(()=> {
 const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
 
 const sortedResults = computed(() => {
-  ////console.log("computed",sortedResults.value)
   const sortedKeys =keys(results.value).sort();
   ////console.log("sortedKeys",sortedKeys)
   const sortedObject = {};
@@ -227,7 +226,6 @@ onMounted(() => {
   GetFollowList(currentGroupId.value).then(result => {
 
     followList.value = result
-    console.log("onMounted",result)
     for (const followedStock of result) {
       if(followedStock.StockCode.startsWith("us")){
         followedStock.StockCode="gb_"+ followedStock.StockCode.replace("us", "").toLowerCase()
@@ -587,14 +585,16 @@ async function updateData(result) {
       }
     }
 
-  //result.key=result.sort
+  // result.key=result.sort
+  results.value = Object.fromEntries(
+      Object.entries(results.value).filter(
+          ([key]) => !key.includes(result["股票代码"])
+      ));
   result.key=GetSortKey(result.sort,result["股票代码"])
   results.value[GetSortKey(result.sort,result["股票代码"])]=result
   if(!stocks.value.includes(result["股票代码"])) {
     delete results.value[result.key]
   }
-
-  ////console.log("updateData",result)
 }
 
 
@@ -1274,10 +1274,8 @@ function showK(code,name){
 function updateCostPriceAndVolumeNew(code,price,volume,alarm,formModel){
 
   if(formModel.sort){
-    console.log("sort:",formModel.sort)
     SetStockSort(formModel.sort,code).then(result => {
       //message.success(result)
-      console.log("sort result:",result)
     })
   }
   if(formModel.cron){
@@ -1296,6 +1294,7 @@ function updateCostPriceAndVolumeNew(code,price,volume,alarm,formModel){
     message.success(result)
     GetFollowList(currentGroupId.value).then(result => {
       followList.value = result
+      stocks.value=[]
       for (const followedStock of result) {
         if (!stocks.value.includes(followedStock.StockCode)) {
           stocks.value.push(followedStock.StockCode)
