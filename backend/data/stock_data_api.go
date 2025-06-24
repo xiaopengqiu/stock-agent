@@ -400,7 +400,13 @@ func (receiver StockDataApi) Follow(stockCode string) string {
 		logger.SugaredLogger.Error(err)
 		return "关注失败"
 	}
-
+	if strings.HasPrefix(stockCode, "us") {
+		stockCode = strings.Replace(stockCode, "us", "gb_", 1)
+	}
+	if strings.HasPrefix(stockCode, "US") {
+		stockCode = strings.Replace(stockCode, "US", "gb_", 1)
+	}
+	stockCode = strings.ToLower(stockCode)
 	maxSort := int64(0)
 	db.Dao.Model(&FollowedStock{}).Raw("select max(sort) as sort from followed_stock").Scan(&maxSort)
 
@@ -464,10 +470,10 @@ func (receiver StockDataApi) SetAlarmChangePercent(val, alarmPrice float64, stoc
 }
 
 func (receiver StockDataApi) SetStockSort(newSort int64, stockCode string) {
-	if strutil.HasPrefixAny(stockCode, []string{"gb_"}) {
-		stockCode = strings.ToLower(stockCode)
-		stockCode = strings.Replace(stockCode, "gb_", "us", 1)
-	}
+	//if strutil.HasPrefixAny(stockCode, []string{"gb_"}) {
+	//	stockCode = strings.ToLower(stockCode)
+	//	stockCode = strings.Replace(stockCode, "gb_", "us", 1)
+	//}
 
 	// 获取当前排序值
 	var currentStock FollowedStock
