@@ -434,7 +434,9 @@ function AddStock() {
   if (!stocks.value.includes(data.code)) {
     Follow(data.code).then(result => {
       if (result === "关注成功") {
-        data.code= "gb_" + data.code.replace("us", "").toLowerCase()
+        if (data.code.startsWith("us")) {
+          data.code= "gb_" + data.code.replace("us", "").toLowerCase()
+        }
         stocks.value.push(data.code)
         message.success(result)
         GetFollowList(currentGroupId.value).then(result => {
