@@ -590,7 +590,7 @@ func (m MarketNewsApi) XUEQIUHotStock(size int, marketType string) *[]models.Hot
 		logger.SugaredLogger.Errorf("XUEQIUHotStock err:%s", err.Error())
 		return &[]models.HotItem{}
 	}
-	logger.SugaredLogger.Infof("XUEQIUHotStock:%+v", res)
+	//	logger.SugaredLogger.Infof("XUEQIUHotStock:%+v", res)
 	return &res.Data.Items
 }
 
@@ -608,7 +608,7 @@ func (m MarketNewsApi) HotEvent(size int) *[]models.HotEvent {
 		logger.SugaredLogger.Errorf("HotEvent err:%s", err.Error())
 		return events
 	}
-	logger.SugaredLogger.Infof("HotEvent:%s", resp.Body())
+	//logger.SugaredLogger.Infof("HotEvent:%s", resp.Body())
 	respMap := map[string]any{}
 	err = json.Unmarshal(resp.Body(), &respMap)
 	items, err := json.Marshal(respMap["list"])
@@ -637,7 +637,7 @@ func (m MarketNewsApi) HotTopic(size int) []any {
 		logger.SugaredLogger.Errorf("HotTopic err:%s", err.Error())
 		return []any{}
 	}
-	logger.SugaredLogger.Infof("HotTopic:%s", resp.Body())
+	//logger.SugaredLogger.Infof("HotTopic:%s", resp.Body())
 	respMap := map[string]any{}
 	err = json.Unmarshal(resp.Body(), &respMap)
 	return respMap["re"].([]any)
