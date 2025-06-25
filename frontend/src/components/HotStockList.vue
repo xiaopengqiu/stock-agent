@@ -2,6 +2,7 @@
 import {onBeforeMount, onUnmounted, ref} from 'vue'
 import {HotStock} from "../../wailsjs/go/main/App";
 import KLineChart from "./KLineChart.vue";
+import {ArrowBack, ArrowDown, ArrowUp} from "@vicons/ionicons5";
 
 const {marketType}=defineProps(
     {
@@ -64,8 +65,19 @@ function getMarketCode(item) {
         <n-td><n-text :type="item.percent>0?'error':'success'">{{item.percent}}%</n-text></n-td>
         <n-td><n-text type="info">{{item.current}}</n-text></n-td>
         <n-td><n-text type="info">{{item.value}}</n-text></n-td>
-        <n-td><n-text type="info">{{item.increment}}</n-text></n-td>
-        <n-td><n-text type="info">{{item.rank_change}}</n-text></n-td>
+        <n-td><n-text  :type="item.increment>0?'error':'success'">
+          {{item.increment}}
+          <n-icon v-if="item.increment>0" :component="ArrowUp"/>
+          <n-icon v-else :component="ArrowDown"/>
+        </n-text></n-td>
+        <n-td>
+          <n-text  :type="item.rank_change>0?'error':'success'">
+            {{item.rank_change}}
+            <n-icon v-if="item.rank_change>0" :component="ArrowUp"/>
+            <n-text v-else-if="item.rank_change==0" ></n-text>
+            <n-icon v-else :component="ArrowDown"/>
+          </n-text>
+        </n-td>
       </n-tr>
     </n-tbody>
   </n-table>

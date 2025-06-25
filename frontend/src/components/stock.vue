@@ -606,14 +606,28 @@ function onSelect(item) {
 
 }
 
+function openCenteredWindow(url, width, height) {
+  const left = (window.screen.width - width) / 2;
+  const top = (window.screen.height - height) / 2;
+
+  return window.open(
+      url,
+      'centeredWindow',
+      `width=${width},height=${height},left=${left},top=${top}`
+  );
+}
+
 function search(code, name) {
   setTimeout(() => {
     //window.open("https://xueqiu.com/S/"+code)
     //window.open("https://www.cls.cn/stock?code="+code)
     //window.open("https://quote.eastmoney.com/"+code+".html")
     //window.open("https://finance.sina.com.cn/realstock/company/"+code+"/nc.shtml")
-    window.open("https://www.iwencai.com/unifiedwap/result?w=" + name)
+    //window.open("https://www.iwencai.com/unifiedwap/result?w=" + name)
     //window.open("https://www.iwencai.com/chat/?question="+code)
+
+    openCenteredWindow("https://www.iwencai.com/unifiedwap/result?w=" + name,1000,800)
+
   }, 500)
 }
 

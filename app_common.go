@@ -33,7 +33,7 @@ func (a App) AnalyzeSentiment(text string) data.SentimentResult {
 }
 
 func (a App) HotStock(marketType string) *[]models.HotItem {
-	return data.NewMarketNewsApi().XUEQIUHotStock(50, marketType)
+	return data.NewMarketNewsApi().XUEQIUHotStock(100, marketType)
 }
 
 func (a App) HotEvent(size int) *[]models.HotEvent {

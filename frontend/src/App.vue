@@ -14,7 +14,7 @@ import {createDiscreteApi,darkTheme,lightTheme , NIcon, NText,dateZhCN,zhCN} fro
 import {
   AlarmOutline,
   AnalyticsOutline,
-  BarChartSharp, EaselSharp,
+  BarChartSharp, Bonfire, BonfireOutline, EaselSharp,
   ExpandOutline, Flag,
   Flame, FlameSharp, InformationOutline,
   LogoGithub,
@@ -28,6 +28,11 @@ import {
   Wallet, WarningOutline,
 } from '@vicons/ionicons5'
 import {AnalyzeSentiment, GetConfig, GetGroupList} from "../wailsjs/go/main/App";
+import {Dragon, Fire, Gripfire} from "@vicons/fa";
+import {ReportSearch} from "@vicons/tabler";
+import {LocalFireDepartmentRound} from "@vicons/material";
+import {CommentNote20Filled} from "@vicons/fluent";
+import {FireFilled, FireOutlined, NotificationFilled, StockOutlined} from "@vicons/antd";
 
 
 
@@ -241,7 +246,7 @@ const menuOptions = ref([
                 {default: () => '龙虎榜',}
             ),
         key: 'market6',
-        icon: renderIcon(Skull),
+        icon: renderIcon(Dragon),
       },
       {
         label: () =>
@@ -262,7 +267,7 @@ const menuOptions = ref([
                 {default: () => '个股研报',}
             ),
         key: 'market7',
-        icon: renderIcon(NewspaperSharp),
+        icon: renderIcon(StockOutlined),
       },
       {
         label: () =>
@@ -283,7 +288,7 @@ const menuOptions = ref([
                 {default: () => '公司公告',}
             ),
         key: 'market8',
-        icon: renderIcon(NewspaperSharp),
+        icon: renderIcon(NotificationFilled),
       },
       {
         label: () =>
@@ -304,7 +309,28 @@ const menuOptions = ref([
                 {default: () => '行业研究',}
             ),
         key: 'market9',
-        icon: renderIcon(NewspaperSharp),
+        icon: renderIcon(ReportSearch),
+      },
+      {
+        label: () =>
+            h(
+                RouterLink,
+                {
+                  href: '#',
+                  to: {
+                    name: 'market',
+                    query: {
+                      name: "当前热门",
+                    }
+                  },
+                  onClick: () => {
+                    EventsEmit("changeMarketTab", {ID: 0, name: '当前热门'})
+                  },
+                },
+                {default: () => '当前热门',}
+            ),
+        key: 'market10',
+        icon: renderIcon(Gripfire),
       },
     ]
   },
