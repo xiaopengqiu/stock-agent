@@ -65,6 +65,12 @@ export function GlobalStockIndexes():Promise<Record<string, any>>;
 
 export function Greet(arg1:string):Promise<data.StockInfo>;
 
+export function HotEvent(arg1:number):Promise<any>;
+
+export function HotStock(arg1:string):Promise<any>;
+
+export function HotTopic(arg1:number):Promise<Array<any>>;
+
 export function IndustryResearchReport(arg1:string):Promise<Array<any>>;
 
 export function LongTigerRank(arg1:string):Promise<any>;

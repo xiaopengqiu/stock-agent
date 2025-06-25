@@ -31,3 +31,20 @@ func (a App) EMDictCode(code string) []any {
 func (a App) AnalyzeSentiment(text string) data.SentimentResult {
 	return data.AnalyzeSentiment(text)
 }
+
+func (a App) HotStock(marketType string) *[]models.HotItem {
+	return data.NewMarketNewsApi().XUEQIUHotStock(50, marketType)
+}
+
+func (a App) HotEvent(size int) *[]models.HotEvent {
+	if size <= 0 {
+		size = 10
+	}
+	return data.NewMarketNewsApi().HotEvent(size)
+}
+func (a App) HotTopic(size int) []any {
+	if size <= 0 {
+		size = 10
+	}
+	return data.NewMarketNewsApi().HotTopic(size)
+}

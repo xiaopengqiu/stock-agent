@@ -126,6 +126,18 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+export function HotEvent(arg1) {
+  return window['go']['main']['App']['HotEvent'](arg1);
+}
+
+export function HotStock(arg1) {
+  return window['go']['main']['App']['HotStock'](arg1);
+}
+
+export function HotTopic(arg1) {
+  return window['go']['main']['App']['HotTopic'](arg1);
+}
+
 export function IndustryResearchReport(arg1) {
   return window['go']['main']['App']['IndustryResearchReport'](arg1);
 }

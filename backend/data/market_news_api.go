@@ -574,3 +574,72 @@ func (m MarketNewsApi) TradingViewNews() *[]models.TVNews {
 	json.Unmarshal(items, TVNews)
 	return TVNews
 }
+
+func (m MarketNewsApi) XUEQIUHotStock(size int, marketType string) *[]models.HotItem {
+	url := fmt.Sprintf("https://stock.xueqiu.com/v5/stock/hot_stock/list.json?page=1&size=%d&_type=%s&type=%s", size, marketType, marketType)
+	res := &models.XUEQIUHot{}
+	_, err := resty.New().SetTimeout(time.Duration(30)*time.Second).R().
+		SetHeader("Host", "stock.xueqiu.com").
+		SetHeader("Origin", "https://xueqiu.com").
+		SetHeader("Referer", "https://xueqiu.com/").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		SetHeader("Cookie", "cookiesu=2617378771242871; s=c2121pp1u71; device_id=237a58584ec58d8e4d4e1040700a644f1; Hm_lvt_1db88642e346389874251b5a1eded6e3=1744100219,1744599115; xq_a_token=b7259d09435458cc3f1a963479abb270a1a016ce; xqat=b7259d09435458cc3f1a963479abb270a1a016ce; xq_r_token=28108bfa1d92ac8a46bbb57722633746218621a3; xq_id_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1aWQiOi0xLCJpc3MiOiJ1YyIsImV4cCI6MTc1MjU0MTk4OCwiY3RtIjoxNzUwMjMwNjA2NzI0LCJjaWQiOiJkOWQwbjRBWnVwIn0.kU_fz0luJoE7nr-K4UrNUi5-mAG-vMdXtuC4mUKIppILId4UpF70LB70yunxGiNSw6tPFR3-hyLvztKAHtekCUTm3XjUl5b3tEDP-ZUVqHnWXO_5hoeMI8h-Cfx6ZGlIr5x3icvTPkT0OV5CD5A33-ZDTKhKPf-DhJ_-m7CG5GbX4MseOBeMXuLUQUiYHPKhX1QUc0GTGrCzi8Mki0z49D0LVqCSgbsx3UGfowOOyx85_cXb4OAFvIjwbs2p0o_h-ibIT0ngVkkAyEDetVvlcZ_bkardhseCB7k9BEMgH2z8ihgkVxyy3P0degLmDUruhmqn5uZOCi1pVBDvCv9lBg; u=261737877124287; ssxmod_itna=QuG=D5AKiKDIqCqGKi7G7DgmmPlSDWFqKGHDyx4YK0CDmxjKiddDUQivnb8xpnQcGyGYoYhoqEeDBubrDSxD67DK4GTm+ogiw1o3B=xedQHDgBtN=7/i1K53N+rOjquLMU=kbqYxB3DExGkqj0tPi4DxaPD5xDTDWeDGDD3DnnsDQKDRx0kL0oDIxD1D0bmHUEvh38mDYePLmOmDYPYx94Y8KoDeEgsD7HUl/vIGGEAqjLPFegXLD0HolCqr4DCid1qDm+ECfkjDn9sD0KP8fn+CRoDv=tYr4ibx+o=W+8vstf9mjGe3cXseWdBmoFrmf4DA3bFAxnAxD7vYxADaDoerDGHPoxHF+PKGPtDKmiqQGeB5qbi4eg4KDHKDe3DeG0qeEP9xVUoHDDWMYYM0ICr4FBimBDM7D0x4QOECmhul5QCN/m5/74lGm=7x9Wp7A+i7xQ7wlMD4D; ssxmod_itna2=QuG=D5AKiKDIqCqGKi7G7DgmmPlSDWFqKGHDyx4YK0CDmxjKiddDUQivnb8xpnQcGyGYoYhoqoDirSDhPmGD24GajjDuGE3m7or4DlxOSGewHl6iaus2Q62SRX5CFjCds6ltF9xy6iaUuB262UkhRA8UXST=4/b+y3kGKzlGE8T29FA008ljy9jXXC7f7m7QsK667mlUooWrofk=qGZjxtcUrN1NtuAnne1hj+rQP5UnlFkxf+o7VjmatH7u7bCDlbTt3cz6CH9Fl4vye16W/ellc8I3Q37W7ZwiLGD/zPpZcnd2nsqqo/+zRbKAmz4plzwaDqGUe7f9E+P0IFRKqpRv+buQFHBSpcbwND7Q+9XWmnjI2UwKd98jIS3gPXwxvbx4OuiyH8gZ+OEt7DgE/AY/9W4VxDZrlFWyWnC4y4/I0IpAfaGKpbPmauKbkqawqv93vSf+9HamGe0Dt2PNgT3yiEB4vQP2/DdVpcGBOjFujWoHP32OshLPYI20LRCKddwEGkKqPzPwKPc3X5zuB=w2fUdtwKsAW5kQtsl8clNwjC5uDYrxR0h9xaj0xmD+YuI3GPT7xYTalRImPj2wL2=+91a304xa4bTWtP=dLGARhb/efRi0uktaz8i8C04G0x/ZWUzqRza8GGU=FfRfvb4GZM/q2rVsl0nLvRjGeAKgocLouyXs/uwZu3YxbAx30qCbjG1A533zAxIeIgD=0VAc3ixD").
+		SetResult(res).
+		Get(url)
+	if err != nil {
+		logger.SugaredLogger.Errorf("XUEQIUHotStock err:%s", err.Error())
+		return &[]models.HotItem{}
+	}
+	logger.SugaredLogger.Infof("XUEQIUHotStock:%+v", res)
+	return &res.Data.Items
+}
+
+func (m MarketNewsApi) HotEvent(size int) *[]models.HotEvent {
+	events := &[]models.HotEvent{}
+	url := fmt.Sprintf("https://xueqiu.com/hot_event/list.json?count=%d", size)
+	resp, err := resty.New().SetTimeout(time.Duration(30)*time.Second).R().
+		SetHeader("Host", "xueqiu.com").
+		SetHeader("Origin", "https://xueqiu.com").
+		SetHeader("Referer", "https://xueqiu.com/").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		SetHeader("Cookie", "cookiesu=2617378771242871; s=c2121pp1u71; device_id=237a58584ec58d8e4d4e1040700a644f1; Hm_lvt_1db88642e346389874251b5a1eded6e3=1744100219,1744599115; xq_a_token=b7259d09435458cc3f1a963479abb270a1a016ce; xqat=b7259d09435458cc3f1a963479abb270a1a016ce; xq_r_token=28108bfa1d92ac8a46bbb57722633746218621a3; xq_id_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1aWQiOi0xLCJpc3MiOiJ1YyIsImV4cCI6MTc1MjU0MTk4OCwiY3RtIjoxNzUwMjMwNjA2NzI0LCJjaWQiOiJkOWQwbjRBWnVwIn0.kU_fz0luJoE7nr-K4UrNUi5-mAG-vMdXtuC4mUKIppILId4UpF70LB70yunxGiNSw6tPFR3-hyLvztKAHtekCUTm3XjUl5b3tEDP-ZUVqHnWXO_5hoeMI8h-Cfx6ZGlIr5x3icvTPkT0OV5CD5A33-ZDTKhKPf-DhJ_-m7CG5GbX4MseOBeMXuLUQUiYHPKhX1QUc0GTGrCzi8Mki0z49D0LVqCSgbsx3UGfowOOyx85_cXb4OAFvIjwbs2p0o_h-ibIT0ngVkkAyEDetVvlcZ_bkardhseCB7k9BEMgH2z8ihgkVxyy3P0degLmDUruhmqn5uZOCi1pVBDvCv9lBg; u=261737877124287; ssxmod_itna=QuG=D5AKiKDIqCqGKi7G7DgmmPlSDWFqKGHDyx4YK0CDmxjKiddDUQivnb8xpnQcGyGYoYhoqEeDBubrDSxD67DK4GTm+ogiw1o3B=xedQHDgBtN=7/i1K53N+rOjquLMU=kbqYxB3DExGkqj0tPi4DxaPD5xDTDWeDGDD3DnnsDQKDRx0kL0oDIxD1D0bmHUEvh38mDYePLmOmDYPYx94Y8KoDeEgsD7HUl/vIGGEAqjLPFegXLD0HolCqr4DCid1qDm+ECfkjDn9sD0KP8fn+CRoDv=tYr4ibx+o=W+8vstf9mjGe3cXseWdBmoFrmf4DA3bFAxnAxD7vYxADaDoerDGHPoxHF+PKGPtDKmiqQGeB5qbi4eg4KDHKDe3DeG0qeEP9xVUoHDDWMYYM0ICr4FBimBDM7D0x4QOECmhul5QCN/m5/74lGm=7x9Wp7A+i7xQ7wlMD4D; ssxmod_itna2=QuG=D5AKiKDIqCqGKi7G7DgmmPlSDWFqKGHDyx4YK0CDmxjKiddDUQivnb8xpnQcGyGYoYhoqoDirSDhPmGD24GajjDuGE3m7or4DlxOSGewHl6iaus2Q62SRX5CFjCds6ltF9xy6iaUuB262UkhRA8UXST=4/b+y3kGKzlGE8T29FA008ljy9jXXC7f7m7QsK667mlUooWrofk=qGZjxtcUrN1NtuAnne1hj+rQP5UnlFkxf+o7VjmatH7u7bCDlbTt3cz6CH9Fl4vye16W/ellc8I3Q37W7ZwiLGD/zPpZcnd2nsqqo/+zRbKAmz4plzwaDqGUe7f9E+P0IFRKqpRv+buQFHBSpcbwND7Q+9XWmnjI2UwKd98jIS3gPXwxvbx4OuiyH8gZ+OEt7DgE/AY/9W4VxDZrlFWyWnC4y4/I0IpAfaGKpbPmauKbkqawqv93vSf+9HamGe0Dt2PNgT3yiEB4vQP2/DdVpcGBOjFujWoHP32OshLPYI20LRCKddwEGkKqPzPwKPc3X5zuB=w2fUdtwKsAW5kQtsl8clNwjC5uDYrxR0h9xaj0xmD+YuI3GPT7xYTalRImPj2wL2=+91a304xa4bTWtP=dLGARhb/efRi0uktaz8i8C04G0x/ZWUzqRza8GGU=FfRfvb4GZM/q2rVsl0nLvRjGeAKgocLouyXs/uwZu3YxbAx30qCbjG1A533zAxIeIgD=0VAc3ixD").
+		Get(url)
+	if err != nil {
+		logger.SugaredLogger.Errorf("HotEvent err:%s", err.Error())
+		return events
+	}
+	logger.SugaredLogger.Infof("HotEvent:%s", resp.Body())
+	respMap := map[string]any{}
+	err = json.Unmarshal(resp.Body(), &respMap)
+	items, err := json.Marshal(respMap["list"])
+	if err != nil {
+		return events
+	}
+	json.Unmarshal(items, events)
+	return events
+
+}
+
+func (m MarketNewsApi) HotTopic(size int) []any {
+	url := "https://gubatopic.eastmoney.com/interface/GetData.aspx?path=newtopic/api/Topic/HomePageListRead"
+	resp, err := resty.New().SetTimeout(time.Duration(30)*time.Second).R().
+		SetHeader("Host", "gubatopic.eastmoney.com").
+		SetHeader("Origin", "https://gubatopic.eastmoney.com").
+		SetHeader("Referer", "https://gubatopic.eastmoney.com/").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		SetFormData(map[string]string{
+			"param": fmt.Sprintf("ps=%d&p=1&type=0", size),
+			"path":  "newtopic/api/Topic/HomePageListRead",
+			"env":   "2",
+		}).
+		Post(url)
+	if err != nil {
+		logger.SugaredLogger.Errorf("HotTopic err:%s", err.Error())
+		return []any{}
+	}
+	logger.SugaredLogger.Infof("HotTopic:%s", resp.Body())
+	respMap := map[string]any{}
+	err = json.Unmarshal(resp.Body(), &respMap)
+	return respMap["re"].([]any)
+
+}
