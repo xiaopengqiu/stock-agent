@@ -406,6 +406,13 @@ func (receiver StockDataApi) Follow(stockCode string) string {
 	if strings.HasPrefix(stockCode, "US") {
 		stockCode = strings.Replace(stockCode, "US", "gb_", 1)
 	}
+	count := int64(0)
+	db.Dao.Model(&FollowedStock{}).Where("is_del = ?", 0).Count(&count)
+	logger.SugaredLogger.Errorf("Follow-count %v", count)
+	if count >= 63 {
+		return "最多只能关注63只股票"
+	}
+
 	stockCode = strings.ToLower(stockCode)
 	maxSort := int64(0)
 	db.Dao.Model(&FollowedStock{}).Raw("select max(sort) as sort from followed_stock").Scan(&maxSort)
