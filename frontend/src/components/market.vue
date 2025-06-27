@@ -29,6 +29,8 @@ import IndustryResearchReportList from "./IndustryResearchReportList.vue";
 import HotStockList from "./HotStockList.vue";
 import HotEvents from "./HotEvents.vue";
 import HotTopics from "./HotTopics.vue";
+import InvestCalendarTimeLine from "./InvestCalendarTimeLine.vue";
+import ClsCalendarTimeLine from "./ClsCalendarTimeLine.vue";
 
 const route = useRoute()
 const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
@@ -583,6 +585,12 @@ function ReFlesh(source) {
 <!--                <HotEvents/>-->
 <!--              </n-grid-item>-->
             </n-grid>
+          </n-tab-pane>
+          <n-tab-pane name="重大事件时间轴" tab="重大事件时间轴">
+            <InvestCalendarTimeLine />
+          </n-tab-pane>
+          <n-tab-pane name="财经日历" tab="财经日历">
+            <ClsCalendarTimeLine />
           </n-tab-pane>
         </n-tabs>
       </n-tab-pane>

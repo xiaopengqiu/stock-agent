@@ -26,6 +26,10 @@ export function CheckUpdate() {
   return window['go']['main']['App']['CheckUpdate']();
 }
 
+export function ClsCalendar() {
+  return window['go']['main']['App']['ClsCalendar']();
+}
+
 export function DelPrompt(arg1) {
   return window['go']['main']['App']['DelPrompt'](arg1);
 }
@@ -140,6 +144,10 @@ export function HotTopic(arg1) {
 
 export function IndustryResearchReport(arg1) {
   return window['go']['main']['App']['IndustryResearchReport'](arg1);
+}
+
+export function InvestCalendarTimeLine(arg1) {
+  return window['go']['main']['App']['InvestCalendarTimeLine'](arg1);
 }
 
 export function LongTigerRank(arg1) {

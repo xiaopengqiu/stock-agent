@@ -15,6 +15,8 @@ export function AnalyzeSentiment(arg1:string):Promise<data.SentimentResult>;
 
 export function CheckUpdate():Promise<void>;
 
+export function ClsCalendar():Promise<Array<any>>;
+
 export function DelPrompt(arg1:number):Promise<string>;
 
 export function EMDictCode(arg1:string):Promise<Array<any>>;
@@ -72,6 +74,8 @@ export function HotStock(arg1:string):Promise<any>;
 export function HotTopic(arg1:number):Promise<Array<any>>;
 
 export function IndustryResearchReport(arg1:string):Promise<Array<any>>;
+
+export function InvestCalendarTimeLine(arg1:string):Promise<Array<any>>;
 
 export function LongTigerRank(arg1:string):Promise<any>;
 

@@ -643,3 +643,52 @@ func (m MarketNewsApi) HotTopic(size int) []any {
 	return respMap["re"].([]any)
 
 }
+
+func (m MarketNewsApi) InvestCalendar(yearMonth string) []any {
+	if yearMonth == "" {
+		yearMonth = time.Now().Format("2006-01")
+	}
+
+	url := "https://app.jiuyangongshe.com/jystock-app/api/v1/timeline/list"
+	resp, err := resty.New().SetTimeout(time.Duration(30)*time.Second).R().
+		SetHeader("Host", "app.jiuyangongshe.com").
+		SetHeader("Origin", "https://www.jiuyangongshe.com").
+		SetHeader("Referer", "https://www.jiuyangongshe.com/").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		SetHeader("Content-Type", "application/json").
+		SetHeader("token", "1cc6380a05c652b922b3d85124c85473").
+		SetHeader("platform", "3").
+		SetHeader("Cookie", "SESSION=NDZkNDU2ODYtODEwYi00ZGZkLWEyY2ItNjgxYzY4ZWMzZDEy").
+		SetHeader("timestamp", strconv.FormatInt(time.Now().UnixMilli(), 10)).
+		SetBody(map[string]string{
+			"date":  yearMonth,
+			"grade": "0",
+		}).
+		Post(url)
+	if err != nil {
+		logger.SugaredLogger.Errorf("InvestCalendar err:%s", err.Error())
+		return []any{}
+	}
+	//logger.SugaredLogger.Infof("InvestCalendar:%s", resp.Body())
+	respMap := map[string]any{}
+	err = json.Unmarshal(resp.Body(), &respMap)
+	return respMap["data"].([]any)
+
+}
+
+func (m MarketNewsApi) ClsCalendar() []any {
+	url := "https://www.cls.cn/api/calendar/web/list?app=CailianpressWeb&flag=0&os=web&sv=8.4.6&type=0&sign=4b839750dc2f6b803d1c8ca00d2b40be"
+	resp, err := resty.New().SetTimeout(time.Duration(30)*time.Second).R().
+		SetHeader("Host", "www.cls.cn").
+		SetHeader("Origin", "https://www.cls.cn").
+		SetHeader("Referer", "https://www.cls.cn/").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		Get(url)
+	if err != nil {
+		logger.SugaredLogger.Errorf("ClsCalendar err:%s", err.Error())
+		return []any{}
+	}
+	respMap := map[string]any{}
+	err = json.Unmarshal(resp.Body(), &respMap)
+	return respMap["data"].([]any)
+}

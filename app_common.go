@@ -48,3 +48,10 @@ func (a App) HotTopic(size int) []any {
 	}
 	return data.NewMarketNewsApi().HotTopic(size)
 }
+
+func (a App) InvestCalendarTimeLine(yearMonth string) []any {
+	return data.NewMarketNewsApi().InvestCalendar(yearMonth)
+}
+func (a App) ClsCalendar() []any {
+	return data.NewMarketNewsApi().ClsCalendar()
+}

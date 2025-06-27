@@ -135,3 +135,19 @@ func TestHotTopic(t *testing.T) {
 	}
 
 }
+
+func TestInvestCalendar(t *testing.T) {
+	db.Init("../../data/stock.db")
+	res := NewMarketNewsApi().InvestCalendar("2025-06")
+	for _, a := range res {
+		logger.SugaredLogger.Debugf("value: %+v", a)
+	}
+}
+
+func TestClsCalendar(t *testing.T) {
+	db.Init("../../data/stock.db")
+	res := NewMarketNewsApi().ClsCalendar()
+	for _, a := range res {
+		logger.SugaredLogger.Debugf("value: %+v", a)
+	}
+}
