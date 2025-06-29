@@ -55,3 +55,7 @@ func (a App) InvestCalendarTimeLine(yearMonth string) []any {
 func (a App) ClsCalendar() []any {
 	return data.NewMarketNewsApi().ClsCalendar()
 }
+
+func (a App) SearchStock(words string) map[string]any {
+	return data.NewSearchStockApi(words).SearchStock()
+}
