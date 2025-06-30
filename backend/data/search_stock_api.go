@@ -50,6 +50,6 @@ func (s SearchStockApi) SearchStock() map[string]any {
 	}
 	respMap := map[string]any{}
 	json.Unmarshal(resp.Body(), &respMap)
-	logger.SugaredLogger.Infof("resp:%+v", respMap["data"])
+	//logger.SugaredLogger.Infof("resp:%+v", respMap["data"])
 	return respMap
 }
