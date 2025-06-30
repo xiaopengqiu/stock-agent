@@ -182,6 +182,10 @@ export function SaveAsMarkdown(arg1, arg2) {
   return window['go']['main']['App']['SaveAsMarkdown'](arg1, arg2);
 }
 
+export function SearchStock(arg1) {
+  return window['go']['main']['App']['SearchStock'](arg1);
+}
+
 export function SendDingDingMessage(arg1, arg2) {
   return window['go']['main']['App']['SendDingDingMessage'](arg1, arg2);
 }

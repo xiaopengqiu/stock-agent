@@ -31,7 +31,7 @@ import {AnalyzeSentiment, GetConfig, GetGroupList} from "../wailsjs/go/main/App"
 import {Dragon, Fire, Gripfire} from "@vicons/fa";
 import {ReportSearch} from "@vicons/tabler";
 import {LocalFireDepartmentRound} from "@vicons/material";
-import {CommentNote20Filled} from "@vicons/fluent";
+import {BoxSearch20Regular, CommentNote20Filled} from "@vicons/fluent";
 import {FireFilled, FireOutlined, NotificationFilled, StockOutlined} from "@vicons/antd";
 
 
@@ -331,6 +331,27 @@ const menuOptions = ref([
             ),
         key: 'market10',
         icon: renderIcon(Gripfire),
+      },
+      {
+        label: () =>
+            h(
+                RouterLink,
+                {
+                  href: '#',
+                  to: {
+                    name: 'market',
+                    query: {
+                      name: "指标选股",
+                    }
+                  },
+                  onClick: () => {
+                    EventsEmit("changeMarketTab", {ID: 0, name: '指标选股'})
+                  },
+                },
+                {default: () => '指标选股',}
+            ),
+        key: 'market11',
+        icon: renderIcon(BoxSearch20Regular),
       },
     ]
   },

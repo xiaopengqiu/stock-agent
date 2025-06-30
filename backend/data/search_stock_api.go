@@ -29,7 +29,7 @@ func (s SearchStockApi) SearchStock() map[string]any {
 		SetHeader("Content-Type", "application/json").
 		SetBody(fmt.Sprintf(`{
 				"keyWord": "%s",
-				"pageSize": 50,
+				"pageSize": 50000,
 				"pageNo": 1,
 				"fingerprint": "e38b5faabf9378c8238e57219f0ebc9b",
 				"gids": [],
