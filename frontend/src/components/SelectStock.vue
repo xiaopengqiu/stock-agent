@@ -3,16 +3,22 @@ import {h, onBeforeMount, onMounted, onUnmounted, ref} from 'vue'
 import {SearchStock} from "../../wailsjs/go/main/App";
 import {useMessage, NText, NTag} from 'naive-ui'
 const message = useMessage()
-const search = ref('科技股;换手率连续3日大于2')
+const search = ref('')
 const columns = ref([])
 const dataList = ref([])
-
+const traceInfo = ref('')
 function Search() {
+  if(!search.value){
+    message.warning('请输入选股指标或者要求')
+    return
+  }
+
   const loading = message.loading("正在获取选股数据...", {duration: 0});
   SearchStock(search.value).then(res => {
     loading.destroy()
-    //console.log(res)
+    console.log(res)
     if(res.code==100){
+      traceInfo.value=res.data.traceInfo.showText
       message.success(res.msg)
       columns.value=res.data.result.columns.filter(item=>!item.hiddenNeed&&(item.title!="市场码"&&item.title!="市场简称")).map(item=>{
 
@@ -70,24 +76,16 @@ onBeforeMount(() => {
 <template>
   <n-flex>
     <n-input-group>
-      <n-input v-model:value="search" placeholder="请输入选股指标或者要求" />
-      <n-button type="success" @click="Search">搜索A股</n-button>
+      <n-input clearable v-model:value="search" placeholder="请输入选股指标或者要求" />
+      <n-button type="primary" @click="Search">搜索A股</n-button>
     </n-input-group>
   </n-flex>
-<!--  <n-table striped size="small">-->
-<!--    <n-thead>-->
-<!--      <n-tr>-->
-<!--        <n-th v-for="item in columns">{{item.title}}</n-th>-->
-<!--      </n-tr>-->
-<!--    </n-thead>-->
-<!--    <n-tbody>-->
-<!--      <n-tr v-for="(item,index) in dataList">-->
-<!--        <n-td v-for="d in columns">{{item[d.key]}}</n-td>-->
-<!--      </n-tr>-->
-<!--    </n-tbody>-->
-<!--  </n-table>-->
+  <n-flex justify="start" v-if="traceInfo">
+    <n-tag type="info" :bordered="false">当前选股条件：<n-tag type="warning" :bordered="true">{{traceInfo}}</n-tag></n-tag>
+<!--    <n-button type="primary" size="small">保存策略</n-button>-->
+  </n-flex>
   <n-data-table
-      :max-height="'calc(100vh - 285px)'"
+      :max-height="'calc(100vh - 312px)'"
       size="small"
       :columns="columns"
       :data="dataList"
