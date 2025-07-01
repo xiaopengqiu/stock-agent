@@ -19,7 +19,7 @@ type SearchStockApi struct {
 func NewSearchStockApi(words string) *SearchStockApi {
 	return &SearchStockApi{words: words}
 }
-func (s SearchStockApi) SearchStock() map[string]any {
+func (s SearchStockApi) SearchStock(pageSize int) map[string]any {
 	url := "https://np-tjxg-g.eastmoney.com/api/smart-tag/stock/v3/pw/search-code"
 	resp, err := resty.New().SetTimeout(time.Duration(30)*time.Second).R().
 		SetHeader("Host", "np-tjxg-g.eastmoney.com").
@@ -29,7 +29,7 @@ func (s SearchStockApi) SearchStock() map[string]any {
 		SetHeader("Content-Type", "application/json").
 		SetBody(fmt.Sprintf(`{
 				"keyWord": "%s",
-				"pageSize": 50000,
+				"pageSize": %d,
 				"pageNo": 1,
 				"fingerprint": "e38b5faabf9378c8238e57219f0ebc9b",
 				"gids": [],
@@ -43,7 +43,7 @@ func (s SearchStockApi) SearchStock() map[string]any {
 				"ownSelectAll": false,
 				"dxInfo": [],
 				"extraCondition": ""
-				}`, s.words)).Post(url)
+				}`, s.words, pageSize)).Post(url)
 	if err != nil {
 		logger.SugaredLogger.Errorf("SearchStock-err:%+v", err)
 		return map[string]any{}

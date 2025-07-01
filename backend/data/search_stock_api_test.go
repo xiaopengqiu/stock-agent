@@ -9,7 +9,7 @@ import (
 func TestSearchStock(t *testing.T) {
 	db.Init("../../data/stock.db")
 
-	res := NewSearchStockApi("算力股;净利润连续3年增长").SearchStock()
+	res := NewSearchStockApi("算力股;净利润连续3年增长").SearchStock(10)
 	data := res["data"].(map[string]any)
 	result := data["result"].(map[string]any)
 	dataList := result["dataList"].([]any)

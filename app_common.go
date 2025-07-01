@@ -57,5 +57,5 @@ func (a App) ClsCalendar() []any {
 }
 
 func (a App) SearchStock(words string) map[string]any {
-	return data.NewSearchStockApi(words).SearchStock()
+	return data.NewSearchStockApi(words).SearchStock(5000)
 }

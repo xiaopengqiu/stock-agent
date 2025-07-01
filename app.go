@@ -1129,7 +1129,26 @@ func (a *App) GlobalStockIndexes() map[string]any {
 }
 
 func (a *App) SummaryStockNews(question string, sysPromptId *int) {
-	msgs := data.NewDeepSeekOpenAi(a.ctx).NewSummaryStockNewsStream(question, sysPromptId)
+	var tools []data.Tool
+	tools = append(tools, data.Tool{
+		Type: "function",
+		Function: data.ToolFunction{
+			Name:        "SearchStockByIndicators",
+			Description: "按行业根据选股指标或策略，返回符合指标或策略的股票列表。多个行业的筛选需按行业顺序调用多次,不支持并行调用",
+			Parameters: data.FunctionParameters{
+				Type: "object",
+				Properties: map[string]any{
+					"words": map[string]any{
+						"type":        "string",
+						"description": "行业选股指标或策略,并且条件使用;分隔，或者条件使用,分隔。例如：创新药;PE<30;净利润增长率>50%;",
+					},
+				},
+				Required: []string{"words"},
+			},
+		},
+	})
+
+	msgs := data.NewDeepSeekOpenAi(a.ctx).NewSummaryStockNewsStreamWithTools(question, sysPromptId, tools)
 	for msg := range msgs {
 		runtime.EventsEmit(a.ctx, "summaryStockNews", msg)
 	}
