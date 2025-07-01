@@ -150,13 +150,14 @@ func (receiver AIResponseResult) TableName() string {
 
 type VersionInfo struct {
 	gorm.Model
-	Version        string                `json:"version"`
-	Content        string                `json:"content"`
-	Icon           string                `json:"icon"`
-	Alipay         string                `json:"alipay"`
-	Wxpay          string                `json:"wxpay"`
-	BuildTimeStamp int64                 `json:"buildTimeStamp"`
-	IsDel          soft_delete.DeletedAt `gorm:"softDelete:flag"`
+	Version           string                `json:"version"`
+	Content           string                `json:"content"`
+	Icon              string                `json:"icon"`
+	Alipay            string                `json:"alipay"`
+	Wxpay             string                `json:"wxpay"`
+	BuildTimeStamp    int64                 `json:"buildTimeStamp"`
+	OfficialStatement string                `json:"officialStatement"`
+	IsDel             soft_delete.DeletedAt `gorm:"softDelete:flag"`
 }
 
 func (receiver VersionInfo) TableName() string {

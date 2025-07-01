@@ -27,7 +27,7 @@ import {
   StarOutline,
   Wallet, WarningOutline,
 } from '@vicons/ionicons5'
-import {AnalyzeSentiment, GetConfig, GetGroupList} from "../wailsjs/go/main/App";
+import {AnalyzeSentiment, GetConfig, GetGroupList,GetVersionInfo} from "../wailsjs/go/main/App";
 import {Dragon, Fire, Gripfire} from "@vicons/fa";
 import {ReportSearch} from "@vicons/tabler";
 import {LocalFireDepartmentRound} from "@vicons/material";
@@ -518,6 +518,12 @@ window.onerror = function (msg, source, lineno, colno, error) {
 };
 
 onBeforeMount(() => {
+  GetVersionInfo().then(result => {
+    if(result.officialStatement){
+      content.value = result.officialStatement
+    }
+  })
+
   GetGroupList().then(result => {
     groupList.value = result
     menuOptions.value.map((item) => {

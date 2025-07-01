@@ -9,6 +9,7 @@ on:
 env:
   # Necessary for most environments as build failure can occur due to OOM issues
   NODE_OPTIONS: "--max-old-space-size=4096"
+  OFFICIAL_STATEMENT: ${{ vars.OFFICIAL_STATEMENT }}
 
 jobs:
   build:
@@ -38,7 +39,7 @@ jobs:
           echo "::set-output name=commit_message::$commit_message"
 
       - name: Build wails x go-stock
-        uses: ArvinLovegood/wails-build-action@v3.4
+        uses: ArvinLovegood/wails-build-action@v3.5
         id: build
         with:
           build-name: ${{ matrix.build.name }}
@@ -47,4 +48,5 @@ jobs:
           go-version: '1.24'
           build-tags: ${{ github.ref_name }}
           build-commit-message: ${{ steps.get_commit_message.outputs.commit_message }}
+          build-statement: ${{ env.OFFICIAL_STATEMENT }}
           node-version: '20.x'

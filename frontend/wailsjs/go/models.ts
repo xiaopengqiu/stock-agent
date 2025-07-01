@@ -701,6 +701,7 @@ export namespace models {
 	    alipay: string;
 	    wxpay: string;
 	    buildTimeStamp: number;
+	    officialStatement: string;
 	    IsDel: number;
 	
 	    static createFrom(source: any = {}) {
@@ -719,6 +720,7 @@ export namespace models {
 	        this.alipay = source["alipay"];
 	        this.wxpay = source["wxpay"];
 	        this.buildTimeStamp = source["buildTimeStamp"];
+	        this.officialStatement = source["officialStatement"];
 	        this.IsDel = source["IsDel"];
 	    }
 	
