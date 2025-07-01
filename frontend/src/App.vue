@@ -520,7 +520,7 @@ window.onerror = function (msg, source, lineno, colno, error) {
 onBeforeMount(() => {
   GetVersionInfo().then(result => {
     if(result.officialStatement){
-      content.value = result.officialStatement
+      content.value = result.officialStatement+"\n\n"+content.value
     }
   })
 
