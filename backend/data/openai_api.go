@@ -191,7 +191,7 @@ func (o OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysPromp
 		}()
 		wg.Wait()
 
-		news := NewMarketNewsApi().GetNewsList("", 100)
+		news := NewMarketNewsApi().GetNewsList("财联社电报", 500)
 		messageText := strings.Builder{}
 		for _, telegraph := range *news {
 			messageText.WriteString("## " + telegraph.Time + ":" + "\n")
@@ -310,7 +310,7 @@ func (o OpenAi) NewSummaryStockNewsStream(userQuestion string, sysPromptId *int)
 	return ch
 }
 
-func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId *int) <-chan map[string]any {
+func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId *int, tools []Tool) <-chan map[string]any {
 	ch := make(chan map[string]any, 512)
 
 	defer func() {
@@ -647,7 +647,11 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 
 		//reqJson, _ := json.Marshal(msg)
 		//logger.SugaredLogger.Errorf("Stream request: \n%s\n", reqJson)
-		AskAi(o, err, msg, ch, question)
+		if tools != nil && len(tools) > 0 {
+			AskAiWithTools(o, err, msg, ch, question, tools)
+		} else {
+			AskAi(o, err, msg, ch, question)
+		}
 	}()
 	return ch
 }
@@ -859,17 +863,30 @@ func AskAiWithTools(o OpenAi, err error, messages []map[string]interface{}, ch c
 				for _, choice := range streamResponse.Choices {
 					if content := choice.Delta.Content; content != "" {
 						//ch <- content
-						ch <- map[string]any{
-							"code":     1,
-							"question": question,
-							"chatId":   streamResponse.Id,
-							"model":    streamResponse.Model,
-							"content":  content,
-							"time":     time.Now().Format(time.DateTime),
+						//logger.SugaredLogger.Infof("Content data: %s", content)
+
+						if content == "###" {
+							currentAIContent.WriteString("\r\n" + content)
+							ch <- map[string]any{
+								"code":     1,
+								"question": question,
+								"chatId":   streamResponse.Id,
+								"model":    streamResponse.Model,
+								"content":  "\r\n" + content,
+								"time":     time.Now().Format(time.DateTime),
+							}
+						} else {
+							currentAIContent.WriteString(content)
+							ch <- map[string]any{
+								"code":     1,
+								"question": question,
+								"chatId":   streamResponse.Id,
+								"model":    streamResponse.Model,
+								"content":  content,
+								"time":     time.Now().Format(time.DateTime),
+							}
 						}
 
-						//logger.SugaredLogger.Infof("Content data: %s", content)
-						currentAIContent.WriteString(content)
 					}
 					if reasoningContent := choice.Delta.ReasoningContent; reasoningContent != "" {
 						//ch <- reasoningContent
@@ -913,16 +930,16 @@ func AskAiWithTools(o OpenAi, err error, messages []map[string]interface{}, ch c
 									"question": question,
 									"chatId":   streamResponse.Id,
 									"model":    streamResponse.Model,
-									"content":  "- ```开始调用工具：SearchStockByIndicators，\n参数：" + words + "```  " + "\n",
+									"content":  "\r\n```\r\n开始调用工具：SearchStockByIndicators，\n参数：" + words + "\r\n```\r\n",
 									"time":     time.Now().Format(time.DateTime),
 								}
 
-								res := NewSearchStockApi(words).SearchStock(10)
+								res := NewSearchStockApi(words).SearchStock(50)
 								searchRes, _ := json.Marshal(res)
 
 								content := gjson.Get(string(searchRes), "data.result").String()
 
-								logger.SugaredLogger.Infof("SearchStockByIndicators:words:%s  --> %s", words, content)
+								//logger.SugaredLogger.Infof("SearchStockByIndicators:words:%s  --> %s", words, content)
 
 								//messages = append(messages, map[string]interface{}{
 								//	"role":    "assistant",
@@ -935,6 +952,31 @@ func AskAiWithTools(o OpenAi, err error, messages []map[string]interface{}, ch c
 								})
 
 							}
+
+							if funcName == "GetStockKLine" {
+								stockCode := gjson.Get(funcArguments, "stockCode").String()
+								days := gjson.Get(funcArguments, "days").String()
+								ch <- map[string]any{
+									"code":     1,
+									"question": question,
+									"chatId":   streamResponse.Id,
+									"model":    streamResponse.Model,
+									"content":  "\r\n```\r\n开始调用工具：GetStockKLine，\n参数：" + stockCode + "," + days + "\r\n```\r\n",
+									"time":     time.Now().Format(time.DateTime),
+								}
+								toIntDay, err := convertor.ToInt(days)
+								if err != nil {
+									toIntDay = 90
+								}
+								res := NewStockDataApi().GetHK_KLineData(stockCode, "day", toIntDay)
+								searchRes, _ := json.Marshal(res)
+								messages = append(messages, map[string]interface{}{
+									"role":         "tool",
+									"content":      stockCode + convertor.ToString(toIntDay) + "日K线数据：\n" + string(searchRes) + "\n",
+									"tool_call_id": currentCallId,
+								})
+							}
+
 							AskAiWithTools(o, err, messages, ch, question, tools)
 						}
 					}

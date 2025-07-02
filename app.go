@@ -36,6 +36,7 @@ type App struct {
 	cache      *freecache.Cache
 	cron       *cron.Cron
 	cronEntrys map[string]cron.EntryID
+	AiTools    []data.Tool
 }
 
 // NewApp creates a new App application struct
@@ -44,11 +45,58 @@ func NewApp() *App {
 	cache := freecache.NewCache(cacheSize)
 	c := cron.New(cron.WithSeconds())
 	c.Start()
+	var tools []data.Tool
+	tools = AddTools(tools)
 	return &App{
 		cache:      cache,
 		cron:       c,
 		cronEntrys: make(map[string]cron.EntryID),
+		AiTools:    tools,
 	}
+}
+
+func AddTools(tools []data.Tool) []data.Tool {
+	tools = append(tools, data.Tool{
+		Type: "function",
+		Function: data.ToolFunction{
+			Name:        "SearchStockByIndicators",
+			Description: "根据自然语言筛选股票，返回自然语言选股条件要求的股票所有相关数据。单独输入股票名称可以获取当前股票最新的股价交易数据和基础财务指标信息",
+			Parameters: data.FunctionParameters{
+				Type: "object",
+				Properties: map[string]any{
+					"words": map[string]any{
+						"type":        "string",
+						"description": "选股自然语言,并且条件使用;分隔，或者条件使用,分隔。例1：创新药;PE<30;净利润增长率>50%。 例2：上证指数(指数名称)。 例3：长电科技(股票名称)",
+					},
+				},
+				Required: []string{"words"},
+			},
+		},
+	})
+
+	tools = append(tools, data.Tool{
+		Type: "function",
+		Function: data.ToolFunction{
+			Name:        "GetStockKLine",
+			Description: "获取股票日K线数据",
+			Parameters: data.FunctionParameters{
+				Type: "object",
+				Properties: map[string]any{
+					"days": map[string]any{
+						"type":        "string",
+						"description": "日K数据条数",
+					},
+					"stockCode": map[string]any{
+						"type":        "string",
+						"description": "股票代码（A股：sh,sz开头;港股hk开头,美股：us开头）",
+					},
+				},
+				Required: []string{"days", "stockCode"},
+			},
+		},
+	})
+
+	return tools
 }
 
 // startup is called at application startup
@@ -311,7 +359,7 @@ func (a *App) AddCronTask(follow data.FollowedStock) func() {
 	return func() {
 		go runtime.EventsEmit(a.ctx, "warnMsg", "开始自动分析"+follow.Name+"_"+follow.StockCode)
 		ai := data.NewDeepSeekOpenAi(a.ctx)
-		msgs := ai.NewChatStream(follow.Name, follow.StockCode, "", nil)
+		msgs := ai.NewChatStream(follow.Name, follow.StockCode, "", nil, a.AiTools)
 		var res strings.Builder
 
 		chatId := ""
@@ -748,7 +796,7 @@ func (a *App) SendDingDingMessageByType(message string, stockCode string, msgTyp
 }
 
 func (a *App) NewChatStream(stock, stockCode, question string, sysPromptId *int) {
-	msgs := data.NewDeepSeekOpenAi(a.ctx).NewChatStream(stock, stockCode, question, sysPromptId)
+	msgs := data.NewDeepSeekOpenAi(a.ctx).NewChatStream(stock, stockCode, question, sysPromptId, a.AiTools)
 	for msg := range msgs {
 		runtime.EventsEmit(a.ctx, "newChatStream", msg)
 	}
@@ -1129,26 +1177,7 @@ func (a *App) GlobalStockIndexes() map[string]any {
 }
 
 func (a *App) SummaryStockNews(question string, sysPromptId *int) {
-	var tools []data.Tool
-	tools = append(tools, data.Tool{
-		Type: "function",
-		Function: data.ToolFunction{
-			Name:        "SearchStockByIndicators",
-			Description: "根据自然语言筛选股票，返回自然语言选股条件要求的股票所有相关数据。单独输入股票名称可以获取当前股票最新的股价交易数据和基础财务指标信息",
-			Parameters: data.FunctionParameters{
-				Type: "object",
-				Properties: map[string]any{
-					"words": map[string]any{
-						"type":        "string",
-						"description": "选股自然语言,并且条件使用;分隔，或者条件使用,分隔。例1：创新药;PE<30;净利润增长率>50%。 例2：上证指数(指数名称)。 例3：长电科技(股票名称)",
-					},
-				},
-				Required: []string{"words"},
-			},
-		},
-	})
-
-	msgs := data.NewDeepSeekOpenAi(a.ctx).NewSummaryStockNewsStreamWithTools(question, sysPromptId, tools)
+	msgs := data.NewDeepSeekOpenAi(a.ctx).NewSummaryStockNewsStreamWithTools(question, sysPromptId, a.AiTools)
 	for msg := range msgs {
 		runtime.EventsEmit(a.ctx, "summaryStockNews", msg)
 	}
