@@ -60,13 +60,13 @@ func AddTools(tools []data.Tool) []data.Tool {
 		Type: "function",
 		Function: data.ToolFunction{
 			Name:        "SearchStockByIndicators",
-			Description: "根据自然语言筛选股票，返回自然语言选股条件要求的股票所有相关数据。单独输入股票名称可以获取当前股票最新的股价交易数据和基础财务指标信息",
+			Description: "根据自然语言筛选股票，返回自然语言选股条件要求的股票所有相关数据。输入股票名称可以获取当前股票最新的股价交易数据和基础财务指标信息，多个股票名称使用,分隔",
 			Parameters: data.FunctionParameters{
 				Type: "object",
 				Properties: map[string]any{
 					"words": map[string]any{
 						"type":        "string",
-						"description": "选股自然语言,并且条件使用;分隔，或者条件使用,分隔。例1：创新药;PE<30;净利润增长率>50%。 例2：上证指数(指数名称)。 例3：长电科技(股票名称)",
+						"description": "选股自然语言,并且条件使用;分隔，或者条件使用,分隔。例1：创新药;PE<30;净利润增长率>50%。 例2：上证指数,科创50。 例3：长电科技,上海贝岭",
 					},
 				},
 				Required: []string{"words"},
