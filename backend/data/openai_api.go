@@ -766,10 +766,14 @@ func AskAi(o OpenAi, err error, messages []map[string]interface{}, ch chan map[s
 				res := &models.Resp{}
 				if err := json.Unmarshal([]byte(line), res); err == nil {
 					//ch <- line
+					msg := res.Message
+					if res.Error.Message != "" {
+						msg = res.Error.Message
+					}
 					ch <- map[string]any{
 						"code":     0,
 						"question": question,
-						"content":  res.Message,
+						"content":  msg,
 					}
 				}
 			}
@@ -920,10 +924,10 @@ func AskAiWithTools(o OpenAi, err error, messages []map[string]interface{}, ch c
 
 								logger.SugaredLogger.Infof("SearchStockByIndicators:words:%s  --> %s", words, content)
 
-								messages = append(messages, map[string]interface{}{
-									"role":    "assistant",
-									"content": currentAIContent.String(),
-								})
+								//messages = append(messages, map[string]interface{}{
+								//	"role":    "assistant",
+								//	"content": currentAIContent.String(),
+								//})
 								messages = append(messages, map[string]interface{}{
 									"role":         "tool",
 									"content":      content,
@@ -964,10 +968,14 @@ func AskAiWithTools(o OpenAi, err error, messages []map[string]interface{}, ch c
 				res := &models.Resp{}
 				if err := json.Unmarshal([]byte(line), res); err == nil {
 					//ch <- line
+					msg := res.Message
+					if res.Error.Message != "" {
+						msg = res.Error.Message
+					}
 					ch <- map[string]any{
 						"code":     0,
 						"question": question,
-						"content":  res.Message,
+						"content":  msg,
 					}
 				}
 			}

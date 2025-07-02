@@ -14,13 +14,13 @@ func TestNewDeepSeekOpenAiConfig(t *testing.T) {
 		Type: "function",
 		Function: ToolFunction{
 			Name:        "SearchStockByIndicators",
-			Description: "通过解析自然语言，形成选股指标或策略，返回符合指标或策略的股票列表",
+			Description: "根据自然语言筛选股票，返回自然语言选股条件要求的股票所有相关数据",
 			Parameters: FunctionParameters{
 				Type: "object",
 				Properties: map[string]any{
 					"words": map[string]any{
 						"type":        "string",
-						"description": "选股指标或策略的自然语言",
+						"description": "选股自然语言,并且条件使用;分隔，或者条件使用,分隔。例如：创新药;PE<30;净利润增长率>50%;",
 					},
 				},
 				Required: []string{"words"},
@@ -35,7 +35,9 @@ func TestNewDeepSeekOpenAiConfig(t *testing.T) {
 	for {
 		select {
 		case msg := <-res:
-			t.Log(msg)
+			if len(msg) > 0 {
+				t.Log(msg)
+			}
 		}
 	}
 }
