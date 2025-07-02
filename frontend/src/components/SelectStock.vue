@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {h, onBeforeMount, onMounted, onUnmounted, ref} from 'vue'
 import {SearchStock,GetHotStrategy} from "../../wailsjs/go/main/App";
-import {useMessage, NText, NTag} from 'naive-ui'
+import {useMessage, NText, NTag,NButton} from 'naive-ui'
 import {RefreshCircleSharp} from "@vicons/ionicons5";
 const message = useMessage()
 const search = ref('')
@@ -40,7 +40,14 @@ function Search() {
                 resizable: true,
                 ellipsis: {
                   tooltip: true
-                }
+                },
+                sorter: (row1, row2) => {
+                  if(isNumeric(row1[item.key])&&isNumeric(row2[item.key])){
+                    return row1[item.key] - row2[item.key];
+                  }else{
+                    return 'default'
+                  }
+                },
               }
             })
           }
@@ -49,11 +56,21 @@ function Search() {
             title:item.title+(item.unit?'['+item.unit+']':''),
             key:item.key,
             resizable: true,
-            minWidth:100,
+            minWidth:120,
             ellipsis: {
               tooltip: true
-            }
+            },
+            sorter: (row1, row2) => {
+              if(isNumeric(row1[item.key])&&isNumeric(row2[item.key])){
+                return row1[item.key] - row2[item.key];
+              }else{
+                return 'default'
+              }
+            },
           }
+
+
+
         }
       })
      dataList.value=res.data.result.dataList
@@ -86,6 +103,16 @@ function DoSearch(question){
   Search()
 }
 
+function openCenteredWindow(url, width, height) {
+  const left = (window.screen.width - width) / 2;
+  const top = (window.screen.height - height) / 2;
+
+  return window.open(
+      url,
+      'centeredWindow',
+      `width=${width},height=${height},left=${left},top=${top},location=no,menubar=no,toolbar=no,display=standalone`
+  );
+}
 </script>
 
 <template>
@@ -167,7 +194,9 @@ function DoSearch(question){
             return h(NText, { type: type }, { default: () => `${value}` })
         }else{
             if(column.key=='SECURITY_SHORT_NAME'){
-              return h(NTag, { type: 'info',bordered: false }, { default: () => `${value}` })
+              return h(NButton, { type: 'info',bordered: false ,size:'small',onClick:()=>{
+                openCenteredWindow(`https://quote.eastmoney.com/concept/${rowData.MARKET_SHORT_NAME}${rowData.SECURITY_CODE}.html`,1240,700)
+              }}, { default: () => `${value}` })
             }else{
               return h(NText, { type: 'info' }, { default: () => `${value}` })
             }
