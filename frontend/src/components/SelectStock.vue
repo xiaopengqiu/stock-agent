@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import {h, onBeforeMount, onMounted, onUnmounted, ref} from 'vue'
-import {SearchStock} from "../../wailsjs/go/main/App";
+import {SearchStock,GetHotStrategy} from "../../wailsjs/go/main/App";
 import {useMessage, NText, NTag} from 'naive-ui'
+import {RefreshCircleSharp} from "@vicons/ionicons5";
 const message = useMessage()
 const search = ref('')
 const columns = ref([])
 const dataList = ref([])
+const hotStrategy = ref([])
 const traceInfo = ref('')
 function Search() {
   if(!search.value){
@@ -16,12 +18,11 @@ function Search() {
   const loading = message.loading("正在获取选股数据...", {duration: 0});
   SearchStock(search.value).then(res => {
     loading.destroy()
-    console.log(res)
+   // console.log(res)
     if(res.code==100){
       traceInfo.value=res.data.traceInfo.showText
-      message.success(res.msg)
+     // message.success(res.msg)
       columns.value=res.data.result.columns.filter(item=>!item.hiddenNeed&&(item.title!="市场码"&&item.title!="市场简称")).map(item=>{
-
         if(item.children){
           return {
             title:item.title+(item.unit?'['+item.unit+']':''),
@@ -68,30 +69,86 @@ function isNumeric(value) {
 }
 
 onBeforeMount(() => {
-  Search()
+  GetHotStrategy().then(res => {
+    console.log(res)
+    if(res.code==1){
+      hotStrategy.value=res.data
+      search.value=hotStrategy.value[0].question
+      Search()
+    }
+  }).catch(err => {
+    message.error(err)
+  })
+
 })
+function DoSearch(question){
+  search.value= question
+  Search()
+}
 
 </script>
 
 <template>
-  <n-flex>
-    <n-input-group>
-      <n-input clearable v-model:value="search" placeholder="请输入选股指标或者要求" />
-      <n-button type="primary" @click="Search">搜索A股</n-button>
-    </n-input-group>
-  </n-flex>
-  <n-flex justify="start" v-if="traceInfo">
-    <n-tag type="info" :bordered="false">当前选股条件：<n-tag type="warning" :bordered="true">{{traceInfo}}</n-tag></n-tag>
-<!--    <n-button type="primary" size="small">保存策略</n-button>-->
-  </n-flex>
-  <n-data-table
-      :max-height="'calc(100vh - 312px)'"
-      size="small"
-      :columns="columns"
-      :data="dataList"
-      :pagination="false"
-      :scroll-x="1800"
-      :render-cell="(value, rowData, column) => {
+  <n-grid :cols="24" style="max-height: calc(100vh - 170px)">
+    <n-gi :span="4" >
+      <n-list bordered   style="text-align: left;" hoverable clickable>
+        <n-scrollbar style="max-height: calc(100vh - 170px);" >
+                  <n-list-item v-for="item in hotStrategy" :key="item.rank" @click="DoSearch(item.question)">
+                    <n-ellipsis  line-clamp="1" :tooltip="true" >
+                      <n-tag size="small"  :bordered="false" type="info">#{{item.rank}}</n-tag><n-text type="warning">{{item.question	}}</n-text>
+                      <template #tooltip>
+                        <div style="text-align: center;max-width: 180px">
+                          <n-text type="warning">{{item.question	}}</n-text>
+                        </div>
+                      </template>
+                    </n-ellipsis>
+                  </n-list-item>
+        </n-scrollbar>
+      </n-list>
+
+<!--        <n-virtual-list :items="hotStrategy" :item-size="hotStrategy.length">-->
+<!--          <template #default="{ item, index }">-->
+<!--                      <n-card :title="''" size="small">-->
+<!--                        <template #header-extra>-->
+<!--                          {{item.rank}}-->
+<!--                        </template>-->
+<!--                        <n-ellipsis expand-trigger="click" line-clamp="3" :tooltip="false" >-->
+<!--                          <n-text type="warning">{{item.question	}}</n-text>-->
+<!--                        </n-ellipsis>-->
+<!--                      </n-card>-->
+
+<!--          </template>-->
+<!--      </n-virtual-list>-->
+    </n-gi>
+    <n-gi :span="20" >
+      <n-flex>
+        <n-input-group style="text-align: left">
+          <n-input :rows="1" clearable v-model:value="search" placeholder="请输入选股指标或者要求" />
+          <n-button type="primary" @click="Search">搜索A股</n-button>
+        </n-input-group>
+      </n-flex>
+      <n-flex justify="start" v-if="traceInfo" style="margin: 5px 0">
+
+        <n-ellipsis  line-clamp="1" :tooltip="true" >
+          <n-text type="info" :bordered="false">选股条件：</n-text><n-text type="warning" :bordered="true">{{traceInfo}}</n-text>
+          <template #tooltip>
+            <div style="text-align: center;max-width: 580px">
+              <n-text type="warning">{{traceInfo}}</n-text>
+            </div>
+          </template>
+        </n-ellipsis>
+
+        <!--    <n-button type="primary" size="small">保存策略</n-button>-->
+      </n-flex>
+      <n-data-table
+          :striped="true"
+          :max-height="'calc(100vh - 250px)'"
+          size="medium"
+          :columns="columns"
+          :data="dataList"
+          :pagination="{pageSize: 9}"
+          :scroll-x="1800"
+          :render-cell="(value, rowData, column) => {
 
         if(column.key=='SECURITY_CODE'||column.key=='SERIAL'){
           return h(NText, { type: 'info',border: false }, { default: () => `${value}` })
@@ -116,7 +173,12 @@ onBeforeMount(() => {
             }
           }
       }"
-  />
+      />
+      <n-text>共找到<n-tag type="info" :bordered="false">{{dataList.length}}</n-tag>只股</n-text>
+    </n-gi>
+  </n-grid>
+
+
 </template>
 
 <style scoped>

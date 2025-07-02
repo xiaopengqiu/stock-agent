@@ -23,3 +23,14 @@ func TestSearchStock(t *testing.T) {
 	//}
 
 }
+
+func TestSearchStockApi_HotStrategy(t *testing.T) {
+	db.Init("../../data/stock.db")
+	res := NewSearchStockApi("").HotStrategy()
+	logger.SugaredLogger.Infof("res:%+v", res)
+	dataList := res["data"].([]any)
+	for _, v := range dataList {
+		d := v.(map[string]any)
+		logger.SugaredLogger.Infof("v:%+v", d)
+	}
+}

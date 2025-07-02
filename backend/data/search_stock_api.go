@@ -53,3 +53,20 @@ func (s SearchStockApi) SearchStock(pageSize int) map[string]any {
 	//logger.SugaredLogger.Infof("resp:%+v", respMap["data"])
 	return respMap
 }
+
+func (s SearchStockApi) HotStrategy() map[string]any {
+	url := fmt.Sprintf("https://np-ipick.eastmoney.com/recommend/stock/heat/ranking?count=20&trace=%d&client=web&biz=web_smart_tag", time.Now().Unix())
+	resp, err := resty.New().SetTimeout(time.Duration(30)*time.Second).R().
+		SetHeader("Host", "np-ipick.eastmoney.com").
+		SetHeader("Origin", "https://xuangu.eastmoney.com").
+		SetHeader("Referer", "https://xuangu.eastmoney.com/").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		Get(url)
+	if err != nil {
+		logger.SugaredLogger.Errorf("HotStrategy-err:%+v", err)
+		return map[string]any{}
+	}
+	respMap := map[string]any{}
+	json.Unmarshal(resp.Body(), &respMap)
+	return respMap
+}
