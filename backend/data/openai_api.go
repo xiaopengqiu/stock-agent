@@ -1045,7 +1045,17 @@ func AskAiWithTools(o OpenAi, err error, messages []map[string]interface{}, ch c
 					}
 
 					if msg == "Function call is not supported for this model." {
-						AskAi(o, err, messages, ch, question)
+						var newMessages []map[string]any
+						for _, message := range messages {
+							if message["role"] == "tool" {
+								continue
+							}
+							if _, ok := message["tool_calls"]; ok {
+								continue
+							}
+							newMessages = append(newMessages, message)
+						}
+						AskAi(o, err, newMessages, ch, question)
 					} else {
 						ch <- map[string]any{
 							"code":     0,
