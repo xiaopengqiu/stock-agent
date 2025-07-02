@@ -941,10 +941,22 @@ func AskAiWithTools(o OpenAi, err error, messages []map[string]interface{}, ch c
 
 								//logger.SugaredLogger.Infof("SearchStockByIndicators:words:%s  --> %s", words, content)
 
-								//messages = append(messages, map[string]interface{}{
-								//	"role":    "assistant",
-								//	"content": currentAIContent.String(),
-								//})
+								messages = append(messages, map[string]interface{}{
+									"role":    "assistant",
+									"content": currentAIContent.String(),
+									"tool_calls": []map[string]any{
+										{
+											"id":           currentCallId,
+											"tool_call_id": currentCallId,
+											"type":         "function",
+											"function": map[string]string{
+												"name":       funcName,
+												"arguments":  funcArguments,
+												"parameters": funcArguments,
+											},
+										},
+									},
+								})
 								messages = append(messages, map[string]interface{}{
 									"role":         "tool",
 									"content":      content,
@@ -970,6 +982,23 @@ func AskAiWithTools(o OpenAi, err error, messages []map[string]interface{}, ch c
 								}
 								res := NewStockDataApi().GetHK_KLineData(stockCode, "day", toIntDay)
 								searchRes, _ := json.Marshal(res)
+
+								messages = append(messages, map[string]interface{}{
+									"role":    "assistant",
+									"content": currentAIContent.String(),
+									"tool_calls": []map[string]any{
+										{
+											"id":           currentCallId,
+											"tool_call_id": currentCallId,
+											"type":         "function",
+											"function": map[string]string{
+												"name":       funcName,
+												"arguments":  funcArguments,
+												"parameters": funcArguments,
+											},
+										},
+									},
+								})
 								messages = append(messages, map[string]interface{}{
 									"role":         "tool",
 									"content":      stockCode + convertor.ToString(toIntDay) + "日K线数据：\n" + string(searchRes) + "\n",
@@ -1014,11 +1043,17 @@ func AskAiWithTools(o OpenAi, err error, messages []map[string]interface{}, ch c
 					if res.Error.Message != "" {
 						msg = res.Error.Message
 					}
-					ch <- map[string]any{
-						"code":     0,
-						"question": question,
-						"content":  msg,
+
+					if msg == "Function call is not supported for this model." {
+						AskAi(o, err, messages, ch, question)
+					} else {
+						ch <- map[string]any{
+							"code":     0,
+							"question": question,
+							"content":  msg,
+						}
 					}
+
 				}
 			}
 
