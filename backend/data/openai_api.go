@@ -1018,8 +1018,8 @@ func AskAiWithTools(o OpenAi, err error, messages []map[string]interface{}, ch c
 								})
 							}
 
-							AskAiWithTools(o, err, messages, ch, question, tools)
 						}
+						AskAiWithTools(o, err, messages, ch, question, tools)
 					}
 
 					if choice.FinishReason == "stop" {
