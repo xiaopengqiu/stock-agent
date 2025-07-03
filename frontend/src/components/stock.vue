@@ -223,8 +223,11 @@ onMounted(() => {
       if (!stocks.value.includes(followedStock.StockCode)) {
         stocks.value.push(followedStock.StockCode)
       }
+      Greet(followedStock.StockCode).then(result => {
+        updateData(result)
+      })
     }
-    monitor()
+    //monitor()
     message.destroyAll()
   })
 
@@ -464,6 +467,7 @@ function removeMonitor(code, name, key) {
 
   UnFollow(code).then(result => {
     message.success(result)
+    monitor()
   })
 }
 
@@ -581,7 +585,6 @@ async function monitor() {
     showPopover.value = true
   }
   for (let code of stocks.value) {
-
     Greet(code).then(result => {
       updateData(result)
     })
@@ -590,8 +593,7 @@ async function monitor() {
 
 
 function GetSortKey(sort, code) {
-  let sortKey = padStart(sort, 8, '0') + "_" + code
-  return sortKey
+  return padStart(sort, 8, '0') + "_" + code
 }
 
 function onSelect(item) {
@@ -1383,12 +1385,12 @@ function aiCheckStock(stock, stockCode) {
       data.time = ""
       data.name = stock
       data.code = stockCode
-      data.loading = true
+      data.loading = false
       modalShow4.value = true
-      message.loading("ai检测中...", {
-        duration: 0,
-      })
-      NewChatStream(stock, stockCode, "", data.sysPromptId)
+      // message.loading("ai检测中...", {
+      //   duration: 0,
+      // })
+      // NewChatStream(stock, stockCode, "", data.sysPromptId)
     }
   })
 }
@@ -1573,18 +1575,20 @@ function AddStockGroupInfo(groupId, code, name) {
 }
 
 function updateTab(name) {
+  stocks.value = []
   currentGroupId.value = Number(name)
   GetFollowList(currentGroupId.value).then(result => {
-    stocks.value = []
     followList.value = result
     for (const followedStock of result) {
       if (followedStock.StockCode.startsWith("us")) {
         followedStock.StockCode = "gb_" + followedStock.StockCode.replace("us", "").toLowerCase()
       }
-      ////console.log("followList",followedStock.StockCode)
       stocks.value.push(followedStock.StockCode)
+      Greet(followedStock.StockCode).then(result => {
+        updateData(result)
+      })
     }
-    monitor()
+    //monitor()
     message.destroyAll()
   })
 }
@@ -1739,11 +1743,10 @@ function searchStockReport(stockCode) {
                         @click="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
                 取消关注
               </n-button>&nbsp;
-              <n-button size="tiny" v-if="data.openAiEnable" secondary type="warning"
-                        @click="aiCheckStock(result['股票名称'],result['股票代码'])">
+
+              <n-button size="tiny" v-if="data.openAiEnable" secondary type="warning"  @click="aiCheckStock(result['股票名称'],result['股票代码'])">
                 AI分析
               </n-button>
-
             </template>
             <template #footer>
               <n-flex justify="center">
@@ -1876,10 +1879,10 @@ function searchStockReport(stockCode) {
                         @click="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
                 取消关注
               </n-button>&nbsp;
-              <n-button size="tiny" v-if="data.openAiEnable" secondary type="warning"
-                        @click="aiCheckStock(result['股票名称'],result['股票代码'])">
-                AI分析
-              </n-button>&nbsp;
+
+                <n-button size="tiny" v-if="data.openAiEnable" secondary type="warning"  @click="aiCheckStock(result['股票名称'],result['股票代码'])">
+                  AI分析
+                </n-button>
               <n-button secondary type="error" size="tiny"
                         @click="delStockGroup(result['股票代码'],result['股票名称'],group.ID)">移出分组
               </n-button>
@@ -2045,7 +2048,7 @@ function searchStockReport(stockCode) {
   </n-modal>
 
   <n-modal transform-origin="center" v-model:show="modalShow4" preset="card" style="width: 800px;"
-           :title="'['+data.name+']AI分析结果'">
+           :title="'['+data.name+']AI分析'">
     <n-spin size="small" :show="data.loading">
       <MdEditor v-if="enableEditor" :toolbars="toolbars" ref="mdEditorRef" style="height: 440px;text-align: left"
                 :modelValue="data.airesult" :theme="theme">
@@ -2087,7 +2090,7 @@ function searchStockReport(stockCode) {
             }"
         />
         <!--        <n-button size="tiny" type="error" @click="enableEditor=!enableEditor">编辑/预览</n-button>-->
-        <n-button size="tiny" type="warning" @click="aiReCheckStock(data.name,data.code)">再次分析</n-button>
+        <n-button size="tiny" type="warning" @click="aiReCheckStock(data.name,data.code)">开始AI分析</n-button>
         <n-button size="tiny" type="info" @click="saveAsImage(data.name,data.code)">保存为图片</n-button>
         <n-button size="tiny" type="success" @click="copyToClipboard">复制到剪切板</n-button>
         <n-button size="tiny" type="primary" @click="saveAsMarkdown">保存为Markdown文件</n-button>
