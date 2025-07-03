@@ -9,6 +9,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/chromedp/chromedp"
 	"github.com/duke-git/lancet/v2/convertor"
+	"github.com/duke-git/lancet/v2/random"
 	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/go-resty/resty/v2"
 	"github.com/tidwall/gjson"
@@ -191,7 +192,7 @@ func (o OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysPromp
 		}()
 		wg.Wait()
 
-		news := NewMarketNewsApi().GetNewsList("财联社电报", 100)
+		news := NewMarketNewsApi().GetNewsList("财联社电报", random.RandInt(50, 150))
 		messageText := strings.Builder{}
 		for _, telegraph := range *news {
 			messageText.WriteString("## " + telegraph.Time + ":" + "\n")
@@ -934,7 +935,7 @@ func AskAiWithTools(o OpenAi, err error, messages []map[string]interface{}, ch c
 									"time":     time.Now().Format(time.DateTime),
 								}
 
-								res := NewSearchStockApi(words).SearchStock(50)
+								res := NewSearchStockApi(words).SearchStock(random.RandInt(5, 10))
 								searchRes, _ := json.Marshal(res)
 
 								content := gjson.Get(string(searchRes), "data.result").String()
