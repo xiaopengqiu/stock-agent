@@ -718,13 +718,24 @@ func AskAi(o OpenAi, err error, messages []map[string]interface{}, ch chan map[s
 				for _, choice := range streamResponse.Choices {
 					if content := choice.Delta.Content; content != "" {
 						//ch <- content
-						ch <- map[string]any{
-							"code":     1,
-							"question": question,
-							"chatId":   streamResponse.Id,
-							"model":    streamResponse.Model,
-							"content":  content,
-							"time":     time.Now().Format(time.DateTime),
+						if content == "###" || content == "##" || content == "#" {
+							ch <- map[string]any{
+								"code":     1,
+								"question": question,
+								"chatId":   streamResponse.Id,
+								"model":    streamResponse.Model,
+								"content":  "\r\n" + content,
+								"time":     time.Now().Format(time.DateTime),
+							}
+						} else {
+							ch <- map[string]any{
+								"code":     1,
+								"question": question,
+								"chatId":   streamResponse.Id,
+								"model":    streamResponse.Model,
+								"content":  content,
+								"time":     time.Now().Format(time.DateTime),
+							}
 						}
 
 						//logger.SugaredLogger.Infof("Content data: %s", content)
@@ -866,7 +877,7 @@ func AskAiWithTools(o OpenAi, err error, messages []map[string]interface{}, ch c
 						//ch <- content
 						//logger.SugaredLogger.Infof("Content data: %s", content)
 
-						if content == "###" {
+						if content == "###" || content == "##" || content == "#" {
 							currentAIContent.WriteString("\r\n" + content)
 							ch <- map[string]any{
 								"code":     1,

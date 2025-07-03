@@ -81,7 +81,7 @@ export function InvestCalendarTimeLine(arg1:string):Promise<Array<any>>;
 
 export function LongTigerRank(arg1:string):Promise<any>;
 
-export function NewChatStream(arg1:string,arg2:string,arg3:string,arg4:any):Promise<void>;
+export function NewChatStream(arg1:string,arg2:string,arg3:string,arg4:any,arg5:boolean):Promise<void>;
 
 export function NewsPush(arg1:any):Promise<void>;
 
@@ -115,7 +115,7 @@ export function StockNotice(arg1:string):Promise<Array<any>>;
 
 export function StockResearchReport(arg1:string):Promise<Array<any>>;
 
-export function SummaryStockNews(arg1:string,arg2:any):Promise<void>;
+export function SummaryStockNews(arg1:string,arg2:any,arg3:boolean):Promise<void>;
 
 export function UnFollow(arg1:string):Promise<string>;
 

@@ -60,13 +60,21 @@ func AddTools(tools []data.Tool) []data.Tool {
 		Type: "function",
 		Function: data.ToolFunction{
 			Name:        "SearchStockByIndicators",
-			Description: "根据自然语言筛选股票，返回自然语言选股条件要求的股票所有相关数据。输入股票名称可以获取当前股票最新的股价交易数据和基础财务指标信息，多个股票名称使用,分隔",
+			Description: "根据自然语言筛选股票，返回自然语言选股条件要求的股票所有相关数据。输入股票名称可以获取当前股票最新的股价交易数据和基础财务指标信息，多个股票名称使用,分隔。工具限制：不允许并行调用",
 			Parameters: data.FunctionParameters{
 				Type: "object",
 				Properties: map[string]any{
 					"words": map[string]any{
-						"type":        "string",
-						"description": "选股自然语言,并且条件使用;分隔，或者条件使用,分隔。例1：创新药;PE<30;净利润增长率>50%。 例2：上证指数,科创50。 例3：长电科技,上海贝岭",
+						"type": "string",
+						"description": "选股自然语言。" +
+							"例1：创新药,半导体;PE<30;净利润增长率>50%。 " +
+							"例2：上证指数,科创50。 " +
+							"例3：长电科技,上海贝岭。" +
+							"例4：长电科技,上海贝岭;KDJ,MACD,RSI,BOLL,主力净流入/流出" +
+							"例5：换手率大于3%小于25%.量比1以上. 10日内有过涨停.股价处于峰值的二分之一以下.流通股本<100亿.当日和连续四日净流入;股价在20日均线以上.分时图股价在均线之上.热门板块下涨幅领先的A股. 当日量能20000手以上.沪深个股.近一年市盈率波动小于150%.MACD金叉;不要ST股及不要退市股，非北交所，每股收益>0。" +
+							"例6：沪深主板.流通市值小于100亿.市值大于10亿.60分钟dif大于dea.60分钟skdj指标k值大于d值.skdj指标k值小于90.换手率大于3%.成交额大于1亿元.量比大于2.涨幅大于2%小于7%.股价大于5小于50.创业板.10日均线大于20日均线;不要ST股及不要退市股;不要北交所;不要科创板;不要创业板。" +
+							"例7：股价在20日线上，一月之内涨停次数>=1，量比大于1，换手率大于3%，流通市值大于 50亿小于200亿。" +
+							"例8：基本条件：前期有爆量，回调到 10 日线，当日是缩量阴线，均线趋势向上。;优选条件：一月之内涨停次数>=1",
 					},
 				},
 				Required: []string{"words"},
@@ -78,7 +86,7 @@ func AddTools(tools []data.Tool) []data.Tool {
 		Type: "function",
 		Function: data.ToolFunction{
 			Name:        "GetStockKLine",
-			Description: "获取股票日K线数据",
+			Description: "获取股票日K线数据。工具限制：不允许并行调用",
 			Parameters: data.FunctionParameters{
 				Type: "object",
 				Properties: map[string]any{
@@ -795,8 +803,13 @@ func (a *App) SendDingDingMessageByType(message string, stockCode string, msgTyp
 	return data.NewDingDingAPI().SendDingDingMessage(message)
 }
 
-func (a *App) NewChatStream(stock, stockCode, question string, sysPromptId *int) {
-	msgs := data.NewDeepSeekOpenAi(a.ctx).NewChatStream(stock, stockCode, question, sysPromptId, a.AiTools)
+func (a *App) NewChatStream(stock, stockCode, question string, sysPromptId *int, enableTools bool) {
+	var msgs <-chan map[string]any
+	if enableTools {
+		msgs = data.NewDeepSeekOpenAi(a.ctx).NewChatStream(stock, stockCode, question, sysPromptId, a.AiTools)
+	} else {
+		msgs = data.NewDeepSeekOpenAi(a.ctx).NewChatStream(stock, stockCode, question, sysPromptId, []data.Tool{})
+	}
 	for msg := range msgs {
 		runtime.EventsEmit(a.ctx, "newChatStream", msg)
 	}
@@ -1176,8 +1189,14 @@ func (a *App) GlobalStockIndexes() map[string]any {
 	return data.NewMarketNewsApi().GlobalStockIndexes(30)
 }
 
-func (a *App) SummaryStockNews(question string, sysPromptId *int) {
-	msgs := data.NewDeepSeekOpenAi(a.ctx).NewSummaryStockNewsStreamWithTools(question, sysPromptId, a.AiTools)
+func (a *App) SummaryStockNews(question string, sysPromptId *int, enableTools bool) {
+	var msgs <-chan map[string]any
+	if enableTools {
+		msgs = data.NewDeepSeekOpenAi(a.ctx).NewSummaryStockNewsStreamWithTools(question, sysPromptId, a.AiTools)
+	} else {
+		msgs = data.NewDeepSeekOpenAi(a.ctx).NewSummaryStockNewsStream(question, sysPromptId)
+	}
+
 	for msg := range msgs {
 		runtime.EventsEmit(a.ctx, "summaryStockNews", msg)
 	}

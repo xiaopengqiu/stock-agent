@@ -70,6 +70,7 @@ const nowTab = ref("市场快讯")
 const indexInterval = ref(null)
 const indexIndustryRank = ref(null)
 const stockCode= ref('')
+const enableTools= ref(true)
 
 function getIndex() {
   GlobalStockIndexes().then((res) => {
@@ -186,7 +187,7 @@ function reAiSummary() {
   aiSummary.value = ""
   summaryModal.value = true
   loading.value = true
-  SummaryStockNews(question.value, sysPromptId.value)
+  SummaryStockNews(question.value, sysPromptId.value,enableTools.value)
 }
 
 function getAiSummary() {
@@ -211,7 +212,7 @@ function getAiSummary() {
       aiSummaryTime.value = ""
       aiSummary.value = ""
       modelName.value = ""
-      SummaryStockNews(question.value, sysPromptId.value)
+      //SummaryStockNews(question.value, sysPromptId.value,enableTools.value)
     }
   })
 }
@@ -615,6 +616,17 @@ function ReFlesh(source) {
       </n-flex>
     </template>
     <template #action>
+      <n-flex justify="left" style="margin-bottom: 10px">
+        <n-switch v-model:value="enableTools" :round="false">
+          <template #checked>
+            启用AI函数工具调用
+          </template>
+          <template #unchecked>
+            不启用AI函数工具调用
+          </template>
+        </n-switch>
+        <n-gradient-text type="error" style="margin-left: 10px">*AI函数工具调用可以增强AI获取数据的能力,但会消耗更多tokens。</n-gradient-text>
+      </n-flex>
       <n-flex justify="space-between" style="margin-bottom: 10px">
         <n-select style="width: 49%" v-model:value="sysPromptId" label-field="name" value-field="ID"
                   :options="sysPromptOptions" placeholder="请选择系统提示词"/>

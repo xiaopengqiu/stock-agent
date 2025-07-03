@@ -63,6 +63,7 @@ import vueDanmaku from 'vue3-danmaku'
 import {keys, padStart} from "lodash";
 import {useRoute, useRouter} from 'vue-router'
 import MoneyTrend from "./moneyTrend.vue";
+import {TaskTools} from "@vicons/carbon";
 
 const route = useRoute()
 const router = useRouter()
@@ -101,6 +102,7 @@ const modalShow3 = ref(false)
 const modalShow4 = ref(false)
 const modalShow5 = ref(false)
 const addBTN = ref(true)
+const enableTools= ref(false)
 const formModel = ref({
   name: "",
   code: "",
@@ -1356,7 +1358,7 @@ function aiReCheckStock(stock, stockCode) {
   //
 
   //message.info("sysPromptId:"+data.sysPromptId)
-  NewChatStream(stock, stockCode, data.question, data.sysPromptId)
+  NewChatStream(stock, stockCode, data.question, data.sysPromptId,enableTools.value)
 }
 
 function aiCheckStock(stock, stockCode) {
@@ -2072,7 +2074,17 @@ function searchStockReport(stockCode) {
       </n-flex>
     </template>
     <template #action>
-
+      <n-flex justify="left" style="margin-bottom: 10px">
+        <n-switch v-model:value="enableTools" :round="false">
+          <template #checked>
+            启用AI函数工具调用
+          </template>
+          <template #unchecked>
+            不启用AI函数工具调用
+          </template>
+        </n-switch>
+        <n-gradient-text type="error" style="margin-left: 10px">*AI函数工具调用可以增强AI获取数据的能力,但会消耗更多tokens。</n-gradient-text>
+      </n-flex>
       <n-flex justify="space-between" style="margin-bottom: 10px">
         <n-select style="width: 49%" v-model:value="data.sysPromptId" label-field="name" value-field="ID"
                   :options="sysPromptOptions" placeholder="请选择系统提示词"/>
