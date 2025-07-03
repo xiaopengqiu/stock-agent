@@ -195,7 +195,8 @@ function openCenteredWindow(url, width, height) {
         }else{
             if(column.key=='SECURITY_SHORT_NAME'){
               return h(NButton, { type: 'info',bordered: false ,size:'small',onClick:()=>{
-                openCenteredWindow(`https://quote.eastmoney.com/concept/${rowData.MARKET_SHORT_NAME}${rowData.SECURITY_CODE}.html`,1240,700)
+               //https://quote.eastmoney.com/sz300558.html#fullScreenChart
+               openCenteredWindow(`https://quote.eastmoney.com/${rowData.MARKET_SHORT_NAME}${rowData.SECURITY_CODE}.html#fullScreenChart`,1240,700)
               }}, { default: () => `${value}` })
             }else{
               return h(NText, { type: 'info' }, { default: () => `${value}` })
