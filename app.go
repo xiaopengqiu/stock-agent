@@ -1,11 +1,8 @@
-//go:build windows
-
 package main
 
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"go-stock/backend/data"
 	"go-stock/backend/db"
@@ -21,13 +18,9 @@ import (
 	"github.com/duke-git/lancet/v2/mathutil"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/duke-git/lancet/v2/strutil"
-	"github.com/energye/systray"
 	"github.com/go-resty/resty/v2"
-	"github.com/go-toast/toast"
 	"github.com/robfig/cron/v3"
-	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
-	"golang.org/x/sys/windows/registry"
 )
 
 // App struct
@@ -105,60 +98,6 @@ func AddTools(tools []data.Tool) []data.Tool {
 	})
 
 	return tools
-}
-
-// startup is called at application startup
-func (a *App) startup(ctx context.Context) {
-	defer PanicHandler()
-	runtime.EventsOn(ctx, "frontendError", func(optionalData ...interface{}) {
-		logger.SugaredLogger.Errorf("Frontend error: %v\n", optionalData)
-	})
-	logger.SugaredLogger.Infof("Version:%s", Version)
-	// Perform your setup here
-	a.ctx = ctx
-
-	// 创建系统托盘
-	//systray.RunWithExternalLoop(func() {
-	//	onReady(a)
-	//}, func() {
-	//	onExit(a)
-	//})
-	runtime.EventsOn(ctx, "updateSettings", func(optionalData ...interface{}) {
-		logger.SugaredLogger.Infof("updateSettings : %v\n", optionalData)
-		config := &data.Settings{}
-		setMap := optionalData[0].(map[string]interface{})
-
-		// 将 map 转换为 JSON 字节切片
-		jsonData, err := json.Marshal(setMap)
-		if err != nil {
-			logger.SugaredLogger.Errorf("Marshal error:%s", err.Error())
-			return
-		}
-		// 将 JSON 字节切片解析到结构体中
-		err = json.Unmarshal(jsonData, config)
-		if err != nil {
-			logger.SugaredLogger.Errorf("Unmarshal error:%s", err.Error())
-			return
-		}
-
-		logger.SugaredLogger.Infof("updateSettings config:%+v", config)
-		if config.DarkTheme {
-			runtime.WindowSetBackgroundColour(ctx, 27, 38, 54, 1)
-			runtime.WindowSetDarkTheme(ctx)
-		} else {
-			runtime.WindowSetBackgroundColour(ctx, 255, 255, 255, 1)
-			runtime.WindowSetLightTheme(ctx)
-		}
-		runtime.WindowReloadApp(ctx)
-
-	})
-	go systray.Run(func() {
-		onReady(a)
-	}, func() {
-		onExit(a)
-	})
-
-	logger.SugaredLogger.Infof(" application startup Version:%s", Version)
 }
 
 func (a *App) CheckUpdate() {
@@ -525,49 +464,6 @@ func MonitorFundPrices(a *App) {
 	}
 }
 
-func MonitorStockPrices(a *App) {
-	dest := &[]data.FollowedStock{}
-	db.Dao.Model(&data.FollowedStock{}).Find(dest)
-	total := float64(0)
-	//for _, follow := range *dest {
-	//	stockData := getStockInfo(follow)
-	//	total += stockData.ProfitAmountToday
-	//	price, _ := convertor.ToFloat(stockData.Price)
-	//	if stockData.PrePrice != price {
-	//		go runtime.EventsEmit(a.ctx, "stock_price", stockData)
-	//	}
-	//}
-
-	stockInfos := GetStockInfos(*dest...)
-	for _, stockInfo := range *stockInfos {
-		if strutil.HasPrefixAny(stockInfo.Code, []string{"SZ", "SH", "sh", "sz"}) && (!isTradingTime(time.Now())) {
-			continue
-		}
-		if strutil.HasPrefixAny(stockInfo.Code, []string{"hk", "HK"}) && (!IsHKTradingTime(time.Now())) {
-			continue
-		}
-		if strutil.HasPrefixAny(stockInfo.Code, []string{"us", "US", "gb_"}) && (!IsUSTradingTime(time.Now())) {
-			continue
-		}
-
-		total += stockInfo.ProfitAmountToday
-		price, _ := convertor.ToFloat(stockInfo.Price)
-
-		if stockInfo.PrePrice != price {
-			//logger.SugaredLogger.Infof("-----------sz------------股票代码: %s, 股票名称: %s, 股票价格: %s,盘前盘后:%s", stockInfo.Code, stockInfo.Name, stockInfo.Price, stockInfo.BA)
-			go runtime.EventsEmit(a.ctx, "stock_price", stockInfo)
-		}
-
-	}
-	if total != 0 {
-		title := "go-stock " + time.Now().Format(time.DateTime) + fmt.Sprintf("  %.2f¥", total)
-		systray.SetTooltip(title)
-	}
-
-	go runtime.EventsEmit(a.ctx, "realtime_profit", fmt.Sprintf("  %.2f", total))
-	//runtime.WindowSetTitle(a.ctx, title)
-
-}
 func GetStockInfos(follows ...data.FollowedStock) *[]data.StockInfo {
 	stockInfos := make([]data.StockInfo, 0)
 	stockCodes := make([]string, 0)
@@ -682,35 +578,6 @@ func addStockFollowData(follow data.FollowedStock, stockData *data.StockInfo) {
 		go db.Dao.Model(follow).Where("stock_code = ?", follow.StockCode).Updates(map[string]interface{}{
 			"price": price,
 		})
-	}
-}
-
-// beforeClose is called when the application is about to quit,
-// either by clicking the window close button or calling runtime.Quit.
-// Returning true will cause the application to continue, false will continue shutdown as normal.
-func (a *App) beforeClose(ctx context.Context) (prevent bool) {
-	defer PanicHandler()
-
-	dialog, err := runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
-		Type:         runtime.QuestionDialog,
-		Title:        "go-stock",
-		Message:      "确定关闭吗？",
-		Buttons:      []string{"确定"},
-		Icon:         icon,
-		CancelButton: "取消",
-	})
-
-	if err != nil {
-		logger.SugaredLogger.Errorf("dialog error:%s", err.Error())
-		return false
-	}
-	logger.SugaredLogger.Debugf("dialog:%s", dialog)
-	if dialog == "No" {
-		return true
-	} else {
-		systray.Quit()
-		a.cron.Stop()
-		return false
 	}
 }
 
@@ -834,40 +701,40 @@ func (a *App) GetVersionInfo() *models.VersionInfo {
 	}
 }
 
-// checkChromeOnWindows 在 Windows 系统上检查谷歌浏览器是否安装
-func checkChromeOnWindows() bool {
-	key, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe`, registry.QUERY_VALUE)
-	if err != nil {
-		// 尝试在 WOW6432Node 中查找（适用于 64 位系统上的 32 位程序）
-		key, err = registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe`, registry.QUERY_VALUE)
-		if err != nil {
-			return false
-		}
-		defer key.Close()
-	}
-	defer key.Close()
-	_, _, err = key.GetValue("Path", nil)
-	return err == nil
-}
-
-// checkEdgeOnWindows 在 Windows 系统上检查Edge浏览器是否安装，并返回安装路径
-func checkEdgeOnWindows() (string, bool) {
-	key, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe`, registry.QUERY_VALUE)
-	if err != nil {
-		// 尝试在 WOW6432Node 中查找（适用于 64 位系统上的 32 位程序）
-		key, err = registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe`, registry.QUERY_VALUE)
-		if err != nil {
-			return "", false
-		}
-		defer key.Close()
-	}
-	defer key.Close()
-	path, _, err := key.GetStringValue("Path")
-	if err != nil {
-		return "", false
-	}
-	return path, true
-}
+//// checkChromeOnWindows 在 Windows 系统上检查谷歌浏览器是否安装
+//func checkChromeOnWindows() bool {
+//	key, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe`, registry.QUERY_VALUE)
+//	if err != nil {
+//		// 尝试在 WOW6432Node 中查找（适用于 64 位系统上的 32 位程序）
+//		key, err = registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe`, registry.QUERY_VALUE)
+//		if err != nil {
+//			return false
+//		}
+//		defer key.Close()
+//	}
+//	defer key.Close()
+//	_, _, err = key.GetValue("Path", nil)
+//	return err == nil
+//}
+//
+//// checkEdgeOnWindows 在 Windows 系统上检查Edge浏览器是否安装，并返回安装路径
+//func checkEdgeOnWindows() (string, bool) {
+//	key, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe`, registry.QUERY_VALUE)
+//	if err != nil {
+//		// 尝试在 WOW6432Node 中查找（适用于 64 位系统上的 32 位程序）
+//		key, err = registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe`, registry.QUERY_VALUE)
+//		if err != nil {
+//			return "", false
+//		}
+//		defer key.Close()
+//	}
+//	defer key.Close()
+//	path, _, err := key.GetStringValue("Path")
+//	if err != nil {
+//		return "", false
+//	}
+//	return path, true
+//}
 
 func GetImageBase(bytes []byte) string {
 	return "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(bytes)
@@ -922,44 +789,6 @@ func onExit(a *App) {
 	logger.SugaredLogger.Infof("systray onExit")
 	//systray.Quit()
 	//runtime.Quit(a.ctx)
-}
-
-func onReady(a *App) {
-
-	// 初始化操作
-	logger.SugaredLogger.Infof("systray onReady")
-	systray.SetIcon(icon2)
-	systray.SetTitle("go-stock")
-	systray.SetTooltip("go-stock 股票行情实时获取")
-	// 创建菜单项
-	show := systray.AddMenuItem("显示", "显示应用程序")
-	show.Click(func() {
-		//logger.SugaredLogger.Infof("显示应用程序")
-		runtime.WindowShow(a.ctx)
-	})
-	hide := systray.AddMenuItem("隐藏", "隐藏应用程序")
-	hide.Click(func() {
-		//logger.SugaredLogger.Infof("隐藏应用程序")
-		runtime.WindowHide(a.ctx)
-	})
-	systray.AddSeparator()
-	mQuitOrig := systray.AddMenuItem("退出", "退出应用程序")
-	mQuitOrig.Click(func() {
-		//logger.SugaredLogger.Infof("退出应用程序")
-		runtime.Quit(a.ctx)
-	})
-	systray.SetOnRClick(func(menu systray.IMenu) {
-		menu.ShowMenu()
-		//logger.SugaredLogger.Infof("SetOnRClick")
-	})
-	systray.SetOnClick(func(menu systray.IMenu) {
-		//logger.SugaredLogger.Infof("SetOnClick")
-		menu.ShowMenu()
-	})
-	systray.SetOnDClick(func(menu systray.IMenu) {
-		menu.ShowMenu()
-		//logger.SugaredLogger.Infof("SetOnDClick")
-	})
 }
 
 func (a *App) UpdateConfig(settings *data.Settings) string {
@@ -1096,22 +925,6 @@ func (a *App) SetStockAICron(cronText, stockCode string) {
 	a.cronEntrys[stockCode] = id
 
 }
-func OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceData) {
-	notification := toast.Notification{
-		AppID:    "go-stock",
-		Title:    "go-stock",
-		Message:  "程序已经在运行了",
-		Icon:     "",
-		Duration: "short",
-		Audio:    toast.Default,
-	}
-	err := notification.Push()
-	if err != nil {
-		logger.SugaredLogger.Error(err)
-	}
-	time.Sleep(time.Second * 3)
-}
-
 func (a *App) AddGroup(group data.Group) string {
 	ok := data.NewStockGroupApi(db.Dao).AddGroup(group)
 	if ok {
