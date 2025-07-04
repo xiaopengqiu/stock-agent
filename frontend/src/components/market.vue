@@ -131,16 +131,20 @@ EventsOn("changeMarketTab", async (msg) => {
 })
 
 EventsOn("newTelegraph", (data) => {
-  for (let i = 0; i < data.length; i++) {
-    telegraphList.value.pop()
+  if (data!=null) {
+    for (let i = 0; i < data.length; i++) {
+      telegraphList.value.pop()
+    }
+    telegraphList.value.unshift(...data)
   }
-  telegraphList.value.unshift(...data)
 })
 EventsOn("newSinaNews", (data) => {
+  if (data!=null) {
   for (let i = 0; i < data.length; i++) {
     sinaNewsList.value.pop()
   }
   sinaNewsList.value.unshift(...data)
+  }
 })
 
 //获取页面高度
