@@ -1,25 +1,9 @@
-//go:build darwin
-// +build darwin
+//go:build windows
+// +build windows
 
 package main
 
-import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"github.com/duke-git/lancet/v2/convertor"
-	"github.com/duke-git/lancet/v2/strutil"
-	"github.com/gen2brain/beeep"
-	"github.com/wailsapp/wails/v2/pkg/options"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
-	"go-stock/backend/data"
-	"go-stock/backend/db"
-	"go-stock/backend/logger"
-	"log"
-	"time"
-)
-
-// startup 在应用程序启动时调用
+// startup is called at application startup
 func (a *App) startup(ctx context.Context) {
 	defer PanicHandler()
 	runtime.EventsOn(ctx, "frontendError", func(optionalData ...interface{}) {
@@ -29,7 +13,12 @@ func (a *App) startup(ctx context.Context) {
 	// Perform your setup here
 	a.ctx = ctx
 
-	// 监听设置更新事件
+	// 创建系统托盘
+	//systray.RunWithExternalLoop(func() {
+	//	onReady(a)
+	//}, func() {
+	//	onExit(a)
+	//})
 	runtime.EventsOn(ctx, "updateSettings", func(optionalData ...interface{}) {
 		logger.SugaredLogger.Infof("updateSettings : %v\n", optionalData)
 		config := &data.Settings{}
@@ -57,22 +46,27 @@ func (a *App) startup(ctx context.Context) {
 			runtime.WindowSetLightTheme(ctx)
 		}
 		runtime.WindowReloadApp(ctx)
+
+	})
+	go systray.Run(func() {
+		onReady(a)
+	}, func() {
+		onExit(a)
 	})
 
-	// 创建 macOS 托盘
-	go func() {
-		// 使用 Beeep 库替代 Windows 的托盘库
-		err := beeep.Notify("go-stock", "应用程序已启动", "")
-		if err != nil {
-			log.Fatalf("系统通知失败: %v", err)
-		}
-	}()
 	logger.SugaredLogger.Infof(" application startup Version:%s", Version)
 }
 
-// OnSecondInstanceLaunch 处理第二实例启动时的通知
 func OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceData) {
-	err := beeep.Notify("go-stock", "程序已经在运行了", "")
+	notification := toast.Notification{
+		AppID:    "go-stock",
+		Title:    "go-stock",
+		Message:  "程序已经在运行了",
+		Icon:     "",
+		Duration: "short",
+		Audio:    toast.Default,
+	}
+	err := notification.Push()
 	if err != nil {
 		logger.SugaredLogger.Error(err)
 	}
@@ -83,8 +77,15 @@ func MonitorStockPrices(a *App) {
 	dest := &[]data.FollowedStock{}
 	db.Dao.Model(&data.FollowedStock{}).Find(dest)
 	total := float64(0)
+	//for _, follow := range *dest {
+	//	stockData := getStockInfo(follow)
+	//	total += stockData.ProfitAmountToday
+	//	price, _ := convertor.ToFloat(stockData.Price)
+	//	if stockData.PrePrice != price {
+	//		go runtime.EventsEmit(a.ctx, "stock_price", stockData)
+	//	}
+	//}
 
-	// 股票信息处理逻辑
 	stockInfos := GetStockInfos(*dest...)
 	for _, stockInfo := range *stockInfos {
 		if strutil.HasPrefixAny(stockInfo.Code, []string{"SZ", "SH", "sh", "sz"}) && (!isTradingTime(time.Now())) {
@@ -101,53 +102,70 @@ func MonitorStockPrices(a *App) {
 		price, _ := convertor.ToFloat(stockInfo.Price)
 
 		if stockInfo.PrePrice != price {
+			//logger.SugaredLogger.Infof("-----------sz------------股票代码: %s, 股票名称: %s, 股票价格: %s,盘前盘后:%s", stockInfo.Code, stockInfo.Name, stockInfo.Price, stockInfo.BA)
 			go runtime.EventsEmit(a.ctx, "stock_price", stockInfo)
 		}
-	}
 
-	// 计算总收益并更新状态
+	}
 	if total != 0 {
-		// 使用通知替代 systray 更新 Tooltip
 		title := "go-stock " + time.Now().Format(time.DateTime) + fmt.Sprintf("  %.2f¥", total)
-
-		// 发送通知显示实时数据
-		err := beeep.Notify("go-stock", title, "")
-		if err != nil {
-			logger.SugaredLogger.Errorf("发送通知失败: %v", err)
-		}
+		systray.SetTooltip(title)
 	}
 
-	// 触发实时利润事件
 	go runtime.EventsEmit(a.ctx, "realtime_profit", fmt.Sprintf("  %.2f", total))
+	//runtime.WindowSetTitle(a.ctx, title)
+
 }
 
-// onReady 在应用程序准备好时调用
 func onReady(a *App) {
+
 	// 初始化操作
-	logger.SugaredLogger.Infof("onReady")
-
-	// 使用 Beeep 发送通知
-	err := beeep.Notify("go-stock", "应用程序已准备就绪", "")
-	if err != nil {
-		log.Fatalf("系统通知失败: %v", err)
-	}
-
-	// 显示应用窗口
-	runtime.WindowShow(a.ctx)
-
-	// 在 macOS 上没有系统托盘图标菜单，通常我们通过通知或其他方式提供与用户交互的界面
+	logger.SugaredLogger.Infof("systray onReady")
+	systray.SetIcon(icon2)
+	systray.SetTitle("go-stock")
+	systray.SetTooltip("go-stock 股票行情实时获取")
+	// 创建菜单项
+	show := systray.AddMenuItem("显示", "显示应用程序")
+	show.Click(func() {
+		//logger.SugaredLogger.Infof("显示应用程序")
+		runtime.WindowShow(a.ctx)
+	})
+	hide := systray.AddMenuItem("隐藏", "隐藏应用程序")
+	hide.Click(func() {
+		//logger.SugaredLogger.Infof("隐藏应用程序")
+		runtime.WindowHide(a.ctx)
+	})
+	systray.AddSeparator()
+	mQuitOrig := systray.AddMenuItem("退出", "退出应用程序")
+	mQuitOrig.Click(func() {
+		//logger.SugaredLogger.Infof("退出应用程序")
+		runtime.Quit(a.ctx)
+	})
+	systray.SetOnRClick(func(menu systray.IMenu) {
+		menu.ShowMenu()
+		//logger.SugaredLogger.Infof("SetOnRClick")
+	})
+	systray.SetOnClick(func(menu systray.IMenu) {
+		//logger.SugaredLogger.Infof("SetOnClick")
+		menu.ShowMenu()
+	})
+	systray.SetOnDClick(func(menu systray.IMenu) {
+		menu.ShowMenu()
+		//logger.SugaredLogger.Infof("SetOnDClick")
+	})
 }
 
-// beforeClose 在应用程序关闭前调用，显示确认对话框
+// beforeClose is called when the application is about to quit,
+// either by clicking the window close button or calling runtime.Quit.
+// Returning true will cause the application to continue, false will continue shutdown as normal.
 func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 	defer PanicHandler()
 
-	// 在 macOS 上使用 MessageDialog 显示确认窗口
 	dialog, err := runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
 		Type:         runtime.QuestionDialog,
 		Title:        "go-stock",
 		Message:      "确定关闭吗？",
-		Buttons:      []string{"确定", "取消"},
+		Buttons:      []string{"确定"},
 		Icon:         icon,
 		CancelButton: "取消",
 	})
@@ -156,13 +174,12 @@ func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 		logger.SugaredLogger.Errorf("dialog error:%s", err.Error())
 		return false
 	}
-
 	logger.SugaredLogger.Debugf("dialog:%s", dialog)
-	if dialog == "取消" {
-		return true // 如果选择了取消，不关闭应用
+	if dialog == "No" {
+		return true
 	} else {
-		// 在 macOS 上应用退出时执行清理工作
-		a.cron.Stop() // 停止定时任务
-		return false  // 如果选择了确定，继续关闭应用
+		systray.Quit()
+		a.cron.Stop()
+		return false
 	}
 }

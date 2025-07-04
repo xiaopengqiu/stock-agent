@@ -128,7 +128,7 @@ func (s SettingsApi) GetConfig() *Settings {
 		}
 	}
 	if settings.BrowserPath == "" {
-		settings.BrowserPath, _ = CheckBrowserOnWindows()
+		settings.BrowserPath, _ = CheckBrowser()
 	}
 	if settings.BrowserPoolSize <= 0 {
 		settings.BrowserPoolSize = 1
