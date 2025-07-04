@@ -7,6 +7,7 @@ require (
 	github.com/chromedp/chromedp v0.11.2
 	github.com/coocood/freecache v1.2.4
 	github.com/duke-git/lancet/v2 v2.3.4
+	github.com/energye/systray v1.0.2
 	github.com/gen2brain/beeep v0.11.1
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-ego/gse v0.80.3
@@ -68,6 +69,7 @@ require (
 	github.com/sergeymakinen/go-bmp v1.0.0 // indirect
 	github.com/sergeymakinen/go-ico v1.0.0-beta.0 // indirect
 	github.com/tadvi/systray v0.0.0-20190226123456-11a2b8fa57af // indirect
+	github.com/tevino/abool v0.0.0-20220530134649-2bfc934cb23c // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tkrajina/go-reflector v0.5.8 // indirect

@@ -3,6 +3,22 @@
 
 package main
 
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/duke-git/lancet/v2/convertor"
+	"github.com/duke-git/lancet/v2/strutil"
+	"github.com/energye/systray"
+	"github.com/go-toast/toast"
+	"github.com/wailsapp/wails/v2/pkg/options"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"go-stock/backend/data"
+	"go-stock/backend/db"
+	"go-stock/backend/logger"
+	"time"
+)
+
 // startup is called at application startup
 func (a *App) startup(ctx context.Context) {
 	defer PanicHandler()

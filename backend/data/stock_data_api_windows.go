@@ -27,7 +27,7 @@ func CheckChrome() (string, bool) {
 
 // CheckBrowser 在 Windows 系统上检查Edge浏览器是否安装，并返回安装路径
 func CheckBrowser() (string, bool) {
-	if path, ok := checkChromeOnWindows(); ok {
+	if path, ok := CheckChrome(); ok {
 		return path, true
 	}
 
