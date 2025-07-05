@@ -14,6 +14,9 @@ import EmbeddedUrl from "./EmbeddedUrl.vue";
     <n-tab-pane name="TopHub" tab="TopHub(今日热榜)">
       <embedded-url url="https://tophub.today/c/finance"  :height="'calc(100vh - 252px)'"/>
     </n-tab-pane>
+    <n-tab-pane name="选股通" tab="选股通">
+      <embedded-url url="https://xuangutong.com.cn"  :height="'calc(100vh - 252px)'"/>
+    </n-tab-pane>
     <n-tab-pane name="摸鱼" tab="摸鱼">
       <embedded-url url="https://996.ninja/"  :height="'calc(100vh - 252px)'"/>
     </n-tab-pane>
