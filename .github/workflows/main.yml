@@ -5,6 +5,7 @@ on:
     tags:
     # Match any new tag
       - '*-release'
+      - '*-dev'
 
 env:
   # Necessary for most environments as build failure can occur due to OOM issues
@@ -21,10 +22,6 @@ jobs:
           - name: 'go-stock-windows-amd64.exe'
             platform:  'windows/amd64'
             os: 'windows-latest'
-          - name: 'go-stock-windows-arm64.exe'
-            platform: 'windows/arm64'
-            os: 'windows-latest'
-            arch: arm64
 #          - name: 'go-stock-linux-amd64'
 #            platform: 'linux/amd64'
 #            os: 'ubuntu-latest'
