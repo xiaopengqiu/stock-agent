@@ -44,9 +44,9 @@ const enableNews = ref(false)
 const contentStyle = ref("")
 const enableFund = ref(false)
 const enableDarkTheme = ref(null)
-const content = ref('数据来源于网络,仅供参考;投资有风险,入市需谨慎\n\n未经授权,禁止商业目的!')
+const content = ref('未经授权,禁止商业目的!\n\n数据来源于网络,仅供参考;投资有风险,入市需谨慎')
 const isFullscreen = ref(false)
-const activeKey = ref('')
+const activeKey = ref('stock')
 const containerRef = ref({})
 const realtimeProfit = ref(0)
 const telegraph = ref([])
@@ -64,7 +64,10 @@ const menuOptions = ref([
                   groupId: 0,
                 },
                 params: {},
-              }
+              },
+              onClick: () => {
+                activeKey.value = 'stock'
+              },
             },
             {default: () => '股票自选',}
         ),
@@ -79,6 +82,7 @@ const menuOptions = ref([
                   href: '#',
                   type: 'info',
                   onClick: () => {
+                    activeKey.value = 'stock'
                     //console.log("push",item)
                     router.push({
                       name: 'stock',
@@ -114,6 +118,7 @@ const menuOptions = ref([
                 params: {}
               },
               onClick: () => {
+                activeKey.value = 'market'
                 EventsEmit("changeMarketTab", {ID: 0, name: '市场快讯'})
               },
             },
@@ -135,6 +140,7 @@ const menuOptions = ref([
                     }
                   },
                   onClick: () => {
+                    activeKey.value = 'market'
                     EventsEmit("changeMarketTab", {ID: 0, name: '市场快讯'})
                   },
                 },
@@ -156,6 +162,7 @@ const menuOptions = ref([
                     },
                   },
                   onClick: () => {
+                    activeKey.value = 'market'
                     EventsEmit("changeMarketTab", {ID: 0, name: '全球股指'})
                   },
                 },
@@ -177,6 +184,7 @@ const menuOptions = ref([
                     }
                   },
                   onClick: () => {
+                    activeKey.value = 'market'
                     EventsEmit("changeMarketTab", {ID: 0, name: '指标行情'})
                   },
                 },
@@ -198,6 +206,7 @@ const menuOptions = ref([
                     }
                   },
                   onClick: () => {
+                    activeKey.value = 'market'
                     EventsEmit("changeMarketTab", {ID: 0, name: '行业排名'})
                   },
                 },
@@ -219,6 +228,7 @@ const menuOptions = ref([
                     }
                   },
                   onClick: () => {
+                    activeKey.value = 'market'
                     EventsEmit("changeMarketTab", {ID: 0, name: '个股资金流向'})
                   },
                 },
@@ -240,6 +250,7 @@ const menuOptions = ref([
                     }
                   },
                   onClick: () => {
+                    activeKey.value = 'market'
                     EventsEmit("changeMarketTab", {ID: 0, name: '龙虎榜'})
                   },
                 },
@@ -261,6 +272,7 @@ const menuOptions = ref([
                     }
                   },
                   onClick: () => {
+                    activeKey.value = 'market'
                     EventsEmit("changeMarketTab", {ID: 0, name: '个股研报'})
                   },
                 },
@@ -282,6 +294,7 @@ const menuOptions = ref([
                     }
                   },
                   onClick: () => {
+                    activeKey.value = 'market'
                     EventsEmit("changeMarketTab", {ID: 0, name: '公司公告'})
                   },
                 },
@@ -303,6 +316,7 @@ const menuOptions = ref([
                     }
                   },
                   onClick: () => {
+                    activeKey.value = 'market'
                     EventsEmit("changeMarketTab", {ID: 0, name: '行业研究'})
                   },
                 },
@@ -324,6 +338,7 @@ const menuOptions = ref([
                     }
                   },
                   onClick: () => {
+                    activeKey.value = 'market'
                     EventsEmit("changeMarketTab", {ID: 0, name: '当前热门'})
                   },
                 },
@@ -345,6 +360,7 @@ const menuOptions = ref([
                     }
                   },
                   onClick: () => {
+                    activeKey.value = 'market'
                     EventsEmit("changeMarketTab", {ID: 0, name: '指标选股'})
                   },
                 },
@@ -362,8 +378,13 @@ const menuOptions = ref([
             {
               to: {
                 name: 'fund',
-                params: {},
-              }
+                query: {
+                  name: '基金自选',
+                },
+              },
+              onClick: () => {
+                activeKey.value = 'fund'
+              },
             },
             {default: () => '基金自选',}
         ),
@@ -386,7 +407,12 @@ const menuOptions = ref([
             {
               to: {
                 name: 'settings',
-                params: {}
+                query: {
+                  name:"设置",
+                },
+                onClick: () => {
+                  activeKey.value = 'settings'
+                },
               }
             },
             {default: () => '设置'}
@@ -401,8 +427,13 @@ const menuOptions = ref([
             {
               to: {
                 name: 'about',
-                params: {}
-              }
+                query: {
+                  name:"关于",
+                }
+              },
+              onClick: () => {
+                activeKey.value = 'about'
+              },
             },
             {default: () => '关于'}
         ),
@@ -451,6 +482,7 @@ function renderIcon(icon) {
 }
 
 function toggleFullscreen(e) {
+  activeKey.value = 'full'
   //console.log(e)
   if (isFullscreen.value) {
     WindowUnfullscreen()

@@ -1,6 +1,6 @@
 <script setup>
 
-import {computed, onBeforeUnmount, onMounted, ref} from "vue";
+import {h, onBeforeUnmount, onMounted, ref} from "vue";
 import {
   AddPrompt, DelPrompt,
   ExportConfig,
@@ -9,7 +9,7 @@ import {
   SendDingDingMessageByType,
   UpdateConfig
 } from "../../wailsjs/go/main/App";
-import {useMessage} from "naive-ui";
+import {NTag, useMessage} from "naive-ui";
 import {data, models} from "../../wailsjs/go/models";
 import {EventsEmit} from "../../wailsjs/runtime";
 const message = useMessage()
@@ -267,12 +267,13 @@ function deletePrompt(ID){
 </script>
 
 <template>
-  <n-flex justify="left" style="margin-top: 12px;padding-left: 12px;">
+  <n-flex justify="left" style="text-align: left">
   <n-form ref="formRef"  :label-placement="'left'" :label-align="'left'" >
-      <n-grid :cols="24" :x-gap="24" style="text-align: left" :layout-shift-disabled="true">
-        <n-gi :span="24">
-          <n-text type="success" style="font-size: 25px;font-weight: bold">基础设置</n-text>
-        </n-gi>
+    <n-card :title="()=> h(NTag, { type: 'primary',bordered:false },()=> '基础设置')" size="small" >
+      <n-grid :cols="24" :x-gap="24" style="text-align: left" >
+        <!--        <n-gi :span="24">-->
+        <!--          <n-text type="success" style="font-size: 25px;font-weight: bold">基础设置</n-text>-->
+        <!--        </n-gi>-->
         <n-form-item-gi  :span="10" label="Tushare &nbsp;&nbsp;Token：" path="tushareToken"  >
           <n-input  type="text" placeholder="Tushare api token"  v-model:value="formValue.tushareToken" clearable />
         </n-form-item-gi>
@@ -296,11 +297,14 @@ function deletePrompt(ID){
           <n-switch v-model:value="formValue.enableFund" />
         </n-form-item-gi>
       </n-grid>
+    </n-card>
 
+
+    <n-card  :title="()=> h(NTag, { type: 'primary',bordered:false },()=> '通知设置')"  size="small" >
         <n-grid :cols="24" :x-gap="24" style="text-align: left">
-          <n-gi :span="24">
-            <n-text type="success" style="font-size: 25px;font-weight: bold">通知设置</n-text>
-          </n-gi>
+<!--          <n-gi :span="24">-->
+<!--            <n-text type="success" style="font-size: 25px;font-weight: bold">通知设置</n-text>-->
+<!--          </n-gi>-->
           <n-form-item-gi  :span="4" label="钉钉推送：" path="dingPush.enable" >
             <n-switch v-model:value="formValue.dingPush.enable" />
           </n-form-item-gi>
@@ -321,11 +325,13 @@ function deletePrompt(ID){
             <n-button type="primary" @click="sendTestNotice">发送测试通知</n-button>
           </n-form-item-gi>
         </n-grid>
+    </n-card>
 
+    <n-card   :title="()=> h(NTag, { type: 'primary',bordered:false },()=> 'AI设置')" size="small" >
     <n-grid :cols="24" :x-gap="24" style="text-align: left;">
-      <n-gi :span="24">
-        <n-text type="success" style="font-size: 25px;font-weight: bold">OpenAI设置</n-text>
-      </n-gi>
+<!--      <n-gi :span="24">-->
+<!--        <n-text type="success" style="font-size: 25px;font-weight: bold">OpenAI设置</n-text>-->
+<!--      </n-gi>-->
       <n-form-item-gi  :span="3" label="AI诊股：" path="openAI.enable" >
         <n-switch v-model:value="formValue.openAI.enable" />
       </n-form-item-gi>
@@ -376,28 +382,38 @@ function deletePrompt(ID){
         />
      </n-form-item-gi>
     </n-grid>
-    <n-gi :span="24">
+    <n-grid :cols="24">
+      <n-gi :span="24">
         <n-space justify="center">
-          <n-button  type="warning" @click="managePrompts">
+          <n-button type="warning" @click="managePrompts">
             添加提示词模板
           </n-button>
-        <n-button  type="primary" @click="saveConfig">
-          保存
-        </n-button>
-        <n-button  type="info" @click="exportConfig">
-          导出
-        </n-button>
-        <n-button  type="error" @click="importConfig">
-          导入
-        </n-button>
+          <n-button type="primary" @click="saveConfig">
+            保存
+          </n-button>
+          <n-button type="info" @click="exportConfig">
+            导出
+          </n-button>
+          <n-button type="error" @click="importConfig">
+            导入
+          </n-button>
         </n-space>
-    </n-gi>
+      </n-gi>
+      <n-gi :span="24"   v-if="promptTemplates.length>0" type="warning">
+        <n-flex justify="start" style="margin-top: 4px" >
+          <n-text type="warning" >
+            <n-flex  justify="left"  >
+              <n-tag :bordered="false" type="warning" > 提示词模板:</n-tag>
+              <n-tag size="medium" secondary v-if="promptTemplates.length>0" v-for="prompt in promptTemplates" closable @close="deletePrompt(prompt.ID)" @click="editPrompt(prompt)" :title="prompt.content"
+                      :type="prompt.type==='模型系统Prompt'?'success':'info'" :bordered="false"> {{ prompt.name }}
+              </n-tag>
+            </n-flex>
+          </n-text>
+        </n-flex>
+      </n-gi>
+    </n-grid>
+    </n-card>
   </n-form>
-    <n-gi :span="24"  v-if="promptTemplates.length>0"  v-for="prompt in promptTemplates" >
-      <n-flex justify="start">
-        <n-tag closable  @close="deletePrompt(prompt.ID)" @click="editPrompt(prompt)" :title="prompt.content" :type="prompt.type==='模型系统Prompt'?'success':'info'" :bordered="false"> {{prompt.name}} </n-tag>
-      </n-flex>
-    </n-gi>
   </n-flex>
   <n-modal v-model:show="showManagePromptsModal" closable  :mask-closable="false">
     <n-card
@@ -442,5 +458,9 @@ function deletePrompt(ID){
 </template>
 
 <style scoped>
-
+.cardHeaderClass{
+  font-size: 16px;
+  font-weight: bold;
+  color: red;
+}
 </style>
