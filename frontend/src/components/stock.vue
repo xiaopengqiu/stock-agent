@@ -64,6 +64,7 @@ import {keys, padStart} from "lodash";
 import {useRoute, useRouter} from 'vue-router'
 import MoneyTrend from "./moneyTrend.vue";
 import {TaskTools} from "@vicons/carbon";
+import StockSparkLine from "./stockSparkLine.vue";
 
 const route = useRoute()
 const router = useRouter()
@@ -1796,8 +1797,8 @@ function searchStockReport(stockCode) {
           <n-card :data-sort="result.sort" :id="result['股票代码']" :data-code="result['股票代码']" :bordered="true"
                   :title="result['股票名称']" :closable="false"
                   @close="removeMonitor(result['股票代码'],result['股票名称'],result.key)">
-            <n-grid :cols="1" :y-gap="6">
-              <n-gi>
+            <n-grid :cols="12" :y-gap="6">
+              <n-gi :span="6">
                 <n-text :type="result.type">
                   <n-number-animation :duration="1000" :precision="2" :from="result['上次当前价格']"
                                       :to="Number(result['当前价格'])"/>
@@ -1812,6 +1813,9 @@ function searchStockReport(stockCode) {
                 <n-text size="small" v-if="result.costVolume>0" :type="result.type">
                   <n-number-animation :duration="1000" :precision="2" :from="0" :to="result.profitAmountToday"/>
                 </n-text>
+              </n-gi>
+              <n-gi :span="6">
+                <stock-spark-line :open-price="result['今日开盘价']" :stock-code="result['股票代码']" :stock-name="result['股票名称']" ></stock-spark-line>
               </n-gi>
             </n-grid>
             <n-grid :cols="2" :y-gap="4" :x-gap="4">

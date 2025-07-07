@@ -199,6 +199,7 @@ function getAiSummary() {
   summaryModal.value = true
   loading.value = true
   GetAIResponseResult("市场资讯").then(result => {
+    loading.value = false
     if (result.content) {
       aiSummary.value = result.content
       question.value = result.question
@@ -310,7 +311,7 @@ function ReFlesh(source) {
 </script>
 
 <template>
-  <n-card>
+  <n-card  style="--wails-draggable:drag">
     <n-tabs type="line" animated @update-value="updateTab" :value="nowTab">
       <n-tab-pane name="市场快讯" tab="市场快讯">
         <n-grid :cols="2" :y-gap="0">
