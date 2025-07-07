@@ -114,7 +114,8 @@ function setChartData(chart) {
 }
 
 onMounted(() => {
-  const chart = echarts.init(chartRef.value);
+
+  const chart = echarts.init( document.getElementById('sparkLine'+stockCode));
   setChartData(chart);
 
   // setInterval(() => {
@@ -123,6 +124,6 @@ onMounted(() => {
 })
 </script>
 <template>
-<div style="height: 20px;width: 100%" ref="chartRef">
+<div style="height: 20px;width: 100%"  :id="'sparkLine'+stockCode">
 </div>
 </template>
