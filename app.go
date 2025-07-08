@@ -135,8 +135,14 @@ func (a *App) CheckUpdate() {
 		if err == nil {
 			releaseVersion.Commit = *commit
 		}
-		//sha:= commit.Sha
-		resp, err := resty.New().R().Get(fmt.Sprintf("https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-windows-amd64.exe", releaseVersion.TagName))
+
+		if !IsWindows() {
+			go runtime.EventsEmit(a.ctx, "updateVersion", releaseVersion)
+			return
+		}
+
+		downloadUrl := fmt.Sprintf("https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-windows-amd64.exe", releaseVersion.TagName)
+		resp, err := resty.New().R().Get(downloadUrl)
 		if err != nil {
 			go runtime.EventsEmit(a.ctx, "newsPush", map[string]any{
 				"time":    "新版本：" + releaseVersion.TagName,
