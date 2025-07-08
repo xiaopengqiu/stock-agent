@@ -1,8 +1,8 @@
 <script setup>
-import {onMounted,onBeforeMount, ref} from "vue";
+import {onMounted, onBeforeMount, ref, watchEffect} from "vue";
 import * as echarts from 'echarts';
 import {GetStockMinutePriceLineData} from "../../wailsjs/go/main/App"; // 如果您使用多个组件，请将此样式导入放在您的主文件中
-const {stockCode,stockName,openPrice,darkTheme} = defineProps({
+const {stockCode,stockName,lastPrice,openPrice,darkTheme} = defineProps({
   stockCode: {
     type: String,
     default: ""
@@ -10,6 +10,10 @@ const {stockCode,stockName,openPrice,darkTheme} = defineProps({
   stockName: {
     type: String,
     default: ""
+  },
+  lastPrice: {
+    type: Number,
+    default: 0
   },
   openPrice: {
     type: Number,
@@ -24,6 +28,7 @@ const {stockCode,stockName,openPrice,darkTheme} = defineProps({
 const chartRef=ref();
 
 function setChartData(chart) {
+  //console.log("setChartData")
   GetStockMinutePriceLineData(stockCode, stockName).then(result => {
     //console.log("GetStockMinutePriceLineData",result)
     const priceData = result.priceData
@@ -31,7 +36,6 @@ function setChartData(chart) {
     let price = []
     let min = 0
     let max = 0
-    let lastPrice = priceData[priceData.length - 1].price
     for (let i = 0; i < priceData.length; i++) {
       category.push(priceData[i].time)
       price.push(priceData[i].price)
@@ -112,16 +116,20 @@ function setChartData(chart) {
     chart.setOption(option);
   })
 }
+const chart =ref( null)
 
 onMounted(() => {
-
-  const chart = echarts.init( document.getElementById('sparkLine'+stockCode));
-  setChartData(chart);
-
-  // setInterval(() => {
-  //   setChartData(chart);
-  // }, 1000 * 5 );
+  chart.value = echarts.init( document.getElementById('sparkLine'+stockCode));
+  setChartData(chart.value);
 })
+
+
+watchEffect(() => {
+  //console.log(stockName,'lastPrice变化为:', lastPrice)
+  setChartData(chart.value);
+})
+
+
 </script>
 <template>
 <div style="height: 20px;width: 100%"  :id="'sparkLine'+stockCode">
