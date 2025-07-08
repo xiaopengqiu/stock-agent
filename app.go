@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/inconshreveable/go-update"
 	"go-stock/backend/data"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
@@ -111,6 +113,13 @@ func (a *App) CheckUpdate() {
 	}
 	logger.SugaredLogger.Infof("releaseVersion:%+v", releaseVersion.TagName)
 	if releaseVersion.TagName != Version {
+		go runtime.EventsEmit(a.ctx, "newsPush", map[string]any{
+			"time":    "发现新版本：" + releaseVersion.TagName,
+			"isRed":   false,
+			"source":  "go-stock",
+			"content": fmt.Sprintf("当前版本:%s, 最新版本:%s,开始下载...", Version, releaseVersion.TagName),
+		})
+
 		tag := &models.Tag{}
 		_, err = resty.New().R().
 			SetResult(tag).
@@ -118,6 +127,7 @@ func (a *App) CheckUpdate() {
 		if err == nil {
 			releaseVersion.Tag = *tag
 		}
+
 		commit := &models.Commit{}
 		_, err = resty.New().R().
 			SetResult(commit).
@@ -125,8 +135,41 @@ func (a *App) CheckUpdate() {
 		if err == nil {
 			releaseVersion.Commit = *commit
 		}
-
-		go runtime.EventsEmit(a.ctx, "updateVersion", releaseVersion)
+		//sha:= commit.Sha
+		resp, err := resty.New().R().Get(fmt.Sprintf("https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-windows-amd64.exe", releaseVersion.TagName))
+		if err != nil {
+			go runtime.EventsEmit(a.ctx, "newsPush", map[string]any{
+				"time":    "新版本：" + releaseVersion.TagName,
+				"isRed":   true,
+				"source":  "go-stock",
+				"content": "新版本下载失败,请前往 https://github.com/ArvinLovegood/go-stock/releases 手动下载替换文件。",
+			})
+			return
+		}
+		body := resp.Body()
+		// 验证下载文件的哈希值
+		//hash := sha256.Sum256(body)
+		//actualSHA256 := hex.EncodeToString(hash[:])
+		//logger.SugaredLogger.Infof("actualSHA256: %s", actualSHA256)
+		//if actualSHA256 != releaseVersion.Commit.Sha {
+		//	logger.SugaredLogger.Errorf("下载文件sha256校验失败")
+		//	logger.SugaredLogger.Errorf("actualSHA256: %s Commit-Sha:%s", actualSHA256, releaseVersion.Commit.Sha)
+		//	return
+		//}
+		// 使用go-update库进行更新
+		err = update.Apply(bytes.NewReader(body), update.Options{})
+		if err != nil {
+			logger.SugaredLogger.Error("更新失败: ", err.Error())
+			go runtime.EventsEmit(a.ctx, "updateVersion", releaseVersion)
+			return
+		} else {
+			go runtime.EventsEmit(a.ctx, "newsPush", map[string]any{
+				"time":    "新版本：" + releaseVersion.TagName,
+				"isRed":   true,
+				"source":  "go-stock",
+				"content": "版本更新完成,下次重启软件生效.",
+			})
+		}
 	}
 }
 

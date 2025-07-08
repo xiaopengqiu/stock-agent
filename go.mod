@@ -13,6 +13,7 @@ require (
 	github.com/go-ego/gse v0.80.3
 	github.com/go-resty/resty/v2 v2.16.2
 	github.com/go-toast/toast v0.0.0-20190211030409-01e6764cf0a4
+	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
 	github.com/robertkrimen/otto v0.5.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/samber/lo v1.49.1
