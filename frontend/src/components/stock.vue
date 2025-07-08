@@ -1815,7 +1815,7 @@ function searchStockReport(stockCode) {
                 </n-text>
               </n-gi>
               <n-gi :span="6">
-                <stock-spark-line :last-price="result['当前价格']" :open-price="result['昨日收盘价']" :stock-code="result['股票代码']" :stock-name="result['股票名称']" ></stock-spark-line>
+                <stock-spark-line :last-price="Number(result['当前价格'])" :open-price="Number(result['昨日收盘价'])" :stock-code="result['股票代码']" :stock-name="result['股票名称']" ></stock-spark-line>
               </n-gi>
             </n-grid>
             <n-grid :cols="2" :y-gap="4" :x-gap="4">
