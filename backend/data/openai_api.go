@@ -145,8 +145,8 @@ func (o OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysPromp
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
-				logger.SugaredLogger.Errorf("NewSummaryStockNewsStream goroutine  panic :%s", err)
-				logger.SugaredLogger.Errorf("NewSummaryStockNewsStream goroutine  panic  config:%v", o)
+				logger.SugaredLogger.Errorf("NewSummaryStockNewsStream goroutine panic: %s", err)
+				logger.SugaredLogger.Errorf("NewSummaryStockNewsStream goroutine panic config: %s", o.String())
 			}
 		}()
 		defer close(ch)
