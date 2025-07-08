@@ -41,6 +41,11 @@ type OpenAi struct {
 	BrowserPath      string  `json:"browser_path"`
 }
 
+func (o OpenAi) String() string {
+	return fmt.Sprintf("OpenAi{BaseUrl: %s, Model: %s, MaxTokens: %d, Temperature: %.2f, Prompt: %s, TimeOut: %d, QuestionTemplate: %s, CrawlTimeOut: %d, KDays: %d, BrowserPath: %s, ApiKey: [MASKED]}",
+		o.BaseUrl, o.Model, o.MaxTokens, o.Temperature, o.Prompt, o.TimeOut, o.QuestionTemplate, o.CrawlTimeOut, o.KDays, o.BrowserPath)
+}
+
 func NewDeepSeekOpenAi(ctx context.Context) *OpenAi {
 	config := GetConfig()
 	if config.OpenAiEnable {
@@ -356,7 +361,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 			if err := recover(); err != nil {
 				logger.SugaredLogger.Errorf("NewChatStream goroutine  panic :%s", err)
 				logger.SugaredLogger.Errorf("NewChatStream goroutine  panic  stock:%s stockCode:%s", stock, stockCode)
-				logger.SugaredLogger.Errorf("NewChatStream goroutine  panic  config:%v", o)
+				logger.SugaredLogger.Errorf("NewChatStream goroutine  panic  config:%s", o.String())
 			}
 		}()
 		defer close(ch)
