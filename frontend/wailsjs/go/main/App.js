@@ -94,6 +94,10 @@ export function GetPromptTemplates(arg1, arg2) {
   return window['go']['main']['App']['GetPromptTemplates'](arg1, arg2);
 }
 
+export function GetSponsorInfo() {
+  return window['go']['main']['App']['GetSponsorInfo']();
+}
+
 export function GetStockCommonKLine(arg1, arg2, arg3) {
   return window['go']['main']['App']['GetStockCommonKLine'](arg1, arg2, arg3);
 }

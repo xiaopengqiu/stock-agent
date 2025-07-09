@@ -347,6 +347,9 @@ func checkDir(dir string) {
 		os.Mkdir(dir, os.ModePerm)
 		log.SugaredLogger.Info("create dir: " + dir)
 	}
+	if BuildKey == "" {
+		BuildKey = "cc1e0d684e32f176c56ff1fcf384dcd9"
+	}
 }
 
 // PanicHandler 捕获 panic 的包装函数

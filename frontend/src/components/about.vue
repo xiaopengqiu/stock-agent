@@ -3,7 +3,7 @@
 // preview.css相比style.css少了编辑器那部分样式
 import 'md-editor-v3/lib/preview.css';
 import {h, onBeforeUnmount, onMounted, ref} from 'vue';
-import {CheckUpdate, GetVersionInfo} from "../../wailsjs/go/main/App";
+import {CheckUpdate, GetVersionInfo,GetSponsorInfo} from "../../wailsjs/go/main/App";
 import {EventsOff, EventsOn} from "../../wailsjs/runtime";
 import {NAvatar, NButton, useNotification} from "naive-ui";
 const updateLog = ref('');
@@ -12,6 +12,9 @@ const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/maste
 const alipay =ref('https://github.com/ArvinLovegood/go-stock/raw/master/build/screenshot/alipay.jpg')
 const wxpay =ref('https://github.com/ArvinLovegood/go-stock/raw/master/build/screenshot/wxpay.jpg')
 const notify = useNotification()
+const vipLevel=ref("");
+const vipStartTime=ref("");
+const vipEndTime=ref("");
 
 onMounted(() => {
   document.title = '关于软件';
@@ -21,7 +24,17 @@ onMounted(() => {
     icon.value = res.icon;
     alipay.value=res.alipay;
     wxpay.value=res.wxpay;
+
+    GetSponsorInfo().then((res) => {
+      vipLevel.value = res.vipLevel;
+      vipStartTime.value = res.vipStartTime;
+      vipEndTime.value = res.vipEndTime;
+    })
+
   });
+
+
+
 })
 onBeforeUnmount(() => {
   notify.destroyAll()
@@ -87,10 +100,14 @@ EventsOn("updateVersion",async (msg) => {
           <n-space vertical >
             <n-image width="100" :src="icon" />
             <h1>
-              <n-badge :value="versionInfo" :offset="[50,10]"  type="success">
+              <n-badge v-if="!vipLevel"  :value="versionInfo" :offset="[50,10]"  type="success">
                 <n-gradient-text type="info" :size="50" >go-stock</n-gradient-text>
               </n-badge>
+              <n-badge v-if="vipLevel"  :value="versionInfo" :offset="[50,10]"  type="success">
+                <n-gradient-text type="warning" :size="50" >go-stock</n-gradient-text><n-tag :bordered="false" size="small" type="warning">VIP{{vipLevel}}</n-tag>
+              </n-badge>
             </h1>
+            <n-gradient-text type="warning"  v-if="vipLevel" >vip到期时间：{{vipEndTime}}</n-gradient-text>
             <n-button size="tiny" @click="CheckUpdate"  type="info" tertiary >检查更新</n-button>
             <div style="justify-self: center;text-align: left" >
               <p>自选股行情实时监控，基于Wails和NaiveUI构建的AI赋能股票分析工具</p>
@@ -126,7 +143,7 @@ EventsOn("updateVersion",async (msg) => {
                   <n-td>每月 0 RMB</n-td><n-td>vip0</n-td><n-td>🌟 全部功能,软件自动更新(从GitHub下载),自行解决github平台网络问题。</n-td>
                 </n-tr>
                 <n-tr>
-                  <n-td>每月赞助 18.8 RMB</n-td><n-td>vip1</n-td><n-td>💕 全部功能,软件自动更新(从CDN下载),更新快速便捷。AI配置指导，提示词参考等</n-td>
+                  <n-td>赞助 18.8 RMB/月<br>赞助 120 RMB/年</n-td><n-td>vip1</n-td><n-td>💕 全部功能,软件自动更新(从CDN下载),更新快速便捷。AI配置指导，提示词参考等</n-td>
                 </n-tr>
                 <n-tr>
                   <n-td>每月赞助 X RMB</n-td><n-td>vipX</n-td><n-td>🧩 更多计划，视go-stock开源项目发展情况而定...(承接GitHub项目README广告推广💖)</n-td>

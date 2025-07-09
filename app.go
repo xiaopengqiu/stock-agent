@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"github.com/duke-git/lancet/v2/cryptor"
 	"github.com/inconshreveable/go-update"
 	"go-stock/backend/data"
 	"go-stock/backend/db"
@@ -27,11 +30,12 @@ import (
 
 // App struct
 type App struct {
-	ctx        context.Context
-	cache      *freecache.Cache
-	cron       *cron.Cron
-	cronEntrys map[string]cron.EntryID
-	AiTools    []data.Tool
+	ctx         context.Context
+	cache       *freecache.Cache
+	cron        *cron.Cron
+	cronEntrys  map[string]cron.EntryID
+	AiTools     []data.Tool
+	SponsorInfo map[string]any
 }
 
 // NewApp creates a new App application struct
@@ -102,6 +106,9 @@ func AddTools(tools []data.Tool) []data.Tool {
 	return tools
 }
 
+func (a *App) GetSponsorInfo() map[string]any {
+	return a.SponsorInfo
+}
 func (a *App) CheckUpdate() {
 	releaseVersion := &models.GitHubReleaseVersion{}
 	_, err := resty.New().R().
@@ -134,17 +141,51 @@ func (a *App) CheckUpdate() {
 			go runtime.EventsEmit(a.ctx, "updateVersion", releaseVersion)
 			return
 		}
+		downloadUrl := fmt.Sprintf("https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-windows-amd64.exe", releaseVersion.TagName)
+		if IsMacOS() {
+			downloadUrl = fmt.Sprintf("https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-darwin-universal", releaseVersion.TagName)
+		}
 
+		sponsorCode := a.GetConfig().SponsorCode
+		if sponsorCode != "" {
+			encrypted, err := hex.DecodeString(sponsorCode)
+			if err != nil {
+				logger.SugaredLogger.Error(err.Error())
+				return
+			}
+			key, err := hex.DecodeString(BuildKey)
+			if err != nil {
+				logger.SugaredLogger.Error(err.Error())
+				return
+			}
+			decrypt := string(cryptor.AesEcbDecrypt(encrypted, key))
+			logger.SugaredLogger.Errorf("赞助码: %s", decrypt)
+			err = json.Unmarshal([]byte(decrypt), &a.SponsorInfo)
+			if err != nil {
+				logger.SugaredLogger.Error(err.Error())
+				return
+			}
+			if IsWindows() {
+				if a.SponsorInfo["winDownUrl"] == nil {
+					downloadUrl = fmt.Sprintf("https://gitproxy.click/https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-windows-amd64.exe", releaseVersion.TagName)
+				} else {
+					downloadUrl = a.SponsorInfo["winDownUrl"].(string)
+				}
+			}
+			if IsMacOS() {
+				if a.SponsorInfo["macDownUrl"] == nil {
+					downloadUrl = fmt.Sprintf("https://gitproxy.click/https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-darwin-universal", releaseVersion.TagName)
+				} else {
+					downloadUrl = a.SponsorInfo["macDownUrl"].(string)
+				}
+			}
+		}
 		go runtime.EventsEmit(a.ctx, "newsPush", map[string]any{
 			"time":    "发现新版本：" + releaseVersion.TagName,
 			"isRed":   false,
 			"source":  "go-stock",
 			"content": fmt.Sprintf("当前版本:%s, 最新版本:%s,开始下载...", Version, releaseVersion.TagName),
 		})
-		downloadUrl := fmt.Sprintf("https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-windows-amd64.exe", releaseVersion.TagName)
-		if IsMacOS() {
-			downloadUrl = fmt.Sprintf("https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-darwin-universal", releaseVersion.TagName)
-		}
 		resp, err := resty.New().R().Get(downloadUrl)
 		if err != nil {
 			go runtime.EventsEmit(a.ctx, "newsPush", map[string]any{

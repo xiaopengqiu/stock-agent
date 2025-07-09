@@ -46,6 +46,7 @@ const formValue = ref({
   darkTheme:true,
   enableFund:false,
   enablePushNews:false,
+  sponsorCode:"",
 })
 const promptTemplates=ref([])
 onMounted(()=>{
@@ -80,6 +81,8 @@ onMounted(()=>{
     formValue.value.darkTheme = res.darkTheme
     formValue.value.enableFund = res.enableFund
     formValue.value.enablePushNews = res.enablePushNews
+    formValue.value.sponsorCode = res.sponsorCode
+
 
     //console.log(res)
   })
@@ -120,7 +123,8 @@ function saveConfig(){
     enableNews:formValue.value.enableNews,
     darkTheme:formValue.value.darkTheme,
     enableFund:formValue.value.enableFund,
-    enablePushNews:formValue.value.enablePushNews
+    enablePushNews:formValue.value.enablePushNews,
+    sponsorCode:formValue.value.sponsorCode
   })
 
 
@@ -199,6 +203,7 @@ function importConfig(){
       formValue.value.darkTheme = config.darkTheme
       formValue.value.enableFund = config.enableFund
       formValue.value.enablePushNews = config.enablePushNews
+      formValue.value.sponsorCode = config.sponsorCode
      // formRef.value.resetFields()
     };
     reader.readAsText(file);
@@ -293,8 +298,11 @@ function deletePrompt(ID){
         <n-form-item-gi  :span="10" label="浏览器安装路径：" path="browserPath" >
           <n-input  type="text" placeholder="浏览器安装路径"  v-model:value="formValue.browserPath" clearable />
         </n-form-item-gi>
-        <n-form-item-gi  :span="6" label="指数基金：" path="enableFund" >
+        <n-form-item-gi  :span="3" label="指数基金：" path="enableFund" >
           <n-switch v-model:value="formValue.enableFund" />
+        </n-form-item-gi>
+        <n-form-item-gi  :span="11" label="赞助码：" path="sponsorCode" >
+          <n-input :show-count="true" placeholder="赞助码" v-model:value="formValue.sponsorCode" />
         </n-form-item-gi>
       </n-grid>
     </n-card>

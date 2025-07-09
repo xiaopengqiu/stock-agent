@@ -343,6 +343,7 @@ export namespace data {
 	    browserPoolSize: number;
 	    enableFund: boolean;
 	    enablePushNews: boolean;
+	    sponsorCode: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -379,6 +380,7 @@ export namespace data {
 	        this.browserPoolSize = source["browserPoolSize"];
 	        this.enableFund = source["enableFund"];
 	        this.enablePushNews = source["enablePushNews"];
+	        this.sponsorCode = source["sponsorCode"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
