@@ -223,9 +223,10 @@ func (a *App) CheckUpdate() {
 				logger.SugaredLogger.Error(err.Error())
 				return
 			}
-
 			isVip := false
-			if time.Now().After(vipStartTime) && time.Now().Before(vipEndTime) {
+			vipAuthTime, err := time.ParseInLocation("2006-01-02 15:04:05", a.SponsorInfo["vipAuthTime"].(string), time.Local)
+
+			if time.Now().After(vipAuthTime) && time.Now().After(vipStartTime) && time.Now().Before(vipEndTime) {
 				isVip = true
 			}
 
@@ -275,7 +276,7 @@ func (a *App) CheckUpdate() {
 				"time":    "新版本：" + releaseVersion.TagName,
 				"isRed":   true,
 				"source":  "go-stock",
-				"content": "新版本下载失败,请前往 https://github.com/ArvinLovegood/go-stock/releases 手动下载替换文件。",
+				"content": "新版本下载失败,请稍后重试或请前往 https://github.com/ArvinLovegood/go-stock/releases 手动下载替换文件。",
 			})
 			return
 		}
