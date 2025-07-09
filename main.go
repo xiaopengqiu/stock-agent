@@ -54,6 +54,7 @@ var stocksBinUS []byte
 var Version string
 var VersionCommit string
 var OFFICIAL_STATEMENT string
+var BuildKey string
 
 func main() {
 	checkDir("data")
