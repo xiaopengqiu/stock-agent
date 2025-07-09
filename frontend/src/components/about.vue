@@ -113,7 +113,7 @@ EventsOn("updateVersion",async (msg) => {
 
           <n-divider title-placement="center">支持💕开源</n-divider>
           <n-flex justify="center">
-            <n-table striped style="width: 800px">
+            <n-table  style="width: 820px">
               <n-thead>
                 <n-tr>
                   <n-th>赞助计划</n-th>
@@ -129,7 +129,7 @@ EventsOn("updateVersion",async (msg) => {
                   <n-td>每月赞助 18.8 RMB</n-td><n-td>vip1</n-td><n-td>💕 全部功能,软件自动更新(从CDN下载),更新快速便捷。AI配置指导，提示词参考等</n-td>
                 </n-tr>
                 <n-tr>
-                  <n-td>每月赞助 X RMB</n-td><n-td>vipX</n-td><n-td>🧩 更多计划，视go-stock开源项目发展情况而定...(承接GitHub项目README广告推广)</n-td>
+                  <n-td>每月赞助 X RMB</n-td><n-td>vipX</n-td><n-td>🧩 更多计划，视go-stock开源项目发展情况而定...(承接GitHub项目README广告推广💖)</n-td>
                 </n-tr>
               </n-tbody>
             </n-table>
