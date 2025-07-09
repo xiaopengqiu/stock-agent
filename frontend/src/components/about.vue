@@ -92,9 +92,6 @@ EventsOn("updateVersion",async (msg) => {
               </n-badge>
             </h1>
             <n-button size="tiny" @click="CheckUpdate"  type="info" tertiary >检查更新</n-button>
-
-
-
             <div style="justify-self: center;text-align: left" >
               <p>自选股行情实时监控，基于Wails和NaiveUI构建的AI赋能股票分析工具</p>
               <p>目前已支持A股，港股，美股，未来计划加入基金，ETF等支持</p>
@@ -113,6 +110,30 @@ EventsOn("updateVersion",async (msg) => {
               <p>QQ交流群：<a href="http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0YQ8qD3exahsD4YLNhzQTWe5ssstWC89&authKey=usOMMRFtIQDC%2FYcatHYapcxQbJ7PwXPHK9OypTXWzNjAq%2FRVvQu9bj2lRgb%2BSZ3p&noverify=0&group_code=491605333" target="_blank">491605333</a></p>
             </div>
           </n-space>
+
+          <n-divider title-placement="center">支持💕开源</n-divider>
+          <n-flex justify="center">
+            <n-table striped style="width: 800px">
+              <n-thead>
+                <n-tr>
+                  <n-th>赞助计划</n-th>
+                  <n-th>赞助等级</n-th>
+                  <n-th>权益说明</n-th>
+                </n-tr>
+              </n-thead>
+              <n-tbody>
+                <n-tr>
+                  <n-td>每月 0 RMB</n-td><n-td>vip0</n-td><n-td>🌟 全部功能,软件自动更新(从GitHub下载),自行解决github平台网络问题。</n-td>
+                </n-tr>
+                <n-tr>
+                  <n-td>每月赞助 18.8 RMB</n-td><n-td>vip1</n-td><n-td>💕 全部功能,软件自动更新(从CDN下载),更新快速便捷。AI配置指导，提示词参考等</n-td>
+                </n-tr>
+                <n-tr>
+                  <n-td>每月赞助 X RMB</n-td><n-td>vipX</n-td><n-td>🧩 更多计划，视go-stock开源项目发展情况而定...(承接GitHub项目README广告推广)</n-td>
+                </n-tr>
+              </n-tbody>
+            </n-table>
+          </n-flex>
           <n-divider title-placement="center">关于作者</n-divider>
           <n-space vertical>
 <!--            <h1>关于作者</h1>-->
