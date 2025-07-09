@@ -113,7 +113,7 @@ EventsOn("updateVersion",async (msg) => {
 
           <n-divider title-placement="center">支持💕开源</n-divider>
           <n-flex justify="center">
-            <n-table  style="width: 820px">
+            <n-table  size="small" style="width: 820px">
               <n-thead>
                 <n-tr>
                   <n-th>赞助计划</n-th>
