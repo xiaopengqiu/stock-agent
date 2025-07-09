@@ -22,6 +22,10 @@ export function AnalyzeSentiment(arg1) {
   return window['go']['main']['App']['AnalyzeSentiment'](arg1);
 }
 
+export function CheckSponsorCode(arg1) {
+  return window['go']['main']['App']['CheckSponsorCode'](arg1);
+}
+
 export function CheckUpdate() {
   return window['go']['main']['App']['CheckUpdate']();
 }

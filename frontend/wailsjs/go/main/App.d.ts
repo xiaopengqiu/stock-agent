@@ -13,6 +13,8 @@ export function AddStockGroup(arg1:number,arg2:string):Promise<string>;
 
 export function AnalyzeSentiment(arg1:string):Promise<data.SentimentResult>;
 
+export function CheckSponsorCode(arg1:string):Promise<Record<string, any>>;
+
 export function CheckUpdate():Promise<void>;
 
 export function ClsCalendar():Promise<Array<any>>;

@@ -7,7 +7,7 @@ import {
   GetConfig,
   GetPromptTemplates,
   SendDingDingMessageByType,
-  UpdateConfig
+  UpdateConfig,CheckSponsorCode
 } from "../../wailsjs/go/main/App";
 import {NTag, useMessage} from "naive-ui";
 import {data, models} from "../../wailsjs/go/models";
@@ -127,12 +127,24 @@ function saveConfig(){
     sponsorCode:formValue.value.sponsorCode
   })
 
+  if (config.sponsorCode){
+    CheckSponsorCode(config.sponsorCode).then(res=>{
+      if (res.code){
+        UpdateConfig(config).then(res=>{
+          message.success(res)
+          EventsEmit("updateSettings", config);
+        })
+      }else{
+        message.error(res.msg)
+      }
+    })
+  }else{
+    UpdateConfig(config).then(res=>{
+      message.success(res)
+      EventsEmit("updateSettings", config);
+    })
+  }
 
-  //console.log("Settings",config)
-  UpdateConfig(config).then(res=>{
-    message.success(res)
-    EventsEmit("updateSettings", config);
-  })
 }
 
 
@@ -302,7 +314,10 @@ function deletePrompt(ID){
           <n-switch v-model:value="formValue.enableFund" />
         </n-form-item-gi>
         <n-form-item-gi  :span="11" label="赞助码：" path="sponsorCode" >
-          <n-input :show-count="true" placeholder="赞助码" v-model:value="formValue.sponsorCode" />
+          <n-input-group>
+            <n-input :show-count="true" placeholder="赞助码" v-model:value="formValue.sponsorCode" />
+            <n-button type="success" secondary strong  @click="CheckSponsorCode(formValue.sponsorCode).then((res) => {message.warning(res.msg) })">验证</n-button>
+          </n-input-group>
         </n-form-item-gi>
       </n-grid>
     </n-card>
