@@ -130,7 +130,7 @@ func (a *App) CheckUpdate() {
 			releaseVersion.Commit = *commit
 		}
 
-		if !IsWindows() {
+		if !(IsWindows() || IsMacOS()) {
 			go runtime.EventsEmit(a.ctx, "updateVersion", releaseVersion)
 			return
 		}
@@ -142,6 +142,9 @@ func (a *App) CheckUpdate() {
 			"content": fmt.Sprintf("当前版本:%s, 最新版本:%s,开始下载...", Version, releaseVersion.TagName),
 		})
 		downloadUrl := fmt.Sprintf("https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-windows-amd64.exe", releaseVersion.TagName)
+		if IsMacOS() {
+			downloadUrl = fmt.Sprintf("https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-darwin-universal", releaseVersion.TagName)
+		}
 		resp, err := resty.New().R().Get(downloadUrl)
 		if err != nil {
 			go runtime.EventsEmit(a.ctx, "newsPush", map[string]any{
