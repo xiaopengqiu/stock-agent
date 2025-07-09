@@ -145,7 +145,6 @@ func (a *App) CheckUpdate() {
 		if IsMacOS() {
 			downloadUrl = fmt.Sprintf("https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-darwin-universal", releaseVersion.TagName)
 		}
-
 		sponsorCode := a.GetConfig().SponsorCode
 		if sponsorCode != "" {
 			encrypted, err := hex.DecodeString(sponsorCode)
@@ -159,7 +158,6 @@ func (a *App) CheckUpdate() {
 				return
 			}
 			decrypt := string(cryptor.AesEcbDecrypt(encrypted, key))
-			logger.SugaredLogger.Errorf("赞助码: %s", decrypt)
 			err = json.Unmarshal([]byte(decrypt), &a.SponsorInfo)
 			if err != nil {
 				logger.SugaredLogger.Error(err.Error())
