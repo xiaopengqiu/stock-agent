@@ -110,6 +110,26 @@ func (a *App) GetSponsorInfo() map[string]any {
 	return a.SponsorInfo
 }
 func (a *App) CheckUpdate() {
+	sponsorCode := a.GetConfig().SponsorCode
+	if sponsorCode != "" {
+		encrypted, err := hex.DecodeString(sponsorCode)
+		if err != nil {
+			logger.SugaredLogger.Error(err.Error())
+			return
+		}
+		key, err := hex.DecodeString(BuildKey)
+		if err != nil {
+			logger.SugaredLogger.Error(err.Error())
+			return
+		}
+		decrypt := string(cryptor.AesEcbDecrypt(encrypted, key))
+		err = json.Unmarshal([]byte(decrypt), &a.SponsorInfo)
+		if err != nil {
+			logger.SugaredLogger.Error(err.Error())
+			return
+		}
+	}
+
 	releaseVersion := &models.GitHubReleaseVersion{}
 	_, err := resty.New().R().
 		SetResult(releaseVersion).
@@ -145,7 +165,7 @@ func (a *App) CheckUpdate() {
 		if IsMacOS() {
 			downloadUrl = fmt.Sprintf("https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-darwin-universal", releaseVersion.TagName)
 		}
-		sponsorCode := a.GetConfig().SponsorCode
+		sponsorCode = a.GetConfig().SponsorCode
 		if sponsorCode != "" {
 			encrypted, err := hex.DecodeString(sponsorCode)
 			if err != nil {
