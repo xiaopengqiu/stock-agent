@@ -236,7 +236,7 @@ func (a *App) CheckUpdate() {
 			"time":    "发现新版本：" + releaseVersion.TagName,
 			"isRed":   false,
 			"source":  "go-stock",
-			"content": fmt.Sprintf("当前版本:%s, 最新版本:%s,开始下载...", Version, releaseVersion.TagName),
+			"content": fmt.Sprintf("当前版本:%s, 最新版本:%s,后台开始下载...", Version, releaseVersion.TagName),
 		})
 		resp, err := resty.New().R().Get(downloadUrl)
 		if err != nil {
@@ -244,7 +244,7 @@ func (a *App) CheckUpdate() {
 				"time":    "新版本：" + releaseVersion.TagName,
 				"isRed":   true,
 				"source":  "go-stock",
-				"content": "新版本下载失败,请前往 https://github.com/ArvinLovegood/go-stock/releases 手动下载替换文件。",
+				"content": "新版本下载失败,请稍后重试或请前往 https://github.com/ArvinLovegood/go-stock/releases 手动下载替换文件。",
 			})
 			return
 		}
