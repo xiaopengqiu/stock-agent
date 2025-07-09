@@ -390,7 +390,7 @@ function ReFlesh(source) {
           </n-tab-pane>
         </n-tabs>
       </n-tab-pane>
-      <n-tab-pane name="指标行情" tab="指标行情">
+      <n-tab-pane name="指标行情" tab="指标行情" style="--wails-dragable:no-drag">
         <n-tabs type="segment" animated>
           <n-tab-pane name="科创50" tab="科创50">
             <k-line-chart code="sh000688" :chart-height="panelHeight" name="科创50" :k-days="20"
