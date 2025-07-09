@@ -217,18 +217,38 @@ func (a *App) CheckUpdate() {
 				logger.SugaredLogger.Error(err.Error())
 				return
 			}
+			vipStartTime, err := time.ParseInLocation("2006-01-02 15:04:05", a.SponsorInfo["vipStartTime"].(string), time.Local)
+			vipEndTime, err := time.ParseInLocation("2006-01-02 15:04:05", a.SponsorInfo["vipEndTime"].(string), time.Local)
+			if err != nil {
+				logger.SugaredLogger.Error(err.Error())
+				return
+			}
+
+			isVip := false
+			if time.Now().After(vipStartTime) && time.Now().Before(vipEndTime) {
+				isVip = true
+			}
+
 			if IsWindows() {
-				if a.SponsorInfo["winDownUrl"] == nil {
-					downloadUrl = fmt.Sprintf("https://gitproxy.click/https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-windows-amd64.exe", releaseVersion.TagName)
+				if isVip {
+					if a.SponsorInfo["winDownUrl"] == nil {
+						downloadUrl = fmt.Sprintf("https://gitproxy.click/https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-windows-amd64.exe", releaseVersion.TagName)
+					} else {
+						downloadUrl = a.SponsorInfo["winDownUrl"].(string)
+					}
 				} else {
-					downloadUrl = a.SponsorInfo["winDownUrl"].(string)
+					downloadUrl = fmt.Sprintf("https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-windows-amd64.exe", releaseVersion.TagName)
 				}
 			}
 			if IsMacOS() {
-				if a.SponsorInfo["macDownUrl"] == nil {
-					downloadUrl = fmt.Sprintf("https://gitproxy.click/https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-darwin-universal", releaseVersion.TagName)
+				if isVip {
+					if a.SponsorInfo["macDownUrl"] == nil {
+						downloadUrl = fmt.Sprintf("https://gitproxy.click/https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-darwin-universal", releaseVersion.TagName)
+					} else {
+						downloadUrl = a.SponsorInfo["macDownUrl"].(string)
+					}
 				} else {
-					downloadUrl = a.SponsorInfo["macDownUrl"].(string)
+					downloadUrl = fmt.Sprintf("https://github.com/ArvinLovegood/go-stock/releases/download/%s/go-stock-darwin-universal", releaseVersion.TagName)
 				}
 			}
 		}
