@@ -23,6 +23,7 @@
 ### 📦 立即体验
 - 安装版：[go-stock-amd64-installer.exe](https://github.com/ArvinLovegood/go-stock/releases)
 - 绿色版：[go-stock-windows-amd64.exe](https://github.com/ArvinLovegood/go-stock/releases)
+- MACOS版：[go-stock-darwin-universal](https://github.com/ArvinLovegood/go-stock/releases)
 
 
 ### 💬 支持大模型/平台
@@ -43,6 +44,13 @@
 - 软件快速迭代开发中,请大家优先测试和使用最新发布的版本。
 - 欢迎大家提出宝贵的建议，欢迎提issue,PR。当然更欢迎[赞助我](#都划到这了如果我的项目对您有帮助请赞助我吧)。💕
 
+
+### 支持开源💕计划
+| 赞助计划	               | 赞助等级	 | 权益说明                                                    |
+|:--------------------|-------|:--------------------------------------------------------|
+| 每月 0 RMB	           | vip0	 | 🌟 全部功能,软件自动更新(从GitHub下载),自行解决github平台网络问题。             |
+| 每月赞助 18.8 RMB		     | vip1	 | 💕 全部功能,软件自动更新(从CDN下载),更新快速便捷。AI配置指导，提示词参考等             |
+| 每月赞助 X RMB			       | vipX	 | 🧩 更多计划，视go-stock开源项目发展情况而定...(承接GitHub项目README广告推广💖)  |
 
 ## 🧩 重大功能开发计划
 | 功能说明            | 状态 | 备注                                                                                                       |
