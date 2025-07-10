@@ -175,3 +175,7 @@ func TestClsCalendar(t *testing.T) {
 	}
 	logger.SugaredLogger.Debugf("md:\n %s", md.String())
 }
+
+func TestGetGDP(t *testing.T) {
+	NewMarketNewsApi().GetGDP()
+}

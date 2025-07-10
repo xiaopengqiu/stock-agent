@@ -701,3 +701,34 @@ func (m MarketNewsApi) ClsCalendar() []any {
 	err = json.Unmarshal(resp.Body(), &respMap)
 	return respMap["data"].([]any)
 }
+
+func (m MarketNewsApi) GetGDP() {
+	url := "https://datacenter-web.eastmoney.com/api/data/v1/get?callback=data&columns=REPORT_DATE%2CTIME%2CDOMESTICL_PRODUCT_BASE%2CFIRST_PRODUCT_BASE%2CSECOND_PRODUCT_BASE%2CTHIRD_PRODUCT_BASE%2CSUM_SAME%2CFIRST_SAME%2CSECOND_SAME%2CTHIRD_SAME&pageNumber=1&pageSize=20&sortColumns=REPORT_DATE&sortTypes=-1&source=WEB&client=WEB&reportName=RPT_ECONOMY_GDP&p=1&pageNo=1&pageNum=1&_=" + strconv.FormatInt(time.Now().Unix(), 10)
+	resp, err := resty.New().SetTimeout(time.Duration(30)*time.Second).R().
+		SetHeader("Host", "datacenter-web.eastmoney.com").
+		SetHeader("Origin", "https://datacenter.eastmoney.com").
+		SetHeader("Referer", "https://data.eastmoney.com/cjsj/gdp.html").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		Get(url)
+	if err != nil {
+		logger.SugaredLogger.Errorf("GDP err:%s", err.Error())
+		return
+	}
+	body := resp.Body()
+	logger.SugaredLogger.Debugf("GDP:%s", body)
+	vm := otto.New()
+	vm.Run("function data(res){return res};")
+
+	val, err := vm.Run(body)
+	if err != nil {
+		logger.SugaredLogger.Errorf("GDP err:%s", err.Error())
+		return
+	}
+	data, _ := val.Object().Value().Export()
+	logger.SugaredLogger.Infof("GDP:%v", data)
+	marshal, err := json.Marshal(data)
+	if err != nil {
+		return
+	}
+	logger.SugaredLogger.Infof("GDP:%s", marshal)
+}

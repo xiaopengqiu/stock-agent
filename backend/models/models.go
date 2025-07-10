@@ -370,3 +370,16 @@ type HotEvent struct {
 	StatusCount int         `json:"status_count"`
 	Content     string      `json:"content"`
 }
+
+type GDP struct {
+	REPORTDATE           string  `json:"REPORT_DATE" md:"报告时间"`
+	TIME                 string  `json:"TIME" md:"报告期"`
+	DOMESTICLPRODUCTBASE float64 `json:"DOMESTICL_PRODUCT_BASE" md:"国内生产总值(亿元)"`
+	SUMSAME              float64 `json:"SUM_SAME" md:"国内生产总值同比增长(%)"`
+	FIRSTPRODUCTBASE     float64 `json:"FIRST_PRODUCT_BASE" md:"第一产业(亿元)"`
+	FIRSTSAME            int     `json:"FIRST_SAME" md:"第一产业同比增长(%)"`
+	SECONDPRODUCTBASE    float64 `json:"SECOND_PRODUCT_BASE" md:"第二产业(亿元)"`
+	SECONDSAME           float64 `json:"SECOND_SAME" md:"第二产业同比增长(%)"`
+	THIRDPRODUCTBASE     float64 `json:"THIRD_PRODUCT_BASE" md:"第三产业(亿元)"`
+	THIRDSAME            float64 `json:"THIRD_SAME" md:"第三产业同比增长(%)"`
+}
