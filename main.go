@@ -19,10 +19,8 @@ import (
 	log "go-stock/backend/logger"
 	"go-stock/backend/models"
 	"os"
-	goruntime "runtime"
 	"runtime/debug"
 	"strings"
-	"time"
 )
 
 //go:embed frontend/dist
@@ -72,34 +70,35 @@ func main() {
 	// Create an instance of the app structure
 	app := NewApp()
 	AppMenu := menu.NewMenu()
+	AppMenu.Append(menu.EditMenu())
 	FileMenu := AppMenu.AddSubmenu("设置")
-	FileMenu.AddText("显示搜索框", keys.CmdOrCtrl("s"), func(callbackData *menu.CallbackData) {
-		runtime.EventsEmit(app.ctx, "showSearch", 1)
-	})
-	FileMenu.AddText("隐藏搜索框", keys.CmdOrCtrl("d"), func(callbackData *menu.CallbackData) {
-		runtime.EventsEmit(app.ctx, "showSearch", 0)
-	})
-	FileMenu.AddText("刷新数据", keys.CmdOrCtrl("r"), func(callbackData *menu.CallbackData) {
-		//runtime.EventsEmit(app.ctx, "refresh", "setting-"+time.Now().Format("2006-01-02 15:04:05"))
-		runtime.EventsEmit(app.ctx, "refreshFollowList", "refresh-"+time.Now().Format("2006-01-02 15:04:05"))
-	})
-	FileMenu.AddSeparator()
 	FileMenu.AddText("窗口全屏", keys.CmdOrCtrl("f"), func(callback *menu.CallbackData) {
 		runtime.WindowFullscreen(app.ctx)
 	})
 	FileMenu.AddText("窗口还原", keys.Key("Esc"), func(callback *menu.CallbackData) {
 		runtime.WindowUnfullscreen(app.ctx)
 	})
+	//FileMenu.AddText("显示搜索框", keys.CmdOrCtrl("s"), func(callbackData *menu.CallbackData) {
+	//	runtime.EventsEmit(app.ctx, "showSearch", 1)
+	//})
+	//FileMenu.AddText("隐藏搜索框", keys.CmdOrCtrl("d"), func(callbackData *menu.CallbackData) {
+	//	runtime.EventsEmit(app.ctx, "showSearch", 0)
+	//})
+	//FileMenu.AddText("刷新数据", keys.CmdOrCtrl("r"), func(callbackData *menu.CallbackData) {
+	//	//runtime.EventsEmit(app.ctx, "refresh", "setting-"+time.Now().Format("2006-01-02 15:04:05"))
+	//	runtime.EventsEmit(app.ctx, "refreshFollowList", "refresh-"+time.Now().Format("2006-01-02 15:04:05"))
+	//})
+	//FileMenu.AddSeparator()
 
-	if goruntime.GOOS == "windows" {
-		FileMenu.AddText("隐藏到托盘区", keys.CmdOrCtrl("h"), func(_ *menu.CallbackData) {
-			runtime.WindowHide(app.ctx)
-		})
-
-		FileMenu.AddText("显示", keys.CmdOrCtrl("v"), func(_ *menu.CallbackData) {
-			runtime.WindowShow(app.ctx)
-		})
-	}
+	//if goruntime.GOOS == "windows" {
+	//	FileMenu.AddText("隐藏到托盘区", keys.CmdOrCtrl("h"), func(_ *menu.CallbackData) {
+	//		runtime.WindowHide(app.ctx)
+	//	})
+	//
+	//	FileMenu.AddText("显示", keys.CmdOrCtrl("v"), func(_ *menu.CallbackData) {
+	//		runtime.WindowShow(app.ctx)
+	//	})
+	//}
 
 	//FileMenu.AddText("退出", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
 	//	runtime.Quit(app.ctx)
