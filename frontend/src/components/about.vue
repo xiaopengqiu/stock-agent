@@ -11,6 +11,7 @@ const versionInfo = ref('');
 const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
 const alipay =ref('https://github.com/ArvinLovegood/go-stock/raw/master/build/screenshot/alipay.jpg')
 const wxpay =ref('https://github.com/ArvinLovegood/go-stock/raw/master/build/screenshot/wxpay.jpg')
+const wxgzh =ref('https://github.com/ArvinLovegood/go-stock/raw/dev/build/screenshot/%E6%89%AB%E7%A0%81_%E6%90%9C%E7%B4%A2%E8%81%94%E5%90%88%E4%BC%A0%E6%92%AD%E6%A0%B7%E5%BC%8F-%E7%99%BD%E8%89%B2%E7%89%88.png')
 const notify = useNotification()
 const vipLevel=ref("");
 const vipStartTime=ref("");
@@ -24,6 +25,7 @@ onMounted(() => {
     icon.value = res.icon;
     alipay.value=res.alipay;
     wxpay.value=res.wxpay;
+    wxgzh.value=res.wxgzh;
 
     GetSponsorInfo().then((res) => {
       vipLevel.value = res.vipLevel;
@@ -127,7 +129,6 @@ EventsOn("updateVersion",async (msg) => {
               <p>QQ交流群：<a href="http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0YQ8qD3exahsD4YLNhzQTWe5ssstWC89&authKey=usOMMRFtIQDC%2FYcatHYapcxQbJ7PwXPHK9OypTXWzNjAq%2FRVvQu9bj2lRgb%2BSZ3p&noverify=0&group_code=491605333" target="_blank">491605333</a></p>
             </div>
           </n-space>
-
           <n-divider title-placement="center">支持💕开源</n-divider>
           <n-flex justify="center">
             <n-table  size="small" style="width: 820px">
@@ -159,9 +160,8 @@ EventsOn("updateVersion",async (msg) => {
 <!--            <h1>关于作者</h1>-->
             <n-avatar width="100" src="https://avatars.githubusercontent.com/u/7401917?v=4" />
             <h2><a href="https://github.com/ArvinLovegood" target="_blank">@ArvinLovegood</a></h2>
-            <p>一个热爱编程的小白，欢迎关注我的Github</p>
-            <n-image width="300" src="https://go-stock.sparkmemory.top/assets/%E6%89%AB%E7%A0%81_%E6%90%9C%E7%B4%A2%E8%81%94%E5%90%88%E4%BC%A0%E6%92%AD%E6%A0%B7%E5%BC%8F-%E7%99%BD%E8%89%B2%E7%89%88-DEJtWc_y.png" />
-
+            <p>一个热爱编程的小白，欢迎关注我的Github/微信公众号</p>
+            <n-image width="300" :src="wxgzh" />
             <p>开源不易，如果觉得好用，可以请作者喝杯咖啡。</p>
             <n-flex justify="center">
               <n-image width="200" :src="alipay" />

@@ -155,6 +155,7 @@ type VersionInfo struct {
 	Icon              string                `json:"icon"`
 	Alipay            string                `json:"alipay"`
 	Wxpay             string                `json:"wxpay"`
+	Wxgzh             string                `json:"wxgzh"`
 	BuildTimeStamp    int64                 `json:"buildTimeStamp"`
 	OfficialStatement string                `json:"officialStatement"`
 	IsDel             soft_delete.DeletedAt `gorm:"softDelete:flag"`

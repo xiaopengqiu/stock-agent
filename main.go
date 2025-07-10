@@ -40,6 +40,9 @@ var alipay []byte
 //go:embed build/screenshot/wxpay.jpg
 var wxpay []byte
 
+//go:embed build/screenshot/扫码_搜索联合传播样式-白色版.png
+var wxgzh []byte
+
 //go:embed build/stock_basic.json
 var stocksBin []byte
 

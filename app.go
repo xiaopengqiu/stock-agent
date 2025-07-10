@@ -863,6 +863,7 @@ func (a *App) GetVersionInfo() *models.VersionInfo {
 		Icon:              GetImageBase(icon),
 		Alipay:            GetImageBase(alipay),
 		Wxpay:             GetImageBase(wxpay),
+		Wxgzh:             GetImageBase(wxgzh),
 		Content:           VersionCommit,
 		OfficialStatement: OFFICIAL_STATEMENT,
 	}
