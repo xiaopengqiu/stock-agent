@@ -14,6 +14,7 @@ import (
 	"go-stock/backend/logger"
 	"go-stock/backend/models"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -1200,4 +1201,82 @@ func (a *App) GetStockMoneyTrendByDay(stockCode string, days int) []map[string]a
 	res := data.NewMarketNewsApi().GetStockMoneyTrendByDay(stockCode, days)
 	slice.Reverse(res)
 	return res
+}
+
+// OpenURL
+//
+//	@Description:  跨平台打开默认浏览器
+//	@receiver a
+//	@param url
+func (a *App) OpenURL(url string) {
+	runtime.BrowserOpenURL(a.ctx, url)
+}
+
+// SaveImage
+//
+//	@Description: 跨平台保存图片
+//	@receiver a
+//	@param name
+//	@param base64Data
+//	@return error
+func (a *App) SaveImage(name, base64Data string) string {
+	// 打开保存文件对话框
+	filePath, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:           "保存图片",
+		DefaultFilename: name + "AI分析.png",
+		Filters: []runtime.FileFilter{
+			{
+				DisplayName: "PNG 图片",
+				Pattern:     "*.png",
+			},
+		},
+	})
+	if err != nil || filePath == "" {
+		return "文件路径,无法保存。"
+	}
+
+	// 解码并保存
+	decodeString, err := base64.StdEncoding.DecodeString(base64Data)
+	if err != nil {
+		return "文件内容异常,无法保存。"
+	}
+
+	err = os.WriteFile(filepath.Clean(filePath), decodeString, 0777)
+	if err != nil {
+		return "保存结果异常,无法保存。"
+	}
+	return filePath
+}
+
+// SaveWordFile
+//
+//	@Description: // 跨平台保存word
+//	@receiver a
+//	@param filename
+//	@param base64Data
+//	@return error
+func (a *App) SaveWordFile(filename string, base64Data string) string {
+	// 弹出保存文件对话框
+	filePath, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:           "保存 Word 文件",
+		DefaultFilename: filename,
+		Filters: []runtime.FileFilter{
+			{DisplayName: "Word 文件", Pattern: "*.docx"},
+		},
+	})
+	if err != nil || filePath == "" {
+		return "文件路径,无法保存。"
+	}
+
+	// 解码 base64 内容
+	decodeString, err := base64.StdEncoding.DecodeString(base64Data)
+	if err != nil {
+		return "文件内容异常,无法保存。"
+	}
+	// 保存为文件
+	err = os.WriteFile(filepath.Clean(filePath), decodeString, 0777)
+	if err != nil {
+		return "保存结果异常,无法保存。"
+	}
+	return filePath
 }

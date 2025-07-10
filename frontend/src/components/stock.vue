@@ -26,7 +26,10 @@ import {
   SetStockAICron,
   SetStockSort,
   ShareAnalysis,
-  UnFollow
+  UnFollow,
+  OpenURL,
+  SaveImage,
+    SaveWordFile
 } from '../../wailsjs/go/main/App'
 import {
   NAvatar,
@@ -41,6 +44,7 @@ import {
   useNotification
 } from 'naive-ui'
 import {
+  Environment,
   EventsEmit,
   EventsOff,
   EventsOn,
@@ -103,7 +107,7 @@ const modalShow3 = ref(false)
 const modalShow4 = ref(false)
 const modalShow5 = ref(false)
 const addBTN = ref(true)
-const enableTools= ref(false)
+const enableTools = ref(false)
 const formModel = ref({
   name: "",
   code: "",
@@ -384,7 +388,15 @@ EventsOn("updateVersion", async (msg) => {
         type: 'primary',
         size: 'small',
         onClick: () => {
-          window.open(msg.html_url)
+          Environment().then(env => {
+            switch (env.platform) {
+              case 'windows':
+                window.open(msg.html_url)
+                break
+              default :
+                OpenURL(msg.html_url)
+            }
+          })
         }
       }, {default: () => '查看'})
     }
@@ -441,7 +453,7 @@ function AddStock() {
     Follow(data.code).then(result => {
       if (result === "关注成功") {
         if (data.code.startsWith("us")) {
-          data.code= "gb_" + data.code.replace("us", "").toLowerCase()
+          data.code = "gb_" + data.code.replace("us", "").toLowerCase()
         }
         stocks.value.push(data.code)
         message.success(result)
@@ -614,12 +626,24 @@ function onSelect(item) {
 function openCenteredWindow(url, width, height) {
   const left = (window.screen.width - width) / 2;
   const top = (window.screen.height - height) / 2;
+  Environment().then(env => {
+    switch (env.platform) {
+      case 'windows':
+        window.open(url, target, features)
+        break
+      default :
+        OpenURL(url)
+        break
+    }
+  })
 
-  return window.open(
-      url,
-      'centeredWindow',
-      `width=${width},height=${height},left=${left},top=${top}`
-  );
+
+  //
+  // return window.open(
+  //     url,
+  //     'centeredWindow',
+  //     `width=${width},height=${height},left=${left},top=${top}`
+  // );
 }
 
 function search(code, name) {
@@ -631,7 +655,7 @@ function search(code, name) {
     //window.open("https://www.iwencai.com/unifiedwap/result?w=" + name)
     //window.open("https://www.iwencai.com/chat/?question="+code)
 
-    openCenteredWindow("https://www.iwencai.com/unifiedwap/result?w=" + name,1000,800)
+    openCenteredWindow("https://www.iwencai.com/unifiedwap/result?w=" + name, 1000, 800)
 
   }, 500)
 }
@@ -1359,7 +1383,7 @@ function aiReCheckStock(stock, stockCode) {
   //
 
   //message.info("sysPromptId:"+data.sysPromptId)
-  NewChatStream(stock, stockCode, data.question, data.sysPromptId,enableTools.value)
+  NewChatStream(stock, stockCode, data.question, data.sysPromptId, enableTools.value)
 }
 
 function aiCheckStock(stock, stockCode) {
@@ -1437,21 +1461,42 @@ window.onerror = function (msg, source, lineno, colno, error) {
 };
 
 function saveAsImage(name, code) {
-  const element = document.querySelector('.md-editor-preview');
-  if (element) {
-    html2canvas(element, {
-      useCORS: true, // 解决跨域图片问题
-      scale: 2, // 提高截图质量
-      allowTaint: true, // 允许跨域图片
-    }).then(canvas => {
-      const link = document.createElement('a');
-      link.href = canvas.toDataURL('image/png');
-      link.download = name + "[" + code + ']-ai-analysis-result.png';
-      link.click();
-    });
-  } else {
-    message.error('无法找到分析结果元素');
-  }
+  Environment().then(env => {
+    switch (env.platform) {
+      case 'windows':
+        const element = document.querySelector('.md-editor-preview');
+        if (element) {
+          html2canvas(element, {
+            useCORS: true, // 解决跨域图片问题
+            scale: 2, // 提高截图质量
+            allowTaint: true, // 允许跨域图片
+          }).then(canvas => {
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png');
+            link.download = name + "[" + code + ']-ai-analysis-result.png';
+            link.click();
+          });
+        } else {
+          message.error('无法找到分析结果元素');
+        }
+        break
+      default :
+        saveCanvasImage(name)
+    }
+  })
+}
+
+async function saveCanvasImage(name) {
+  const element =  document.querySelector('.md-editor-preview'); // 要截图的 DOM 节点
+  const canvas = await html2canvas(element)
+
+  const dataUrl = canvas.toDataURL('image/png') // base64 格式
+  const base64 = dataUrl.replace(/^data:image\/png;base64,/, '')
+
+  // 调用 Go 后端保存文件（Wails 绑定方法）
+  await SaveImage(name,base64).then(result => {
+    message.success(result)
+  })
 }
 
 async function copyToClipboard() {
@@ -1511,13 +1556,26 @@ AI赋能股票分析：自选股行情获取，成本盈亏展示，涨跌报警
 `
   // landscape就是横着的，portrait是竖着的，默认是竖屏portrait。
   const blob = await asBlob(value, {orientation: 'portrait'})
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(blob)
-  a.download = `${data.name}[${data.code}]-ai-analysis-result.docx`;
-  a.click()
-  // 下载后将标签移除
-  URL.revokeObjectURL(a.href);
-  a.remove()
+  const { platform } = await Environment()
+  switch (platform) {
+    case 'windows':
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `${data.name}[${data.code}]-ai-analysis-result.docx`;
+      a.click()
+      // 下载后将标签移除
+      URL.revokeObjectURL(a.href);
+      a.remove()
+      break
+    default:
+        const arrayBuffer = await blob.arrayBuffer()
+        const uint8Array = new Uint8Array(arrayBuffer)
+        const binary = uint8Array.reduce((data, byte) => data + String.fromCharCode(byte), '')
+        const base64 = btoa(binary)
+        await SaveWordFile(`${data.name}[${data.code}]-ai-analysis-result.docx`, base64).then(result => {
+          message.success(result)
+        })
+  }
 }
 
 function share(code, name) {
@@ -1747,7 +1805,8 @@ function searchStockReport(stockCode) {
                 取消关注
               </n-button>&nbsp;
 
-              <n-button size="tiny" v-if="data.openAiEnable" secondary type="warning"  @click="aiCheckStock(result['股票名称'],result['股票代码'])">
+              <n-button size="tiny" v-if="data.openAiEnable" secondary type="warning"
+                        @click="aiCheckStock(result['股票名称'],result['股票代码'])">
                 AI分析
               </n-button>
             </template>
@@ -1756,7 +1815,9 @@ function searchStockReport(stockCode) {
                 <n-text :type="'info'">{{ result["日期"] + " " + result["时间"] }}</n-text>
                 <n-tag size="small" v-if="result.volume>0" :type="result.profitType">{{ result.volume + "股" }}</n-tag>
                 <n-tag size="small" v-if="result.costPrice>0" :type="result.profitType">
-                  {{ "成本:" + result.costPrice + "*" + result.costVolume + " " + result.profit + "%" + " ( " + result.profitAmount + " ¥ )" }}
+                  {{
+                    "成本:" + result.costPrice + "*" + result.costVolume + " " + result.profit + "%" + " ( " + result.profitAmount + " ¥ )"
+                  }}
                 </n-tag>
               </n-flex>
             </template>
@@ -1815,7 +1876,8 @@ function searchStockReport(stockCode) {
                 </n-text>
               </n-gi>
               <n-gi :span="6">
-                <stock-spark-line :last-price="Number(result['当前价格'])" :open-price="Number(result['昨日收盘价'])" :stock-code="result['股票代码']" :stock-name="result['股票名称']" ></stock-spark-line>
+                <stock-spark-line :last-price="Number(result['当前价格'])" :open-price="Number(result['昨日收盘价'])"
+                                  :stock-code="result['股票代码']" :stock-name="result['股票名称']"></stock-spark-line>
               </n-gi>
             </n-grid>
             <n-grid :cols="2" :y-gap="4" :x-gap="4">
@@ -1886,9 +1948,10 @@ function searchStockReport(stockCode) {
                 取消关注
               </n-button>&nbsp;
 
-                <n-button size="tiny" v-if="data.openAiEnable" secondary type="warning"  @click="aiCheckStock(result['股票名称'],result['股票代码'])">
-                  AI分析
-                </n-button>
+              <n-button size="tiny" v-if="data.openAiEnable" secondary type="warning"
+                        @click="aiCheckStock(result['股票名称'],result['股票代码'])">
+                AI分析
+              </n-button>
               <n-button secondary type="error" size="tiny"
                         @click="delStockGroup(result['股票代码'],result['股票名称'],group.ID)">移出分组
               </n-button>
@@ -1898,7 +1961,9 @@ function searchStockReport(stockCode) {
                 <n-text :type="'info'">{{ result["日期"] + " " + result["时间"] }}</n-text>
                 <n-tag size="small" v-if="result.volume>0" :type="result.profitType">{{ result.volume + "股" }}</n-tag>
                 <n-tag size="small" v-if="result.costPrice>0" :type="result.profitType">
-                  {{ "成本:" + result.costPrice + "*" + result.costVolume + " " + result.profit + "%" + " ( " + result.profitAmount + " ¥ )" }}
+                  {{
+                    "成本:" + result.costPrice + "*" + result.costVolume + " " + result.profit + "%" + " ( " + result.profitAmount + " ¥ )"
+                  }}
                 </n-tag>
               </n-flex>
             </template>
@@ -2087,7 +2152,9 @@ function searchStockReport(stockCode) {
             不启用AI函数工具调用
           </template>
         </n-switch>
-        <n-gradient-text type="error" style="margin-left: 10px">*AI函数工具调用可以增强AI获取数据的能力,但会消耗更多tokens。</n-gradient-text>
+        <n-gradient-text type="error" style="margin-left: 10px">
+          *AI函数工具调用可以增强AI获取数据的能力,但会消耗更多tokens。
+        </n-gradient-text>
       </n-flex>
       <n-flex justify="space-between" style="margin-bottom: 10px">
         <n-select style="width: 49%" v-model:value="data.sysPromptId" label-field="name" value-field="ID"

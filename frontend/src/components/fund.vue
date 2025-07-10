@@ -7,7 +7,7 @@ import {
   GetConfig,
   GetFollowedFund,
   GetfundList,
-  GetVersionInfo,
+  GetVersionInfo, OpenURL,
   UnFollowFund
 } from "../../wailsjs/go/main/App";
 import vueDanmaku from 'vue3-danmaku'
@@ -147,8 +147,19 @@ function formatterTitle(title){
 
 function search(code,name){
   setTimeout(() => {
-    window.open("https://fund.eastmoney.com/"+code+".html","_blank","noreferrer,width=1000,top=100,left=100,status=no,toolbar=no,location=no,scrollbars=no")
+    //window.open("https://fund.eastmoney.com/"+code+".html","_blank","noreferrer,width=1000,top=100,left=100,status=no,toolbar=no,location=no,scrollbars=no")
     //window.open("https://finance.sina.com.cn/fund/quotes/"+code+"/bc.shtml","_blank","width=1000,height=800,top=100,left=100,toolbar=no,location=no")
+
+    Environment().then(env => {
+      switch (env.platform) {
+        case 'windows':
+          window.open("https://fund.eastmoney.com/"+code+".html","_blank","noreferrer,width=1000,top=100,left=100,status=no,toolbar=no,location=no,scrollbars=no")
+          break
+        default :
+          OpenURL("https://fund.eastmoney.com/"+code+".html")
+      }
+    })
+
   }, 500)
 }
 
