@@ -629,7 +629,11 @@ function openCenteredWindow(url, width, height) {
   Environment().then(env => {
     switch (env.platform) {
       case 'windows':
-        window.open(url, target, features)
+        window.open(
+            url,
+            'centeredWindow',
+            `width=${width},height=${height},left=${left},top=${top},location=no,menubar=no,toolbar=no,display=standalone`
+        )
         break
       default :
         OpenURL(url)
