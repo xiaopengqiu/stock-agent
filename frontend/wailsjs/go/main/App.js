@@ -174,6 +174,10 @@ export function NewsPush(arg1) {
   return window['go']['main']['App']['NewsPush'](arg1);
 }
 
+export function OpenURL(arg1) {
+  return window['go']['main']['App']['OpenURL'](arg1);
+}
+
 export function ReFleshTelegraphList(arg1) {
   return window['go']['main']['App']['ReFleshTelegraphList'](arg1);
 }
@@ -192,6 +196,14 @@ export function SaveAIResponseResult(arg1, arg2, arg3, arg4, arg5) {
 
 export function SaveAsMarkdown(arg1, arg2) {
   return window['go']['main']['App']['SaveAsMarkdown'](arg1, arg2);
+}
+
+export function SaveImage(arg1, arg2) {
+  return window['go']['main']['App']['SaveImage'](arg1, arg2);
+}
+
+export function SaveWordFile(arg1, arg2) {
+  return window['go']['main']['App']['SaveWordFile'](arg1, arg2);
 }
 
 export function SearchStock(arg1) {

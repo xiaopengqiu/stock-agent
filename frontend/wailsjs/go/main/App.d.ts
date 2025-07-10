@@ -89,6 +89,8 @@ export function NewChatStream(arg1:string,arg2:string,arg3:string,arg4:any,arg5:
 
 export function NewsPush(arg1:any):Promise<void>;
 
+export function OpenURL(arg1:string):Promise<void>;
+
 export function ReFleshTelegraphList(arg1:string):Promise<any>;
 
 export function RemoveGroup(arg1:number):Promise<string>;
@@ -98,6 +100,10 @@ export function RemoveStockGroup(arg1:string,arg2:string,arg3:number):Promise<st
 export function SaveAIResponseResult(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<void>;
 
 export function SaveAsMarkdown(arg1:string,arg2:string):Promise<string>;
+
+export function SaveImage(arg1:string,arg2:string):Promise<string>;
+
+export function SaveWordFile(arg1:string,arg2:string):Promise<string>;
 
 export function SearchStock(arg1:string):Promise<Record<string, any>>;
 
