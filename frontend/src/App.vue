@@ -453,7 +453,7 @@ const menuOptions = ref([
     label: () => h("a", {
       href: '#',
       onClick: WindowHide,
-      title: '隐藏到托盘区 Ctrl+H',
+      title: '隐藏到托盘区 Ctrl+Z',
     }, {default: () => '隐藏到托盘区'}),
     key: 'hide',
     icon: renderIcon(ReorderTwoOutline),

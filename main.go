@@ -19,6 +19,7 @@ import (
 	log "go-stock/backend/logger"
 	"go-stock/backend/models"
 	"os"
+	goruntime "runtime"
 	"runtime/debug"
 	"strings"
 )
@@ -90,15 +91,11 @@ func main() {
 	//})
 	//FileMenu.AddSeparator()
 
-	//if goruntime.GOOS == "windows" {
-	//	FileMenu.AddText("隐藏到托盘区", keys.CmdOrCtrl("h"), func(_ *menu.CallbackData) {
-	//		runtime.WindowHide(app.ctx)
-	//	})
-	//
-	//	FileMenu.AddText("显示", keys.CmdOrCtrl("v"), func(_ *menu.CallbackData) {
-	//		runtime.WindowShow(app.ctx)
-	//	})
-	//}
+	if goruntime.GOOS == "windows" {
+		FileMenu.AddText("隐藏到托盘区", keys.CmdOrCtrl("z"), func(_ *menu.CallbackData) {
+			runtime.WindowHide(app.ctx)
+		})
+	}
 
 	//FileMenu.AddText("退出", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
 	//	runtime.Quit(app.ctx)
