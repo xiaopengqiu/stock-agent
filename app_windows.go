@@ -199,3 +199,17 @@ func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 		return false
 	}
 }
+
+func getFrameless() bool {
+	return true
+}
+
+func getScreenResolution() (int, int, int, int, error) {
+	//user32 := syscall.NewLazyDLL("user32.dll")
+	//getSystemMetrics := user32.NewProc("GetSystemMetrics")
+	//
+	//width, _, _ := getSystemMetrics.Call(0)
+	//height, _, _ := getSystemMetrics.Call(1)
+
+	return int(1366), int(768), 1456, 768, nil
+}

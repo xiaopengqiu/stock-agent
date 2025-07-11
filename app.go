@@ -998,15 +998,6 @@ func (a *App) ExportConfig() string {
 	}
 	return "导出成功:" + file
 }
-func getScreenResolution() (int, int, error) {
-	//user32 := syscall.NewLazyDLL("user32.dll")
-	//getSystemMetrics := user32.NewProc("GetSystemMetrics")
-	//
-	//width, _, _ := getSystemMetrics.Call(0)
-	//height, _, _ := getSystemMetrics.Call(1)
-
-	return int(1366), int(768), nil
-}
 
 func (a *App) ShareAnalysis(stockCode, stockName string) string {
 	//http://go-stock.sparkmemory.top:16688/upload
