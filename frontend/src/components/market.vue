@@ -1,5 +1,5 @@
 <script setup>
-import {computed, h, onBeforeMount, onBeforeUnmount, ref} from 'vue'
+import {computed, h, onBeforeMount, onBeforeUnmount, onMounted, ref} from 'vue'
 import {
   GetAIResponseResult,
   GetConfig,
@@ -83,8 +83,6 @@ function getIndex() {
     other.value = res["other"]
   })
 }
-
-
 
 onBeforeMount(() => {
   nowTab.value = route.query.name
@@ -311,8 +309,8 @@ function ReFlesh(source) {
 </script>
 
 <template>
-  <n-card  style="--wails-draggable:drag">
-    <n-tabs type="line" animated @update-value="updateTab" :value="nowTab">
+  <n-card>
+    <n-tabs type="line" animated @update-value="updateTab" :value="nowTab" style="--wails-draggable:drag">
       <n-tab-pane name="市场快讯" tab="市场快讯">
         <n-grid :cols="2" :y-gap="0">
           <n-gi>
@@ -390,10 +388,10 @@ function ReFlesh(source) {
           </n-tab-pane>
         </n-tabs>
       </n-tab-pane>
-      <n-tab-pane name="指标行情" tab="指标行情" style="--wails-dragable:no-drag">
+      <n-tab-pane name="指标行情" tab="指标行情">
         <n-tabs type="segment" animated>
-          <n-tab-pane name="科创50" tab="科创50">
-            <k-line-chart code="sh000688" :chart-height="panelHeight" name="科创50" :k-days="20"
+          <n-tab-pane name="科创50" tab="科创50"  >
+            <k-line-chart code="sh000688" :chart-height="panelHeight" name="科创50" :k-days="20"  
                           :dark-theme="true"></k-line-chart>
           </n-tab-pane>
           <n-tab-pane name="沪深300" tab="沪深300">
@@ -672,5 +670,4 @@ function ReFlesh(source) {
 
 </template>
 <style scoped>
-
 </style>
