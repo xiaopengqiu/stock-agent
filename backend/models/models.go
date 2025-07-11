@@ -383,3 +383,47 @@ type GDP struct {
 	THIRDPRODUCTBASE     float64 `json:"THIRD_PRODUCT_BASE" md:"第三产业(亿元)"`
 	THIRDSAME            float64 `json:"THIRD_SAME" md:"第三产业同比增长(%)"`
 }
+type CPI struct {
+	REPORTDATE         string  `json:"REPORT_DATE" md:"报告时间"`
+	TIME               string  `json:"TIME" md:"报告期"`
+	NATIONALBASE       float64 `json:"NATIONAL_BASE" md:"全国当月"`
+	NATIONALSAME       float64 `json:"NATIONAL_SAME" md:"全国当月同比增长"`
+	NATIONALSEQUENTIAL float64 `json:"NATIONAL_SEQUENTIAL" md:"全国当月环比增长"`
+	NATIONALACCUMULATE float64 `json:"NATIONAL_ACCUMULATE" md:"全国当月累计"`
+	CITYBASE           float64 `json:"CITY_BASE" md:"城市当月"`
+	CITYSAME           float64 `json:"CITY_SAME" md:"城市当月同比增长"`
+	CITYSEQUENTIAL     float64 `json:"CITY_SEQUENTIAL" md:"城市当月环比增长"`
+	CITYACCUMULATE     int     `json:"CITY_ACCUMULATE" md:"城市当月累计"`
+	RURALBASE          float64 `json:"RURAL_BASE" md:"农村当月"`
+	RURALSAME          float64 `json:"RURAL_SAME" md:"农村当月同比增长"`
+	RURALSEQUENTIAL    int     `json:"RURAL_SEQUENTIAL" md:"农村当月环比增长"`
+	RURALACCUMULATE    float64 `json:"RURAL_ACCUMULATE" md:"农村当月累计"`
+}
+
+type DCResp struct {
+	Version string `json:"version"`
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+	Code    int    `json:"code"`
+}
+
+type GDPResult struct {
+	Pages int   `json:"pages"`
+	Data  []GDP `json:"data"`
+	Count int   `json:"count"`
+}
+type CPIResult struct {
+	Pages int   `json:"pages"`
+	Data  []CPI `json:"data"`
+	Count int   `json:"count"`
+}
+
+type GDPResp struct {
+	DCResp
+	GDPResult GDPResult `json:"result"`
+}
+
+type CPIResp struct {
+	DCResp
+	CPIResult CPIResult `json:"result"`
+}

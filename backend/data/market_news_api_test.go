@@ -6,6 +6,7 @@ import (
 	"github.com/tidwall/gjson"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
+	"go-stock/backend/util"
 	"strings"
 	"testing"
 )
@@ -177,5 +178,12 @@ func TestClsCalendar(t *testing.T) {
 }
 
 func TestGetGDP(t *testing.T) {
-	NewMarketNewsApi().GetGDP()
+	res := NewMarketNewsApi().GetGDP()
+	md := util.MarkdownTable(res.GDPResult.Data)
+	logger.SugaredLogger.Debugf("国内生产总值(GDP):\n %s", md)
+}
+func TestGetCPI(t *testing.T) {
+	res := NewMarketNewsApi().GetCPI()
+	md := util.MarkdownTable(res.CPIResult.Data)
+	logger.SugaredLogger.Debugf("居民消费价格指数(CPI) :\n %s", md)
 }
