@@ -67,7 +67,29 @@ func (a *App) startup(ctx context.Context) {
 			log.Fatalf("系统通知失败: %v", err)
 		}
 	}()
+	go setUpScreen(a)
 	logger.SugaredLogger.Infof(" application startup Version:%s", Version)
+}
+
+func setUpScreen(a *App) {
+	screens, _ := runtime.ScreenGetAll(a.ctx)
+	if len(screens) == 0 {
+		return
+	}
+	screen := screens[0]
+	sw, sh := screen.Width, screen.Height
+
+	// macOS 菜单栏 + Dock 留出空间
+	topBarHeight := 22
+	dockHeight := 56
+	verticalMargin := topBarHeight + dockHeight
+
+	// 设置窗口为屏幕 80% 宽 × 可用高度 90%
+	w := int(float64(sw) * 0.8)
+	h := int(float64(sh-verticalMargin) * 0.9)
+
+	runtime.WindowSetSize(a.ctx, w, h)
+	runtime.WindowCenter(a.ctx)
 }
 
 // OnSecondInstanceLaunch 处理第二实例启动时的通知
@@ -165,4 +187,18 @@ func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 		a.cron.Stop() // 停止定时任务
 		return false  // 如果选择了确定，继续关闭应用
 	}
+}
+
+func getFrameless() bool {
+	return false
+}
+
+func getScreenResolution() (int, int, int, int, error) {
+	//user32 := syscall.NewLazyDLL("user32.dll")
+	//getSystemMetrics := user32.NewProc("GetSystemMetrics")
+	//
+	//width, _, _ := getSystemMetrics.Call(0)
+	//height, _, _ := getSystemMetrics.Call(1)
+
+	return int(1200), int(800), 0, 0, nil
 }

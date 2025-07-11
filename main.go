@@ -109,7 +109,7 @@ func main() {
 	//var width, height int
 	//var err error
 	//
-	width, _, err := getScreenResolution()
+	width, _, minWidth, minHeight, err := getScreenResolution()
 	if err != nil {
 		log.SugaredLogger.Error("get screen resolution error")
 		width = 1456
@@ -122,18 +122,20 @@ func main() {
 		backgroundColour = &options.RGBA{R: 27, G: 38, B: 54, A: 1}
 	}
 
+	frameless := getFrameless()
+
 	// Create application with options
 	err = wails.Run(&options.App{
 		Title:     "go-stock",
 		Width:     width * 4 / 5,
 		Height:    900,
-		MinWidth:  1456,
-		MinHeight: 768,
+		MinWidth:  minWidth,
+		MinHeight: minHeight,
 		//MaxWidth:                 width,
 		//MaxHeight:                height,
 		DisableResize:            false,
 		Fullscreen:               false,
-		Frameless:                true,
+		Frameless:                frameless,
 		StartHidden:              false,
 		HideWindowOnClose:        false,
 		EnableDefaultContextMenu: true,
@@ -166,12 +168,11 @@ func main() {
 		// Mac platform specific options
 		Mac: &mac.Options{
 			TitleBar: &mac.TitleBar{
-				TitlebarAppearsTransparent: true,
+				TitlebarAppearsTransparent: false,
 				HideTitle:                  false,
 				HideTitleBar:               false,
 				FullSizeContent:            false,
-				UseToolbar:                 false,
-				HideToolbarSeparator:       true,
+				UseToolbar:                 true,
 			},
 			Appearance:           mac.NSAppearanceNameDarkAqua,
 			WebviewIsTransparent: true,
