@@ -17,6 +17,7 @@ import (
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"go-stock/backend/models"
+	"go-stock/backend/util"
 	"strings"
 	"sync"
 	"time"
@@ -178,7 +179,28 @@ func (o OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysPromp
 			"content": "当前本地时间是:" + time.Now().Format("2006-01-02 15:04:05"),
 		})
 		wg := &sync.WaitGroup{}
-		wg.Add(2)
+		wg.Add(3)
+
+		go func() {
+			defer wg.Done()
+			var market strings.Builder
+			res := NewMarketNewsApi().GetGDP()
+			md := util.MarkdownTableWithTitle("国内生产总值(GDP)", res.GDPResult.Data)
+			market.WriteString(md)
+			res2 := NewMarketNewsApi().GetCPI()
+			md2 := util.MarkdownTableWithTitle("居民消费价格指数(CPI)", res2.CPIResult.Data)
+			market.WriteString(md2)
+
+			msg = append(msg, map[string]interface{}{
+				"role":    "user",
+				"content": "国内宏观经济数据",
+			})
+			msg = append(msg, map[string]interface{}{
+				"role":    "assistant",
+				"content": "\n# 国内宏观经济数据：\n" + market.String(),
+			})
+		}()
+
 		go func() {
 			defer wg.Done()
 			var market strings.Builder

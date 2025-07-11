@@ -29,6 +29,28 @@ func MarkdownTable(v interface{}) string {
 	return "输入必须是结构体、结构体指针、结构体切片或数组"
 }
 
+func MarkdownTableWithTitle(title string, v interface{}) string {
+	value := reflect.ValueOf(v)
+	if value.Kind() == reflect.Ptr {
+		value = value.Elem()
+	}
+
+	// 处理单个结构体
+	if value.Kind() == reflect.Struct {
+		return markdownSingleStruct(value)
+	}
+
+	// 处理结构体切片/数组
+	if value.Kind() == reflect.Slice || value.Kind() == reflect.Array {
+		if value.Len() == 0 {
+			return "\n## " + title + "\n" + "无数据" + "\n"
+		}
+		return "\n## " + title + "\n" + markdownStructSlice(value) + "\n"
+	}
+
+	return "\n## " + title + "\n" + "无数据" + "\n"
+}
+
 // 处理单个结构体
 func markdownSingleStruct(value reflect.Value) string {
 	t := value.Type()

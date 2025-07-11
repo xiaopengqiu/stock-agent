@@ -179,11 +179,11 @@ func TestClsCalendar(t *testing.T) {
 
 func TestGetGDP(t *testing.T) {
 	res := NewMarketNewsApi().GetGDP()
-	md := util.MarkdownTable(res.GDPResult.Data)
-	logger.SugaredLogger.Debugf("国内生产总值(GDP):\n %s", md)
+	md := util.MarkdownTableWithTitle("国内生产总值(GDP)", res.GDPResult.Data)
+	logger.SugaredLogger.Debugf(md)
 }
 func TestGetCPI(t *testing.T) {
 	res := NewMarketNewsApi().GetCPI()
-	md := util.MarkdownTable(res.CPIResult.Data)
-	logger.SugaredLogger.Debugf("居民消费价格指数(CPI) :\n %s", md)
+	md := util.MarkdownTableWithTitle("居民消费价格指数(CPI)", res.CPIResult.Data)
+	logger.SugaredLogger.Debugf(md)
 }
