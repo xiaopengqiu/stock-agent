@@ -388,10 +388,30 @@ function ReFlesh(source) {
           </n-tab-pane>
         </n-tabs>
       </n-tab-pane>
-      <n-tab-pane name="指标行情" tab="指标行情">
+      <n-tab-pane name="重大指数" tab="重大指数">
         <n-tabs type="segment" animated>
           <n-tab-pane name="科创50" tab="科创50"  >
             <k-line-chart code="sh000688" :chart-height="panelHeight" name="科创50" :k-days="20"  
+                          :dark-theme="true"></k-line-chart>
+          </n-tab-pane>
+          <n-tab-pane name="科创芯片" tab="科创芯片"  >
+            <k-line-chart code="sh000685" :chart-height="panelHeight" name="科创芯片" :k-days="20"
+                          :dark-theme="true"></k-line-chart>
+          </n-tab-pane>
+          <n-tab-pane name="证券龙头" tab="证券龙头"  >
+            <k-line-chart code="sz399437" :chart-height="panelHeight" name="证券龙头" :k-days="20"
+                          :dark-theme="true"></k-line-chart>
+          </n-tab-pane>
+          <n-tab-pane name="高端装备" tab="高端装备"  >
+            <k-line-chart code="sz399437" :chart-height="panelHeight" name="高端装备" :k-days="20"
+                          :dark-theme="true"></k-line-chart>
+          </n-tab-pane>
+          <n-tab-pane name="中证银行" tab="中证银行">
+            <k-line-chart code="sz399986" :chart-height="panelHeight" name="中证银行" :k-days="20"
+                          :dark-theme="true"></k-line-chart>
+          </n-tab-pane>
+          <n-tab-pane name="上证医药" tab="上证医药">
+            <k-line-chart code="sh000037" :chart-height="panelHeight" name="上证医药" :k-days="20"
                           :dark-theme="true"></k-line-chart>
           </n-tab-pane>
           <n-tab-pane name="沪深300" tab="沪深300">
