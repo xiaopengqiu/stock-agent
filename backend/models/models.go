@@ -387,17 +387,32 @@ type CPI struct {
 	REPORTDATE         string  `json:"REPORT_DATE" md:"报告时间"`
 	TIME               string  `json:"TIME" md:"报告期"`
 	NATIONALBASE       float64 `json:"NATIONAL_BASE" md:"全国当月"`
-	NATIONALSAME       float64 `json:"NATIONAL_SAME" md:"全国当月同比增长"`
-	NATIONALSEQUENTIAL float64 `json:"NATIONAL_SEQUENTIAL" md:"全国当月环比增长"`
+	NATIONALSAME       float64 `json:"NATIONAL_SAME" md:"全国当月同比增长(%)"`
+	NATIONALSEQUENTIAL float64 `json:"NATIONAL_SEQUENTIAL" md:"全国当月环比增长(%)"`
 	NATIONALACCUMULATE float64 `json:"NATIONAL_ACCUMULATE" md:"全国当月累计"`
 	CITYBASE           float64 `json:"CITY_BASE" md:"城市当月"`
-	CITYSAME           float64 `json:"CITY_SAME" md:"城市当月同比增长"`
-	CITYSEQUENTIAL     float64 `json:"CITY_SEQUENTIAL" md:"城市当月环比增长"`
+	CITYSAME           float64 `json:"CITY_SAME" md:"城市当月同比增长(%)"`
+	CITYSEQUENTIAL     float64 `json:"CITY_SEQUENTIAL" md:"城市当月环比增长(%)"`
 	CITYACCUMULATE     int     `json:"CITY_ACCUMULATE" md:"城市当月累计"`
 	RURALBASE          float64 `json:"RURAL_BASE" md:"农村当月"`
-	RURALSAME          float64 `json:"RURAL_SAME" md:"农村当月同比增长"`
-	RURALSEQUENTIAL    int     `json:"RURAL_SEQUENTIAL" md:"农村当月环比增长"`
+	RURALSAME          float64 `json:"RURAL_SAME" md:"农村当月同比增长(%)"`
+	RURALSEQUENTIAL    int     `json:"RURAL_SEQUENTIAL" md:"农村当月环比增长(%)"`
 	RURALACCUMULATE    float64 `json:"RURAL_ACCUMULATE" md:"农村当月累计"`
+}
+type PPI struct {
+	REPORTDATE     string  `json:"REPORT_DATE" md:"报告时间"`
+	TIME           string  `json:"TIME" md:"报告期"`
+	BASE           float64 `json:"BASE" md:"当月"`
+	BASESAME       float64 `json:"BASE_SAME" md:"当月同比增长(%)"`
+	BASEACCUMULATE float64 `json:"BASE_ACCUMULATE" md:"累计"`
+}
+type PMI struct {
+	REPORTDATE string  `md:"报告时间" json:"REPORT_DATE"`
+	TIME       string  `md:"报告期" json:"TIME"`
+	MAKEINDEX  float64 `md:"制造业指数" json:"MAKE_INDEX"`
+	MAKESAME   float64 `md:"制造业指数同比增长(%)" json:"MAKE_SAME"`
+	NMAKEINDEX float64 `md:"非制造业" json:"NMAKE_INDEX"`
+	NMAKESAME  float64 `md:"非制造业同比增长(%)" json:"NMAKE_SAME"`
 }
 
 type DCResp struct {
@@ -418,6 +433,16 @@ type CPIResult struct {
 	Count int   `json:"count"`
 }
 
+type PPIResult struct {
+	Pages int   `json:"pages"`
+	Data  []PPI `json:"data"`
+	Count int   `json:"count"`
+}
+type PMIResult struct {
+	Pages int   `json:"pages"`
+	Data  []PMI `json:"data"`
+	Count int   `json:"count"`
+}
 type GDPResp struct {
 	DCResp
 	GDPResult GDPResult `json:"result"`
@@ -426,4 +451,13 @@ type GDPResp struct {
 type CPIResp struct {
 	DCResp
 	CPIResult CPIResult `json:"result"`
+}
+
+type PPIResp struct {
+	DCResp
+	PPIResult PPIResult `json:"result"`
+}
+type PMIResp struct {
+	DCResp
+	PMIResult PMIResult `json:"result"`
 }

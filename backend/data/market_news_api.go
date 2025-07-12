@@ -771,3 +771,64 @@ func (m MarketNewsApi) GetCPI() *models.CPIResp {
 	logger.SugaredLogger.Infof("GDP:%+v", res)
 	return res
 }
+
+// GetPPI PPI
+func (m MarketNewsApi) GetPPI() *models.PPIResp {
+	res := &models.PPIResp{}
+	url := "https://datacenter-web.eastmoney.com/api/data/v1/get?callback=data&columns=REPORT_DATE,TIME,BASE,BASE_SAME,BASE_ACCUMULATE&pageNumber=1&pageSize=20&sortColumns=REPORT_DATE&sortTypes=-1&source=WEB&client=WEB&reportName=RPT_ECONOMY_PPI&p=1&pageNo=1&pageNum=1&_=" + strconv.FormatInt(time.Now().Unix(), 10)
+	resp, err := resty.New().SetTimeout(time.Duration(30)*time.Second).R().
+		SetHeader("Host", "datacenter-web.eastmoney.com").
+		SetHeader("Origin", "https://datacenter.eastmoney.com").
+		SetHeader("Referer", "https://data.eastmoney.com/cjsj/gdp.html").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		Get(url)
+	if err != nil {
+		logger.SugaredLogger.Errorf("GDP err:%s", err.Error())
+		return res
+	}
+	body := resp.Body()
+	vm := otto.New()
+	vm.Run("function data(res){return res};")
+
+	val, err := vm.Run(body)
+	if err != nil {
+		return res
+	}
+	data, _ := val.Object().Value().Export()
+	marshal, err := json.Marshal(data)
+	if err != nil {
+		return res
+	}
+	json.Unmarshal(marshal, &res)
+	return res
+}
+
+func (m MarketNewsApi) GetPMI() *models.PMIResp {
+	res := &models.PMIResp{}
+	url := "https://datacenter-web.eastmoney.com/api/data/v1/get?callback=data&columns=REPORT_DATE%2CTIME%2CMAKE_INDEX%2CMAKE_SAME%2CNMAKE_INDEX%2CNMAKE_SAME&pageNumber=1&pageSize=20&sortColumns=REPORT_DATE&sortTypes=-1&source=WEB&client=WEB&reportName=RPT_ECONOMY_PMI&p=1&pageNo=1&pageNum=1&_=" + strconv.FormatInt(time.Now().Unix(), 10)
+	resp, err := resty.New().SetTimeout(time.Duration(30)*time.Second).R().
+		SetHeader("Host", "datacenter-web.eastmoney.com").
+		SetHeader("Origin", "https://datacenter.eastmoney.com").
+		SetHeader("Referer", "https://data.eastmoney.com/cjsj/gdp.html").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		Get(url)
+	if err != nil {
+		return res
+	}
+	body := resp.Body()
+	vm := otto.New()
+	vm.Run("function data(res){return res};")
+
+	val, err := vm.Run(body)
+	if err != nil {
+		return res
+	}
+	data, _ := val.Object().Value().Export()
+	marshal, err := json.Marshal(data)
+	if err != nil {
+		return res
+	}
+	json.Unmarshal(marshal, &res)
+	return res
+
+}

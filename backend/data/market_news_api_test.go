@@ -187,3 +187,17 @@ func TestGetCPI(t *testing.T) {
 	md := util.MarkdownTableWithTitle("居民消费价格指数(CPI)", res.CPIResult.Data)
 	logger.SugaredLogger.Debugf(md)
 }
+
+// PPI
+func TestGetPPI(t *testing.T) {
+	res := NewMarketNewsApi().GetPPI()
+	md := util.MarkdownTableWithTitle("工业品出厂价格指数(PPI)", res.PPIResult.Data)
+	logger.SugaredLogger.Debugf(md)
+}
+
+// PMI
+func TestGetPMI(t *testing.T) {
+	res := NewMarketNewsApi().GetPMI()
+	md := util.MarkdownTableWithTitle("采购经理人指数(PMI)", res.PMIResult.Data)
+	logger.SugaredLogger.Debugf(md)
+}

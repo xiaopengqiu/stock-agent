@@ -190,6 +190,12 @@ func (o OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysPromp
 			res2 := NewMarketNewsApi().GetCPI()
 			md2 := util.MarkdownTableWithTitle("居民消费价格指数(CPI)", res2.CPIResult.Data)
 			market.WriteString(md2)
+			res3 := NewMarketNewsApi().GetPPI()
+			md3 := util.MarkdownTableWithTitle("工业品出厂价格指数(PPI)", res3.PPIResult.Data)
+			market.WriteString(md3)
+			res4 := NewMarketNewsApi().GetPMI()
+			md4 := util.MarkdownTableWithTitle("采购经理人指数(PMI)", res4.PMIResult.Data)
+			market.WriteString(md4)
 
 			msg = append(msg, map[string]interface{}{
 				"role":    "user",
