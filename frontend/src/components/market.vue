@@ -390,6 +390,10 @@ function ReFlesh(source) {
       </n-tab-pane>
       <n-tab-pane name="重大指数" tab="重大指数">
         <n-tabs type="segment" animated>
+          <n-tab-pane name="恒生科技指数" tab="恒生科技指数">
+            <k-line-chart code="hkHSTECH" :chart-height="panelHeight" name="恒生科技指数" :k-days="20"
+                          :dark-theme="true"></k-line-chart>
+          </n-tab-pane>
           <n-tab-pane name="科创50" tab="科创50"  >
             <k-line-chart code="sh000688" :chart-height="panelHeight" name="科创50" :k-days="20"  
                           :dark-theme="true"></k-line-chart>

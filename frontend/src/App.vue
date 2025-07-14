@@ -180,15 +180,15 @@ const menuOptions = ref([
                   to: {
                     name: 'market',
                     query: {
-                      name: "指标行情",
+                      name: "重大指数",
                     }
                   },
                   onClick: () => {
                     activeKey.value = 'market'
-                    EventsEmit("changeMarketTab", {ID: 0, name: '指标行情'})
+                    EventsEmit("changeMarketTab", {ID: 0, name: '重大指数'})
                   },
                 },
-                {default: () => '指标行情',}
+                {default: () => '重大指数',}
             ),
         key: 'market3',
         icon: renderIcon(AnalyticsOutline),
