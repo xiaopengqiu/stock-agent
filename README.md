@@ -23,7 +23,8 @@
 ### 📦 立即体验
 - 安装版：[go-stock-amd64-installer.exe](https://github.com/ArvinLovegood/go-stock/releases)
 - 绿色版：[go-stock-windows-amd64.exe](https://github.com/ArvinLovegood/go-stock/releases)
-- MACOS版：[go-stock-darwin-universal](https://github.com/ArvinLovegood/go-stock/releases)
+- MACOS绿色版：[go-stock-darwin-universal](https://github.com/ArvinLovegood/go-stock/releases)
+- MACOS安装版：[go-stock-darwin-universal.pkg](https://github.com/ArvinLovegood/go-stock/releases)
 
 
 ### 💬 支持大模型/平台

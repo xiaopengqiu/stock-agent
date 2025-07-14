@@ -258,7 +258,7 @@ func (a *App) CheckUpdate() {
 			"time":    "发现新版本：" + releaseVersion.TagName,
 			"isRed":   false,
 			"source":  "go-stock",
-			"content": fmt.Sprintf("当前版本:%s, 最新版本:%s,后台开始下载...\n%s", Version, releaseVersion.TagName, commit.Message),
+			"content": fmt.Sprintf("%s", commit.Message),
 		})
 		resp, err := resty.New().R().Get(downloadUrl)
 		if err != nil {

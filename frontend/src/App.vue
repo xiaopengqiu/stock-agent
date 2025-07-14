@@ -10,7 +10,7 @@ import {
 } from '../wailsjs/runtime'
 import {h, onBeforeMount, onBeforeUnmount, onMounted, ref} from "vue";
 import {RouterLink, useRouter} from 'vue-router'
-import {createDiscreteApi,darkTheme,lightTheme , NIcon, NText,dateZhCN,zhCN} from 'naive-ui'
+import {createDiscreteApi,darkTheme,lightTheme , NIcon, NText,NButton,dateZhCN,zhCN} from 'naive-ui'
 import {
   AlarmOutline,
   AnalyticsOutline,
@@ -638,16 +638,24 @@ onMounted(() => {
           //type:"error",
          // avatar: () => h(NIcon,{component:Notifications,color:"red"}),
           title: data.time,
-          content: () => h(NText,{type:"error"}, { default: () => data.content }),
+          content: () => h('div',{type:"error",style:{
+              "text-align":"left",
+              "font-size":"14px",
+              "color":"#f67979"
+            }}, { default: () => data.content }),
           meta: () => h(NText,{type:"warning"}, { default: () => data.source}),
           duration:1000*40,
         })
       }else{
-        notification.create({
+         notification.create({
           //type:"info",
           //avatar: () => h(NIcon,{component:Notifications}),
           title: data.time,
-          content: () => h(NText,{type:"info"}, { default: () => data.content }),
+          content: () => h('div',{type:"info",style:{
+            "text-align":"left",
+              "font-size":"14px",
+              "color":"#F98C24"
+            }}, { default: () => data.content }),
           meta: () => h(NText,{type:"warning"}, { default: () => data.source}),
           duration:1000*30 ,
         })
