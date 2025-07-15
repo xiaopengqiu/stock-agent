@@ -201,3 +201,6 @@ func TestGetPMI(t *testing.T) {
 	md := util.MarkdownTableWithTitle("采购经理人指数(PMI)", res.PMIResult.Data)
 	logger.SugaredLogger.Debugf(md)
 }
+func TestGetIndustryReportInfo(t *testing.T) {
+	NewMarketNewsApi().GetIndustryReportInfo("AP202507151709216483")
+}

@@ -301,21 +301,24 @@ func (a *App) CheckUpdate() {
 // domReady is called after front-end resources have been loaded
 func (a *App) domReady(ctx context.Context) {
 	defer PanicHandler()
+	defer func() {
+		go runtime.EventsEmit(ctx, "loadingMsg", "done")
+	}()
 
-	if stocksBin != nil && len(stocksBin) > 0 {
-		go runtime.EventsEmit(a.ctx, "loadingMsg", "检查A股基础信息...")
-		go initStockData(a.ctx)
-	}
-
-	if stocksBinHK != nil && len(stocksBinHK) > 0 {
-		go runtime.EventsEmit(a.ctx, "loadingMsg", "检查港股基础信息...")
-		go initStockDataHK(a.ctx)
-	}
-
-	if stocksBinUS != nil && len(stocksBinUS) > 0 {
-		go runtime.EventsEmit(a.ctx, "loadingMsg", "检查美股基础信息...")
-		go initStockDataUS(a.ctx)
-	}
+	//if stocksBin != nil && len(stocksBin) > 0 {
+	//	go runtime.EventsEmit(a.ctx, "loadingMsg", "检查A股基础信息...")
+	//	go initStockData(a.ctx)
+	//}
+	//
+	//if stocksBinHK != nil && len(stocksBinHK) > 0 {
+	//	go runtime.EventsEmit(a.ctx, "loadingMsg", "检查港股基础信息...")
+	//	go initStockDataHK(a.ctx)
+	//}
+	//
+	//if stocksBinUS != nil && len(stocksBinUS) > 0 {
+	//	go runtime.EventsEmit(a.ctx, "loadingMsg", "检查美股基础信息...")
+	//	go initStockDataUS(a.ctx)
+	//}
 	updateBasicInfo()
 
 	// Add your action here
@@ -424,6 +427,7 @@ func (a *App) domReady(ctx context.Context) {
 		a.cron.AddFunc("30 05 8,12,20 * * *", func() {
 			logger.SugaredLogger.Errorf("Checking for updates...")
 			a.CheckUpdate()
+			a.CheckStockBaseInfo()
 		})
 
 	}()
@@ -460,7 +464,71 @@ func (a *App) domReady(ctx context.Context) {
 	logger.SugaredLogger.Infof("domReady-cronEntrys:%+v", a.cronEntrys)
 
 }
+func (a *App) CheckStockBaseInfo() {
+	defer PanicHandler()
 
+	stockBasics := &[]data.StockBasic{}
+	resty.New().R().
+		SetHeader("user", "go-stock").
+		SetResult(stockBasics).
+		Get("https://go-stock.sparkmemory.top/stock_basic.json")
+
+	for _, stock := range *stockBasics {
+		stockInfo := &data.StockBasic{
+			TsCode: stock.TsCode,
+			Name:   stock.Name,
+			Symbol: stock.Symbol,
+			BKCode: stock.BKCode,
+			BKName: stock.BKName,
+		}
+		db.Dao.Model(&data.StockBasic{}).Where("ts_code = ?", stock.TsCode).First(stockInfo)
+		if stockInfo.ID == 0 {
+			db.Dao.Model(&data.StockBasic{}).Create(stockInfo)
+		} else {
+			db.Dao.Model(&data.StockBasic{}).Where("ts_code = ?", stock.TsCode).Updates(stockInfo)
+		}
+	}
+
+	stockHKBasics := &[]models.StockInfoHK{}
+	resty.New().R().
+		SetHeader("user", "go-stock").
+		SetResult(stockHKBasics).
+		Get("https://go-stock.sparkmemory.top/stock_base_info_hk.json")
+	for _, stock := range *stockHKBasics {
+		stockInfo := &models.StockInfoHK{
+			Code:   stock.Code,
+			Name:   stock.Name,
+			BKName: stock.BKName,
+			BKCode: stock.BKCode,
+		}
+		db.Dao.Model(&models.StockInfoHK{}).Where("code = ?", stock.Code).First(stockInfo)
+		if stockInfo.ID == 0 {
+			db.Dao.Model(&models.StockInfoHK{}).Create(stockInfo)
+		} else {
+			db.Dao.Model(&models.StockInfoHK{}).Where("code = ?", stock.Code).Updates(stockInfo)
+		}
+	}
+	stockUSBasics := &[]models.StockInfoUS{}
+	resty.New().R().
+		SetHeader("user", "go-stock").
+		SetResult(stockUSBasics).
+		Get("https://go-stock.sparkmemory.top/stock_base_info_us.json")
+	for _, stock := range *stockUSBasics {
+		stockInfo := &models.StockInfoUS{
+			Code:   stock.Code,
+			Name:   stock.Name,
+			BKName: stock.BKName,
+			BKCode: stock.BKCode,
+		}
+		db.Dao.Model(&models.StockInfoUS{}).Where("code = ?", stock.Code).First(stockInfo)
+		if stockInfo.ID == 0 {
+			db.Dao.Model(&models.StockInfoUS{}).Create(stockInfo)
+		} else {
+			db.Dao.Model(&models.StockInfoUS{}).Where("code = ?", stock.Code).Updates(stockInfo)
+		}
+	}
+
+}
 func (a *App) NewsPush(news *[]models.Telegraph) {
 	for _, telegraph := range *news {
 		//if telegraph.IsRed {

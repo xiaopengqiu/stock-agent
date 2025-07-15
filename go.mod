@@ -21,6 +21,7 @@ require (
 	github.com/tidwall/gjson v1.14.2
 	github.com/wailsapp/wails/v2 v2.10.1
 	go.uber.org/zap v1.27.0
+	golang.org/x/net v0.38.0
 	golang.org/x/sys v0.31.0
 	golang.org/x/text v0.23.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
@@ -82,7 +83,6 @@ require (
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 // indirect
-	golang.org/x/net v0.38.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.22.5 // indirect

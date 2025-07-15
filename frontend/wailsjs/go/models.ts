@@ -426,6 +426,8 @@ export namespace data {
 	    is_hs: string;
 	    act_name: string;
 	    act_ent_type: string;
+	    bk_name: string;
+	    bk_code: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new StockBasic(source);
@@ -454,6 +456,8 @@ export namespace data {
 	        this.is_hs = source["is_hs"];
 	        this.act_name = source["act_name"];
 	        this.act_ent_type = source["act_ent_type"];
+	        this.bk_name = source["bk_name"];
+	        this.bk_code = source["bk_code"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

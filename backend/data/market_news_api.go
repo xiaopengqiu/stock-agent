@@ -15,6 +15,7 @@ import (
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"go-stock/backend/models"
+	"go-stock/backend/util"
 	"strconv"
 	"strings"
 	"time"
@@ -831,4 +832,28 @@ func (m MarketNewsApi) GetPMI() *models.PMIResp {
 	json.Unmarshal(marshal, &res)
 	return res
 
+}
+func (m MarketNewsApi) GetIndustryReportInfo(infoCode string) {
+	url := "https://data.eastmoney.com/report/zw_industry.jshtml?infocode=" + infoCode
+	resp, err := resty.New().SetTimeout(time.Duration(30)*time.Second).R().
+		SetHeader("Host", "data.eastmoney.com").
+		SetHeader("Origin", "https://data.eastmoney.com").
+		SetHeader("Referer", "https://data.eastmoney.com/report/industry.jshtml").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		Get(url)
+	if err != nil {
+		logger.SugaredLogger.Errorf("GetIndustryReportInfo err:%s", err.Error())
+		return
+	}
+	body := resp.Body()
+	//logger.SugaredLogger.Debugf("GetIndustryReportInfo:%s", body)
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(string(body)))
+	title, _ := doc.Find("div.c-title").Html()
+	content, _ := doc.Find("div.ctx-content").Html()
+	//logger.SugaredLogger.Infof("GetIndustryReportInfo:\n%s\n%s", title, content)
+	markdown, err := util.HTMLToMarkdown(title + content)
+	if err != nil {
+		return
+	}
+	logger.SugaredLogger.Infof("GetIndustryReportInfo markdown:\n%s", markdown)
 }

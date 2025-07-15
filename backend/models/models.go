@@ -172,6 +172,8 @@ type StockInfoHK struct {
 	FullName string                `json:"fullName"`
 	EName    string                `json:"eName"`
 	IsDel    soft_delete.DeletedAt `gorm:"softDelete:flag"`
+	BKName   string                `json:"bk_name"`
+	BKCode   string                `json:"bk_code"`
 }
 
 func (receiver StockInfoHK) TableName() string {
@@ -187,6 +189,8 @@ type StockInfoUS struct {
 	Exchange string                `json:"exchange"`
 	Type     string                `json:"type"`
 	IsDel    soft_delete.DeletedAt `gorm:"softDelete:flag"`
+	BKName   string                `json:"bk_name"`
+	BKCode   string                `json:"bk_code"`
 }
 
 func (receiver StockInfoUS) TableName() string {
