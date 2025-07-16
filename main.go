@@ -123,7 +123,7 @@ func main() {
 
 	// Create application with options
 	err = wails.Run(&options.App{
-		Title:     "go-stock",
+		Title:     "go-stock：AI赋能股票分析✨",
 		Width:     width * 4 / 5,
 		Height:    900,
 		MinWidth:  minWidth,
