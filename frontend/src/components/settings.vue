@@ -285,7 +285,7 @@ function deletePrompt(ID){
 
 <template>
   <n-flex justify="left" style="text-align: left;--wails-draggable:drag" >
-  <n-form ref="formRef"  :label-placement="'left'" :label-align="'left'" >
+  <n-form ref="formRef"  :label-placement="'left'" :label-align="'left'" style="--wails-draggable:no-drag">
     <n-card :title="()=> h(NTag, { type: 'primary',bordered:false },()=> '基础设置')" size="small" >
       <n-grid :cols="24" :x-gap="24" style="text-align: left" >
         <!--        <n-gi :span="24">-->
@@ -379,7 +379,7 @@ function deletePrompt(ID){
       <n-form-item-gi :span="5"  v-if="formValue.openAI.enable" label="openAI maxTokens："  path="openAI.maxTokens" >
         <n-input-number  placeholder="maxTokens"  v-model:value="formValue.openAI.maxTokens"/>
       </n-form-item-gi>
-      <n-form-item-gi :span="5"  v-if="formValue.openAI.enable" title="天数越多消耗tokens越多" label="日K线数据(天)："  path="openAI.maxTokens" >
+      <n-form-item-gi :span="5"  v-if="formValue.openAI.enable" title="天数越多消耗tokens越多" label="日K线数据(天)："  path="openAI.kDays" >
         <n-input-number  min="30" step="1" max="365"  placeholder="日K线数据(天)" title="天数越多消耗tokens越多" v-model:value="formValue.openAI.kDays"/>
       </n-form-item-gi>
       <n-form-item-gi :span="11"  v-if="formValue.openAI.enable" label="模型系统 Prompt："  path="openAI.prompt" >
@@ -389,7 +389,7 @@ function deletePrompt(ID){
             placeholder="请输入系统prompt"
             :autosize="{
               minRows: 5,
-              maxRows: 8
+              maxRows: 6
             }"
         />
       </n-form-item-gi>
@@ -400,7 +400,7 @@ function deletePrompt(ID){
             placeholder="请输入用户prompt:例如{{stockName}}[{{stockCode}}]分析和总结"
             :autosize="{
               minRows: 5,
-              maxRows: 8
+              maxRows: 6
             }"
         />
      </n-form-item-gi>

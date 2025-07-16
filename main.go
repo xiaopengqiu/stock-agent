@@ -9,7 +9,6 @@ import (
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/menu"
-	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/mac"
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
@@ -70,14 +69,16 @@ func main() {
 	// Create an instance of the app structure
 	app := NewApp()
 	AppMenu := menu.NewMenu()
-	AppMenu.Append(menu.EditMenu())
-	FileMenu := AppMenu.AddSubmenu("设置")
-	FileMenu.AddText("窗口全屏", keys.CmdOrCtrl("f"), func(callback *menu.CallbackData) {
-		runtime.WindowFullscreen(app.ctx)
-	})
-	FileMenu.AddText("窗口还原", keys.Key("Esc"), func(callback *menu.CallbackData) {
-		runtime.WindowUnfullscreen(app.ctx)
-	})
+	if IsMacOS() {
+		AppMenu.Append(menu.EditMenu())
+	}
+	//FileMenu := AppMenu.AddSubmenu("设置")
+	//FileMenu.AddText("窗口全屏", keys.CmdOrCtrl("f"), func(callback *menu.CallbackData) {
+	//	runtime.WindowFullscreen(app.ctx)
+	//})
+	//FileMenu.AddText("窗口还原", keys.Key("Esc"), func(callback *menu.CallbackData) {
+	//	runtime.WindowUnfullscreen(app.ctx)
+	//})
 	//FileMenu.AddText("显示搜索框", keys.CmdOrCtrl("s"), func(callbackData *menu.CallbackData) {
 	//	runtime.EventsEmit(app.ctx, "showSearch", 1)
 	//})
@@ -118,7 +119,7 @@ func main() {
 		backgroundColour = &options.RGBA{R: 27, G: 38, B: 54, A: 1}
 	}
 
-	frameless := getFrameless()
+	//frameless := getFrameless()
 
 	// Create application with options
 	err = wails.Run(&options.App{
@@ -131,7 +132,7 @@ func main() {
 		//MaxHeight:                height,
 		DisableResize:            false,
 		Fullscreen:               false,
-		Frameless:                frameless,
+		Frameless:                false,
 		StartHidden:              false,
 		HideWindowOnClose:        false,
 		EnableDefaultContextMenu: true,

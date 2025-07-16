@@ -128,7 +128,7 @@ function openCenteredWindow(url, width, height) {
 </script>
 
 <template>
-  <n-grid :cols="24" style="max-height: calc(100vh - 170px)">
+  <n-grid :cols="24" style="max-height: calc(100vh - 165px)">
     <n-gi :span="4">
       <n-list bordered style="text-align: left;" hoverable clickable>
         <n-scrollbar style="max-height: calc(100vh - 170px);">
@@ -161,13 +161,13 @@ function openCenteredWindow(url, width, height) {
       <!--      </n-virtual-list>-->
     </n-gi>
     <n-gi :span="20">
-      <n-flex>
+      <n-flex style="--wails-draggable:no-drag">
         <n-input-group style="text-align: left">
           <n-input :rows="1" clearable v-model:value="search" placeholder="请输入选股指标或者要求"/>
           <n-button type="primary" @click="Search">搜索A股</n-button>
         </n-input-group>
       </n-flex>
-      <n-flex justify="start" v-if="traceInfo" style="margin: 5px 0">
+      <n-flex justify="start" v-if="traceInfo" style="margin: 5px 0;--wails-draggable:no-drag">
 
         <n-ellipsis line-clamp="1" :tooltip="true">
           <n-text type="info" :bordered="false">选股条件：</n-text>
@@ -183,11 +183,11 @@ function openCenteredWindow(url, width, height) {
       </n-flex>
       <n-data-table
           :striped="true"
-          :max-height="'calc(100vh - 250px)'"
+          :max-height="'calc(100vh - 150px)'"
           size="medium"
           :columns="columns"
           :data="dataList"
-          :pagination="{pageSize: 9}"
+          :pagination="{pageSize: 10}"
           :scroll-x="1800"
           :render-cell="(value, rowData, column) => {
 
@@ -218,10 +218,10 @@ function openCenteredWindow(url, width, height) {
           }
       }"
       />
-      <n-text>共找到
+      <div style="margin-top: -25px">共找到
         <n-tag type="info" :bordered="false">{{ dataList.length }}</n-tag>
         只股
-      </n-text>
+      </div>
     </n-gi>
   </n-grid>
 
