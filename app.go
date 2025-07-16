@@ -295,6 +295,13 @@ func (a *App) CheckUpdate() {
 				"content": "版本更新完成,下次重启软件生效.",
 			})
 		}
+	} else {
+		go runtime.EventsEmit(a.ctx, "newsPush", map[string]any{
+			"time":    "当前版本：" + Version,
+			"isRed":   false,
+			"source":  "go-stock",
+			"content": "当前版本无更新",
+		})
 	}
 }
 

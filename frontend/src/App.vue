@@ -654,7 +654,7 @@ onMounted(() => {
           content: () => h('div',{type:"info",style:{
             "text-align":"left",
               "font-size":"14px",
-              "color":"#F98C24"
+              "color": data.source==="go-stock"?"#F98C24":"#549EC8"
             }}, { default: () => data.content }),
           meta: () => h(NText,{type:"warning"}, { default: () => data.source}),
           duration:1000*30 ,
