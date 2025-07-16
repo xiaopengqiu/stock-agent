@@ -424,12 +424,11 @@ func (a *App) domReady(ctx context.Context) {
 	//检查新版本
 	go func() {
 		a.CheckUpdate()
+		a.CheckStockBaseInfo()
 		a.cron.AddFunc("30 05 8,12,20 * * *", func() {
 			logger.SugaredLogger.Errorf("Checking for updates...")
 			a.CheckUpdate()
-			a.CheckStockBaseInfo()
 		})
-
 	}()
 
 	//检查谷歌浏览器
