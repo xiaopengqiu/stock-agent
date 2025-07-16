@@ -424,7 +424,7 @@ func (a *App) domReady(ctx context.Context) {
 	//检查新版本
 	go func() {
 		a.CheckUpdate()
-		a.CheckStockBaseInfo()
+		a.CheckStockBaseInfo(a.ctx)
 		a.cron.AddFunc("30 05 8,12,20 * * *", func() {
 			logger.SugaredLogger.Errorf("Checking for updates...")
 			a.CheckUpdate()
@@ -463,8 +463,11 @@ func (a *App) domReady(ctx context.Context) {
 	logger.SugaredLogger.Infof("domReady-cronEntrys:%+v", a.cronEntrys)
 
 }
-func (a *App) CheckStockBaseInfo() {
+func (a *App) CheckStockBaseInfo(ctx context.Context) {
 	defer PanicHandler()
+	defer func() {
+		go runtime.EventsEmit(ctx, "loadingMsg", "done")
+	}()
 
 	stockBasics := &[]data.StockBasic{}
 	resty.New().R().

@@ -26,6 +26,10 @@ export function CheckSponsorCode(arg1) {
   return window['go']['main']['App']['CheckSponsorCode'](arg1);
 }
 
+export function CheckStockBaseInfo(arg1) {
+  return window['go']['main']['App']['CheckStockBaseInfo'](arg1);
+}
+
 export function CheckUpdate() {
   return window['go']['main']['App']['CheckUpdate']();
 }
