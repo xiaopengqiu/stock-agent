@@ -478,7 +478,6 @@ func (a *App) CheckStockBaseInfo(ctx context.Context) {
 	defer func() {
 		go runtime.EventsEmit(ctx, "loadingMsg", "done")
 	}()
-
 	stockBasics := &[]data.StockBasic{}
 	resty.New().R().
 		SetHeader("user", "go-stock").
