@@ -12,6 +12,7 @@ import (
 	"github.com/duke-git/lancet/v2/random"
 	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/go-resty/resty/v2"
+	"github.com/samber/lo"
 	"github.com/tidwall/gjson"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"go-stock/backend/db"
@@ -47,33 +48,41 @@ func (o OpenAi) String() string {
 		o.BaseUrl, o.Model, o.MaxTokens, o.Temperature, o.Prompt, o.TimeOut, o.QuestionTemplate, o.CrawlTimeOut, o.KDays, o.BrowserPath)
 }
 
-func NewDeepSeekOpenAi(ctx context.Context) *OpenAi {
-	config := GetConfig()
-	if config.OpenAiEnable {
-		if config.OpenAiApiTimeOut <= 0 {
-			config.OpenAiApiTimeOut = 60 * 5
+func NewDeepSeekOpenAi(ctx context.Context, aiConfigId int) *OpenAi {
+	settingConfig := GetSettingConfig()
+	aiConfig, find := lo.Find(settingConfig.AiConfigs, func(item *AIConfig) bool {
+		return uint(aiConfigId) == item.ID
+	})
+	if !find {
+		aiConfig = &AIConfig{}
+	}
+
+	if settingConfig.OpenAiEnable {
+		if aiConfig.TimeOut <= 0 {
+			aiConfig.TimeOut = 60 * 5
 		}
-		if config.CrawlTimeOut <= 0 {
-			config.CrawlTimeOut = 60
+		if settingConfig.CrawlTimeOut <= 0 {
+			settingConfig.CrawlTimeOut = 60
 		}
-		if config.KDays < 30 {
-			config.KDays = 120
+		if settingConfig.KDays < 30 {
+			settingConfig.KDays = 120
 		}
 	}
-	return &OpenAi{
+	o := &OpenAi{
 		ctx:              ctx,
-		BaseUrl:          config.OpenAiBaseUrl,
-		ApiKey:           config.OpenAiApiKey,
-		Model:            config.OpenAiModelName,
-		MaxTokens:        config.OpenAiMaxTokens,
-		Temperature:      config.OpenAiTemperature,
-		Prompt:           config.Prompt,
-		TimeOut:          config.OpenAiApiTimeOut,
-		QuestionTemplate: config.QuestionTemplate,
-		CrawlTimeOut:     config.CrawlTimeOut,
-		KDays:            config.KDays,
-		BrowserPath:      config.BrowserPath,
+		BaseUrl:          aiConfig.BaseUrl,
+		ApiKey:           aiConfig.ApiKey,
+		Model:            aiConfig.ModelName,
+		MaxTokens:        aiConfig.MaxTokens,
+		Temperature:      aiConfig.Temperature,
+		TimeOut:          aiConfig.TimeOut,
+		Prompt:           settingConfig.Prompt,
+		QuestionTemplate: settingConfig.QuestionTemplate,
+		CrawlTimeOut:     settingConfig.CrawlTimeOut,
+		KDays:            settingConfig.KDays,
+		BrowserPath:      settingConfig.BrowserPath,
 	}
+	return o
 }
 
 type THSTokenResponse struct {
@@ -135,7 +144,7 @@ type ToolFunction struct {
 	Parameters  FunctionParameters `json:"parameters"`
 }
 
-func (o OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysPromptId *int, tools []Tool) <-chan map[string]any {
+func (o *OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysPromptId *int, tools []Tool) <-chan map[string]any {
 	ch := make(chan map[string]any, 512)
 	defer func() {
 		if err := recover(); err != nil {
@@ -285,7 +294,7 @@ func (o OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysPromp
 	return ch
 }
 
-func (o OpenAi) NewSummaryStockNewsStream(userQuestion string, sysPromptId *int) <-chan map[string]any {
+func (o *OpenAi) NewSummaryStockNewsStream(userQuestion string, sysPromptId *int) <-chan map[string]any {
 	ch := make(chan map[string]any, 512)
 	defer func() {
 		if err := recover(); err != nil {
@@ -376,7 +385,7 @@ func (o OpenAi) NewSummaryStockNewsStream(userQuestion string, sysPromptId *int)
 	return ch
 }
 
-func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId *int, tools []Tool) <-chan map[string]any {
+func (o *OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId *int, tools []Tool) <-chan map[string]any {
 	ch := make(chan map[string]any, 512)
 
 	defer func() {
@@ -722,7 +731,7 @@ func (o OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptId
 	return ch
 }
 
-func AskAi(o OpenAi, err error, messages []map[string]interface{}, ch chan map[string]any, question string) {
+func AskAi(o *OpenAi, err error, messages []map[string]interface{}, ch chan map[string]any, question string) {
 	client := resty.New()
 	client.SetBaseURL(strutil.Trim(o.BaseUrl))
 	client.SetHeader("Authorization", "Bearer "+o.ApiKey)
@@ -863,7 +872,7 @@ func AskAi(o OpenAi, err error, messages []map[string]interface{}, ch chan map[s
 
 	}
 }
-func AskAiWithTools(o OpenAi, err error, messages []map[string]interface{}, ch chan map[string]any, question string, tools []Tool) {
+func AskAiWithTools(o *OpenAi, err error, messages []map[string]interface{}, ch chan map[string]any, question string, tools []Tool) {
 	client := resty.New()
 	client.SetBaseURL(strutil.Trim(o.BaseUrl))
 	client.SetHeader("Authorization", "Bearer "+o.ApiKey)
@@ -1421,7 +1430,7 @@ func GetTopNewsList(crawlTimeOut int64) *[]string {
 	return &telegraph
 }
 
-func (o OpenAi) SaveAIResponseResult(stockCode, stockName, result, chatId, question string) {
+func (o *OpenAi) SaveAIResponseResult(stockCode, stockName, result, chatId, question string) {
 	db.Dao.Create(&models.AIResponseResult{
 		StockCode: stockCode,
 		StockName: stockName,
@@ -1432,7 +1441,7 @@ func (o OpenAi) SaveAIResponseResult(stockCode, stockName, result, chatId, quest
 	})
 }
 
-func (o OpenAi) GetAIResponseResult(stock string) *models.AIResponseResult {
+func (o *OpenAi) GetAIResponseResult(stock string) *models.AIResponseResult {
 	var result models.AIResponseResult
 	db.Dao.Where("stock_code = ?", stock).Order("id desc").Limit(1).Find(&result)
 	return &result

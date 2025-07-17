@@ -37,7 +37,7 @@ const tushareApiUrl = "http://api.tushare.pro"
 
 type StockDataApi struct {
 	client *resty.Client
-	config *Settings
+	config *SettingConfig
 }
 type StockInfo struct {
 	gorm.Model
@@ -172,6 +172,7 @@ type FollowedStock struct {
 	Cron               *string
 	IsDel              soft_delete.DeletedAt `gorm:"softDelete:flag"`
 	Groups             []GroupStock          `gorm:"foreignKey:StockCode;references:StockCode"`
+	AiConfigId         int
 }
 
 func (receiver FollowedStock) TableName() string {
@@ -196,7 +197,7 @@ func (receiver StockBasic) TableName() string {
 func NewStockDataApi() *StockDataApi {
 	return &StockDataApi{
 		client: resty.New(),
-		config: GetConfig(),
+		config: GetSettingConfig(),
 	}
 }
 
