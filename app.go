@@ -144,7 +144,7 @@ func (a *App) CheckSponsorCode(sponsorCode string) map[string]any {
 	}
 }
 
-func (a *App) CheckUpdate() {
+func (a *App) CheckUpdate(flag int) {
 	sponsorCode := strutil.Trim(a.GetConfig().SponsorCode)
 	if sponsorCode != "" {
 		encrypted, err := hex.DecodeString(sponsorCode)
@@ -296,12 +296,15 @@ func (a *App) CheckUpdate() {
 			})
 		}
 	} else {
-		go runtime.EventsEmit(a.ctx, "newsPush", map[string]any{
-			"time":    "当前版本：" + Version,
-			"isRed":   false,
-			"source":  "go-stock",
-			"content": "当前版本无更新",
-		})
+		if flag == 1 {
+			go runtime.EventsEmit(a.ctx, "newsPush", map[string]any{
+				"time":    "当前版本：" + Version,
+				"isRed":   false,
+				"source":  "go-stock",
+				"content": "当前版本无更新",
+			})
+		}
+
 	}
 }
 
@@ -430,11 +433,11 @@ func (a *App) domReady(ctx context.Context) {
 	}
 	//检查新版本
 	go func() {
-		a.CheckUpdate()
+		a.CheckUpdate(0)
 		a.CheckStockBaseInfo(a.ctx)
 		a.cron.AddFunc("30 05 8,12,20 * * *", func() {
 			logger.SugaredLogger.Errorf("Checking for updates...")
-			a.CheckUpdate()
+			a.CheckUpdate(0)
 		})
 	}()
 

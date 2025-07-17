@@ -18,7 +18,7 @@ export function CheckSponsorCode(arg1:string):Promise<Record<string, any>>;
 
 export function CheckStockBaseInfo(arg1:context.Context):Promise<void>;
 
-export function CheckUpdate():Promise<void>;
+export function CheckUpdate(arg1:number):Promise<void>;
 
 export function ClsCalendar():Promise<Array<any>>;
 
