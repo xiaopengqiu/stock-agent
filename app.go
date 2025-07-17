@@ -480,7 +480,7 @@ func (a *App) CheckStockBaseInfo(ctx context.Context) {
 	resty.New().R().
 		SetHeader("user", "go-stock").
 		SetResult(stockBasics).
-		Get("https://go-stock.sparkmemory.top/stock_basic.json")
+		Get("http://8.134.249.145:18080/go-stock/stock_basic.json")
 
 	for _, stock := range *stockBasics {
 		stockInfo := &data.StockBasic{
@@ -502,7 +502,7 @@ func (a *App) CheckStockBaseInfo(ctx context.Context) {
 	resty.New().R().
 		SetHeader("user", "go-stock").
 		SetResult(stockHKBasics).
-		Get("https://go-stock.sparkmemory.top/stock_base_info_hk.json")
+		Get("http://8.134.249.145:18080/go-stock/stock_base_info_hk.json")
 	for _, stock := range *stockHKBasics {
 		stockInfo := &models.StockInfoHK{
 			Code:   stock.Code,
@@ -521,7 +521,7 @@ func (a *App) CheckStockBaseInfo(ctx context.Context) {
 	resty.New().R().
 		SetHeader("user", "go-stock").
 		SetResult(stockUSBasics).
-		Get("https://go-stock.sparkmemory.top/stock_base_info_us.json")
+		Get("http://8.134.249.145:18080/go-stock/stock_base_info_us.json")
 	for _, stock := range *stockUSBasics {
 		stockInfo := &models.StockInfoUS{
 			Code:   stock.Code,
