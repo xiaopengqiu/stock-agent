@@ -666,11 +666,11 @@ function ReFlesh(source) {
         <n-gradient-text type="error" style="margin-left: 10px">*AI函数工具调用可以增强AI获取数据的能力,但会消耗更多tokens。</n-gradient-text>
       </n-flex>
       <n-flex justify="space-between" style="margin-bottom: 10px">
-        <n-select style="width: 49%" v-model:value="aiConfigId" label-field="name" value-field="ID"
+        <n-select style="width: 32%" v-model:value="aiConfigId" label-field="name" value-field="ID"
                   :options="aiConfigs" placeholder="请选择AI模型服务配置"/>
-        <n-select style="width: 49%" v-model:value="sysPromptId" label-field="name" value-field="ID"
+        <n-select style="width: 32%" v-model:value="sysPromptId" label-field="name" value-field="ID"
                   :options="sysPromptOptions" placeholder="请选择系统提示词"/>
-        <n-select style="width: 49%" v-model:value="question" label-field="name" value-field="content"
+        <n-select style="width: 32%" v-model:value="question" label-field="name" value-field="content"
                   :options="userPromptOptions" placeholder="请选择用户提示词"/>
       </n-flex>
       <n-flex justify="right">

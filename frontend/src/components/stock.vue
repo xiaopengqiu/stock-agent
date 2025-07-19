@@ -2168,11 +2168,11 @@ function searchStockReport(stockCode) {
         </n-gradient-text>
       </n-flex>
       <n-flex justify="space-between" style="margin-bottom: 10px">
-        <n-select style="width: 49%" v-model:value="data.aiConfigId" label-field="name" value-field="ID"
+        <n-select style="width: 31%" v-model:value="data.aiConfigId" label-field="name" value-field="ID"
                   :options="aiConfigs" placeholder="请选择AI模型服务配置"/>
-        <n-select style="width: 49%" v-model:value="data.sysPromptId" label-field="name" value-field="ID"
+        <n-select style="width: 31%" v-model:value="data.sysPromptId" label-field="name" value-field="ID"
                   :options="sysPromptOptions" placeholder="请选择系统提示词"/>
-        <n-select style="width: 49%" v-model:value="data.question" label-field="name" value-field="content"
+        <n-select style="width: 31%" v-model:value="data.question" label-field="name" value-field="content"
                   :options="userPromptOptions" placeholder="请选择用户提示词"/>
       </n-flex>
       <n-flex justify="right">

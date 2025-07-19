@@ -1076,7 +1076,7 @@ func (a *App) ExportConfig() string {
 		logger.SugaredLogger.Errorf("导出配置文件失败:%s", err.Error())
 		return err.Error()
 	}
-	err = os.WriteFile(file, []byte(config), 0644)
+	err = os.WriteFile(file, []byte(config), os.ModePerm)
 	if err != nil {
 		logger.SugaredLogger.Errorf("导出配置文件失败:%s", err.Error())
 		return err.Error()
@@ -1317,7 +1317,7 @@ func (a *App) SaveImage(name, base64Data string) string {
 		return "文件内容异常,无法保存。"
 	}
 
-	err = os.WriteFile(filepath.Clean(filePath), decodeString, 0777)
+	err = os.WriteFile(filepath.Clean(filePath), decodeString, os.ModePerm)
 	if err != nil {
 		return "保存结果异常,无法保存。"
 	}

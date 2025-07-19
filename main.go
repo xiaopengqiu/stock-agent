@@ -125,7 +125,7 @@ func main() {
 	err = wails.Run(&options.App{
 		Title:     "go-stock：AI赋能股票分析✨",
 		Width:     width * 4 / 5,
-		Height:    900,
+		Height:    950,
 		MinWidth:  minWidth,
 		MinHeight: minHeight,
 		//MaxWidth:                 width,

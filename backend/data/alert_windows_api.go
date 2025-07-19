@@ -2,6 +2,7 @@
 
 package data
 
+import "C"
 import (
 	"github.com/go-toast/toast"
 	"go-stock/backend/logger"
@@ -31,7 +32,7 @@ func NewAlertWindowsApi(AppID string, Title string, Content string, Icon string)
 }
 
 func (a AlertWindowsApi) SendNotification() bool {
-	if GetConfig().LocalPushEnable == false {
+	if GetSettingConfig().LocalPushEnable == false {
 		logger.SugaredLogger.Error("本地推送未开启")
 		return false
 	}
