@@ -312,7 +312,11 @@ func (a *App) CheckUpdate(flag int) {
 func (a *App) domReady(ctx context.Context) {
 	defer PanicHandler()
 	defer func() {
-		go runtime.EventsEmit(ctx, "loadingMsg", "done")
+		// 增加延迟确保前端已准备好接收事件
+		go func() {
+			time.Sleep(2 * time.Second)
+			runtime.EventsEmit(a.ctx, "loadingMsg", "done")
+		}()
 	}()
 
 	//if stocksBin != nil && len(stocksBin) > 0 {
@@ -333,7 +337,7 @@ func (a *App) domReady(ctx context.Context) {
 
 	// Add your action here
 	//定时更新数据
-	config := data.NewSettingsApi(&data.Settings{}).GetConfig()
+	config := data.GetSettingConfig()
 	go func() {
 		interval := config.RefreshInterval
 		if interval <= 0 {
@@ -434,7 +438,7 @@ func (a *App) domReady(ctx context.Context) {
 	//检查新版本
 	go func() {
 		a.CheckUpdate(0)
-		a.CheckStockBaseInfo(a.ctx)
+		//a.CheckStockBaseInfo(a.ctx)
 		a.cron.AddFunc("30 05 8,12,20 * * *", func() {
 			logger.SugaredLogger.Errorf("Checking for updates...")
 			a.CheckUpdate(0)
@@ -552,7 +556,7 @@ func (a *App) NewsPush(news *[]models.Telegraph) {
 func (a *App) AddCronTask(follow data.FollowedStock) func() {
 	return func() {
 		go runtime.EventsEmit(a.ctx, "warnMsg", "开始自动分析"+follow.Name+"_"+follow.StockCode)
-		ai := data.NewDeepSeekOpenAi(a.ctx)
+		ai := data.NewDeepSeekOpenAi(a.ctx, follow.AiConfigId)
 		msgs := ai.NewChatStream(follow.Name, follow.StockCode, "", nil, a.AiTools)
 		var res strings.Builder
 
@@ -572,7 +576,8 @@ func (a *App) AddCronTask(follow data.FollowedStock) func() {
 				question = msg["question"].(string)
 			}
 		}
-		data.NewDeepSeekOpenAi(a.ctx).SaveAIResponseResult(follow.StockCode, follow.Name, res.String(), chatId, question)
+
+		data.NewDeepSeekOpenAi(a.ctx, follow.AiConfigId).SaveAIResponseResult(follow.StockCode, follow.Name, res.String(), chatId, question)
 		go runtime.EventsEmit(a.ctx, "warnMsg", "AI分析完成："+follow.Name+"_"+follow.StockCode)
 
 	}
@@ -917,12 +922,12 @@ func (a *App) SendDingDingMessageByType(message string, stockCode string, msgTyp
 	return data.NewDingDingAPI().SendDingDingMessage(message)
 }
 
-func (a *App) NewChatStream(stock, stockCode, question string, sysPromptId *int, enableTools bool) {
+func (a *App) NewChatStream(stock, stockCode, question string, aiConfigId int, sysPromptId *int, enableTools bool) {
 	var msgs <-chan map[string]any
 	if enableTools {
-		msgs = data.NewDeepSeekOpenAi(a.ctx).NewChatStream(stock, stockCode, question, sysPromptId, a.AiTools)
+		msgs = data.NewDeepSeekOpenAi(a.ctx, aiConfigId).NewChatStream(stock, stockCode, question, sysPromptId, a.AiTools)
 	} else {
-		msgs = data.NewDeepSeekOpenAi(a.ctx).NewChatStream(stock, stockCode, question, sysPromptId, []data.Tool{})
+		msgs = data.NewDeepSeekOpenAi(a.ctx, aiConfigId).NewChatStream(stock, stockCode, question, sysPromptId, []data.Tool{})
 	}
 	for msg := range msgs {
 		runtime.EventsEmit(a.ctx, "newChatStream", msg)
@@ -930,11 +935,11 @@ func (a *App) NewChatStream(stock, stockCode, question string, sysPromptId *int,
 	runtime.EventsEmit(a.ctx, "newChatStream", "DONE")
 }
 
-func (a *App) SaveAIResponseResult(stockCode, stockName, result, chatId, question string) {
-	data.NewDeepSeekOpenAi(a.ctx).SaveAIResponseResult(stockCode, stockName, result, chatId, question)
+func (a *App) SaveAIResponseResult(stockCode, stockName, result, chatId, question string, aiConfigId int) {
+	data.NewDeepSeekOpenAi(a.ctx, aiConfigId).SaveAIResponseResult(stockCode, stockName, result, chatId, question)
 }
 func (a *App) GetAIResponseResult(stock string) *models.AIResponseResult {
-	return data.NewDeepSeekOpenAi(a.ctx).GetAIResponseResult(stock)
+	return data.NewDeepSeekOpenAi(a.ctx, 0).GetAIResponseResult(stock)
 }
 
 func (a *App) GetVersionInfo() *models.VersionInfo {
@@ -1039,28 +1044,29 @@ func onExit(a *App) {
 	//runtime.Quit(a.ctx)
 }
 
-func (a *App) UpdateConfig(settings *data.Settings) string {
-	//logger.SugaredLogger.Infof("UpdateConfig:%+v", settings)
-	if settings.RefreshInterval > 0 {
+func (a *App) UpdateConfig(settingConfig *data.SettingConfig) string {
+	s1, _ := json.Marshal(settingConfig)
+	logger.SugaredLogger.Infof("UpdateConfig:%s", s1)
+	if settingConfig.RefreshInterval > 0 {
 		if entryID, exists := a.cronEntrys["MonitorStockPrices"]; exists {
 			a.cron.Remove(entryID)
 		}
-		id, _ := a.cron.AddFunc(fmt.Sprintf("@every %ds", settings.RefreshInterval), func() {
+		id, _ := a.cron.AddFunc(fmt.Sprintf("@every %ds", settingConfig.RefreshInterval), func() {
 			//logger.SugaredLogger.Infof("MonitorStockPrices:%s", time.Now())
 			MonitorStockPrices(a)
 		})
 		a.cronEntrys["MonitorStockPrices"] = id
 	}
 
-	return data.NewSettingsApi(settings).UpdateConfig()
+	return data.UpdateConfig(settingConfig)
 }
 
-func (a *App) GetConfig() *data.Settings {
-	return data.NewSettingsApi(&data.Settings{}).GetConfig()
+func (a *App) GetConfig() *data.SettingConfig {
+	return data.GetSettingConfig()
 }
 
 func (a *App) ExportConfig() string {
-	config := data.NewSettingsApi(&data.Settings{}).Export()
+	config := data.NewSettingsApi().Export()
 	file, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
 		Title:                "导出配置文件",
 		CanCreateDirectories: true,
@@ -1080,7 +1086,7 @@ func (a *App) ExportConfig() string {
 
 func (a *App) ShareAnalysis(stockCode, stockName string) string {
 	//http://go-stock.sparkmemory.top:16688/upload
-	res := data.NewDeepSeekOpenAi(a.ctx).GetAIResponseResult(stockCode)
+	res := data.NewDeepSeekOpenAi(a.ctx, 0).GetAIResponseResult(stockCode)
 	if res != nil && len(res.Content) > 100 {
 		analysisTime := res.CreatedAt.Format("2006/01/02")
 		logger.SugaredLogger.Infof("%s analysisTime:%s", res.CreatedAt, analysisTime)
@@ -1112,7 +1118,7 @@ func (a *App) UnFollowFund(fundCode string) string {
 	return data.NewFundApi().UnFollowFund(fundCode)
 }
 func (a *App) SaveAsMarkdown(stockCode, stockName string) string {
-	res := data.NewDeepSeekOpenAi(a.ctx).GetAIResponseResult(stockCode)
+	res := data.NewDeepSeekOpenAi(a.ctx, 0).GetAIResponseResult(stockCode)
 	if res != nil && len(res.Content) > 100 {
 		analysisTime := res.CreatedAt.Format("2006-01-02_15_04_05")
 		file, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
@@ -1241,12 +1247,12 @@ func (a *App) GlobalStockIndexes() map[string]any {
 	return data.NewMarketNewsApi().GlobalStockIndexes(30)
 }
 
-func (a *App) SummaryStockNews(question string, sysPromptId *int, enableTools bool) {
+func (a *App) SummaryStockNews(question string, aiConfigId int, sysPromptId *int, enableTools bool) {
 	var msgs <-chan map[string]any
 	if enableTools {
-		msgs = data.NewDeepSeekOpenAi(a.ctx).NewSummaryStockNewsStreamWithTools(question, sysPromptId, a.AiTools)
+		msgs = data.NewDeepSeekOpenAi(a.ctx, aiConfigId).NewSummaryStockNewsStreamWithTools(question, sysPromptId, a.AiTools)
 	} else {
-		msgs = data.NewDeepSeekOpenAi(a.ctx).NewSummaryStockNewsStream(question, sysPromptId)
+		msgs = data.NewDeepSeekOpenAi(a.ctx, aiConfigId).NewSummaryStockNewsStream(question, sysPromptId)
 	}
 
 	for msg := range msgs {
@@ -1349,4 +1355,13 @@ func (a *App) SaveWordFile(filename string, base64Data string) string {
 		return "保存结果异常,无法保存。"
 	}
 	return filePath
+}
+
+// GetAiConfigs
+//
+//	@Description: // 获取AiConfig列表
+//	@receiver a
+//	@return error
+func (a *App) GetAiConfigs() []*data.AIConfig {
+	return data.GetSettingConfig().AiConfigs
 }

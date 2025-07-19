@@ -28,7 +28,7 @@ func TestNewDeepSeekOpenAiConfig(t *testing.T) {
 		},
 	})
 
-	ai := NewDeepSeekOpenAi(context.TODO())
+	ai := NewDeepSeekOpenAi(context.TODO(), 1)
 	//res := ai.NewChatStream("长电科技", "sh600584", "长电科技分析和总结", nil)
 	res := ai.NewSummaryStockNewsStreamWithTools("总结市场资讯，发掘潜力标的/行业/板块/概念，控制风险。调用工具函数验证", nil, tools)
 

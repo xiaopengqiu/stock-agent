@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
@@ -29,7 +30,7 @@ func TestIsUSTradingTime(t *testing.T) {
 
 func TestCheckStockBaseInfo(t *testing.T) {
 	db.Init("./data/stock.db")
-	NewApp().CheckStockBaseInfo()
+	NewApp().CheckStockBaseInfo(context.Background())
 }
 
 func TestJson(t *testing.T) {

@@ -29,7 +29,8 @@ import {
   UnFollow,
   OpenURL,
   SaveImage,
-    SaveWordFile
+  SaveWordFile,
+  GetAiConfigs
 } from '../../wailsjs/go/main/App'
 import {
   NAvatar,
@@ -120,6 +121,7 @@ const formModel = ref({
 })
 
 const promptTemplates = ref([])
+const aiConfigs = ref([])
 const sysPromptOptions = ref([])
 const userPromptOptions = ref([])
 const data = reactive({
@@ -127,6 +129,7 @@ const data = reactive({
   chatId: "",
   question: "",
   sysPromptId: null,
+  aiConfigId: null,
   name: "",
   code: "",
   fenshiURL: "",
@@ -213,6 +216,10 @@ onBeforeMount(() => {
 
     //console.log("userPromptOptions",userPromptOptions.value)
     //console.log("sysPromptOptions",sysPromptOptions.value)
+  })
+
+  GetAiConfigs().then(res=>{
+    aiConfigs.value = res
   })
 
 })
@@ -319,7 +326,7 @@ EventsOn("newChatStream", async (msg) => {
   data.loading = false
   ////console.log(msg)
   if (msg === "DONE") {
-    SaveAIResponseResult(data.code, data.name, data.airesult, data.chatId, data.question)
+    SaveAIResponseResult(data.code, data.name, data.airesult, data.chatId, data.question,data.aiConfigId)
     message.info("AI分析完成！")
     message.destroyAll()
   } else {
@@ -1387,7 +1394,7 @@ function aiReCheckStock(stock, stockCode) {
   //
 
   //message.info("sysPromptId:"+data.sysPromptId)
-  NewChatStream(stock, stockCode, data.question, data.sysPromptId, enableTools.value)
+  NewChatStream(stock, stockCode, data.question,data.aiConfigId, data.sysPromptId, enableTools.value)
 }
 
 function aiCheckStock(stock, stockCode) {
@@ -2161,6 +2168,8 @@ function searchStockReport(stockCode) {
         </n-gradient-text>
       </n-flex>
       <n-flex justify="space-between" style="margin-bottom: 10px">
+        <n-select style="width: 49%" v-model:value="data.aiConfigId" label-field="name" value-field="ID"
+                  :options="aiConfigs" placeholder="请选择AI模型服务配置"/>
         <n-select style="width: 49%" v-model:value="data.sysPromptId" label-field="name" value-field="ID"
                   :options="sysPromptOptions" placeholder="请选择系统提示词"/>
         <n-select style="width: 49%" v-model:value="data.question" label-field="name" value-field="content"

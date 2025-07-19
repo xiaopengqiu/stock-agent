@@ -34,7 +34,9 @@ export function FollowFund(arg1:string):Promise<string>;
 
 export function GetAIResponseResult(arg1:string):Promise<models.AIResponseResult>;
 
-export function GetConfig():Promise<data.Settings>;
+export function GetAiConfigs():Promise<Array<data.AIConfig>>;
+
+export function GetConfig():Promise<data.SettingConfig>;
 
 export function GetFollowList(arg1:number):Promise<any>;
 
@@ -88,7 +90,7 @@ export function InvestCalendarTimeLine(arg1:string):Promise<Array<any>>;
 
 export function LongTigerRank(arg1:string):Promise<any>;
 
-export function NewChatStream(arg1:string,arg2:string,arg3:string,arg4:any,arg5:boolean):Promise<void>;
+export function NewChatStream(arg1:string,arg2:string,arg3:string,arg4:number,arg5:any,arg6:boolean):Promise<void>;
 
 export function NewsPush(arg1:any):Promise<void>;
 
@@ -100,7 +102,7 @@ export function RemoveGroup(arg1:number):Promise<string>;
 
 export function RemoveStockGroup(arg1:string,arg2:string,arg3:number):Promise<string>;
 
-export function SaveAIResponseResult(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<void>;
+export function SaveAIResponseResult(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:number):Promise<void>;
 
 export function SaveAsMarkdown(arg1:string,arg2:string):Promise<string>;
 
@@ -128,10 +130,10 @@ export function StockNotice(arg1:string):Promise<Array<any>>;
 
 export function StockResearchReport(arg1:string):Promise<Array<any>>;
 
-export function SummaryStockNews(arg1:string,arg2:any,arg3:boolean):Promise<void>;
+export function SummaryStockNews(arg1:string,arg2:number,arg3:any,arg4:boolean):Promise<void>;
 
 export function UnFollow(arg1:string):Promise<string>;
 
 export function UnFollowFund(arg1:string):Promise<string>;
 
-export function UpdateConfig(arg1:data.Settings):Promise<string>;
+export function UpdateConfig(arg1:data.SettingConfig):Promise<string>;

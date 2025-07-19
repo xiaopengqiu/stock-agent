@@ -11,7 +11,8 @@ import {
   SaveAIResponseResult,
   SaveAsMarkdown,
   ShareAnalysis,
-  SummaryStockNews
+  SummaryStockNews,
+  GetAiConfigs
 } from "../../wailsjs/go/main/App";
 import {EventsOff, EventsOn} from "../../wailsjs/runtime";
 import NewsList from "./newsList.vue";
@@ -60,8 +61,10 @@ const aiSummaryTime = ref("")
 const modelName = ref("")
 const chatId = ref("")
 const question = ref(``)
-const sysPromptId = ref(0)
+const aiConfigId = ref(null)
+const sysPromptId = ref(null)
 const loading = ref(true)
+const aiConfigs = ref([])
 const sysPromptOptions = ref([])
 const userPromptOptions = ref([])
 const promptTemplates = ref([])
@@ -95,6 +98,10 @@ onBeforeMount(() => {
     promptTemplates.value = res
     sysPromptOptions.value = promptTemplates.value.filter(item => item.type === '模型系统Prompt')
     userPromptOptions.value = promptTemplates.value.filter(item => item.type === '模型用户Prompt')
+  })
+
+  GetAiConfigs().then(res=>{
+    aiConfigs.value = res
   })
 
   GetTelegraphList("财联社电报").then((res) => {
@@ -190,7 +197,7 @@ function reAiSummary() {
   aiSummary.value = ""
   summaryModal.value = true
   loading.value = true
-  SummaryStockNews(question.value, sysPromptId.value,enableTools.value)
+  SummaryStockNews(question.value,aiConfigId.value, sysPromptId.value,enableTools.value)
 }
 
 function getAiSummary() {
@@ -230,7 +237,7 @@ EventsOn("summaryStockNews", async (msg) => {
   loading.value = false
   ////console.log(msg)
   if (msg === "DONE") {
-    SaveAIResponseResult("市场资讯", "市场资讯", aiSummary.value, chatId.value, question.value)
+    await SaveAIResponseResult("市场资讯", "市场资讯", aiSummary.value, chatId.value, question.value,aiConfigId.value)
     message.info("AI分析完成！")
     message.destroyAll()
 
@@ -659,6 +666,8 @@ function ReFlesh(source) {
         <n-gradient-text type="error" style="margin-left: 10px">*AI函数工具调用可以增强AI获取数据的能力,但会消耗更多tokens。</n-gradient-text>
       </n-flex>
       <n-flex justify="space-between" style="margin-bottom: 10px">
+        <n-select style="width: 49%" v-model:value="aiConfigId" label-field="name" value-field="ID"
+                  :options="aiConfigs" placeholder="请选择AI模型服务配置"/>
         <n-select style="width: 49%" v-model:value="sysPromptId" label-field="name" value-field="ID"
                   :options="sysPromptOptions" placeholder="请选择系统提示词"/>
         <n-select style="width: 49%" v-model:value="question" label-field="name" value-field="content"

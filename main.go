@@ -113,7 +113,7 @@ func main() {
 		//height = 768
 	}
 
-	darkTheme := data.NewSettingsApi(&data.Settings{}).GetConfig().DarkTheme
+	darkTheme := data.GetSettingConfig().DarkTheme
 	backgroundColour := &options.RGBA{R: 255, G: 255, B: 255, A: 1}
 	if darkTheme {
 		backgroundColour = &options.RGBA{R: 27, G: 38, B: 54, A: 1}
@@ -206,6 +206,7 @@ func AutoMigrate() {
 	db.Dao.AutoMigrate(&models.Telegraph{})
 	db.Dao.AutoMigrate(&models.TelegraphTags{})
 	db.Dao.AutoMigrate(&models.LongTigerRankData{})
+	db.Dao.AutoMigrate(&data.AIConfig{})
 }
 
 func initStockDataUS(ctx context.Context) {
@@ -262,7 +263,7 @@ func initStockDataHK(ctx context.Context) {
 }
 
 func updateBasicInfo() {
-	config := data.NewSettingsApi(&data.Settings{}).GetConfig()
+	config := data.GetSettingConfig()
 	if config.UpdateBasicInfoOnStart {
 		//更新基本信息
 		go data.NewStockDataApi().GetStockBaseInfo()
