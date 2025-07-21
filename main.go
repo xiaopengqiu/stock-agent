@@ -188,6 +188,26 @@ func main() {
 
 }
 
+func updateMultipleModel() {
+	oldSettings := &models.OldSettings{}
+	db.Dao.Model(oldSettings).First(oldSettings)
+	aiConfig := &data.AIConfig{}
+	db.Dao.Model(aiConfig).First(aiConfig)
+	if oldSettings.OpenAiEnable && oldSettings.OpenAiApiKey != "" && aiConfig.ID == 0 {
+		aiConfig.Name = oldSettings.OpenAiModelName
+		aiConfig.ApiKey = oldSettings.OpenAiApiKey
+		aiConfig.BaseUrl = oldSettings.OpenAiBaseUrl
+		aiConfig.ModelName = oldSettings.OpenAiModelName
+		aiConfig.Temperature = oldSettings.OpenAiTemperature
+		aiConfig.MaxTokens = oldSettings.OpenAiMaxTokens
+		aiConfig.TimeOut = oldSettings.OpenAiApiTimeOut
+		err := db.Dao.Model(aiConfig).Create(aiConfig).Error
+		if err != nil {
+			log.SugaredLogger.Error(err.Error())
+		}
+	}
+}
+
 func AutoMigrate() {
 	db.Dao.AutoMigrate(&data.StockInfo{})
 	db.Dao.AutoMigrate(&data.StockBasic{})
@@ -207,6 +227,8 @@ func AutoMigrate() {
 	db.Dao.AutoMigrate(&models.TelegraphTags{})
 	db.Dao.AutoMigrate(&models.LongTigerRankData{})
 	db.Dao.AutoMigrate(&data.AIConfig{})
+
+	updateMultipleModel()
 }
 
 func initStockDataUS(ctx context.Context) {
