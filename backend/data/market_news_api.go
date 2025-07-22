@@ -551,9 +551,14 @@ func (m MarketNewsApi) EMDictCode(code string, cache *freecache.Cache) []any {
 }
 
 func (m MarketNewsApi) TradingViewNews() *[]models.TVNews {
+	client := resty.New()
+	config := GetSettingConfig()
+	if config.HttpProxyEnabled && config.HttpProxy != "" {
+		client.SetProxy(config.HttpProxy)
+	}
 	TVNews := &[]models.TVNews{}
 	url := "https://news-mediator.tradingview.com/news-flow/v2/news?filter=lang:zh-Hans&filter=provider:panews,reuters&client=screener&streaming=false"
-	resp, err := resty.New().SetProxy("http://127.0.0.1:10809").SetTimeout(time.Duration(30)*time.Second).R().
+	resp, err := client.SetTimeout(time.Duration(5)*time.Second).R().
 		SetHeader("Host", "news-mediator.tradingview.com").
 		SetHeader("Origin", "https://cn.tradingview.com").
 		SetHeader("Referer", "https://cn.tradingview.com/").
@@ -833,7 +838,7 @@ func (m MarketNewsApi) GetPMI() *models.PMIResp {
 	return res
 
 }
-func (m MarketNewsApi) GetIndustryReportInfo(infoCode string) {
+func (m MarketNewsApi) GetIndustryReportInfo(infoCode string) string {
 	url := "https://data.eastmoney.com/report/zw_industry.jshtml?infocode=" + infoCode
 	resp, err := resty.New().SetTimeout(time.Duration(30)*time.Second).R().
 		SetHeader("Host", "data.eastmoney.com").
@@ -843,7 +848,7 @@ func (m MarketNewsApi) GetIndustryReportInfo(infoCode string) {
 		Get(url)
 	if err != nil {
 		logger.SugaredLogger.Errorf("GetIndustryReportInfo err:%s", err.Error())
-		return
+		return ""
 	}
 	body := resp.Body()
 	//logger.SugaredLogger.Debugf("GetIndustryReportInfo:%s", body)
@@ -853,7 +858,25 @@ func (m MarketNewsApi) GetIndustryReportInfo(infoCode string) {
 	//logger.SugaredLogger.Infof("GetIndustryReportInfo:\n%s\n%s", title, content)
 	markdown, err := util.HTMLToMarkdown(title + content)
 	if err != nil {
-		return
+		return ""
 	}
 	logger.SugaredLogger.Infof("GetIndustryReportInfo markdown:\n%s", markdown)
+	return markdown
+}
+
+func (m MarketNewsApi) ReutersNew() {
+	url := "https://www.reuters.com/pf/api/v3/content/fetch/articles-by-section-alias-or-id-v1?query=%7B%22arc-site%22%3A%22reuters%22%2C%22fetch_type%22%3A%22collection%22%2C%22offset%22%3A20%2C%22section_id%22%3A%22%2Fworld%2Fchina%2F%22%2C%22size%22%3A9%2C%22uri%22%3A%22%2Fworld%2Fchina%2F%22%2C%22website%22%3A%22reuters%22%7D&d=300&mxId=00000000&_website=reuters"
+	resp, err := resty.New().SetProxy("http://127.0.0.1:10809").SetTimeout(time.Duration(30)*time.Second).R().
+		SetHeader("Host", "www.reuters.com").
+		SetHeader("Origin", "https://www.reuters.com").
+		SetHeader("Referer", "https://www.reuters.com/world/china/").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		Get(url)
+	if err != nil {
+		logger.SugaredLogger.Errorf("ReutersNew err:%s", err.Error())
+		return
+	}
+	body := resp.Body()
+	logger.SugaredLogger.Debugf("ReutersNew:%s", body)
+
 }

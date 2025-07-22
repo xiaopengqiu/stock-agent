@@ -32,6 +32,8 @@ type Settings struct {
 	EnableFund             bool   `json:"enableFund"`
 	EnablePushNews         bool   `json:"enablePushNews"`
 	SponsorCode            string `json:"sponsorCode"`
+	HttpProxy              string `json:"httpProxy"`
+	HttpProxyEnabled       bool   `json:"httpProxyEnabled"`
 }
 
 func (receiver Settings) TableName() string {
@@ -99,6 +101,8 @@ func UpdateConfig(s *SettingConfig) string {
 			"enable_fund":                s.EnableFund,
 			"enable_push_news":           s.EnablePushNews,
 			"sponsor_code":               s.SponsorCode,
+			"http_proxy":                 s.HttpProxy,
+			"http_proxy_enabled":         s.HttpProxyEnabled,
 		})
 
 		//更新AiConfig

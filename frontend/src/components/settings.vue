@@ -42,6 +42,8 @@ const formValue = ref({
   enableFund: false,
   enablePushNews: false,
   sponsorCode: "",
+  httpProxy:"",
+  httpProxyEnabled:false,
 })
 
 // 添加一个新的AI配置到列表
@@ -97,6 +99,8 @@ onMounted(() => {
     formValue.value.enableFund = res.enableFund
     formValue.value.enablePushNews = res.enablePushNews
     formValue.value.sponsorCode = res.sponsorCode
+    formValue.value.httpProxy=res.httpProxy;
+    formValue.value.httpProxyEnabled=res.httpProxyEnabled;
   })
 
   GetPromptTemplates("", "").then(res => {
@@ -131,7 +135,9 @@ function saveConfig() {
     darkTheme: formValue.value.darkTheme,
     enableFund: formValue.value.enableFund,
     enablePushNews: formValue.value.enablePushNews,
-    sponsorCode: formValue.value.sponsorCode
+    sponsorCode: formValue.value.sponsorCode,
+    httpProxy:formValue.value.httpProxy,
+    httpProxyEnabled:formValue.value.httpProxyEnabled,
   })
 
   if (config.sponsorCode) {
@@ -218,6 +224,8 @@ function importConfig() {
       formValue.value.enableFund = config.enableFund
       formValue.value.enablePushNews = config.enablePushNews
       formValue.value.sponsorCode = config.sponsorCode
+      formValue.value.httpProxy=config.httpProxy
+      formValue.value.httpProxyEnabled=config.httpProxyEnabled
     };
     reader.readAsText(file);
   };
@@ -354,10 +362,18 @@ function deletePrompt(ID) {
                             title="资讯采集超时时间(秒)" path="openAI.crawlTimeOut">
               <n-input-number min="30" step="1" v-model:value="formValue.openAI.crawlTimeOut"/>
             </n-form-item-gi>
-            <n-form-item-gi :span="6" v-if="formValue.openAI.enable" title="天数越多消耗tokens越多"
+            <n-form-item-gi :span="4" v-if="formValue.openAI.enable" title="天数越多消耗tokens越多"
                             label="日K线数据(天)" path="openAI.kDays">
               <n-input-number min="30" step="1" max="365" v-model:value="formValue.openAI.kDays"/>
             </n-form-item-gi>
+            <n-form-item-gi :span="2" label="http代理" path="httpProxyEnabled">
+              <n-switch v-model:value="formValue.httpProxyEnabled"/>
+            </n-form-item-gi>
+            <n-form-item-gi :span="10" v-if="formValue.httpProxyEnabled" title="http代理地址"
+                            label="http代理地址" path="httpProxy">
+              <n-input type="text" placeholder="http代理地址" v-model:value="formValue.httpProxy" clearable/>
+            </n-form-item-gi>
+
 
             <n-gi :span="24" v-if="formValue.openAI.enable">
               <n-divider title-placement="left">Prompt 内容设置</n-divider>

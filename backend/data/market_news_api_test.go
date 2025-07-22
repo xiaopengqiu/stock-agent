@@ -79,11 +79,13 @@ func TestStockResearchReport(t *testing.T) {
 
 func TestIndustryResearchReport(t *testing.T) {
 	db.Init("../../data/stock.db")
-	resp := NewMarketNewsApi().IndustryResearchReport("", 7)
+	resp := NewMarketNewsApi().IndustryResearchReport("735", 7)
 	for _, a := range resp {
 		logger.SugaredLogger.Debugf("value: %+v", a)
+		data := a.(map[string]any)
+		logger.SugaredLogger.Debugf("value: %s  infoCode:%s", data["title"], data["infoCode"])
+		NewMarketNewsApi().GetIndustryReportInfo(data["infoCode"].(string))
 	}
-
 }
 
 func TestStockNotice(t *testing.T) {
@@ -101,6 +103,11 @@ func TestEMDictCode(t *testing.T) {
 	for _, a := range resp {
 		logger.SugaredLogger.Debugf("value: %+v", a)
 	}
+	bytes, err := json.Marshal(resp)
+	if err != nil {
+		return
+	}
+	logger.SugaredLogger.Debugf("value: %s", string(bytes))
 
 }
 
@@ -108,7 +115,7 @@ func TestTradingViewNews(t *testing.T) {
 	db.Init("../../data/stock.db")
 	resp := NewMarketNewsApi().TradingViewNews()
 	for _, a := range *resp {
-		logger.SugaredLogger.Debugf("value: %+v", a)
+		logger.SugaredLogger.Debugf("value: %s", a.Title)
 	}
 }
 
@@ -203,4 +210,8 @@ func TestGetPMI(t *testing.T) {
 }
 func TestGetIndustryReportInfo(t *testing.T) {
 	NewMarketNewsApi().GetIndustryReportInfo("AP202507151709216483")
+}
+
+func TestReutersNew(t *testing.T) {
+	NewMarketNewsApi().ReutersNew()
 }

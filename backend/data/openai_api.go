@@ -338,7 +338,7 @@ func (o *OpenAi) NewSummaryStockNewsStream(userQuestion string, sysPromptId *int
 			"content": "当前本地时间是:" + time.Now().Format("2006-01-02 15:04:05"),
 		})
 		wg := &sync.WaitGroup{}
-		wg.Add(1)
+		wg.Add(2)
 		go func() {
 			defer wg.Done()
 			var market strings.Builder
@@ -355,6 +355,25 @@ func (o *OpenAi) NewSummaryStockNewsStream(userQuestion string, sysPromptId *int
 				"content": "当前市场指数行情情况如下：\n" + market.String(),
 			})
 		}()
+		go func() {
+			defer wg.Done()
+			resp := NewMarketNewsApi().TradingViewNews()
+			var newsText strings.Builder
+
+			for _, a := range *resp {
+				logger.SugaredLogger.Debugf("value: %s", a.Title)
+				newsText.WriteString(a.Title + "\n")
+			}
+			msg = append(msg, map[string]interface{}{
+				"role":    "user",
+				"content": "外媒全球新闻资讯",
+			})
+			msg = append(msg, map[string]interface{}{
+				"role":    "assistant",
+				"content": newsText.String(),
+			})
+		}()
+
 		wg.Wait()
 
 		news := NewMarketNewsApi().GetNewsList("", 100)
@@ -468,9 +487,8 @@ func (o *OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptI
 		logger.SugaredLogger.Infof("NewChatStream stock:%s stockCode:%s", stock, stockCode)
 		logger.SugaredLogger.Infof("Prompt：%s", sysPrompt)
 		logger.SugaredLogger.Infof("final question:%s", question)
-
 		wg := &sync.WaitGroup{}
-		wg.Add(7)
+		wg.Add(8)
 
 		go func() {
 			defer wg.Done()
@@ -707,6 +725,25 @@ func (o *OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptI
 			msg = append(msg, map[string]interface{}{
 				"role":    "user",
 				"content": stock + "相关新闻资讯",
+			})
+			msg = append(msg, map[string]interface{}{
+				"role":    "assistant",
+				"content": newsText.String(),
+			})
+		}()
+
+		go func() {
+			defer wg.Done()
+			resp := NewMarketNewsApi().TradingViewNews()
+			var newsText strings.Builder
+
+			for _, a := range *resp {
+				logger.SugaredLogger.Debugf("value: %s", a.Title)
+				newsText.WriteString(a.Title + "\n")
+			}
+			msg = append(msg, map[string]interface{}{
+				"role":    "user",
+				"content": "外媒全球新闻资讯",
 			})
 			msg = append(msg, map[string]interface{}{
 				"role":    "assistant",

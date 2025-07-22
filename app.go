@@ -272,7 +272,7 @@ func (a *App) CheckUpdate(flag int) {
 		}
 		body := resp.Body()
 
-		if len(body) < 1024 {
+		if len(body) < 1024*500 {
 			go runtime.EventsEmit(a.ctx, "newsPush", map[string]any{
 				"time":    "新版本：" + releaseVersion.TagName,
 				"isRed":   true,
@@ -438,7 +438,7 @@ func (a *App) domReady(ctx context.Context) {
 	//检查新版本
 	go func() {
 		a.CheckUpdate(0)
-		//a.CheckStockBaseInfo(a.ctx)
+		a.CheckStockBaseInfo(a.ctx)
 		a.cron.AddFunc("30 05 8,12,20 * * *", func() {
 			logger.SugaredLogger.Errorf("Checking for updates...")
 			a.CheckUpdate(0)
