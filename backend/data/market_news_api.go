@@ -866,7 +866,7 @@ func (m MarketNewsApi) GetIndustryReportInfo(infoCode string) string {
 
 func (m MarketNewsApi) ReutersNew() {
 	url := "https://www.reuters.com/pf/api/v3/content/fetch/articles-by-section-alias-or-id-v1?query=%7B%22arc-site%22%3A%22reuters%22%2C%22fetch_type%22%3A%22collection%22%2C%22offset%22%3A20%2C%22section_id%22%3A%22%2Fworld%2Fchina%2F%22%2C%22size%22%3A9%2C%22uri%22%3A%22%2Fworld%2Fchina%2F%22%2C%22website%22%3A%22reuters%22%7D&d=300&mxId=00000000&_website=reuters"
-	resp, err := resty.New().SetProxy("http://127.0.0.1:10809").SetTimeout(time.Duration(30)*time.Second).R().
+	resp, err := resty.New().SetProxy("http://127.0.0.1:10809").SetTimeout(time.Duration(5)*time.Second).R().
 		SetHeader("Host", "www.reuters.com").
 		SetHeader("Origin", "https://www.reuters.com").
 		SetHeader("Referer", "https://www.reuters.com/world/china/").

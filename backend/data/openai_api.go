@@ -188,7 +188,7 @@ func (o *OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysProm
 			"content": "当前本地时间是:" + time.Now().Format("2006-01-02 15:04:05"),
 		})
 		wg := &sync.WaitGroup{}
-		wg.Add(3)
+		wg.Add(4)
 
 		go func() {
 			defer wg.Done()
@@ -262,6 +262,25 @@ func (o *OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysProm
 				"content": "近期重大事件/会议如下：\n" + md.String(),
 			})
 
+		}()
+
+		go func() {
+			defer wg.Done()
+			resp := NewMarketNewsApi().TradingViewNews()
+			var newsText strings.Builder
+
+			for _, a := range *resp {
+				logger.SugaredLogger.Debugf("TradingViewNews: %s", a.Title)
+				newsText.WriteString(a.Title + "\n")
+			}
+			msg = append(msg, map[string]interface{}{
+				"role":    "user",
+				"content": "外媒全球新闻资讯",
+			})
+			msg = append(msg, map[string]interface{}{
+				"role":    "assistant",
+				"content": newsText.String(),
+			})
 		}()
 
 		wg.Wait()
@@ -361,7 +380,7 @@ func (o *OpenAi) NewSummaryStockNewsStream(userQuestion string, sysPromptId *int
 			var newsText strings.Builder
 
 			for _, a := range *resp {
-				logger.SugaredLogger.Debugf("value: %s", a.Title)
+				logger.SugaredLogger.Debugf("TradingViewNews: %s", a.Title)
 				newsText.WriteString(a.Title + "\n")
 			}
 			msg = append(msg, map[string]interface{}{
