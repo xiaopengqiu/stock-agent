@@ -213,5 +213,6 @@ func TestGetIndustryReportInfo(t *testing.T) {
 }
 
 func TestReutersNew(t *testing.T) {
+	db.Init("../../data/stock.db")
 	NewMarketNewsApi().ReutersNew()
 }

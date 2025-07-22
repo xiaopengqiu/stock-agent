@@ -188,7 +188,7 @@ func (o *OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysProm
 			"content": "当前本地时间是:" + time.Now().Format("2006-01-02 15:04:05"),
 		})
 		wg := &sync.WaitGroup{}
-		wg.Add(4)
+		wg.Add(5)
 
 		go func() {
 			defer wg.Done()
@@ -283,6 +283,23 @@ func (o *OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysProm
 			})
 		}()
 
+		go func() {
+			defer wg.Done()
+			news := NewMarketNewsApi().ReutersNew()
+			messageText := strings.Builder{}
+			for _, article := range news.Result.Articles {
+				messageText.WriteString("## " + article.Title + "\n")
+				messageText.WriteString("### " + article.Description + "\n")
+			}
+			msg = append(msg, map[string]interface{}{
+				"role":    "user",
+				"content": "外媒全球新闻资讯",
+			})
+			msg = append(msg, map[string]interface{}{
+				"role":    "assistant",
+				"content": messageText.String(),
+			})
+		}()
 		wg.Wait()
 
 		news := NewMarketNewsApi().GetNewsList("财联社电报", random.RandInt(50, 150))
@@ -357,7 +374,7 @@ func (o *OpenAi) NewSummaryStockNewsStream(userQuestion string, sysPromptId *int
 			"content": "当前本地时间是:" + time.Now().Format("2006-01-02 15:04:05"),
 		})
 		wg := &sync.WaitGroup{}
-		wg.Add(2)
+		wg.Add(3)
 		go func() {
 			defer wg.Done()
 			var market strings.Builder
@@ -390,6 +407,24 @@ func (o *OpenAi) NewSummaryStockNewsStream(userQuestion string, sysPromptId *int
 			msg = append(msg, map[string]interface{}{
 				"role":    "assistant",
 				"content": newsText.String(),
+			})
+		}()
+
+		go func() {
+			defer wg.Done()
+			news := NewMarketNewsApi().ReutersNew()
+			messageText := strings.Builder{}
+			for _, article := range news.Result.Articles {
+				messageText.WriteString("## " + article.Title + "\n")
+				messageText.WriteString("### " + article.Description + "\n")
+			}
+			msg = append(msg, map[string]interface{}{
+				"role":    "user",
+				"content": "外媒全球新闻资讯",
+			})
+			msg = append(msg, map[string]interface{}{
+				"role":    "assistant",
+				"content": messageText.String(),
 			})
 		}()
 

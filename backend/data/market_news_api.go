@@ -864,19 +864,25 @@ func (m MarketNewsApi) GetIndustryReportInfo(infoCode string) string {
 	return markdown
 }
 
-func (m MarketNewsApi) ReutersNew() {
+func (m MarketNewsApi) ReutersNew() *models.ReutersNews {
+	client := resty.New()
+	config := GetSettingConfig()
+	if config.HttpProxyEnabled && config.HttpProxy != "" {
+		client.SetProxy(config.HttpProxy)
+	}
+	news := &models.ReutersNews{}
 	url := "https://www.reuters.com/pf/api/v3/content/fetch/articles-by-section-alias-or-id-v1?query={\"arc-site\":\"reuters\",\"fetch_type\":\"collection\",\"offset\":0,\"section_id\":\"/world/\",\"size\":9,\"uri\":\"/world/\",\"website\":\"reuters\"}&d=300&mxId=00000000&_website=reuters"
-	resp, err := resty.New().SetProxy("http://127.0.0.1:10809").SetTimeout(time.Duration(5)*time.Second).R().
+	_, err := client.SetTimeout(time.Duration(5)*time.Second).R().
 		SetHeader("Host", "www.reuters.com").
 		SetHeader("Origin", "https://www.reuters.com").
 		SetHeader("Referer", "https://www.reuters.com/world/china/").
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		SetResult(news).
 		Get(url)
 	if err != nil {
 		logger.SugaredLogger.Errorf("ReutersNew err:%s", err.Error())
-		return
+		return news
 	}
-	body := resp.Body()
-	logger.SugaredLogger.Debugf("ReutersNew:%s", body)
-
+	logger.SugaredLogger.Infof("Articles:%+v", news.Result.Articles)
+	return news
 }
