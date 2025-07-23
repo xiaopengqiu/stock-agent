@@ -220,6 +220,7 @@ onBeforeMount(() => {
 
   GetAiConfigs().then(res=>{
     aiConfigs.value = res
+    data.aiConfigId =res[0].ID
   })
 
 })
