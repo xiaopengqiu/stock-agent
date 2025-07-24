@@ -1723,7 +1723,7 @@ function searchStockReport(stockCode) {
       </n-gradient-text>
     </template>
   </vue-danmaku>
-  <n-tabs type="card" style="--wails-draggable:drag" animated addable :data-currentGroupId="currentGroupId"
+  <n-tabs type="card" style="--wails-draggable:no-drag" animated addable :data-currentGroupId="currentGroupId"
           :value="currentGroupId" @add="addTab" @update-value="updateTab" placement="top" @close="(key)=>{delTab(key)}">
     <n-tab-pane :name="0" :tab="'全部'">
       <n-grid :x-gap="8" :cols="3" :y-gap="8">

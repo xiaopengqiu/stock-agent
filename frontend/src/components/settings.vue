@@ -291,7 +291,7 @@ function deletePrompt(ID) {
 </script>
 
 <template>
-  <n-flex justify="left" style="text-align: left; --wails-draggable:drag">
+  <n-flex justify="left" style="text-align: left; --wails-draggable:no-drag">
     <n-form ref="formRef" :label-placement="'left'" :label-align="'left'">
       <n-space vertical size="large">
         <n-card :title="() => h(NTag, { type: 'primary', bordered: false }, () => '基础设置')" size="small">

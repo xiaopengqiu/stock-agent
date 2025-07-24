@@ -275,7 +275,7 @@ func (o *OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysProm
 			}
 			msg = append(msg, map[string]interface{}{
 				"role":    "user",
-				"content": "外媒全球新闻资讯",
+				"content": "全球新闻资讯",
 			})
 			msg = append(msg, map[string]interface{}{
 				"role":    "assistant",

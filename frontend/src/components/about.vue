@@ -104,7 +104,7 @@ EventsOn("updateVersion",async (msg) => {
 </script>
 
 <template>
-      <n-space vertical size="large"  style="--wails-draggable:drag">
+      <n-space vertical size="large"  style="--wails-draggable:no-drag">
         <!-- 软件描述 -->
         <n-card size="large">
           <n-divider title-placement="center">关于软件</n-divider>
