@@ -219,17 +219,24 @@ func (o *OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysProm
 		go func() {
 			defer wg.Done()
 			var market strings.Builder
+			market.WriteString(getZSInfo("上证指数", "sh000001", 30) + "\n")
+			market.WriteString(getZSInfo("深证成指", "sz399001", 30) + "\n")
 			market.WriteString(getZSInfo("创业板指数", "sz399006", 30) + "\n")
-			market.WriteString(getZSInfo("上证综合指数", "sh000001", 30) + "\n")
+			market.WriteString(getZSInfo("科创50", "sh000688", 30) + "\n")
 			market.WriteString(getZSInfo("沪深300指数", "sh000300", 30) + "\n")
+			market.WriteString(getZSInfo("中证银行", "sz399986", 30) + "\n")
+			market.WriteString(getZSInfo("科创芯片", "sh000685", 30) + "\n")
+			market.WriteString(getZSInfo("上证医药", "sh000037", 30) + "\n")
+			market.WriteString(getZSInfo("证券龙头", "sz399437", 30) + "\n")
+			market.WriteString(getZSInfo("中证白酒", "sz399997", 30) + "\n")
 			//logger.SugaredLogger.Infof("NewChatStream getZSInfo=\n%s", market.String())
 			msg = append(msg, map[string]interface{}{
 				"role":    "user",
-				"content": "当前市场指数行情",
+				"content": "当前市场/大盘/行业/指数行情",
 			})
 			msg = append(msg, map[string]interface{}{
 				"role":    "assistant",
-				"content": "当前市场指数行情情况如下：\n" + market.String(),
+				"content": "当前市场/大盘/行业/指数行情如下：\n" + market.String(),
 			})
 		}()
 
@@ -302,7 +309,7 @@ func (o *OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysProm
 		}()
 		wg.Wait()
 
-		news := NewMarketNewsApi().GetNewsList("财联社电报", random.RandInt(50, 150))
+		news := NewMarketNewsApi().GetNewsList("财联社电报", random.RandInt(100, 500))
 		messageText := strings.Builder{}
 		for _, telegraph := range *news {
 			messageText.WriteString("## " + telegraph.Time + ":" + "\n")
@@ -378,9 +385,16 @@ func (o *OpenAi) NewSummaryStockNewsStream(userQuestion string, sysPromptId *int
 		go func() {
 			defer wg.Done()
 			var market strings.Builder
+			market.WriteString(getZSInfo("上证指数", "sh000001", 30) + "\n")
+			market.WriteString(getZSInfo("深证成指", "sz399001", 30) + "\n")
 			market.WriteString(getZSInfo("创业板指数", "sz399006", 30) + "\n")
-			market.WriteString(getZSInfo("上证综合指数", "sh000001", 30) + "\n")
+			market.WriteString(getZSInfo("科创50", "sh000688", 30) + "\n")
 			market.WriteString(getZSInfo("沪深300指数", "sh000300", 30) + "\n")
+			market.WriteString(getZSInfo("中证银行", "sz399986", 30) + "\n")
+			market.WriteString(getZSInfo("科创芯片", "sh000685", 30) + "\n")
+			market.WriteString(getZSInfo("上证医药", "sh000037", 30) + "\n")
+			market.WriteString(getZSInfo("证券龙头", "sz399437", 30) + "\n")
+			market.WriteString(getZSInfo("中证白酒", "sz399997", 30) + "\n")
 			//logger.SugaredLogger.Infof("NewChatStream getZSInfo=\n%s", market.String())
 			msg = append(msg, map[string]interface{}{
 				"role":    "user",
