@@ -389,6 +389,7 @@ export namespace data {
 	    browserPoolSize: number;
 	    enableFund: boolean;
 	    enablePushNews: boolean;
+	    enableOnlyPushRedNews: boolean;
 	    sponsorCode: string;
 	    httpProxy: string;
 	    httpProxyEnabled: boolean;
@@ -423,6 +424,7 @@ export namespace data {
 	        this.browserPoolSize = source["browserPoolSize"];
 	        this.enableFund = source["enableFund"];
 	        this.enablePushNews = source["enablePushNews"];
+	        this.enableOnlyPushRedNews = source["enableOnlyPushRedNews"];
 	        this.sponsorCode = source["sponsorCode"];
 	        this.httpProxy = source["httpProxy"];
 	        this.httpProxyEnabled = source["httpProxyEnabled"];

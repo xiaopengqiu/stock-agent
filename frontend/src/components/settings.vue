@@ -41,6 +41,7 @@ const formValue = ref({
   darkTheme: true,
   enableFund: false,
   enablePushNews: false,
+  enableOnlyPushRedNews: false,
   sponsorCode: "",
   httpProxy:"",
   httpProxyEnabled:false,
@@ -98,9 +99,11 @@ onMounted(() => {
     formValue.value.darkTheme = res.darkTheme
     formValue.value.enableFund = res.enableFund
     formValue.value.enablePushNews = res.enablePushNews
+    formValue.value.enableOnlyPushRedNews = res.enableOnlyPushRedNews
     formValue.value.sponsorCode = res.sponsorCode
     formValue.value.httpProxy=res.httpProxy;
     formValue.value.httpProxyEnabled=res.httpProxyEnabled;
+
   })
 
   GetPromptTemplates("", "").then(res => {
@@ -135,6 +138,7 @@ function saveConfig() {
     darkTheme: formValue.value.darkTheme,
     enableFund: formValue.value.enableFund,
     enablePushNews: formValue.value.enablePushNews,
+    enableOnlyPushRedNews: formValue.value.enableOnlyPushRedNews,
     sponsorCode: formValue.value.sponsorCode,
     httpProxy:formValue.value.httpProxy,
     httpProxyEnabled:formValue.value.httpProxyEnabled,
@@ -223,6 +227,7 @@ function importConfig() {
       formValue.value.darkTheme = config.darkTheme
       formValue.value.enableFund = config.enableFund
       formValue.value.enablePushNews = config.enablePushNews
+      formValue.value.enableOnlyPushRedNews = config.enableOnlyPushRedNews
       formValue.value.sponsorCode = config.sponsorCode
       formValue.value.httpProxy=config.httpProxy
       formValue.value.httpProxyEnabled=config.httpProxyEnabled
@@ -329,21 +334,25 @@ function deletePrompt(ID) {
 
         <n-card :title="() => h(NTag, { type: 'primary', bordered: false }, () => '通知设置')" size="small">
           <n-grid :cols="24" :x-gap="24" style="text-align: left">
-            <n-form-item-gi :span="4" label="钉钉推送：" path="dingPush.enable">
+            <n-form-item-gi :span="3" label="钉钉推送：" path="dingPush.enable">
               <n-switch v-model:value="formValue.dingPush.enable"/>
             </n-form-item-gi>
-            <n-form-item-gi :span="4" label="本地推送：" path="localPush.enable">
+            <n-form-item-gi :span="3" label="本地推送：" path="localPush.enable">
               <n-switch v-model:value="formValue.localPush.enable"/>
             </n-form-item-gi>
-            <n-form-item-gi :span="4" label="弹幕功能：" path="enableDanmu">
+            <n-form-item-gi :span="3" label="弹幕功能：" path="enableDanmu">
               <n-switch v-model:value="formValue.enableDanmu"/>
             </n-form-item-gi>
-            <n-form-item-gi :span="4" label="显示滚动快讯：" path="enableNews">
+            <n-form-item-gi :span="3" label="显示滚动快讯：" path="enableNews">
               <n-switch v-model:value="formValue.enableNews"/>
             </n-form-item-gi>
-            <n-form-item-gi :span="4" label="市场资讯提醒：" path="enablePushNews">
+            <n-form-item-gi :span="3" label="市场资讯提醒：" path="enablePushNews">
               <n-switch v-model:value="formValue.enablePushNews"/>
             </n-form-item-gi>
+            <n-form-item-gi v-if="formValue.enablePushNews" :span="4" label="只提醒红字或关注个股的新闻：" path="enableOnlyPushRedNews">
+              <n-switch v-model:value="formValue.enableOnlyPushRedNews"/>
+            </n-form-item-gi>
+
             <n-form-item-gi :span="22" v-if="formValue.dingPush.enable" label="钉钉机器人接口地址："
                             path="dingPush.dingRobot">
               <n-input placeholder="请输入钉钉机器人接口地址" v-model:value="formValue.dingPush.dingRobot"/>
@@ -461,7 +470,6 @@ function deletePrompt(ID) {
 
           </n-grid>
         </n-card>
-
       </n-space>
     </n-form>
   </n-flex>

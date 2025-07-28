@@ -545,10 +545,21 @@ func (a *App) CheckStockBaseInfo(ctx context.Context) {
 
 }
 func (a *App) NewsPush(news *[]models.Telegraph) {
+
+	follows := data.NewStockDataApi().GetFollowList(0)
+	stockNames := slice.Map(*follows, func(index int, item data.FollowedStock) string {
+		return item.Name
+	})
+
 	for _, telegraph := range *news {
-		//if telegraph.IsRed {
-		go runtime.EventsEmit(a.ctx, "newsPush", telegraph)
-		go data.NewAlertWindowsApi("go-stock", telegraph.Source+" "+telegraph.Time, telegraph.Content, string(icon)).SendNotification()
+		if a.GetConfig().EnableOnlyPushRedNews {
+			if telegraph.IsRed || strutil.ContainsAny(telegraph.Content, stockNames) {
+				go runtime.EventsEmit(a.ctx, "newsPush", telegraph)
+			}
+		} else {
+			go runtime.EventsEmit(a.ctx, "newsPush", telegraph)
+		}
+		//go data.NewAlertWindowsApi("go-stock", telegraph.Source+" "+telegraph.Time, telegraph.Content, string(icon)).SendNotification()
 		//}
 	}
 }

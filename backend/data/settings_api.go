@@ -31,6 +31,7 @@ type Settings struct {
 	BrowserPoolSize        int    `json:"browserPoolSize"`
 	EnableFund             bool   `json:"enableFund"`
 	EnablePushNews         bool   `json:"enablePushNews"`
+	EnableOnlyPushRedNews  bool   `json:"enableOnlyPushRedNews"`
 	SponsorCode            string `json:"sponsorCode"`
 	HttpProxy              string `json:"httpProxy"`
 	HttpProxyEnabled       bool   `json:"httpProxyEnabled"`
@@ -100,6 +101,7 @@ func UpdateConfig(s *SettingConfig) string {
 			"dark_theme":                 s.DarkTheme,
 			"enable_fund":                s.EnableFund,
 			"enable_push_news":           s.EnablePushNews,
+			"enable_only_push_red_news":  s.EnableOnlyPushRedNews,
 			"sponsor_code":               s.SponsorCode,
 			"http_proxy":                 s.HttpProxy,
 			"http_proxy_enabled":         s.HttpProxyEnabled,
