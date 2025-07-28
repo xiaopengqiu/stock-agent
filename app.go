@@ -256,7 +256,7 @@ func (a *App) CheckUpdate(flag int) {
 		}
 		go runtime.EventsEmit(a.ctx, "newsPush", map[string]any{
 			"time":    "发现新版本：" + releaseVersion.TagName,
-			"isRed":   false,
+			"isRed":   true,
 			"source":  "go-stock",
 			"content": fmt.Sprintf("%s", commit.Message),
 		})
@@ -299,7 +299,7 @@ func (a *App) CheckUpdate(flag int) {
 		if flag == 1 {
 			go runtime.EventsEmit(a.ctx, "newsPush", map[string]any{
 				"time":    "当前版本：" + Version,
-				"isRed":   false,
+				"isRed":   true,
 				"source":  "go-stock",
 				"content": "当前版本无更新",
 			})
