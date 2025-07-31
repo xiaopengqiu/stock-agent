@@ -3,12 +3,14 @@ package data
 import (
 	"encoding/json"
 	"github.com/coocood/freecache"
+	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/tidwall/gjson"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"go-stock/backend/util"
 	"strings"
 	"testing"
+	"time"
 )
 
 // @Author spark
@@ -215,4 +217,21 @@ func TestGetIndustryReportInfo(t *testing.T) {
 func TestReutersNew(t *testing.T) {
 	db.Init("../../data/stock.db")
 	NewMarketNewsApi().ReutersNew()
+}
+
+func TestInteractiveAnswer(t *testing.T) {
+	db.Init("../../data/stock.db")
+	datas := NewMarketNewsApi().InteractiveAnswer(1, 25, "")
+	logger.SugaredLogger.Debugf("PageSize:%d", datas.PageSize)
+	for _, res := range datas.Results {
+		toInt, err := convertor.ToInt(res.AttachedPubDate)
+		if err != nil {
+			continue
+		}
+		logger.SugaredLogger.Debugf("%s companyShortName:%s[%s] \n MainContent:%s \n AttachedContent:%s", time.UnixMilli(toInt).Format("2006-01-02 15:04:05"), res.CompanyShortName, res.StockCode, res.MainContent, res.AttachedContent)
+	}
+
+	md := util.MarkdownTableWithTitle("投资互动", datas.Results)
+	logger.SugaredLogger.Debugf(md)
+
 }

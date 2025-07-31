@@ -104,6 +104,32 @@ func AddTools(tools []data.Tool) []data.Tool {
 		},
 	})
 
+	tools = append(tools, data.Tool{
+		Type: "function",
+		Function: data.ToolFunction{
+			Name:        "InteractiveAnswer",
+			Description: "获取投资者与上市公司互动问答的数据,反映当前投资者关注的热点问题",
+			Parameters: data.FunctionParameters{
+				Type: "object",
+				Properties: map[string]any{
+					"page": map[string]any{
+						"type":        "string",
+						"description": "分页号",
+					},
+					"pageSize": map[string]any{
+						"type":        "string",
+						"description": "分页大小",
+					},
+					"keyWord": map[string]any{
+						"type":        "string",
+						"description": "搜索关键词,多个关键词空格隔开（可输入股票名称或者当前热门板块/行业/概念/标的/事件等）",
+					},
+				},
+				Required: []string{"page", "pageSize"},
+			},
+		},
+	})
+
 	return tools
 }
 

@@ -188,7 +188,21 @@ func (o *OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysProm
 			"content": "当前本地时间是:" + time.Now().Format("2006-01-02 15:04:05"),
 		})
 		wg := &sync.WaitGroup{}
-		wg.Add(5)
+		wg.Add(6)
+
+		go func() {
+			defer wg.Done()
+			datas := NewMarketNewsApi().InteractiveAnswer(1, 100, "")
+			content := util.MarkdownTableWithTitle("当前最新投资者互动数据", datas.Results)
+			msg = append(msg, map[string]interface{}{
+				"role":    "user",
+				"content": "投资者互动数据",
+			})
+			msg = append(msg, map[string]interface{}{
+				"role":    "assistant",
+				"content": content,
+			})
+		}()
 
 		go func() {
 			defer wg.Done()
@@ -381,7 +395,7 @@ func (o *OpenAi) NewSummaryStockNewsStream(userQuestion string, sysPromptId *int
 			"content": "当前本地时间是:" + time.Now().Format("2006-01-02 15:04:05"),
 		})
 		wg := &sync.WaitGroup{}
-		wg.Add(3)
+		wg.Add(4)
 		go func() {
 			defer wg.Done()
 			var market strings.Builder
@@ -439,6 +453,20 @@ func (o *OpenAi) NewSummaryStockNewsStream(userQuestion string, sysPromptId *int
 			msg = append(msg, map[string]interface{}{
 				"role":    "assistant",
 				"content": messageText.String(),
+			})
+		}()
+
+		go func() {
+			defer wg.Done()
+			datas := NewMarketNewsApi().InteractiveAnswer(1, 100, "")
+			content := util.MarkdownTableWithTitle("当前最新投资者互动数据", datas.Results)
+			msg = append(msg, map[string]interface{}{
+				"role":    "user",
+				"content": "投资者互动数据",
+			})
+			msg = append(msg, map[string]interface{}{
+				"role":    "assistant",
+				"content": content,
 			})
 		}()
 
@@ -1290,6 +1318,52 @@ func AskAiWithTools(o *OpenAi, err error, messages []map[string]interface{}, ch 
 										"tool_call_id": currentCallId,
 									})
 								}
+							}
+
+							if funcName == "InteractiveAnswer" {
+								page := gjson.Get(funcArguments, "page").String()
+								pageSize := gjson.Get(funcArguments, "pageSize").String()
+								keyWord := gjson.Get(funcArguments, "keyWord").String()
+								ch <- map[string]any{
+									"code":     1,
+									"question": question,
+									"chatId":   streamResponse.Id,
+									"model":    streamResponse.Model,
+									"content":  "\r\n```\r\n开始调用工具：InteractiveAnswer，\n参数：" + page + "," + pageSize + "," + keyWord + "\r\n```\r\n",
+									"time":     time.Now().Format(time.DateTime),
+								}
+								pageNo, err := convertor.ToInt(page)
+								if err != nil {
+									pageNo = 1
+								}
+								pageSizeNum, err := convertor.ToInt(pageSize)
+								if err != nil {
+									pageSizeNum = 50
+								}
+								datas := NewMarketNewsApi().InteractiveAnswer(int(pageNo), int(pageSizeNum), keyWord)
+								content := util.MarkdownTableWithTitle("投资互动数据", datas.Results)
+								logger.SugaredLogger.Infof("InteractiveAnswer=\n%s", content)
+								messages = append(messages, map[string]interface{}{
+									"role":    "assistant",
+									"content": currentAIContent.String(),
+									"tool_calls": []map[string]any{
+										{
+											"id":           currentCallId,
+											"tool_call_id": currentCallId,
+											"type":         "function",
+											"function": map[string]string{
+												"name":       funcName,
+												"arguments":  funcArguments,
+												"parameters": funcArguments,
+											},
+										},
+									},
+								})
+								messages = append(messages, map[string]interface{}{
+									"role":         "tool",
+									"content":      content,
+									"tool_call_id": currentCallId,
+								})
 							}
 
 						}

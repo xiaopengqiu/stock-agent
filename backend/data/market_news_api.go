@@ -886,3 +886,35 @@ func (m MarketNewsApi) ReutersNew() *models.ReutersNews {
 	logger.SugaredLogger.Infof("Articles:%+v", news.Result.Articles)
 	return news
 }
+
+func (m MarketNewsApi) InteractiveAnswer(page int, pageSize int, keyWord string) *models.InteractiveAnswer {
+	client := resty.New()
+	config := GetSettingConfig()
+	if config.HttpProxyEnabled && config.HttpProxy != "" {
+		client.SetProxy(config.HttpProxy)
+	}
+	url := fmt.Sprintf("https://irm.cninfo.com.cn/newircs/index/search?_t=%d", time.Now().Unix())
+	answers := &models.InteractiveAnswer{}
+	logger.SugaredLogger.Infof("请求url:%s", url)
+	resp, err := client.SetTimeout(time.Duration(5)*time.Second).R().
+		SetHeader("Host", "irm.cninfo.com.cn").
+		SetHeader("Origin", "https://irm.cninfo.com.cn").
+		SetHeader("Referer", "https://irm.cninfo.com.cn/views/interactiveAnswer").
+		SetHeader("handleError", "true").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:142.0) Gecko/20100101 Firefox/142.0").
+		SetFormData(map[string]string{
+			"pageNo":      convertor.ToString(page),
+			"pageSize":    convertor.ToString(pageSize),
+			"searchTypes": "1,11",
+			"highLight":   "true",
+			"keyWord":     keyWord,
+		}).
+		SetResult(answers).
+		Post(url)
+	if err != nil {
+		logger.SugaredLogger.Errorf("InteractiveAnswer-err:%+v", err)
+	}
+	logger.SugaredLogger.Debugf("InteractiveAnswer-resp:%s", resp.Body())
+	return answers
+
+}

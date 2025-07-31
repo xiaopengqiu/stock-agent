@@ -635,3 +635,45 @@ type ReutersNews struct {
 	} `json:"result"`
 	Id string `json:"_id"`
 }
+
+type InteractiveAnswer struct {
+	PageNo      int                        `json:"pageNo"`
+	PageSize    int                        `json:"pageSize"`
+	TotalRecord int                        `json:"totalRecord"`
+	TotalPage   int                        `json:"totalPage"`
+	Results     []InteractiveAnswerResults `json:"results"`
+	Count       bool                       `json:"count"`
+}
+
+type InteractiveAnswerResults struct {
+	EsId             string   `json:"esId" md:"-"`
+	IndexId          string   `json:"indexId" md:"-"`
+	ContentType      int      `json:"contentType" md:"-"`
+	Trade            []string `json:"trade"  md:"行业名称"`
+	MainContent      string   `json:"mainContent" md:"投资者提问"`
+	StockCode        string   `json:"stockCode" md:"股票代码"`
+	Secid            string   `json:"secid" md:"-"`
+	CompanyShortName string   `json:"companyShortName" md:"股票名称"`
+	CompanyLogo      string   `json:"companyLogo,omitempty" md:"-"`
+	BoardType        []string `json:"boardType" md:"-"`
+	PubDate          string   `json:"pubDate" md:"发布时间"`
+	UpdateDate       string   `json:"updateDate" md:"-"`
+	Author           string   `json:"author" md:"-"`
+	AuthorName       string   `json:"authorName" md:"-"`
+	PubClient        string   `json:"pubClient" md:"-"`
+	AttachedId       string   `json:"attachedId" md:"-"`
+	AttachedContent  string   `json:"attachedContent" md:"上市公司回复"`
+	AttachedAuthor   string   `json:"attachedAuthor" md:"-"`
+	AttachedPubDate  string   `json:"attachedPubDate" md:"回复时间"`
+	Score            float64  `json:"score" md:"-"`
+	TopStatus        int      `json:"topStatus" md:"-"`
+	PraiseCount      int      `json:"praiseCount" md:"-"`
+	PraiseStatus     bool     `json:"praiseStatus" md:"-"`
+	FavoriteStatus   bool     `json:"favoriteStatus" md:"-"`
+	AttentionCompany bool     `json:"attentionCompany" md:"-"`
+	IsCheck          string   `json:"isCheck" md:"-"`
+	QaStatus         int      `json:"qaStatus" md:"-"`
+	PackageDate      string   `json:"packageDate" md:"-"`
+	RemindStatus     bool     `json:"remindStatus" md:"-"`
+	InterviewLive    bool     `json:"interviewLive" md:"-"`
+}
