@@ -905,7 +905,7 @@ func (m MarketNewsApi) InteractiveAnswer(page int, pageSize int, keyWord string)
 		SetFormData(map[string]string{
 			"pageNo":      convertor.ToString(page),
 			"pageSize":    convertor.ToString(pageSize),
-			"searchTypes": "1,11",
+			"searchTypes": "11",
 			"highLight":   "true",
 			"keyWord":     keyWord,
 		}).

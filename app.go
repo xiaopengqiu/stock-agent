@@ -122,7 +122,7 @@ func AddTools(tools []data.Tool) []data.Tool {
 					},
 					"keyWord": map[string]any{
 						"type":        "string",
-						"description": "搜索关键词,多个关键词空格隔开（可输入股票名称或者当前热门板块/行业/概念/标的/事件等）",
+						"description": "搜索关键词（可输入股票名称或者当前热门板块/行业/概念/标的/事件等）",
 					},
 				},
 				Required: []string{"page", "pageSize"},
