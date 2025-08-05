@@ -29,16 +29,17 @@
 
 
 ### 💬 支持大模型/平台
-| 模型 | 状态 | 备注                                                                                                                                                            |
-| --- | --- |---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [OpenAI](https://platform.openai.com/) | ✅ | 可接入任何 OpenAI 接口格式模型                                                                                                                                           |
-| [Ollama](https://ollama.com/) | ✅ | 本地大模型运行平台                                                                                                                                                     |
-| [LMStudio](https://lmstudio.ai/) | ✅ | 本地大模型运行平台                                                                                                                                                     |
-| [AnythingLLM](https://anythingllm.com/) | ✅ | 本地知识库                                                                                                                                                         |
-| [DeepSeek](https://www.deepseek.com/) | ✅ | deepseek-reasoner,deepseek-chat                                                                                                                               |
-| [大模型聚合平台](https://cloud.siliconflow.cn/i/foufCerk) | ✅ | 如：[硅基流动](https://cloud.siliconflow.cn/i/foufCerk)，[火山方舟](https://www.volcengine.com/experience/ark?utm_term=202502dsinvite&ac=DSASUQY5&rc=IJSE43PZ) ,[优云智算](https://www.compshare.cn/image-community?ytag=GPU_YY-gh_gostock) |
+| 模型 | 状态 | 备注                                                                                                                                                                                                                                       |
+| --- | --- |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [OpenAI](https://platform.openai.com/) | ✅ | 可接入任何 OpenAI 接口格式模型                                                                                                                                                                                                                      |
+| [Ollama](https://ollama.com/) | ✅ | 本地大模型运行平台                                                                                                                                                                                                                                |
+| [LMStudio](https://lmstudio.ai/) | ✅ | 本地大模型运行平台                                                                                                                                                                                                                                |
+| [AnythingLLM](https://anythingllm.com/) | ✅ | 本地知识库                                                                                                                                                                                                                                    |
+| [DeepSeek](https://www.deepseek.com/) | ✅ | deepseek-reasoner,deepseek-chat                                                                                                                                                                                                          |
+| [大模型聚合平台](https://cloud.siliconflow.cn/i/foufCerk) | ✅ | 如：[硅基流动](https://cloud.siliconflow.cn/i/foufCerk)，[火山方舟](https://www.volcengine.com/experience/ark?utm_term=202502dsinvite&ac=DSASUQY5&rc=IJSE43PZ) ,[优云智算](https://www.compshare.cn/image-community?ytag=GPU_YY-gh_gostock) ,[302.AI](https://share.302.ai/1KUpfG) |
 
 ### <span style="color: #568DF4;">各位亲爱的朋友们，如果您对这个项目感兴趣，请先给我一个<i style="color: #EA2626;">star</i>吧，谢谢！</span>💕
+- 302.AI：新用户使用邀请码注册，即可领取 $1 测试额度！[注册链接](https://share.302.ai/1KUpfG)
 - 优云智算（by UCloud）：万卡规模4090免费用10小时，新人注册另增50万tokens，海量热门源项目镜像一键部署，[注册链接](https://www.compshare.cn/image-community?ytag=GPU_YY-gh_gostock)
 - 火山方舟：新用户每个模型注册即送50万tokens，[注册链接](https://www.volcengine.com/experience/ark?utm_term=202502dsinvite&ac=DSASUQY5&rc=IJSE43PZ)
 - 硅基流动(siliconflow)，注册即送2000万Tokens，[注册链接](https://cloud.siliconflow.cn/i/foufCerk)
