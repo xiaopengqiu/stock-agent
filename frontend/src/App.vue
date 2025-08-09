@@ -28,7 +28,7 @@ import {
   Wallet, WarningOutline,
 } from '@vicons/ionicons5'
 import {AnalyzeSentiment, GetConfig, GetGroupList,GetVersionInfo} from "../wailsjs/go/main/App";
-import {Dragon, Fire, Gripfire} from "@vicons/fa";
+import {Dragon, Fire, Gripfire, Robot} from "@vicons/fa";
 import {ReportSearch} from "@vicons/tabler";
 import {LocalFireDepartmentRound} from "@vicons/material";
 import {BoxSearch20Regular, CommentNote20Filled} from "@vicons/fluent";
@@ -406,6 +406,26 @@ const menuOptions = ref([
             RouterLink,
             {
               to: {
+                name: 'agent',
+                query: {
+                  name:"Ai智能体",
+                },
+                onClick: () => {
+                  activeKey.value = 'agent'
+                },
+              }
+            },
+            {default: () => 'Ai智能体'}
+        ),
+    key: 'agent',
+    icon: renderIcon(Robot),
+  },
+  {
+    label: () =>
+        h(
+            RouterLink,
+            {
+              to: {
                 name: 'settings',
                 query: {
                   name:"设置",
@@ -441,6 +461,7 @@ const menuOptions = ref([
     icon: renderIcon(LogoGithub),
   },
   {
+    show:false,
     label: () => h("a", {
       href: '#',
       onClick: toggleFullscreen,

@@ -378,6 +378,9 @@ func (receiver StockDataApi) GetStockCodeRealTimeData(StockCodes ...string) (*[]
 			logger.SugaredLogger.Error(err.Error())
 			continue
 		}
+		if stockData == nil {
+			continue
+		}
 		stockInfos = append(stockInfos, *stockData)
 
 		go func() {
@@ -1165,7 +1168,7 @@ func getHKStockPriceInfo(stockCode string, crawlTimeOut int64) *[]string {
 	return &messages
 }
 
-func getZSInfo(name, stockCode string, crawlTimeOut int64) string {
+func GetZSInfo(name, stockCode string, crawlTimeOut int64) string {
 	url := "https://finance.sina.com.cn/realstock/company/" + stockCode + "/nc.shtml"
 	crawlerAPI := CrawlerApi{}
 	crawlerBaseInfo := CrawlerBaseInfo{
@@ -1189,6 +1192,10 @@ func getZSInfo(name, stockCode string, crawlTimeOut int64) string {
 	//price
 	price := strutil.RemoveWhiteSpace(document.Find("div#price").First().Text(), false)
 	hqTime := strutil.RemoveWhiteSpace(document.Find("div#hqTime").First().Text(), false)
+
+	if strutil.ContainsAny(price, []string{"-", "--", ""}) {
+		return "暂无数据"
+	}
 
 	var markdown strings.Builder
 	markdown.WriteString(fmt.Sprintf("### 时间：%s %s：%s \n", hqTime, name, price))

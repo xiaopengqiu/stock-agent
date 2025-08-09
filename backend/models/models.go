@@ -677,3 +677,13 @@ type InteractiveAnswerResults struct {
 	RemindStatus     bool     `json:"remindStatus" md:"-"`
 	InterviewLive    bool     `json:"interviewLive" md:"-"`
 }
+
+type CailianpressWeb struct {
+	Total int `json:"total"`
+	List  []struct {
+		Title   string `json:"title" md:"资讯标题"`
+		Ctime   int    `json:"ctime" md:"资讯时间"`
+		Content string `json:"content" md:"资讯内容"`
+		Author  string `json:"author" md:"资讯发布者"`
+	} `json:"list"`
+}

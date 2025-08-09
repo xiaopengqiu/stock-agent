@@ -22,6 +22,10 @@ export function AnalyzeSentiment(arg1) {
   return window['go']['main']['App']['AnalyzeSentiment'](arg1);
 }
 
+export function ChatWithAgent(arg1, arg2, arg3) {
+  return window['go']['main']['App']['ChatWithAgent'](arg1, arg2, arg3);
+}
+
 export function CheckSponsorCode(arg1) {
   return window['go']['main']['App']['CheckSponsorCode'](arg1);
 }

@@ -4,6 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"go-stock/backend/db"
+	"go-stock/backend/logger"
+	"go-stock/backend/models"
+	"go-stock/backend/util"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/coocood/freecache"
 	"github.com/duke-git/lancet/v2/convertor"
@@ -12,13 +20,6 @@ import (
 	"github.com/robertkrimen/otto"
 	"github.com/samber/lo"
 	"github.com/tidwall/gjson"
-	"go-stock/backend/db"
-	"go-stock/backend/logger"
-	"go-stock/backend/models"
-	"go-stock/backend/util"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // @Author spark
@@ -37,7 +38,7 @@ func (m MarketNewsApi) GetNewTelegraph(crawlTimeOut int64) *[]models.Telegraph {
 	response, _ := resty.New().SetTimeout(time.Duration(crawlTimeOut)*time.Second).R().
 		SetHeader("Referer", "https://www.cls.cn/").
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").
-		Get(fmt.Sprintf(url))
+		Get(url)
 	var telegraphs []models.Telegraph
 	//logger.SugaredLogger.Info(string(response.Body()))
 	document, _ := goquery.NewDocumentFromReader(strings.NewReader(string(response.Body())))
@@ -754,27 +755,27 @@ func (m MarketNewsApi) GetCPI() *models.CPIResp {
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
 		Get(url)
 	if err != nil {
-		logger.SugaredLogger.Errorf("GDP err:%s", err.Error())
+		logger.SugaredLogger.Errorf("GetCPI err:%s", err.Error())
 		return res
 	}
 	body := resp.Body()
-	logger.SugaredLogger.Debugf("GDP:%s", body)
+	logger.SugaredLogger.Debugf("GetCPI:%s", body)
 	vm := otto.New()
 	vm.Run("function data(res){return res};")
 
 	val, err := vm.Run(body)
 	if err != nil {
-		logger.SugaredLogger.Errorf("GDP err:%s", err.Error())
+		logger.SugaredLogger.Errorf("GetCPI err:%s", err.Error())
 		return res
 	}
 	data, _ := val.Object().Value().Export()
-	logger.SugaredLogger.Infof("GDP:%v", data)
+	logger.SugaredLogger.Infof("GetCPI:%v", data)
 	marshal, err := json.Marshal(data)
 	if err != nil {
 		return res
 	}
 	json.Unmarshal(marshal, &res)
-	logger.SugaredLogger.Infof("GDP:%+v", res)
+	logger.SugaredLogger.Infof("GetCPI:%+v", res)
 	return res
 }
 
@@ -789,7 +790,7 @@ func (m MarketNewsApi) GetPPI() *models.PPIResp {
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
 		Get(url)
 	if err != nil {
-		logger.SugaredLogger.Errorf("GDP err:%s", err.Error())
+		logger.SugaredLogger.Errorf("GetPPI err:%s", err.Error())
 		return res
 	}
 	body := resp.Body()
@@ -917,4 +918,23 @@ func (m MarketNewsApi) InteractiveAnswer(page int, pageSize int, keyWord string)
 	logger.SugaredLogger.Debugf("InteractiveAnswer-resp:%s", resp.Body())
 	return answers
 
+}
+
+func (m MarketNewsApi) CailianpressWeb(searchWords string) *models.CailianpressWeb {
+	res := &models.CailianpressWeb{}
+	_, err := resty.New().SetTimeout(time.Second*10).R().
+		SetHeader("Content-Type", "application/json").
+		SetHeader("Host", "www.cls.cn").
+		SetHeader("Origin", "https://www.cls.cn").
+		SetHeader("Referer", "https://www.cls.cn/telegraph").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").
+		SetBody(fmt.Sprintf(`{"app":"CailianpressWeb","os":"web","sv":"8.4.6","category":"","keyword":"%s"}`, searchWords)).
+		SetResult(res).
+		Post("https://www.cls.cn/api/csw?app=CailianpressWeb&os=web&sv=8.4.6&sign=9f8797a1f4de66c2370f7a03990d2737")
+	if err != nil {
+		return nil
+	}
+	logger.SugaredLogger.Debug(res)
+
+	return res
 }

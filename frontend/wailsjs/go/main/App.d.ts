@@ -14,6 +14,8 @@ export function AddStockGroup(arg1:number,arg2:string):Promise<string>;
 
 export function AnalyzeSentiment(arg1:string):Promise<data.SentimentResult>;
 
+export function ChatWithAgent(arg1:string,arg2:number,arg3:any):Promise<void>;
+
 export function CheckSponsorCode(arg1:string):Promise<Record<string, any>>;
 
 export function CheckStockBaseInfo(arg1:context.Context):Promise<void>;

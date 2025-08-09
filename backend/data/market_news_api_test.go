@@ -2,13 +2,14 @@ package data
 
 import (
 	"encoding/json"
-	"github.com/coocood/freecache"
-	"github.com/tidwall/gjson"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"go-stock/backend/util"
 	"strings"
 	"testing"
+
+	"github.com/coocood/freecache"
+	"github.com/tidwall/gjson"
 )
 
 // @Author spark
@@ -79,7 +80,7 @@ func TestStockResearchReport(t *testing.T) {
 
 func TestIndustryResearchReport(t *testing.T) {
 	db.Init("../../data/stock.db")
-	resp := NewMarketNewsApi().IndustryResearchReport("735", 7)
+	resp := NewMarketNewsApi().IndustryResearchReport("456", 7)
 	for _, a := range resp {
 		logger.SugaredLogger.Debugf("value: %+v", a)
 		data := a.(map[string]any)

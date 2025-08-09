@@ -6,6 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go-stock/backend/db"
+	"go-stock/backend/logger"
+	"go-stock/backend/models"
+	"go-stock/backend/util"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/chromedp/chromedp"
 	"github.com/duke-git/lancet/v2/convertor"
@@ -15,13 +23,6 @@ import (
 	"github.com/samber/lo"
 	"github.com/tidwall/gjson"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
-	"go-stock/backend/db"
-	"go-stock/backend/logger"
-	"go-stock/backend/models"
-	"go-stock/backend/util"
-	"strings"
-	"sync"
-	"time"
 )
 
 // @Author spark
@@ -233,16 +234,16 @@ func (o *OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysProm
 		go func() {
 			defer wg.Done()
 			var market strings.Builder
-			market.WriteString(getZSInfo("上证指数", "sh000001", 30) + "\n")
-			market.WriteString(getZSInfo("深证成指", "sz399001", 30) + "\n")
-			market.WriteString(getZSInfo("创业板指数", "sz399006", 30) + "\n")
-			market.WriteString(getZSInfo("科创50", "sh000688", 30) + "\n")
-			market.WriteString(getZSInfo("沪深300指数", "sh000300", 30) + "\n")
-			market.WriteString(getZSInfo("中证银行", "sz399986", 30) + "\n")
-			market.WriteString(getZSInfo("科创芯片", "sh000685", 30) + "\n")
-			market.WriteString(getZSInfo("上证医药", "sh000037", 30) + "\n")
-			market.WriteString(getZSInfo("证券龙头", "sz399437", 30) + "\n")
-			market.WriteString(getZSInfo("中证白酒", "sz399997", 30) + "\n")
+			market.WriteString(GetZSInfo("上证指数", "sh000001", 30) + "\n")
+			market.WriteString(GetZSInfo("深证成指", "sz399001", 30) + "\n")
+			market.WriteString(GetZSInfo("创业板指数", "sz399006", 30) + "\n")
+			market.WriteString(GetZSInfo("科创50", "sh000688", 30) + "\n")
+			market.WriteString(GetZSInfo("沪深300指数", "sh000300", 30) + "\n")
+			market.WriteString(GetZSInfo("中证银行", "sz399986", 30) + "\n")
+			market.WriteString(GetZSInfo("科创芯片", "sh000685", 30) + "\n")
+			market.WriteString(GetZSInfo("上证医药", "sh000037", 30) + "\n")
+			market.WriteString(GetZSInfo("证券龙头", "sz399437", 30) + "\n")
+			market.WriteString(GetZSInfo("中证白酒", "sz399997", 30) + "\n")
 			//logger.SugaredLogger.Infof("NewChatStream getZSInfo=\n%s", market.String())
 			msg = append(msg, map[string]interface{}{
 				"role":    "user",
@@ -399,16 +400,16 @@ func (o *OpenAi) NewSummaryStockNewsStream(userQuestion string, sysPromptId *int
 		go func() {
 			defer wg.Done()
 			var market strings.Builder
-			market.WriteString(getZSInfo("上证指数", "sh000001", 30) + "\n")
-			market.WriteString(getZSInfo("深证成指", "sz399001", 30) + "\n")
-			market.WriteString(getZSInfo("创业板指数", "sz399006", 30) + "\n")
-			market.WriteString(getZSInfo("科创50", "sh000688", 30) + "\n")
-			market.WriteString(getZSInfo("沪深300指数", "sh000300", 30) + "\n")
-			market.WriteString(getZSInfo("中证银行", "sz399986", 30) + "\n")
-			market.WriteString(getZSInfo("科创芯片", "sh000685", 30) + "\n")
-			market.WriteString(getZSInfo("上证医药", "sh000037", 30) + "\n")
-			market.WriteString(getZSInfo("证券龙头", "sz399437", 30) + "\n")
-			market.WriteString(getZSInfo("中证白酒", "sz399997", 30) + "\n")
+			market.WriteString(GetZSInfo("上证指数", "sh000001", 30) + "\n")
+			market.WriteString(GetZSInfo("深证成指", "sz399001", 30) + "\n")
+			market.WriteString(GetZSInfo("创业板指数", "sz399006", 30) + "\n")
+			market.WriteString(GetZSInfo("科创50", "sh000688", 30) + "\n")
+			market.WriteString(GetZSInfo("沪深300指数", "sh000300", 30) + "\n")
+			market.WriteString(GetZSInfo("中证银行", "sz399986", 30) + "\n")
+			market.WriteString(GetZSInfo("科创芯片", "sh000685", 30) + "\n")
+			market.WriteString(GetZSInfo("上证医药", "sh000037", 30) + "\n")
+			market.WriteString(GetZSInfo("证券龙头", "sz399437", 30) + "\n")
+			market.WriteString(GetZSInfo("中证白酒", "sz399997", 30) + "\n")
 			//logger.SugaredLogger.Infof("NewChatStream getZSInfo=\n%s", market.String())
 			msg = append(msg, map[string]interface{}{
 				"role":    "user",
@@ -589,9 +590,9 @@ func (o *OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptI
 		go func() {
 			defer wg.Done()
 			var market strings.Builder
-			market.WriteString(getZSInfo("创业板指数", "sz399006", 30) + "\n")
-			market.WriteString(getZSInfo("上证综合指数", "sh000001", 30) + "\n")
-			market.WriteString(getZSInfo("沪深300指数", "sh000300", 30) + "\n")
+			market.WriteString(GetZSInfo("创业板指数", "sz399006", 30) + "\n")
+			market.WriteString(GetZSInfo("上证综合指数", "sh000001", 30) + "\n")
+			market.WriteString(GetZSInfo("沪深300指数", "sh000300", 30) + "\n")
 			//logger.SugaredLogger.Infof("NewChatStream getZSInfo=\n%s", market.String())
 			msg = append(msg, map[string]interface{}{
 				"role":    "user",
@@ -1570,7 +1571,7 @@ func GetTelegraphList(crawlTimeOut int64) *[]string {
 	response, err := resty.New().SetTimeout(time.Duration(crawlTimeOut)*time.Second).R().
 		SetHeader("Referer", "https://www.cls.cn/").
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").
-		Get(fmt.Sprintf(url))
+		Get(url)
 	if err != nil {
 		return &[]string{}
 	}
@@ -1592,7 +1593,7 @@ func GetTopNewsList(crawlTimeOut int64) *[]string {
 	response, err := resty.New().SetTimeout(time.Duration(crawlTimeOut)*time.Second).R().
 		SetHeader("Referer", "https://www.cls.cn/").
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").
-		Get(fmt.Sprintf(url))
+		Get(url)
 	if err != nil {
 		return &[]string{}
 	}
