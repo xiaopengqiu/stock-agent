@@ -419,6 +419,15 @@ func (receiver StockDataApi) Follow(stockCode string) string {
 	}
 
 	stockCode = strings.ToLower(stockCode)
+
+	// 检查是否已经关注过该股票
+	var existingStock FollowedStock
+	result := db.Dao.Model(&FollowedStock{}).Where("stock_code = ? AND is_del = ?", stockCode, 0).First(&existingStock)
+	if result.Error == nil {
+		// 股票已经关注过
+		return "已经关注了"
+	}
+
 	maxSort := int64(0)
 	db.Dao.Model(&FollowedStock{}).Raw("select max(sort) as sort from followed_stock").Scan(&maxSort)
 
