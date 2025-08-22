@@ -170,6 +170,10 @@ export function IndustryResearchReport(arg1) {
   return window['go']['main']['App']['IndustryResearchReport'](arg1);
 }
 
+export function InitializeGroupSort() {
+  return window['go']['main']['App']['InitializeGroupSort']();
+}
+
 export function InvestCalendarTimeLine(arg1) {
   return window['go']['main']['App']['InvestCalendarTimeLine'](arg1);
 }
@@ -272,4 +276,8 @@ export function UnFollowFund(arg1) {
 
 export function UpdateConfig(arg1) {
   return window['go']['main']['App']['UpdateConfig'](arg1);
+}
+
+export function UpdateGroupSort(arg1, arg2) {
+  return window['go']['main']['App']['UpdateGroupSort'](arg1, arg2);
 }

@@ -1219,6 +1219,14 @@ func (a *App) GetGroupList() []data.Group {
 	return data.NewStockGroupApi(db.Dao).GetGroupList()
 }
 
+func (a *App) UpdateGroupSort(id int, newSort int) bool {
+	return data.NewStockGroupApi(db.Dao).UpdateGroupSort(id, newSort)
+}
+
+func (a *App) InitializeGroupSort() bool {
+	return data.NewStockGroupApi(db.Dao).InitializeGroupSort()
+}
+
 func (a *App) GetGroupStockList(groupId int) []data.GroupStock {
 	return data.NewStockGroupApi(db.Dao).GetGroupStockByGroupId(groupId)
 }
