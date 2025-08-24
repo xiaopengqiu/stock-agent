@@ -3,7 +3,6 @@
 
 package data
 
-import "C"
 import (
 	"go-stock/backend/logger"
 
