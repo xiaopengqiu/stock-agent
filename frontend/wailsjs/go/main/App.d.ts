@@ -88,6 +88,8 @@ export function HotTopic(arg1:number):Promise<Array<any>>;
 
 export function IndustryResearchReport(arg1:string):Promise<Array<any>>;
 
+export function InitializeGroupSort():Promise<boolean>;
+
 export function InvestCalendarTimeLine(arg1:string):Promise<Array<any>>;
 
 export function LongTigerRank(arg1:string):Promise<any>;
@@ -139,3 +141,5 @@ export function UnFollow(arg1:string):Promise<string>;
 export function UnFollowFund(arg1:string):Promise<string>;
 
 export function UpdateConfig(arg1:data.SettingConfig):Promise<string>;
+
+export function UpdateGroupSort(arg1:number,arg2:number):Promise<boolean>;
