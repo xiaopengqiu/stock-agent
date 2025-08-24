@@ -28,7 +28,7 @@ import {
   Wallet, WarningOutline,
 } from '@vicons/ionicons5'
 import {AnalyzeSentiment, GetConfig, GetGroupList,GetVersionInfo} from "../wailsjs/go/main/App";
-import {Dragon, Fire, Gripfire, Robot} from "@vicons/fa";
+import {Dragon, Fire, FirefoxBrowser, Gripfire, Robot} from "@vicons/fa";
 import {ReportSearch} from "@vicons/tabler";
 import {LocalFireDepartmentRound} from "@vicons/material";
 import {BoxSearch20Regular, CommentNote20Filled} from "@vicons/fluent";
@@ -368,6 +368,28 @@ const menuOptions = ref([
             ),
         key: 'market11',
         icon: renderIcon(BoxSearch20Regular),
+      },
+      {
+        label: () =>
+            h(
+                RouterLink,
+                {
+                  href: '#',
+                  to: {
+                    name: 'market',
+                    query: {
+                      name: "名站优选",
+                    }
+                  },
+                  onClick: () => {
+                    activeKey.value = 'market'
+                    EventsEmit("changeMarketTab", {ID: 0, name: '名站优选'})
+                  },
+                },
+                {default: () => '名站优选',}
+            ),
+        key: 'market12',
+        icon: renderIcon(FirefoxBrowser),
       },
     ]
   },

@@ -5,6 +5,14 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"go-stock/backend/data"
+	"go-stock/backend/db"
+	log "go-stock/backend/logger"
+	"go-stock/backend/models"
+	"os"
+	"runtime/debug"
+	"strings"
+
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/logger"
@@ -13,13 +21,6 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/mac"
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
-	"go-stock/backend/data"
-	"go-stock/backend/db"
-	log "go-stock/backend/logger"
-	"go-stock/backend/models"
-	"os"
-	"runtime/debug"
-	"strings"
 )
 
 //go:embed frontend/dist
@@ -125,7 +126,7 @@ func main() {
 	err = wails.Run(&options.App{
 		Title:     "go-stock：AI赋能股票分析✨",
 		Width:     width * 4 / 5,
-		Height:    950,
+		Height:    920,
 		MinWidth:  minWidth,
 		MinHeight: minHeight,
 		//MaxWidth:                 width,

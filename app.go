@@ -7,8 +7,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/duke-git/lancet/v2/cryptor"
-	"github.com/inconshreveable/go-update"
 	"go-stock/backend/data"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
@@ -17,6 +15,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/duke-git/lancet/v2/cryptor"
+	"github.com/inconshreveable/go-update"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/coocood/freecache"
@@ -464,7 +465,10 @@ func (a *App) domReady(ctx context.Context) {
 	//检查新版本
 	go func() {
 		a.CheckUpdate(0)
-		a.CheckStockBaseInfo(a.ctx)
+		a.cron.AddFunc("0 0 2 * * *", func() {
+			logger.SugaredLogger.Errorf("Checking for updates...")
+			a.CheckStockBaseInfo(a.ctx)
+		})
 		a.cron.AddFunc("30 05 8,12,20 * * *", func() {
 			logger.SugaredLogger.Errorf("Checking for updates...")
 			a.CheckUpdate(0)
