@@ -1,11 +1,13 @@
 //go:build windows
+// +build windows
 
 package data
 
 import "C"
 import (
-	"github.com/go-toast/toast"
 	"go-stock/backend/logger"
+
+	"github.com/go-toast/toast"
 )
 
 // AlertWindowsApi @Author spark
