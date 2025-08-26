@@ -465,6 +465,12 @@ func (a *App) domReady(ctx context.Context) {
 	//检查新版本
 	go func() {
 		a.CheckUpdate(0)
+		count := int64(0)
+		db.Dao.Model(&data.StockBasic{}).Count(&count)
+		if count <= 0 {
+			go a.CheckStockBaseInfo(a.ctx)
+		}
+
 		a.cron.AddFunc("0 0 2 * * *", func() {
 			logger.SugaredLogger.Errorf("Checking for updates...")
 			a.CheckStockBaseInfo(a.ctx)
