@@ -465,11 +465,7 @@ func (a *App) domReady(ctx context.Context) {
 	//检查新版本
 	go func() {
 		a.CheckUpdate(0)
-		count := int64(0)
-		db.Dao.Model(&data.StockBasic{}).Count(&count)
-		if count <= 0 {
-			go a.CheckStockBaseInfo(a.ctx)
-		}
+		go a.CheckStockBaseInfo(a.ctx)
 
 		a.cron.AddFunc("0 0 2 * * *", func() {
 			logger.SugaredLogger.Errorf("Checking for updates...")
@@ -524,6 +520,11 @@ func (a *App) CheckStockBaseInfo(ctx context.Context) {
 		SetResult(stockBasics).
 		Get("http://8.134.249.145:18080/go-stock/stock_basic.json")
 
+	count := int64(0)
+	db.Dao.Model(&data.StockBasic{}).Count(&count)
+	if count == int64(len(*stockBasics)) {
+		return
+	}
 	for _, stock := range *stockBasics {
 		stockInfo := &data.StockBasic{
 			TsCode: stock.TsCode,
