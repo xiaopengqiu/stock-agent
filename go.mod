@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/PuerkitoBio/goquery v1.10.1
-	github.com/chromedp/chromedp v0.11.2
+	github.com/chromedp/chromedp v0.14.1
 	github.com/cloudwego/eino v0.4.1
 	github.com/cloudwego/eino-ext/components/model/ark v0.1.19
 	github.com/cloudwego/eino-ext/components/model/deepseek v0.0.0-20250804092122-8845979a2228
@@ -26,7 +26,7 @@ require (
 	github.com/wailsapp/wails/v2 v2.10.1
 	go.uber.org/zap v1.27.0
 	golang.org/x/net v0.38.0
-	golang.org/x/sys v0.35.0
+	golang.org/x/sys v0.36.0
 	golang.org/x/text v0.26.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gorm.io/gorm v1.25.12
@@ -41,7 +41,7 @@ require (
 	github.com/bytedance/sonic v1.14.0 // indirect
 	github.com/bytedance/sonic/loader v0.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/chromedp/cdproto v0.0.0-20241022234722-4d5d5faf59fb // indirect
+	github.com/chromedp/cdproto v0.0.0-20250803210736-d308e07a266d // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/cloudwego/base64x v0.1.6 // indirect
 	github.com/cloudwego/eino-ext/libs/acl/openai v0.0.0-20250804062529-6e67726a4b3f // indirect
@@ -52,6 +52,7 @@ require (
 	github.com/evanphx/json-patch v0.5.2 // indirect
 	github.com/getkin/kin-openapi v0.118.0 // indirect
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
+	github.com/go-json-experiment/json v0.0.0-20250910080747-cc2cfa0554c3 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
