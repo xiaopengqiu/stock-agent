@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"go-stock/backend/db"
+	log "go-stock/backend/logger"
 	"testing"
 )
 
@@ -52,9 +53,12 @@ func TestGetTopNewsList(t *testing.T) {
 
 func TestSearchGuShiTongStockInfo(t *testing.T) {
 	db.Init("../../data/stock.db")
-	SearchGuShiTongStockInfo("hk01810", 60)
-	SearchGuShiTongStockInfo("sh600745", 60)
-	SearchGuShiTongStockInfo("gb_goog", 60)
+	//SearchGuShiTongStockInfo("hk01810", 60)
+	msgs := SearchGuShiTongStockInfo("sh600745", 60)
+	for _, msg := range *msgs {
+		log.SugaredLogger.Infof("%s", msg)
+	}
+	//SearchGuShiTongStockInfo("gb_goog", 60)
 
 }
 

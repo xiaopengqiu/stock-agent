@@ -808,25 +808,25 @@ func (o *OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptI
 				return
 			}
 
-			messages := SearchGuShiTongStockInfo(stockCode, o.CrawlTimeOut)
-			if messages == nil || len(*messages) == 0 {
-				logger.SugaredLogger.Error("获取股势通资讯失败")
-				//ch <- "***❗获取股势通资讯失败,分析结果可能不准确***<hr>"
-				//go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取股势通资讯失败,分析结果可能不准确")
-				return
-			}
-			var newsText strings.Builder
-			for _, message := range *messages {
-				newsText.WriteString(message + "\n")
-			}
-			msg = append(msg, map[string]interface{}{
-				"role":    "user",
-				"content": stock + "相关新闻资讯",
-			})
-			msg = append(msg, map[string]interface{}{
-				"role":    "assistant",
-				"content": newsText.String(),
-			})
+			//messages := SearchGuShiTongStockInfo(stockCode, o.CrawlTimeOut)
+			//if messages == nil || len(*messages) == 0 {
+			//	logger.SugaredLogger.Error("获取股势通资讯失败")
+			//	//ch <- "***❗获取股势通资讯失败,分析结果可能不准确***<hr>"
+			//	//go runtime.EventsEmit(o.ctx, "warnMsg", "❗获取股势通资讯失败,分析结果可能不准确")
+			//	return
+			//}
+			//var newsText strings.Builder
+			//for _, message := range *messages {
+			//	newsText.WriteString(message + "\n")
+			//}
+			//msg = append(msg, map[string]interface{}{
+			//	"role":    "user",
+			//	"content": stock + "相关新闻资讯",
+			//})
+			//msg = append(msg, map[string]interface{}{
+			//	"role":    "assistant",
+			//	"content": newsText.String(),
+			//})
 		}()
 
 		go func() {
