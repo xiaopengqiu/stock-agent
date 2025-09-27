@@ -131,31 +131,31 @@ func AddTools(tools []data.Tool) []data.Tool {
 		},
 	})
 
-	tools = append(tools, data.Tool{
-		Type: "function",
-		Function: data.ToolFunction{
-			Name:        "QueryBKDictInfo",
-			Description: "获取所有板块/行业名称或者代码(bkCode,bkName)",
-		},
-	})
+	//tools = append(tools, data.Tool{
+	//	Type: "function",
+	//	Function: data.ToolFunction{
+	//		Name:        "QueryBKDictInfo",
+	//		Description: "获取所有板块/行业名称或者代码(bkCode,bkName)",
+	//	},
+	//})
 
-	tools = append(tools, data.Tool{
-		Type: "function",
-		Function: data.ToolFunction{
-			Name:        "GetIndustryResearchReport",
-			Description: "获取行业/板块研究报告,请先使用QueryBKDictInfo工具获取行业代码，然后输入行业代码调用",
-			Parameters: data.FunctionParameters{
-				Type: "object",
-				Properties: map[string]any{
-					"bkCode": map[string]any{
-						"type":        "string",
-						"description": "板块/行业代码",
-					},
-				},
-				Required: []string{"bkCode"},
-			},
-		},
-	})
+	//tools = append(tools, data.Tool{
+	//	Type: "function",
+	//	Function: data.ToolFunction{
+	//		Name:        "GetIndustryResearchReport",
+	//		Description: "获取行业/板块研究报告,请先使用QueryBKDictInfo工具获取行业代码，然后输入行业代码调用",
+	//		Parameters: data.FunctionParameters{
+	//			Type: "object",
+	//			Properties: map[string]any{
+	//				"bkCode": map[string]any{
+	//					"type":        "string",
+	//					"description": "板块/行业代码",
+	//				},
+	//			},
+	//			Required: []string{"bkCode"},
+	//		},
+	//	},
+	//})
 
 	tools = append(tools, data.Tool{
 		Type: "function",
