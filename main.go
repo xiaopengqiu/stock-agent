@@ -228,6 +228,7 @@ func AutoMigrate() {
 	db.Dao.AutoMigrate(&models.TelegraphTags{})
 	db.Dao.AutoMigrate(&models.LongTigerRankData{})
 	db.Dao.AutoMigrate(&data.AIConfig{})
+	db.Dao.AutoMigrate(&models.BKDict{})
 
 	updateMultipleModel()
 }

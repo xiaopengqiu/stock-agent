@@ -73,6 +73,7 @@ func GetStockAiAgent(ctx *context.Context, aiConfig data.AIConfig) *react.Agent 
 			tools.GetFinancialReportTool(),
 			tools.GetQueryStockNewsTool(),
 			tools.GetIndustryResearchReportTool(),
+			tools.GetQueryBKDictTool(),
 		},
 	}
 	// 创建 agent

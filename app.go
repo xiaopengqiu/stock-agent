@@ -131,6 +131,50 @@ func AddTools(tools []data.Tool) []data.Tool {
 		},
 	})
 
+	tools = append(tools, data.Tool{
+		Type: "function",
+		Function: data.ToolFunction{
+			Name:        "QueryBKDictInfo",
+			Description: "获取所有板块/行业名称或者代码(bkCode,bkName)",
+		},
+	})
+
+	tools = append(tools, data.Tool{
+		Type: "function",
+		Function: data.ToolFunction{
+			Name:        "GetIndustryResearchReport",
+			Description: "获取行业/板块研究报告",
+			Parameters: data.FunctionParameters{
+				Type: "object",
+				Properties: map[string]any{
+					"bkCode": map[string]any{
+						"type":        "string",
+						"description": "板块/行业代码",
+					},
+				},
+				Required: []string{"bkCode"},
+			},
+		},
+	})
+
+	tools = append(tools, data.Tool{
+		Type: "function",
+		Function: data.ToolFunction{
+			Name:        "GetStockResearchReport",
+			Description: "获取机构的股票分析/研究报告",
+			Parameters: data.FunctionParameters{
+				Type: "object",
+				Properties: map[string]any{
+					"stockCode": map[string]any{
+						"type":        "string",
+						"description": "股票代码",
+					},
+				},
+				Required: []string{"stockCode"},
+			},
+		},
+	})
+
 	return tools
 }
 

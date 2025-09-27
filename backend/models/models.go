@@ -1,9 +1,10 @@
 package models
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 	"gorm.io/plugin/soft_delete"
-	"time"
 )
 
 // @Author spark
@@ -686,4 +687,17 @@ type CailianpressWeb struct {
 		Content string `json:"content" md:"资讯内容"`
 		Author  string `json:"author" md:"资讯发布者"`
 	} `json:"list"`
+}
+
+type BKDict struct {
+	gorm.Model  `md:"-"`
+	BkCode      string `json:"bkCode" md:"行业/板块代码"`
+	BkName      string `json:"bkName" md:"行业/板块名称"`
+	FirstLetter string `json:"firstLetter" md:"first_letter"`
+	FubkCode    string `json:"fubkCode" md:"fubk_code"`
+	PublishCode string `json:"publishCode" md:"publish_code"`
+}
+
+func (b BKDict) TableName() string {
+	return "bk_dict"
 }

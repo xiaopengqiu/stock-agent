@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
+	"go-stock/backend/models"
 	"go-stock/backend/util"
 	"strings"
 	"testing"
@@ -75,6 +76,9 @@ func TestStockResearchReport(t *testing.T) {
 	resp := NewMarketNewsApi().StockResearchReport("600584.sh", 7)
 	for _, a := range resp {
 		logger.SugaredLogger.Debugf("value: %+v", a)
+		data := a.(map[string]any)
+		logger.SugaredLogger.Debugf("value: %s  infoCode:%s", data["title"], data["infoCode"])
+		NewMarketNewsApi().GetIndustryReportInfo(data["infoCode"].(string))
 	}
 }
 
@@ -108,7 +112,11 @@ func TestEMDictCode(t *testing.T) {
 	if err != nil {
 		return
 	}
+	dict := &[]models.BKDict{}
+	json.Unmarshal(bytes, dict)
 	logger.SugaredLogger.Debugf("value: %s", string(bytes))
+	md := util.MarkdownTableWithTitle("行业/板块代码", dict)
+	logger.SugaredLogger.Debugf(md)
 
 }
 
