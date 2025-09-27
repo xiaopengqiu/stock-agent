@@ -143,7 +143,7 @@ func AddTools(tools []data.Tool) []data.Tool {
 		Type: "function",
 		Function: data.ToolFunction{
 			Name:        "GetIndustryResearchReport",
-			Description: "获取行业/板块研究报告",
+			Description: "获取行业/板块研究报告,请先使用QueryBKDictInfo工具获取行业代码，然后输入行业代码调用",
 			Parameters: data.FunctionParameters{
 				Type: "object",
 				Properties: map[string]any{
