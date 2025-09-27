@@ -1853,8 +1853,8 @@ function updateTab(name) {
   })
 }
 
-function delTab(name) {
-  let infos = groupList.value = groupList.value.filter(item => item.ID === Number(name))
+function delTab(groupId) {
+  let infos = groupList.value = groupList.value.filter(item => item.ID === Number(groupId))
   dialog.create({
     title: '删除分组',
     type: 'warning',
@@ -1862,7 +1862,7 @@ function delTab(name) {
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: () => {
-      RemoveGroup(name).then(result => {
+      RemoveGroup(Number(groupId)).then(result => {
         message.info(result)
         GetGroupList().then(result => {
           groupList.value = result

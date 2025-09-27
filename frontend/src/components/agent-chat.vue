@@ -14,7 +14,7 @@
       <template #content="{ item, index }">
         <t-chat-reasoning v-if="item.role === 'assistant'"  expand-icon-placement="right">
           <t-chat-loading v-if="isStreamLoad" text="思考中..." />
-<!--          <t-chat-content v-if="item.reasoning.length > 0" :content="item.reasoning" />-->
+          <t-chat-content v-if="item.reasoning.length > 0" :content="item.reasoning" />
         </t-chat-reasoning>
         <t-chat-content v-if="item.content.length > 0" :content="item.content" />
       </template>
@@ -97,9 +97,9 @@ EventsOn("agent-message", (data) => {
   if(data['role']==="assistant"){
     loading.value = false;
     const lastItem = chatList.value[0];
-    // if (data['reasoning_content']){
-    //   lastItem.reasoning = data['reasoning_content'];
-    // }
+    if (data['reasoning_content']){
+      lastItem.reasoning += data['reasoning_content'];
+    }
     if (data['content']){
       lastItem.content +=data['content'];
     }

@@ -79,7 +79,7 @@ func GetStockAiAgent(ctx *context.Context, aiConfig data.AIConfig) *react.Agent 
 	agent, err := react.NewAgent(*ctx, &react.AgentConfig{
 		ToolCallingModel: toolableChatModel,
 		ToolsConfig:      aiTools,
-		MaxStep:          len(aiTools.Tools)*3 + 2,
+		MaxStep:          len(aiTools.Tools)*1 + 3,
 		MessageModifier: func(ctx context.Context, input []*schema.Message) []*schema.Message {
 			return input
 		},
