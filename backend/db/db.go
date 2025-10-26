@@ -53,3 +53,9 @@ func Init(sqlitePath string) {
 	dbCon.SetConnMaxLifetime(time.Hour)
 	Dao = openDb
 }
+
+func CheckTableEmpty(tableName string) bool {
+	var count int64
+	Dao.Table(tableName).Count(&count)
+	return count == 0
+}

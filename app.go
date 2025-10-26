@@ -32,12 +32,23 @@ import (
 
 // App struct
 type App struct {
-	ctx         context.Context
-	cache       *freecache.Cache
-	cron        *cron.Cron
-	cronEntrys  map[string]cron.EntryID
-	AiTools     []data.Tool
-	SponsorInfo map[string]any
+	ctx               context.Context
+	cache             *freecache.Cache
+	cron              *cron.Cron
+	cronEntrys        map[string]cron.EntryID
+	AiTools           []data.Tool
+	SponsorInfo       map[string]any
+	PromptTemplateSvc *data.PromptTemplateApi
+}
+
+type ConfigWithPrompt struct {
+	Config  *data.SettingConfig
+	Prompts *[]models.PromptTemplate `json:"prompts"`
+}
+
+func (c ConfigWithPrompt) Export() string {
+	d, _ := json.MarshalIndent(c, "", "    ")
+	return string(d)
 }
 
 // NewApp creates a new App application struct
@@ -49,10 +60,11 @@ func NewApp() *App {
 	var tools []data.Tool
 	tools = AddTools(tools)
 	return &App{
-		cache:      cache,
-		cron:       c,
-		cronEntrys: make(map[string]cron.EntryID),
-		AiTools:    tools,
+		cache:             cache,
+		cron:              c,
+		cronEntrys:        make(map[string]cron.EntryID),
+		AiTools:           tools,
+		PromptTemplateSvc: data.NewPromptTemplateApi(),
 	}
 }
 

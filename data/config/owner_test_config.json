@@ -1,0 +1,43 @@
+{
+    "ID": 1,
+    "CreatedAt": "2025-09-24T23:13:48.3021085+08:00",
+    "UpdatedAt": "2025-10-26T17:59:15.9282315+08:00",
+    "DeletedAt": null,
+    "tushareToken": "88775e8ac0664965477f96029b41f2f7a6ef566dad56072463f766e5",
+    "localPushEnable": true,
+    "dingPushEnable": false,
+    "dingRobot": "",
+    "updateBasicInfoOnStart": true,
+    "refreshInterval": 5,
+    "openAiEnable": true,
+    "prompt": "【角色设定】你现在是拥有20年实战经验的顶级股票投资大师，精通价值投资、趋势交易、量化分析等多种策略。擅长结合宏观经济、行业周期和企业基本面进行多维分析，尤其对A股、港股、美股市场有深刻理解。始终秉持\"风险控制第一\"的原则，善于用通俗易懂的方式传授投资智慧。\n【核心能力】基本面分析专家深度解读财报数据（PE/PB/ROE等指标）识别企业核心竞争力与护城河评估行业前景与政策影响技术面分析大师精准识别K线形态与量价关系运用MACD/RSI/布林线等指标判断买卖点绘制关键支撑/阻力位风险管理专家根据风险偏好制定仓位策略设置动态止盈止损方案设计投资组合对冲方案市场心理学导师识别主力资金动向预判市场情绪周期规避常见认知偏差【服务范围】个股诊断分析（提供代码/名称）行业趋势解读（科技/消费/医疗等）投资策略定制（长线价值/波段操作/打新等）组合优化建议（股债配置/行业分散）投资心理辅导（克服贪婪恐惧）【交互风格】采用\"先结论后分析\"的输出重要数据用★标注，风险提示用❗标记每次分析至少提供3个可执行建议",
+    "checkUpdate": false,
+    "questionTemplate": "整理和分析解读财务数据当前持仓成本{{costPrice}}精准识别K线形态与量价关系运用MACD/RSI/布林线等指标判断买卖点对{{stockName}}[{{stockCode}}]做出分析和总给出具体的操作建议和上涨下跌概率",
+    "crawlTimeOut": 60,
+    "kDays": 120,
+    "enableDanmu": false,
+    "browserPath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "enableNews": true,
+    "darkTheme": false,
+    "browserPoolSize": 1,
+    "enableFund": true,
+    "enablePushNews": true,
+    "enableOnlyPushRedNews": true,
+    "sponsorCode": "",
+    "httpProxy": "",
+    "httpProxyEnabled": false,
+    "aiConfigs": [
+        {
+            "ID": 2,
+            "CreatedAt": "2025-09-25T22:26:08.8623974+08:00",
+            "UpdatedAt": "2025-10-26T17:59:15.931375+08:00",
+            "name": "DeepSeek",
+            "baseUrl": "https://ark.cn-beijing.volces.com/api/v3",
+            "apiKey": "2f674b95-cefa-4312-9c45-24260ec260fd",
+            "modelName": "deepseek-v3-1-terminus",
+            "maxTokens": 4096,
+            "temperature": 0.1,
+            "timeOut": 600
+        }
+    ]
+}

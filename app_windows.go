@@ -88,6 +88,7 @@ func OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceData) {
 	time.Sleep(time.Second * 3)
 }
 
+// MonitorStockPrices 监控股票价格
 func MonitorStockPrices(a *App) {
 	dest := &[]data.FollowedStock{}
 	db.Dao.Model(&data.FollowedStock{}).Find(dest)

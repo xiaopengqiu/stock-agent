@@ -383,21 +383,6 @@ function deletePrompt(ID) {
               <n-input type="text" placeholder="http代理地址" v-model:value="formValue.httpProxy" clearable/>
             </n-form-item-gi>
 
-
-            <n-gi :span="24" v-if="formValue.openAI.enable">
-              <n-divider title-placement="left">Prompt 内容设置</n-divider>
-            </n-gi>
-            <n-form-item-gi :span="12" v-if="formValue.openAI.enable" label="模型系统 Prompt" path="openAI.prompt">
-              <n-input v-model:value="formValue.openAI.prompt" type="textarea" :show-count="true"
-                       placeholder="请输入系统prompt" :autosize="{ minRows: 4, maxRows: 8 }"/>
-            </n-form-item-gi>
-            <n-form-item-gi :span="12" v-if="formValue.openAI.enable" label="模型用户 Prompt"
-                            path="openAI.questionTemplate">
-              <n-input v-model:value="formValue.openAI.questionTemplate" type="textarea" :show-count="true"
-                       placeholder="请输入用户prompt:例如{{stockName}}[{{stockCode}}]分析和总结"
-                       :autosize="{ minRows: 4, maxRows: 8 }"/>
-            </n-form-item-gi>
-
             <n-gi :span="24" v-if="formValue.openAI.enable">
               <n-divider title-placement="left">AI模型服务配置</n-divider>
             </n-gi>
@@ -439,9 +424,35 @@ function deletePrompt(ID) {
                     </n-form-item-gi>
                   </n-grid>
                 </n-card>
-                <n-button type="primary" dashed @click="addAiConfig" style="width: 100%;">+ 添加AI配置</n-button>
+                <n-button type="primary" dashed @click=" addAiConfig" style="width: 100%;">+ 添加AI配置</n-button>
               </n-space>
             </n-gi>
+
+            <n-gi :span="24" v-if="formValue.openAI.enable">
+              <n-divider title-placement="left">Prompt 内容设置</n-divider>
+            </n-gi>
+            <n-form-item-gi :span="12" v-if="formValue.openAI.enable" label="模型系统 Prompt" path="openAI.prompt">
+              <n-input v-model:value="formValue.openAI.prompt" type="textarea" :show-count="true"
+                       placeholder="请输入系统prompt" :autosize="{ minRows: 4, maxRows: 8 }"/>
+            </n-form-item-gi>
+            <n-form-item-gi :span="12" v-if="formValue.openAI.enable" label="模型用户 Prompt"
+                            path="openAI.questionTemplate">
+              <n-input v-model:value="formValue.openAI.questionTemplate" type="textarea" :show-count="true"
+                       placeholder="请输入用户prompt:例如{{stockName}}[{{stockCode}}]分析和总结"
+                       :autosize="{ minRows: 4, maxRows: 8 }"/>
+            </n-form-item-gi>
+
+            <n-flex justify="start" style="margin-top: 10px" v-if="promptTemplates.length > 0">
+              <n-tag :bordered="false" type="warning">提示词模板:</n-tag>
+              <n-tag size="medium" secondary v-for="prompt in promptTemplates" closable
+                     @close="deletePrompt(prompt.ID)" @click="editPrompt(prompt)" :title="prompt.content"
+                     :type="prompt.type === '模型系统Prompt' ? 'success' : 'info'" :bordered="false">{{
+                  prompt.name
+                }}
+              </n-tag>
+            </n-flex>
+
+            <n-button type="primary" dashed @click=" managePrompts" style="width: 100%;">+ 添加提示词模板</n-button>
 
             <n-gi :span="24">
               <n-divider/>
@@ -450,21 +461,11 @@ function deletePrompt(ID) {
             <n-gi :span="24">
               <n-space vertical>
                 <n-space justify="center">
-                  <n-button type="warning" @click="managePrompts">管理提示词模板</n-button>
                   <n-button type="primary" strong @click="saveConfig">保存设置</n-button>
                   <n-button type="info" @click="exportConfig">导出配置</n-button>
                   <n-button type="error" @click="importConfig">导入配置</n-button>
                 </n-space>
 
-                <n-flex justify="start" style="margin-top: 10px" v-if="promptTemplates.length > 0">
-                  <n-tag :bordered="false" type="warning">提示词模板:</n-tag>
-                  <n-tag size="medium" secondary v-for="prompt in promptTemplates" closable
-                         @close="deletePrompt(prompt.ID)" @click="editPrompt(prompt)" :title="prompt.content"
-                         :type="prompt.type === '模型系统Prompt' ? 'success' : 'info'" :bordered="false">{{
-                      prompt.name
-                    }}
-                  </n-tag>
-                </n-flex>
               </n-space>
             </n-gi>
 

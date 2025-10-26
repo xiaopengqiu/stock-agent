@@ -7,6 +7,8 @@ import (
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"gorm.io/gorm"
+	"os"
+	"strings"
 	"time"
 )
 
@@ -53,6 +55,8 @@ type AIConfig struct {
 	Temperature float64 `json:"temperature"`
 	TimeOut     int     `json:"timeOut"`
 }
+
+var OS_PATH_ENV = "ENV"
 
 func (AIConfig) TableName() string {
 	return "ai_config"
@@ -228,4 +232,24 @@ func GetSettingConfig() *SettingConfig {
 	settingConfig.AiConfigs = aiConfigs
 
 	return settingConfig
+}
+
+// InitOwnerConfig 个人测试时初始化配置，todo 正式发布时需要删除
+func InitOwnerConfig() {
+	env := os.Getenv(OS_PATH_ENV)
+	if !strings.EqualFold(env, "dev") {
+		return
+	}
+
+	bytes, err := os.ReadFile("./data/config/owner_test_config.json")
+	if err != nil {
+		return
+	}
+	var config SettingConfig
+	err = json.Unmarshal(bytes, &config)
+	if err != nil {
+		return
+	}
+
+	UpdateConfig(&config)
 }

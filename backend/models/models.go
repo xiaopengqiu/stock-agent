@@ -210,7 +210,7 @@ type Resp struct {
 }
 
 type PromptTemplate struct {
-	ID        int `gorm:"primarykey"`
+	ID        int `gorm:"primarykey" json:"ID"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Name      string `json:"name"`

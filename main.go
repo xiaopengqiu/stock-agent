@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"embed"
+	_ "embed"
 	"encoding/json"
 	"fmt"
+	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"go-stock/backend/data"
 	"go-stock/backend/db"
 	log "go-stock/backend/logger"
@@ -22,9 +24,6 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
-
-//go:embed frontend/dist
-var assets embed.FS
 
 //go:embed build/appicon.png
 var icon []byte
@@ -49,6 +48,9 @@ var stocksBinHK []byte
 
 //go:embed build/stock_base_info_us.json
 var stocksBinUS []byte
+
+//go:embed all:frontend/dist
+var assets embed.FS
 
 //go:generate cp -R ./data ./build/bin
 
@@ -138,7 +140,6 @@ func main() {
 		HideWindowOnClose:        false,
 		EnableDefaultContextMenu: true,
 		BackgroundColour:         backgroundColour,
-		Assets:                   assets,
 		Menu:                     AppMenu,
 		Logger:                   nil,
 		LogLevel:                 logger.DEBUG,
@@ -154,6 +155,9 @@ func main() {
 		},
 		Bind: []interface{}{
 			app,
+		},
+		AssetServer: &assetserver.Options{
+			Assets: assets,
 		},
 		// Windows platform specific options
 		Windows: &windows.Options{
@@ -231,6 +235,8 @@ func AutoMigrate() {
 	db.Dao.AutoMigrate(&models.BKDict{})
 
 	updateMultipleModel()
+
+	data.InitOwnerConfig()
 }
 
 func initStockDataUS(ctx context.Context) {
