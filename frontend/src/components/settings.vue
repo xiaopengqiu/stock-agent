@@ -443,7 +443,7 @@ function deletePrompt(ID) {
             </n-form-item-gi>
 
             <n-flex justify="start" style="margin-top: 10px" v-if="promptTemplates.length > 0">
-              <n-tag :bordered="false" type="warning">提示词模板:</n-tag>
+              <n-tag :bordered="false" type="warning">模型用户 Prompt:</n-tag>
               <n-tag size="medium" secondary v-for="prompt in promptTemplates" closable
                      @close="deletePrompt(prompt.ID)" @click="editPrompt(prompt)" :title="prompt.content"
                      :type="prompt.type === '模型系统Prompt' ? 'success' : 'info'" :bordered="false">{{

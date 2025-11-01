@@ -6,5 +6,7 @@
 - [ ] 指标选股bug fix
 - [ ] ai分析历史版本管理
 - [ ] ai分析、工具调用逻辑优化
+  - 补充调用函数
+  - 增加金融数据获取api
 - [ ] 多agent
 - ![img_1.png](picture/multi-agent.png)
