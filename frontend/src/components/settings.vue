@@ -488,29 +488,51 @@ function deletePrompt(ID) {
               </n-alert>
             </n-form-item-gi>
 
+            <n-gi :span="24" v-if="promptTemplates.length > 0 && promptTemplates.some(p => p.type === '模型系统Prompt')">
+              <n-form-item-gi :span="24" label="模型系统 Prompt 模板">
+                <n-tag size="medium"
+                       secondary
+                       v-for="prompt in promptTemplates"
+                       v-if="prompt.type === '模型系统Prompt'"
+                       closable
+                       @close="deletePrompt(prompt.ID)"
+                       @click="editPrompt(prompt)"
+                       :title="prompt.content"
+                       :type="'success'"
+                       :bordered="false">
+                  {{ prompt.name }}
+                </n-tag>
+              </n-form-item-gi>
+            </n-gi>
 
-            <n-flex justify="start" style="margin-top: 10px" v-if="promptTemplates.length > 0">
-              <n-tag :bordered="false" type="warning">模型系统 Prompt 模板:</n-tag>
-              <n-tag size="medium" secondary v-for="prompt in promptTemplates" v-if="prompt.type === '模型系统Prompt'" closable
-                     @close="deletePrompt(prompt.ID)" @click="editPrompt(prompt)" :title="prompt.content"
-                     :type="success" :bordered="false">{{
-                  prompt.name
-                }}
-              </n-tag>
-            </n-flex>
-            <n-flex justify="start" style="margin-top: 10px" v-if="promptTemplates.length > 0">
-              <n-tag :bordered="false" type="warning">模型用户 Prompt 模板:</n-tag>
-              <n-tag size="medium" secondary v-for="prompt in promptTemplates" v-if="prompt.type === '模型用户Prompt'" closable
-                     @close="deletePrompt(prompt.ID)" @click="editPrompt(prompt)" :title="prompt.content"
-                     :type="info" :bordered="false">{{
-                  prompt.name
-                }}
-              </n-tag>
-            </n-flex>
+            <n-gi :span="24" v-if="promptTemplates.length > 0 && promptTemplates.some(p => p.type === '模型用户Prompt')">
+              <n-form-item-gi :span="24" label="模型用户 Prompt 模板">
+                <n-tag size="medium"
+                       secondary
+                       v-for="prompt in promptTemplates"
+                       v-if="prompt.type === '模型用户Prompt'"
+                       closable
+                       @close="deletePrompt(prompt.ID)"
+                       @click="editPrompt(prompt)"
+                       :title="prompt.content"
+                       :type="'info'"
+                       :bordered="false">
+                  {{ prompt.name }}
+                </n-tag>
+              </n-form-item-gi>
+            </n-gi>
 
-            <n-button type="primary" dashed @click="managePrompts" style="width: 100%;">添加提示词模板</n-button>
-            <n-button type="info" dashed @click="" style="width: 100%;">导出提示词模板</n-button>
-            <n-button type="info" dashed @click="importPrompt" style="width: 100%;">导入 提示词模板</n-button>
+
+            <n-gi :span="24">
+              <n-space vertical>
+                <n-space justify="center">
+                  <n-button type="primary" dashed @click="managePrompts" style="width: 100%;">添加提示词模板</n-button>
+                  <n-button type="info" dashed @click="exportPrompts" style="width: 100%;">导出提示词模板</n-button>
+                  <n-button type="info" dashed @click="importPrompt" style="width: 100%;">导入 提示词模板</n-button>
+                </n-space>
+
+              </n-space>
+            </n-gi>
 
 
           </n-grid>

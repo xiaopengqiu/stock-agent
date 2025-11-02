@@ -54,6 +54,10 @@ export function ExportConfig() {
   return window['go']['main']['App']['ExportConfig']();
 }
 
+export function ExportPrompts() {
+  return window['go']['main']['App']['ExportPrompts']();
+}
+
 export function Follow(arg1) {
   return window['go']['main']['App']['Follow'](arg1);
 }
@@ -280,7 +284,4 @@ export function UpdateConfig(arg1) {
 
 export function UpdateGroupSort(arg1, arg2) {
   return window['go']['main']['App']['UpdateGroupSort'](arg1, arg2);
-}
-export function ExportPrompts() {
-  return window['go']['main']['App']['ExportPrompts']();
 }
