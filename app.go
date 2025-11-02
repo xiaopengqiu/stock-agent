@@ -1259,6 +1259,39 @@ func (a *App) AddPrompt(prompt models.Prompt) string {
 func (a *App) DelPrompt(id uint) string {
 	return data.NewPromptTemplateApi().DelPrompt(id)
 }
+func (a *App) ExportPrompts() string {
+	prompts := a.PromptTemplateSvc.Export()
+	// 获取当前路径
+	dir, err := os.Getwd()
+	if err != nil {
+		logger.SugaredLogger.Error(err)
+		return "导出 Prompt 模板失败:" + err.Error()
+	}
+	// 不存在则创建
+	defaultDir := filepath.Join(dir, "data/prompt")
+	if err := os.MkdirAll(defaultDir, os.ModePerm); err != nil {
+		logger.SugaredLogger.Error(err)
+		return "导出 Prompt 模板失败:" + err.Error()
+	}
+
+	file, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:                "导出 Prompt 模板",
+		CanCreateDirectories: true,
+		DefaultFilename:      "prompt.json",
+		DefaultDirectory:     defaultDir,
+	})
+	if err != nil {
+		logger.SugaredLogger.Error(err)
+		return "导出 Prompt 模板失败" + err.Error()
+	}
+	err = os.WriteFile(file, []byte(prompts), os.ModePerm)
+	if err != nil {
+		logger.SugaredLogger.Error(err)
+		return "导出 Prompt 模板失败:" + err.Error()
+	}
+	return "导出 Prompt 模板成功:" + file
+}
+
 func (a *App) SetStockAICron(cronText, stockCode string) {
 	data.NewStockDataApi().SetStockAICron(cronText, stockCode)
 	if strutil.HasPrefixAny(stockCode, []string{"gb_"}) {

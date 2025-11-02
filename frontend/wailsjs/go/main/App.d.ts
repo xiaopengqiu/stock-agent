@@ -143,3 +143,5 @@ export function UnFollowFund(arg1:string):Promise<string>;
 export function UpdateConfig(arg1:data.SettingConfig):Promise<string>;
 
 export function UpdateGroupSort(arg1:number,arg2:number):Promise<boolean>;
+
+export function ExportPrompts():Promise<string>;

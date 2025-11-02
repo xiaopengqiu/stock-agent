@@ -6,11 +6,12 @@ import {
   GetConfig,
   GetPromptTemplates,
   SendDingDingMessageByType,
-  UpdateConfig, CheckSponsorCode
+  UpdateConfig, CheckSponsorCode, ExportPrompts
 } from "../../wailsjs/go/main/App";
 import {NTag, useMessage} from "naive-ui";
 import {data, models} from "../../wailsjs/go/models";
 import {EventsEmit} from "../../wailsjs/runtime";
+import NButton from "../App.vue";
 
 const message = useMessage()
 
@@ -277,6 +278,36 @@ function savePrompt() {
   })
 }
 
+function exportPrompts() {
+  ExportPrompts().then(res => {
+    message.info(res)
+  })
+}
+
+function importPrompt() {
+  let input = document.createElement('input')
+  input.type = 'file'
+  input.accept = '.json'
+  input.onchange = (e) => {
+    let file = e.target.files[0]
+    let reader  = new FileReader()
+    reader.onload = (e) => {
+      let prompts = JSON.parse(e.target.result)
+      prompts.forEach((prompt, index) => {
+        let data = {
+          ID: prompt.ID,
+          Name: prompt.Name,
+          Content: prompt.Content,
+          Type: prompt.Type
+        }
+        AddPrompt(data)
+      })
+    }
+    reader.readAsText(file)
+  }
+  input.click()
+}
+
 function editPrompt(prompt) {
   formPrompt.value.ID = prompt.ID
   formPrompt.value.Name = prompt.name
@@ -477,7 +508,9 @@ function deletePrompt(ID) {
               </n-tag>
             </n-flex>
 
-            <n-button type="primary" dashed @click=" managePrompts" style="width: 100%;">+ 添加提示词模板</n-button>
+            <n-button type="primary" dashed @click="managePrompts" style="width: 100%;">添加提示词模板</n-button>
+            <n-button type="info" dashed @click="" style="width: 100%;">导出提示词模板</n-button>
+            <n-button type="info" dashed @click="importPrompt" style="width: 100%;">导入 提示词模板</n-button>
 
 
           </n-grid>

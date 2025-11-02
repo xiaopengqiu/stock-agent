@@ -281,3 +281,6 @@ export function UpdateConfig(arg1) {
 export function UpdateGroupSort(arg1, arg2) {
   return window['go']['main']['App']['UpdateGroupSort'](arg1, arg2);
 }
+export function ExportPrompts() {
+  return window['go']['main']['App']['ExportPrompts']();
+}

@@ -1,12 +1,17 @@
 package data
 
 import (
+	"encoding/json"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"go-stock/backend/models"
 )
 
 type PromptTemplateApi struct {
+}
+
+func NewPromptTemplateApi() *PromptTemplateApi {
+	return &PromptTemplateApi{}
 }
 
 func (t PromptTemplateApi) GetPromptTemplates(name string, promptType string) *[]models.PromptTemplate {
@@ -70,6 +75,9 @@ func (t PromptTemplateApi) GetPromptTemplateByID(id int) string {
 	logger.SugaredLogger.Infof("GetPromptTemplateByID:%d %s", id, prompt.Content)
 	return prompt.Content
 }
-func NewPromptTemplateApi() *PromptTemplateApi {
-	return &PromptTemplateApi{}
+
+func (t PromptTemplateApi) Export() string {
+	prompts := t.GetPromptTemplates("", "")
+	d, _ := json.MarshalIndent(prompts, "", "  ")
+	return string(d)
 }
