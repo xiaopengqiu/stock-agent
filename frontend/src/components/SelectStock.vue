@@ -192,13 +192,14 @@ function openCenteredWindow(url, width, height) {
     <n-gi :span="4">
       <n-list bordered style="text-align: left;" hoverable clickable>
         <n-scrollbar style="max-height: calc(100vh - 170px);">
-          <n-list-item v-for="item in hotStrategy" :key="item.rank" @click="DoSearch(item.question)">
+          <n-list-item v-for="(item, index) in hotStrategy" :key="item.rank" @click="DoSearch(item.question)">
             <n-ellipsis line-clamp="1" :tooltip="true">
-              <n-tag size="small" :bordered="false" type="info">#{{ item.rank }}</n-tag>
+              <n-tag size="small" :bordered="false" type="info">#{{ index + 1 }}</n-tag>
               <n-text type="warning">{{ item.question }}</n-text>
               <template #tooltip>
                 <div style="text-align: center;max-width: 180px">
-                  <n-text type="warning">{{ item.question }}</n-text>
+                  <n-text type="warning" depth="3">选股条件：{{ item.question }}</n-text><br />
+                  <n-text type="info">搜索热度：{{ item.heatValue }}</n-text>
                 </div>
               </template>
             </n-ellipsis>
