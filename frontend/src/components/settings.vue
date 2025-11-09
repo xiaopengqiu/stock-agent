@@ -8,10 +8,9 @@ import {
   SendDingDingMessageByType,
   UpdateConfig, CheckSponsorCode, ExportPrompts
 } from "../../wailsjs/go/main/App";
-import {NTag, useMessage} from "naive-ui";
+import {NTag, NButton, NAlert, useDialog, useMessage} from "naive-ui";
 import {data, models} from "../../wailsjs/go/models";
 import {EventsEmit} from "../../wailsjs/runtime";
-import NButton from "../App.vue";
 
 const message = useMessage()
 
@@ -316,14 +315,25 @@ function editPrompt(prompt) {
   showManagePromptsModal.value = true
 }
 
-function deletePrompt(ID) {
-  DelPrompt(ID).then(res => {
-    message.success(res)
-    GetPromptTemplates("", "").then(res => {
-      promptTemplates.value = res
-    })
+const dialog = useDialog()
+function deletePrompt(Name, ID) {
+  dialog.warning({
+    title: '确认删除',
+    content: `确定要删除 Prompt 模板「${Name}」吗？此操作无法撤销。`,
+    positiveText: '删除',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      DelPrompt(ID).then(res => {
+        message.success(res)
+        GetPromptTemplates("", "").then(res => {
+          promptTemplates.value = res
+        })
+      })
+    }
   })
 }
+
+const userPromptExampleText = '例如：{{stockName}}[{{stockCode}}] 分析和总结'
 </script>
 
 <template>
@@ -394,7 +404,7 @@ function deletePrompt(ID) {
 
         <n-card :title="() => h(NTag, { type: 'primary', bordered: false }, () => 'AI设置')" size="small">
           <n-grid :cols="24" :x-gap="24" style="text-align: left;">
-            <n-form-item-gi :span="24" label="AI诊股：" path="openAI.enable">
+            <n-form-item-gi :span="24" label="AI诊股：">
               <n-switch v-model:value="formValue.openAI.enable"/>
             </n-form-item-gi>
 
@@ -470,53 +480,45 @@ function deletePrompt(ID) {
                   <n-button type="info" @click="exportConfig">导出配置</n-button>
                   <n-button type="error" @click="importConfig">导入配置</n-button>
                 </n-space>
-
               </n-space>
             </n-gi>
 
+          </n-grid>
+        </n-card>
+
+        <n-card :title="() => h(NTag, { type: 'primary', bordered: false }, () => 'Prompt模板设置')" size="small">
+          <n-grid :cols="24" :x-gap="24" style="text-align: left;">
             <n-gi :span="24" v-if="formValue.openAI.enable">
               <n-divider title-placement="left">Prompt 内容设置</n-divider>
             </n-gi>
-            <n-form-item-gi :span="12" v-if="formValue.openAI.enable" label="模型系统 Prompt" path="openAI.prompt">
-              <n-alert type="info" title="系统 Prompt 提示" :show-icon="true">
-                请输入系统 prompt，用于定义模型的基础行为和身份。
+            <n-form-item-gi :span="12" v-if="formValue.openAI.enable" label="系统 Prompt 示例">
+              <n-alert type="info" title="系统 Prompt 示例" :show-icon="true" bordered class="prompt-alert equal-height">
+                <div class="prompt-content">
+                  请输入系统 Prompt，用于定义模型的基础行为和身份。
+                </div>
               </n-alert>
             </n-form-item-gi>
-            <n-form-item-gi :span="12" v-if="formValue.openAI.enable" label="模型用户 Prompt" path="openAI.questionTemplate">
-              <n-alert type="info" title="用户 Prompt 示例" :show-icon="true">
-                例如：{{stockName}}[{{stockCode}}] 分析和总结
+            <n-form-item-gi :span="12" v-if="formValue.openAI.enable" label="用户 Prompt 示例">
+              <n-alert type="info" title="用户 Prompt 示例" :show-icon="true" bordered class="prompt-alert equal-height">
+                <div class="prompt-content">
+                  {{ userPromptExampleText }}
+                </div>
               </n-alert>
             </n-form-item-gi>
 
-            <n-gi :span="24" v-if="promptTemplates.length > 0 && promptTemplates.some(p => p.type === '模型系统Prompt')">
+            <n-gi :span="24" v-if="promptTemplates.length > 0">
               <n-form-item-gi :span="24" label="模型系统 Prompt 模板">
-                <n-tag size="medium"
-                       secondary
-                       v-for="prompt in promptTemplates"
-                       v-if="prompt.type === '模型系统Prompt'"
-                       closable
-                       @close="deletePrompt(prompt.ID)"
-                       @click="editPrompt(prompt)"
-                       :title="prompt.content"
-                       :type="'success'"
-                       :bordered="false">
+                <n-tag size="medium" secondary v-for="prompt in promptTemplates.filter(p => p.type === '模型系统Prompt')" closable
+                       @close="deletePrompt(prompt.name, prompt.ID)" @click="editPrompt(prompt)" :title="prompt.content" :type="'success'" :bordered="false">
                   {{ prompt.name }}
                 </n-tag>
               </n-form-item-gi>
             </n-gi>
 
-            <n-gi :span="24" v-if="promptTemplates.length > 0 && promptTemplates.some(p => p.type === '模型用户Prompt')">
+            <n-gi :span="24" v-if="promptTemplates.length > 0">
               <n-form-item-gi :span="24" label="模型用户 Prompt 模板">
-                <n-tag size="medium"
-                       secondary
-                       v-for="prompt in promptTemplates"
-                       v-if="prompt.type === '模型用户Prompt'"
-                       closable
-                       @close="deletePrompt(prompt.ID)"
-                       @click="editPrompt(prompt)"
-                       :title="prompt.content"
-                       :type="'info'"
-                       :bordered="false">
+                <n-tag size="medium" secondary v-for="prompt in promptTemplates.filter(p => p.type === '模型用户Prompt')" closable
+                       @close="deletePrompt(prompt.name, prompt.ID)" @click="editPrompt(prompt)" :title="prompt.content" :type="'info'" :bordered="false">
                   {{ prompt.name }}
                 </n-tag>
               </n-form-item-gi>
@@ -528,15 +530,14 @@ function deletePrompt(ID) {
                 <n-space justify="center">
                   <n-button type="primary" dashed @click="managePrompts" style="width: 100%;">添加提示词模板</n-button>
                   <n-button type="info" dashed @click="exportPrompts" style="width: 100%;">导出提示词模板</n-button>
-                  <n-button type="info" dashed @click="importPrompt" style="width: 100%;">导入 提示词模板</n-button>
+                  <n-button type="info" dashed @click="importPrompt" style="width: 100%;">导入提示词模板</n-button>
                 </n-space>
 
               </n-space>
             </n-gi>
-
-
           </n-grid>
         </n-card>
+
       </n-space>
     </n-form>
   </n-flex>
@@ -571,5 +572,24 @@ function deletePrompt(ID) {
   font-size: 16px;
   font-weight: bold;
   color: red;
+}
+.prompt-alert {
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  background-color: #f9fafb;
+  padding: 12px 16px;
+  transition: all 0.2s ease-in-out;
+}
+
+.prompt-alert:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.prompt-content {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+  white-space: pre-line;
 }
 </style>
