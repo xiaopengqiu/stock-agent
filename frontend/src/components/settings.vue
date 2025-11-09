@@ -491,15 +491,15 @@ const userPromptExampleText = '例如：{{stockName}}[{{stockCode}}] 分析和�
             <n-gi :span="24" v-if="formValue.openAI.enable">
               <n-divider title-placement="left">Prompt 内容设置</n-divider>
             </n-gi>
-            <n-form-item-gi :span="12" v-if="formValue.openAI.enable" label="系统 Prompt 示例">
-              <n-alert type="info" title="系统 Prompt 示例" :show-icon="true" bordered class="prompt-alert equal-height">
+            <n-form-item-gi :span="12" v-if="formValue.openAI.enable" label="系统 Prompt 示例" label-placement="left">
+              <n-alert type="info" :show-icon="true" bordered class="prompt-alert equal-height">
                 <div class="prompt-content">
                   请输入系统 Prompt，用于定义模型的基础行为和身份。
                 </div>
               </n-alert>
             </n-form-item-gi>
-            <n-form-item-gi :span="12" v-if="formValue.openAI.enable" label="用户 Prompt 示例">
-              <n-alert type="info" title="用户 Prompt 示例" :show-icon="true" bordered class="prompt-alert equal-height">
+            <n-form-item-gi :span="12" v-if="formValue.openAI.enable" label="用户 Prompt 示例" label-placement="left">
+              <n-alert type="info" :show-icon="true" bordered class="prompt-alert equal-height">
                 <div class="prompt-content">
                   {{ userPromptExampleText }}
                 </div>
@@ -508,7 +508,7 @@ const userPromptExampleText = '例如：{{stockName}}[{{stockCode}}] 分析和�
 
             <n-gi :span="24" v-if="promptTemplates.length > 0">
               <n-form-item-gi :span="24" label="模型系统 Prompt 模板">
-                <n-tag size="medium" secondary v-for="prompt in promptTemplates.filter(p => p.type === '模型系统Prompt')" closable
+                <n-tag size="medium" secondary v-if="formValue.openAI.enable" v-for="prompt in promptTemplates.filter(p => p.type === '模型系统Prompt')" closable
                        @close="deletePrompt(prompt.name, prompt.ID)" @click="editPrompt(prompt)" :title="prompt.content" :type="'success'" :bordered="false">
                   {{ prompt.name }}
                 </n-tag>
@@ -517,7 +517,7 @@ const userPromptExampleText = '例如：{{stockName}}[{{stockCode}}] 分析和�
 
             <n-gi :span="24" v-if="promptTemplates.length > 0">
               <n-form-item-gi :span="24" label="模型用户 Prompt 模板">
-                <n-tag size="medium" secondary v-for="prompt in promptTemplates.filter(p => p.type === '模型用户Prompt')" closable
+                <n-tag size="medium" secondary v-if="formValue.openAI.enable" v-for="prompt in promptTemplates.filter(p => p.type === '模型用户Prompt')" closable
                        @close="deletePrompt(prompt.name, prompt.ID)" @click="editPrompt(prompt)" :title="prompt.content" :type="'info'" :bordered="false">
                   {{ prompt.name }}
                 </n-tag>
