@@ -1,0 +1,17 @@
+{
+  "enabled": false,
+  "servers": [
+    {
+      "name": "filesystem",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed"],
+      "enabled": false
+    },
+    {
+      "name": "brave-search",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "enabled": false
+    }
+  ]
+}

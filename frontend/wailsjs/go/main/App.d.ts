@@ -40,6 +40,8 @@ export function GetAIResponseResult(arg1:string):Promise<models.AIResponseResult
 
 export function GetAiConfigs():Promise<Array<data.AIConfig>>;
 
+export function GetBuiltinToolCount():Promise<number>;
+
 export function GetConfig():Promise<data.SettingConfig>;
 
 export function GetFollowList(arg1:number):Promise<any>;
@@ -55,6 +57,14 @@ export function GetHotStrategy():Promise<Record<string, any>>;
 export function GetIndustryMoneyRankSina(arg1:string,arg2:string):Promise<Array<Record<string, any>>>;
 
 export function GetIndustryRank(arg1:string,arg2:number):Promise<Array<any>>;
+
+export function GetMCPConfig():Promise<string>;
+
+export function GetMCPEnabled():Promise<boolean>;
+
+export function GetMCPStatus():Promise<Record<string, any>>;
+
+export function GetMCPToolCount():Promise<number>;
 
 export function GetMoneyRankSina(arg1:string):Promise<Array<Record<string, any>>>;
 
@@ -104,6 +114,8 @@ export function OpenURL(arg1:string):Promise<void>;
 
 export function ReFleshTelegraphList(arg1:string):Promise<any>;
 
+export function ReloadMCPTools():Promise<string>;
+
 export function RemoveGroup(arg1:number):Promise<string>;
 
 export function RemoveStockGroup(arg1:string,arg2:string,arg3:number):Promise<string>;
@@ -125,6 +137,8 @@ export function SendDingDingMessageByType(arg1:string,arg2:string,arg3:number):P
 export function SetAlarmChangePercent(arg1:number,arg2:number,arg3:string):Promise<string>;
 
 export function SetCostPriceAndVolume(arg1:string,arg2:number,arg3:number):Promise<string>;
+
+export function SetMCPConfig(arg1:string):Promise<string>;
 
 export function SetStockAICron(arg1:string,arg2:string):Promise<void>;
 

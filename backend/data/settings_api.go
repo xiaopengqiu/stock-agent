@@ -3,13 +3,14 @@ package data
 import (
 	"encoding/json"
 	"errors"
-	"github.com/samber/lo"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
-	"gorm.io/gorm"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/samber/lo"
+	"gorm.io/gorm"
 )
 
 type Settings struct {

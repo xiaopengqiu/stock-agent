@@ -23,6 +23,7 @@ declare module 'vue' {
     KLineChart: typeof import('./src/components/KLineChart.vue')['default']
     LongTigerRankList: typeof import('./src/components/LongTigerRankList.vue')['default']
     Market: typeof import('./src/components/market.vue')['default']
+    McpSettings: typeof import('./src/components/mcp-settings.vue')['default']
     MoneyTrend: typeof import('./src/components/moneyTrend.vue')['default']
     NewsList: typeof import('./src/components/newsList.vue')['default']
     RankTable: typeof import('./src/components/rankTable.vue')['default']

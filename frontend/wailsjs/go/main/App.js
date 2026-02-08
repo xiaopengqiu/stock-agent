@@ -74,6 +74,10 @@ export function GetAiConfigs() {
   return window['go']['main']['App']['GetAiConfigs']();
 }
 
+export function GetBuiltinToolCount() {
+  return window['go']['main']['App']['GetBuiltinToolCount']();
+}
+
 export function GetConfig() {
   return window['go']['main']['App']['GetConfig']();
 }
@@ -104,6 +108,22 @@ export function GetIndustryMoneyRankSina(arg1, arg2) {
 
 export function GetIndustryRank(arg1, arg2) {
   return window['go']['main']['App']['GetIndustryRank'](arg1, arg2);
+}
+
+export function GetMCPConfig() {
+  return window['go']['main']['App']['GetMCPConfig']();
+}
+
+export function GetMCPEnabled() {
+  return window['go']['main']['App']['GetMCPEnabled']();
+}
+
+export function GetMCPStatus() {
+  return window['go']['main']['App']['GetMCPStatus']();
+}
+
+export function GetMCPToolCount() {
+  return window['go']['main']['App']['GetMCPToolCount']();
 }
 
 export function GetMoneyRankSina(arg1) {
@@ -202,6 +222,10 @@ export function ReFleshTelegraphList(arg1) {
   return window['go']['main']['App']['ReFleshTelegraphList'](arg1);
 }
 
+export function ReloadMCPTools() {
+  return window['go']['main']['App']['ReloadMCPTools']();
+}
+
 export function RemoveGroup(arg1) {
   return window['go']['main']['App']['RemoveGroup'](arg1);
 }
@@ -244,6 +268,10 @@ export function SetAlarmChangePercent(arg1, arg2, arg3) {
 
 export function SetCostPriceAndVolume(arg1, arg2, arg3) {
   return window['go']['main']['App']['SetCostPriceAndVolume'](arg1, arg2, arg3);
+}
+
+export function SetMCPConfig(arg1) {
+  return window['go']['main']['App']['SetMCPConfig'](arg1);
 }
 
 export function SetStockAICron(arg1, arg2) {

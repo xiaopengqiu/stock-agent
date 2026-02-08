@@ -6,7 +6,6 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"go-stock/backend/data"
 	"go-stock/backend/db"
 	log "go-stock/backend/logger"
@@ -14,6 +13,8 @@ import (
 	"os"
 	"runtime/debug"
 	"strings"
+
+	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/wailsapp/wails/v2"

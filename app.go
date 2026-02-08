@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"go-stock/backend/agent"
 	"go-stock/backend/data"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
@@ -940,6 +941,8 @@ func addStockFollowData(follow data.FollowedStock, stockData *data.StockInfo) {
 // shutdown is called at application termination
 func (a *App) shutdown(ctx context.Context) {
 	defer PanicHandler()
+	// Shutdown tool registry (MCP connections)
+	agent.ShutdownToolRegistry()
 	// Perform your teardown here
 	//os.Exit(0)
 	logger.SugaredLogger.Infof("application shutdown Version:%s", Version)
@@ -1509,4 +1512,107 @@ func (a *App) SaveWordFile(filename string, base64Data string) string {
 //	@return error
 func (a *App) GetAiConfigs() []*data.AIConfig {
 	return data.GetSettingConfig().AiConfigs
+}
+
+// MCP Configuration Management
+// GetMCPEnabled returns whether MCP is enabled
+func (a *App) GetMCPEnabled() bool {
+	config := agent.GetToolRegistry(a.ctx)
+	if config == nil {
+		return false
+	}
+	return len(config.GetMCPTools()) > 0
+}
+
+// GetMCPStatus returns status of all MCP connections
+func (a *App) GetMCPStatus() map[string]any {
+	status := agent.GetMCPStatus()
+	result := make(map[string]any)
+	for name, state := range status {
+		result[name] = map[string]any{
+			"status":     state.Status,
+			"lastError":  state.LastError,
+			"connectedAt": state.ConnectedAt,
+		}
+	}
+	return result
+}
+
+// ReloadMCPTools reloads MCP tools
+func (a *App) ReloadMCPTools() string {
+	if err := agent.ReloadMCPTools(); err != nil {
+		logger.SugaredLogger.Errorf("Failed to reload MCP tools: %v", err)
+		return "Failed to reload MCP tools: " + err.Error()
+	}
+	return "MCP tools reloaded successfully"
+}
+
+// GetMCPConfig returns the current MCP configuration
+func (a *App) GetMCPConfig() string {
+	configPath := "data/mcp_config.json"
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		// Return default config
+		defaultConfig := map[string]any{
+			"enabled": false,
+			"servers": []map[string]any{},
+		}
+		configJSON, _ := json.MarshalIndent(defaultConfig, "", "  ")
+		return string(configJSON)
+	}
+
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		return "Failed to read config: " + err.Error()
+	}
+
+	var prettyJSON bytes.Buffer
+	if err := json.Indent(&prettyJSON, data, "", "  "); err != nil {
+		return string(data)
+	}
+
+	return prettyJSON.String()
+}
+
+// SetMCPConfig saves the MCP configuration
+func (a *App) SetMCPConfig(config string) string {
+	configPath := "data/mcp_config.json"
+
+	// Validate JSON
+	var configMap map[string]any
+	if err := json.Unmarshal([]byte(config), &configMap); err != nil {
+		logger.SugaredLogger.Errorf("Invalid MCP config JSON: %v", err)
+		return "Invalid configuration: " + err.Error()
+	}
+
+	// Ensure data directory exists
+	if err := os.MkdirAll("data", 0755); err != nil {
+		logger.SugaredLogger.Errorf("Failed to create data directory: %v", err)
+		return "Failed to create data directory: " + err.Error()
+	}
+
+	// Write config file
+	if err := os.WriteFile(configPath, []byte(config), 0644); err != nil {
+		logger.SugaredLogger.Errorf("Failed to write MCP config: %v", err)
+		return "Failed to save configuration: " + err.Error()
+	}
+
+	logger.SugaredLogger.Infof("MCP config saved, will reload tools")
+
+	// Reload MCP tools
+	if err := agent.ReloadMCPTools(); err != nil {
+		logger.SugaredLogger.Errorf("Failed to reload MCP tools: %v", err)
+		return "Config saved but tool reload failed: " + err.Error()
+	}
+
+	return "Configuration saved and MCP tools reloaded"
+}
+
+// GetMCPToolCount returns the number of MCP tools
+func (a *App) GetMCPToolCount() int {
+	return agent.GetMCPToolCount()
+}
+
+// GetBuiltinToolCount returns the number of built-in tools
+func (a *App) GetBuiltinToolCount() int {
+	return agent.GetBuiltinToolCount()
 }
