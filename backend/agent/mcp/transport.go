@@ -2,15 +2,18 @@ package mcp
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"go-stock/backend/logger"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
 	"sync"
+	"time"
 )
 
 // Transport is the interface for MCP communication
@@ -253,35 +256,161 @@ func (t *StdioTransport) readStderr() {
 
 // HTTPTransport implements MCP communication via HTTP (for remote MCP servers)
 type HTTPTransport struct {
-	baseURL string
-	// Future implementation for HTTP transport
+	baseURL  string
+	headers  map[string]string
+	client   *http.Client
+	mu       sync.Mutex
+	connected bool
 }
 
 // NewHTTPTransport creates a new HTTP transport
-func NewHTTPTransport(baseURL string) *HTTPTransport {
-	return &HTTPTransport{
-		baseURL: baseURL,
+func NewHTTPTransport(ctx context.Context, config *MCPServerConfig) (*HTTPTransport, error) {
+	if config.URL == "" {
+		return nil, fmt.Errorf("URL is required for HTTP transport")
 	}
+
+	transport := &HTTPTransport{
+		baseURL:   config.URL,
+		headers:   config.Headers,
+		client:    &http.Client{
+			Timeout: 30 * time.Second,
+		},
+		connected: false,
+	}
+
+	// Set connected flag (HTTP is stateless, but we track if URL is valid)
+	transport.mu.Lock()
+	transport.connected = true
+	transport.mu.Unlock()
+
+	return transport, nil
 }
 
-// Send for HTTP transport (placeholder)
+// Send for HTTP transport sends a JSON-RPC request and waits for immediate response
 func (t *HTTPTransport) Send(ctx context.Context, request *Request) error {
-	// TODO: Implement HTTP transport
-	return fmt.Errorf("HTTP transport not yet implemented")
+	t.mu.Lock()
+	if !t.connected {
+		t.mu.Unlock()
+		return fmt.Errorf("transport not connected")
+	}
+	t.mu.Unlock()
+
+	// Marshal request
+	data, err := json.Marshal(request)
+	if err != nil {
+		return fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	logger.SugaredLogger.Debugf("MCP HTTP send: %s", string(data))
+
+	// Create HTTP request
+	req, err := http.NewRequestWithContext(ctx, "POST", t.baseURL, bytes.NewReader(data))
+	if err != nil {
+		return fmt.Errorf("failed to create HTTP request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	// Add custom headers
+	for k, v := range t.headers {
+		req.Header.Set(k, v)
+	}
+
+	// Send request
+	resp, err := t.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("HTTP request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check status code
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("HTTP request failed with status %d: %s", resp.StatusCode, string(body))
+	}
+
+	return nil
 }
 
-// Receive for HTTP transport (placeholder)
+// Receive for HTTP transport - for HTTP, responses are immediate in Send, so this is a no-op
+// HTTP transport follows request-response pattern, not streaming like stdio
 func (t *HTTPTransport) Receive(ctx context.Context) (*Response, error) {
-	// TODO: Implement HTTP transport
-	return nil, fmt.Errorf("HTTP transport not yet implemented")
+	// HTTP transport uses synchronous request-response pattern
+	// This method is not used for HTTP transport
+	return nil, fmt.Errorf("HTTP transport uses synchronous pattern, Receive not applicable")
 }
 
 // Close for HTTP transport
 func (t *HTTPTransport) Close() error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.connected = false
 	return nil
 }
 
 // IsConnected for HTTP transport
 func (t *HTTPTransport) IsConnected() bool {
-	return false
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.connected
+}
+
+// SendRequest sends a request and receives response in one call (synchronous HTTP pattern)
+func (t *HTTPTransport) SendRequest(ctx context.Context, request *Request) (*Response, error) {
+	t.mu.Lock()
+	if !t.connected {
+		t.mu.Unlock()
+		return nil, fmt.Errorf("transport not connected")
+	}
+	t.mu.Unlock()
+
+	// Marshal request
+	data, err := json.Marshal(request)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	logger.SugaredLogger.Debugf("MCP HTTP send: %s", string(data))
+
+	// Create HTTP request
+	req, err := http.NewRequestWithContext(ctx, "POST", t.baseURL, bytes.NewReader(data))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	// Add custom headers
+	for k, v := range t.headers {
+		req.Header.Set(k, v)
+	}
+
+	// Send request
+	resp, err := t.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("HTTP request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check status code
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP request failed with status %d: %s", resp.StatusCode, string(body))
+	}
+
+	// Read response
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	logger.SugaredLogger.Debugf("MCP HTTP receive: %s", string(body))
+
+	// Unmarshal response
+	var response Response
+	if err := json.Unmarshal(body, &response); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return &response, nil
 }

@@ -12,15 +12,16 @@ import (
 
 // Client represents an MCP client connection
 type Client struct {
-	config      *MCPServerConfig
-	transport   Transport
-	requestID   int64
-	mu          sync.Mutex
-	initialized bool
-	state       ConnectionState
-	tools       map[string]Tool
-	ctx         context.Context
-	cancel      context.CancelFunc
+	config          *MCPServerConfig
+	transport       Transport
+	transportType   TransportType
+	requestID       int64
+	mu              sync.Mutex
+	initialized     bool
+	state           ConnectionState
+	tools           map[string]Tool
+	ctx             context.Context
+	cancel          context.CancelFunc
 }
 
 // NewClient creates a new MCP client
@@ -30,18 +31,37 @@ func NewClient(ctx context.Context, config *MCPServerConfig) (*Client, error) {
 	}
 	ctx, cancel := context.WithCancel(ctx)
 
-	// Create stdio transport
-	transport, err := NewStdioTransport(ctx, config)
+	// Determine transport type (default to stdio for backward compatibility)
+	transportType := config.Transport
+	if transportType == "" {
+		transportType = TransportTypeStdio
+	}
+
+	// Create appropriate transport
+	var transport Transport
+	var err error
+
+	switch transportType {
+	case TransportTypeStdio:
+		transport, err = NewStdioTransport(ctx, config)
+	case TransportTypeHTTP:
+		transport, err = NewHTTPTransport(ctx, config)
+	default:
+		cancel()
+		return nil, fmt.Errorf("unsupported transport type: %s", transportType)
+	}
+
 	if err != nil {
 		cancel()
-		return nil, fmt.Errorf("failed to create transport: %w", err)
+		return nil, fmt.Errorf("failed to create: %w", err)
 	}
 
 	client := &Client{
-		config:      config,
-		transport:   transport,
-		requestID:   0,
-		initialized: false,
+		config:        config,
+		transport:     transport,
+		transportType: transportType,
+		requestID:     0,
+		initialized:   false,
 		state: ConnectionState{
 			Status: StatusDisconnected,
 		},
@@ -63,10 +83,7 @@ func (c *Client) Connect() error {
 	c.state.Status = StatusConnecting
 	c.mu.Unlock()
 
-	logger.SugaredLogger.Infof("Connecting to MCP server: %s", c.config.Name)
-
-	// Wait a bit for transport to be ready
-	time.Sleep(500 * time.Millisecond)
+	logger.SugaredLogger.Infof("Connecting to MCP server: %s (%s)", c.config.Name, c.transportType)
 
 	// Send initialize request
 	initParams := InitializeParams{
@@ -82,16 +99,12 @@ func (c *Client) Connect() error {
 	}
 
 	req := c.createRequest("initialize", initParams)
-	if err := c.transport.Send(c.ctx, req); err != nil {
-		c.updateState(StatusError, fmt.Sprintf("initialize failed: %v", err))
-		return fmt.Errorf("failed to send initialize: %w", err)
-	}
 
-	// Wait for response
-	resp, err := c.waitForResponse(req.ID, 10*time.Second)
+	// Send request and get response (handles both sync HTTP and async stdio)
+	resp, err := c.sendRequest(req, 10*time.Second)
 	if err != nil {
-		c.updateState(StatusError, fmt.Sprintf("initialize timeout: %v", err))
-		return fmt.Errorf("initialize response timeout: %w", err)
+		c.updateState(StatusError, fmt.Sprintf("initialize failed: %v", err))
+		return fmt.Errorf("initialize failed: %w", err)
 	}
 
 	if resp.Error != nil {
@@ -134,13 +147,11 @@ func (c *Client) LoadTools() error {
 	}
 
 	req := c.createRequest("tools/list", nil)
-	if err := c.transport.Send(c.ctx, req); err != nil {
-		return fmt.Errorf("failed to send tools/list: %w", err)
-	}
 
-	resp, err := c.waitForResponse(req.ID, 5*time.Second)
+	// Send request and get response
+	resp, err := c.sendRequest(req, 5*time.Second)
 	if err != nil {
-		return fmt.Errorf("tools/list response timeout: %w", err)
+		return fmt.Errorf("tools/list failed: %w", err)
 	}
 
 	if resp.Error != nil {
@@ -193,13 +204,11 @@ func (c *Client) CallTool(ctx context.Context, toolName string, arguments map[st
 	}
 
 	req := c.createRequest("tools/call", call)
-	if err := c.transport.Send(ctx, req); err != nil {
-		return nil, fmt.Errorf("failed to send tools/call: %w", err)
-	}
 
-	resp, err := c.waitForResponse(req.ID, 30*time.Second)
+	// Send request and get response
+	resp, err := c.sendRequest(req, 30*time.Second)
 	if err != nil {
-		return nil, fmt.Errorf("tools/call response timeout: %w", err)
+		return nil, fmt.Errorf("tools/call failed: %w", err)
 	}
 
 	if resp.Error != nil {
@@ -292,6 +301,25 @@ func (c *Client) createRequest(method string, params interface{}) *Request {
 		Method:  method,
 		Params:  params,
 	}
+}
+
+// sendRequest sends a request and receives response, handling both sync HTTP and async stdio
+func (c *Client) sendRequest(req *Request, timeout time.Duration) (*Response, error) {
+	if c.transportType == TransportTypeHTTP {
+		// HTTP transport is synchronous, use SendRequest directly
+		httpTransport, ok := c.transport.(*HTTPTransport)
+		if !ok {
+			return nil, fmt.Errorf("transport is not HTTPTransport")
+		}
+		return httpTransport.SendRequest(c.ctx, req)
+	}
+
+	// stdio transport is asynchronous, send then wait
+	if err := c.transport.Send(c.ctx, req); err != nil {
+		return nil, err
+	}
+
+	return c.waitForResponse(req.ID, timeout)
 }
 
 // waitForResponse waits for a response with matching ID

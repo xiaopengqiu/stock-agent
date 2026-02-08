@@ -59,23 +59,211 @@ backend/agent/mcp/
   "servers": [
     {
       "name": "filesystem",
+      "transport": "stdio",
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed"],
       "enabled": true
     },
     {
       "name": "brave-search",
+      "transport": "stdio",
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-brave-search"],
       "enabled": true
     },
     {
       "name": "github",
+      "transport": "stdio",
       "command": "mcp-server-github",
       "args": ["--token", "${GITHUB_TOKEN}"],
       "enabled": false
+    },
+    {
+      "name": "remote-mcp-server",
+      "transport": "http",
+      "url": "http://localhost:3000/mcp",
+      "headers": {
+        "Authorization": "Bearer your-api-token"
+      },
+      "enabled": false
+    },
+    {
+      "name": "cloud-mcp-server",
+      "transport": "http",
+      "url": "https://api.example.com/mcp/v1",
+      "headers": {
+        "Authorization": "Bearer ${CLOUD_MCP_TOKEN}",
+        "X-API-Version": "v1"
+      },
+      "enabled": false
     }
   ]
+}
+```
+
+### 2.1 Transport Implementation Details
+
+The MCP client supports two transport types for different use cases:
+
+#### Stdio Transport (Local MCP Servers)
+
+**Use Case:** Local MCP servers running as subprocesses
+**Implementation:** `backend/agent/mcp/transport.go` - `StdioTransport`
+
+**Characteristics:**
+- Asynchronous communication pattern (send + receive)
+- Process-based: MCP server runs as child process
+- JSON-RPC messages separated by newlines
+- Bidirectional: can receive server-initiated notifications
+- Connection lifecycle: managed process (start/stop)
+
+**Flow:**
+```
+Client → Start subprocess (npx @modelcontextprotocol/server-*)
+Client → stdin: {"jsonrpc":"2.0","id":1,"method":"initialize",...}
+Client ← stdout: {"jsonrpc":"2.0","id":1,"result":{...}}
+Client → stdin: {"jsonrpc":"2.0","id":2,"method":"tools/list"}
+Client ← stdout: {"jsonrpc":"2.0","id":2,"result":{"tools":[...]}}
+```
+
+**Example Config:**
+```json
+{
+  "name": "filesystem",
+  "transport": "stdio",
+  "command": "npx",
+  "args": ["-y", "@modelcontextprotocol/server-filesystem", "/allowed/path"],
+  "enabled": true
+}
+```
+
+#### HTTP Transport (Remote MCP Servers)
+
+**Use Case:** Remote/cloud-hosted MCP servers
+**Implementation:** `backend/agent/mcp/transport.go` - `HTTPTransport`
+
+**Characteristics:**
+- Synchronous request-response pattern
+- HTTP POST to endpoint
+- JSON-RPC over HTTP
+- Stateless: no persistent connection
+- Custom headers support (Bearer tokens, API keys)
+- Network timeout: 30 seconds (configurable)
+
+**Flow:**
+```
+Client → POST /mcp {"jsonrpc":"2.0","id":1,"method":"initialize",...}
+Client ← 200 OK {"jsonrpc":"2.0","id":1,"result":{...}}
+Client → POST /mcp {"jsonrpc":"2.0","id":2,"method":"tools/list"}
+Client ← 200 OK {"jsonrpc":"2.0","id":2,"result":{"tools":[...]}}
+```
+
+**Example Config:**
+```json
+{
+  "name": "remote-server",
+  "transport": "http",
+  "url": "https://api.example.com/mcp/v1",
+  "headers": {
+    "Authorization": "Bearer ${MCP_API_TOKEN}",
+    "X-Custom-Header": "custom-value"
+  },
+  "enabled": true
+}
+```
+
+**HTTP Protocol Specification:**
+
+**Request:**
+- Method: POST
+- Content-Type: application/json
+- Body: JSON-RPC 2.0 request
+- Headers: Custom headers from config
+
+**Response:**
+- Status: 200 OK
+- Content-Type: application/json
+- Body: JSON-RPC 2.0 response
+
+**Error Handling:**
+- Non-200 status: Return error with status code and body
+- Timeout: Return context timeout error
+- Invalid JSON: Return unmarshal error
+
+**Transport Interface:**
+
+Both transports implement the same `Transport` interface:
+
+```go
+type Transport interface {
+    Send(ctx context.Context, request *Request) error
+    Receive(ctx context.Context) (*Response, error)
+    Close() error
+    IsConnected() bool
+}
+```
+
+**HTTP-Specific Methods:**
+
+```go
+// SendRequest combines send and receive for synchronous HTTP pattern
+func (t *HTTPTransport) SendRequest(ctx context.Context, request *Request) (*Response, error)
+```
+
+#### Client Factory Pattern
+
+**Implementation:** `backend/agent/mcp/client.go` - `NewClient()`
+
+The client factory automatically creates the appropriate transport based on configuration:
+
+```go
+func NewClient(ctx context.Context, config *MCPServerConfig) (*Client, error) {
+    // Determine transport type (default to stdio for backward compatibility)
+    transportType := config.Transport
+    if transportType == "" {
+        transportType = TransportTypeStdio
+    }
+
+    // Create appropriate transport
+    var transport Transport
+    var err error
+
+    switch transportType {
+    case TransportTypeStdio:
+        transport, err = NewStdioTransport(ctx, config)
+    case TransportTypeHTTP:
+        transport, err = NewHTTPTransport(ctx, config)
+    default:
+        return nil, fmt.Errorf("unsupported transport type: %s", transportType)
+    }
+
+    // ... create client with transport
+}
+```
+
+#### Request Handling Pattern
+
+**Implementation:** `backend/agent/mcp/client.go` - `sendRequest()`
+
+The client uses a unified request handler that adapts to transport type:
+
+```go
+func (c *Client) sendRequest(req *Request, timeout time.Duration) (*Response, error) {
+    if c.transportType == TransportTypeHTTP {
+        // HTTP transport is synchronous, use SendRequest directly
+        httpTransport, ok := c.transport.(*HTTPTransport)
+        if !ok {
+            return nil, fmt.Errorf("transport is not HTTPTransport")
+        }
+        return httpTransport.SendRequest(c.ctx, req)
+    }
+
+    // stdio transport is asynchronous, send then wait
+    if err := c.transport.Send(c.ctx, req); err != nil {
+        return nil, err
+    }
+
+    return c.waitForResponse(req.ID, timeout)
 }
 ```
 
@@ -87,12 +275,22 @@ type MCPConfig struct {
     Servers []*MCPServerConfig `json:"servers"`
 }
 
+type TransportType string
+
+const (
+    TransportTypeStdio TransportType = "stdio"
+    TransportTypeHTTP TransportType = "http"
+)
+
 type MCPServerConfig struct {
-    Name    string   `json:"name"`
-    Command string   `json:"command"`
-    Args    []string `json:"args"`
-    Env     map[string]string `json:"env"`
-    Enabled bool     `json:"enabled"`
+    Name      string            `json:"name"`
+    Transport TransportType     `json:"transport"` // "stdio" or "http"
+    Command   string            `json:"command,omitempty"`  // Required for stdio
+    Args      []string          `json:"args,omitempty"`     // Required for stdio
+    URL       string            `json:"url,omitempty"`      // Required for http
+    Headers   map[string]string `json:"headers,omitempty"`  // Optional for http
+    Env       map[string]string `json:"env,omitempty"`      // For stdio
+    Enabled   bool              `json:"enabled"`
 }
 ```
 

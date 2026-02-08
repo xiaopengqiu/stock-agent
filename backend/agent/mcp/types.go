@@ -151,13 +151,26 @@ type ProgressParams struct {
 // ToolsChangedParams for tools/list_changed
 type ToolsChangedParams struct{}
 
+// TransportType defines the transport protocol for MCP communication
+type TransportType string
+
+const (
+    // TransportTypeStdio uses stdio for local MCP servers
+    TransportTypeStdio TransportType = "stdio"
+    // TransportTypeHTTP uses HTTP for remote MCP servers
+    TransportTypeHTTP TransportType = "http"
+)
+
 // Config related types
 type MCPServerConfig struct {
-    Name    string            `json:"name"`
-    Command string            `json:"command"`
-    Args    []string          `json:"args"`
-    Env     map[string]string   `json:"env"`
-    Enabled bool              `json:"enabled"`
+    Name      string            `json:"name"`
+    Transport TransportType     `json:"transport"` // "stdio" or "http"
+    Command   string            `json:"command,omitempty"`  // Required for stdio
+    Args      []string          `json:"args,omitempty"`     // Required for stdio
+    URL       string            `json:"url,omitempty"`      // Required for http
+    Headers   map[string]string `json:"headers,omitempty"`  // Optional for http
+    Env       map[string]string `json:"env,omitempty"`      // For stdio
+    Enabled   bool              `json:"enabled"`
 }
 
 type MCPConfig struct {

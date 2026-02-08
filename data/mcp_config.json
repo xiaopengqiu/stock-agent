@@ -3,14 +3,35 @@
   "servers": [
     {
       "name": "filesystem",
+      "transport": "stdio",
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed"],
       "enabled": false
     },
     {
       "name": "brave-search",
+      "transport": "stdio",
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "enabled": false
+    },
+    {
+      "name": "remote-mcp-server",
+      "transport": "http",
+      "url": "http://localhost:3000/mcp",
+      "headers": {
+        "Authorization": "Bearer your-api-token",
+        "X-Custom-Header": "custom-value"
+      },
+      "enabled": false
+    },
+    {
+      "name": "cloud-mcp-server",
+      "transport": "http",
+      "url": "https://api.example.com/mcp/v1",
+      "headers": {
+        "Authorization": "Bearer ${CLOUD_MCP_TOKEN}"
+      },
       "enabled": false
     }
   ]
