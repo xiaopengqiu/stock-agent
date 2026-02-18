@@ -14,6 +14,7 @@ import (
 
 	"github.com/samber/lo"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"gorm.io/gorm"
 )
 
 // StockPickService AI荐股服务
@@ -377,8 +378,45 @@ func (s *StockPickService) GetReports(offset, limit int) ([]models.StockPickRepo
 // GetReport 获取单个报告
 func (s *StockPickService) GetReport(id uint) (*models.StockPickReport, error) {
 	var report models.StockPickReport
-	err := db.Dao.First(&report, id).Error
-	return &report, err
+	logger.SugaredLogger.Infof("GetReport: 查询报告ID=%d, 表名=%s", id, report.TableName())
+
+	// 使用调试日志查看实际执行的SQL
+	result := db.Dao.Where("id = ?", id).First(&report)
+	logger.SugaredLogger.Debugf("GetReport: 查询结果 rows_affected=%d, error=%v", result.RowsAffected, result.Error)
+
+	if result.Error != nil {
+		logger.SugaredLogger.Errorf("GetReport: 查询失败 ID=%d, error=%v", id, result.Error)
+
+		// 如果是记录未找到错误，尝试查找包括软删除在内的所有记录
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			logger.SugaredLogger.Warnf("GetReport: 记录未找到，尝试查询包括软删除的记录 ID=%d", id)
+
+			// 使用 Unscoped 查询所有记录（包括软删除的）
+			var deletedReport models.StockPickReport
+			deletedResult := db.Dao.Unscoped().Where("id = ?", id).First(&deletedReport)
+			if deletedResult.Error == nil {
+				logger.SugaredLogger.Warnf("GetReport: 发现软删除记录 ID=%d, deleted_at=%v", id, deletedReport.DeletedAt)
+				return nil, fmt.Errorf("记录ID %d 已被软删除", id)
+			} else {
+				logger.SugaredLogger.Errorf("GetReport: 包括软删除也找不到记录 ID=%d, error=%v", id, deletedResult.Error)
+			}
+
+			// 检查表中的所有记录数量
+			var totalCount int64
+			db.Dao.Model(&models.StockPickReport{}).Count(&totalCount)
+			logger.SugaredLogger.Infof("GetReport: 表中总记录数=%d", totalCount)
+
+			// 检查包括软删除的总数
+			var totalWithDeleted int64
+			db.Dao.Unscoped().Model(&models.StockPickReport{}).Count(&totalWithDeleted)
+			logger.SugaredLogger.Infof("GetReport: 表中总记录数(包括软删除)=%d", totalWithDeleted)
+		}
+
+		return nil, result.Error
+	}
+
+	logger.SugaredLogger.Infof("GetReport: 查询成功 ID=%d, QuerySummary=%s", report.ID, report.QuerySummary)
+	return &report, nil
 }
 
 // DeleteReport 删除报告

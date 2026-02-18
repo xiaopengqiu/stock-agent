@@ -540,6 +540,7 @@ async function loadHistory() {
 // 查看历史报告
 async function viewHistoryReport(id) {
   try {
+    console.log('加载历史报告:', id)
     const report = await GetStockPickReport(id)
     if (report) {
       reportId.value = report.id
@@ -547,9 +548,22 @@ async function viewHistoryReport(id) {
       const recs = await GetStockPickRecommendations(id)
       recommendations.value = recs || []
       historyVisible.value = false
+      message.success('报告加载成功')
     }
   } catch (error) {
-    message.error('加载报告失败: ' + error)
+    console.error('加载报告失败:', error)
+    const errorMsg = error?.message || error?.toString() || error || '未知错误'
+
+    // 判断是否是记录不存在的错误
+    if (errorMsg.includes('record not found') || errorMsg.includes('记录不存在') || errorMsg.includes('已被删除')) {
+      message.error('报告记录不存在或已被删除，请刷新历史记录列表')
+      // 自动刷新历史记录列表
+      setTimeout(async () => {
+        await loadHistory()
+      }, 1000)
+    } else {
+      message.error('加载报告失败: ' + errorMsg)
+    }
   }
 }
 

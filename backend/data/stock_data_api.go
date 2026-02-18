@@ -559,7 +559,7 @@ func (receiver StockDataApi) SetStockAICron(cron string, stockCode string) {
 
 }
 func (receiver StockDataApi) GetFollowList(groupId int) *[]FollowedStock {
-	logger.SugaredLogger.Infof("GetFollowList %d", groupId)
+	//logger.SugaredLogger.Infof("GetFollowList %d", groupId)
 
 	var result *[]FollowedStock
 	if groupId == 0 {

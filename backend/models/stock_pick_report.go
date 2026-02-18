@@ -1,13 +1,16 @@
 package models
 
-import "time"
+import (
+	"gorm.io/gorm"
+	"time"
+)
 
 // StockPickReport AI荐股报告
 type StockPickReport struct {
-	ID        uint      `gorm:"primaryKey" json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	DeletedAt time.Time `gorm:"index" json:"deleted_at"`
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"`
 
 	// 用户需求
 	UserQuery    string `gorm:"type:text;not null" json:"user_query"` // 用户输入的选股需求
@@ -82,11 +85,11 @@ type ToolUsage struct {
 
 // StockPickReportItem 荐股报告列表项（用于前端展示）
 type StockPickReportItem struct {
-	ID             uint      `json:"id"`
-	CreatedAt      time.Time `json:"created_at"`
-	QuerySummary   string    `json:"query_summary"`
-	RecommendCount int       `json:"recommend_count"` // 推荐股票数量
-	Status         string    `json:"status"`
+	ID             uint      `json:"ID"`
+	CreatedAt      time.Time `json:"CreatedAt"`
+	QuerySummary   string    `json:"QuerySummary"`
+	RecommendCount int       `json:"RecommendCount"` // 推荐股票数量
+	Status         string    `json:"Status"`
 }
 
 // StockPickReportsResponse 荐股报告列表响应（用于Wails绑定）

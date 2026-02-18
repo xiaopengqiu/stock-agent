@@ -1816,8 +1816,16 @@ func (a *App) GetStockPickReports(offset, limit int) (*models.StockPickReportsRe
 
 // GetStockPickReport returns a single stock pick report
 func (a *App) GetStockPickReport(id uint) (*models.StockPickReport, error) {
+	logger.SugaredLogger.Infof("GetStockPickReport 调用: id=%d", id)
+
 	service := data.NewStockPickService(a.ctx)
-	return service.GetReport(id)
+	report, err := service.GetReport(id)
+	if err != nil {
+		logger.SugaredLogger.Errorf("GetStockPickReport 失败: id=%d, error=%v", id, err)
+		return nil, err
+	}
+	logger.SugaredLogger.Infof("GetStockPickReport 成功: id=%d, QuerySummary=%s", id, report.QuerySummary)
+	return report, nil
 }
 
 // GetStockPickRecommendations returns recommendations for a report
