@@ -10,7 +10,8 @@
       "Bash(timeout:*)",
       "Bash(wails generate:*)",
       "Bash(ping:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(git rm:*)"
     ]
   }
 }

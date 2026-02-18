@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "tools": [
+    {
+      "name": "SearchStockByIndicators",
+      "type": "builtin",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "name": "GetStockKLine",
+      "type": "builtin",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "name": "F",
+      "type": "builtin",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "name": "GetStockResearchReport",
+      "type": "builtin",
+      "enabled": true,
+      "config": {}
+    }
+  ]
+}

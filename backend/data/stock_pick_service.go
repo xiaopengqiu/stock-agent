@@ -1,0 +1,1273 @@
+package data
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"go-stock/backend/db"
+	"go-stock/backend/logger"
+	"go-stock/backend/models"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/samber/lo"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
+)
+
+// StockPickService AI荐股服务
+type StockPickService struct {
+	ctx context.Context
+}
+
+// NewStockPickService 创建荐股服务
+func NewStockPickService(ctx context.Context) *StockPickService {
+	return &StockPickService{ctx: ctx}
+}
+
+// StockPickRequest 荐股请求
+type StockPickRequest struct {
+	UserQuery  string `json:"user_query"`
+	AIConfigID uint   `json:"ai_config_id"`
+}
+
+// StockPickResponse 荐股响应
+type StockPickResponse struct {
+	ReportID uint   `json:"report_id"`
+	StreamID string `json:"stream_id"`
+}
+
+// ProcessStockPick 处理荐股流程
+func (s *StockPickService) ProcessStockPick(req StockPickRequest, eventHandler func(eventType string, data interface{})) (*StockPickResponse, error) {
+	// 1. 创建报告记录
+	report := &models.StockPickReport{
+		UserQuery:    req.UserQuery,
+		QuerySummary: generateQuerySummary(req.UserQuery),
+		AIConfigID:   req.AIConfigID,
+		Status:       "processing",
+	}
+	if err := db.Dao.Create(report).Error; err != nil {
+		logger.SugaredLogger.Errorf("创建荐股报告失败: %v", err)
+		return nil, err
+	}
+
+	// 2. 获取AI配置
+	settingConfig := GetSettingConfig()
+	var aiConfig *AIConfig
+	if req.AIConfigID > 0 {
+		aiConfig, _ = lo.Find(settingConfig.AiConfigs, func(item *AIConfig) bool {
+			return req.AIConfigID == item.ID
+		})
+	}
+	if aiConfig == nil && len(settingConfig.AiConfigs) > 0 {
+		aiConfig = settingConfig.AiConfigs[0]
+	}
+	if aiConfig == nil {
+		report.Status = "failed"
+		report.Error = "未配置AI服务"
+		db.Dao.Save(report)
+		return nil, errors.New("未配置AI服务")
+	}
+
+	// 3. 加载Skill Prompt模板
+	skillPrompt, err := s.loadSkillPrompt()
+	if err != nil {
+		logger.SugaredLogger.Errorf("加载Skill Prompt失败: %v", err)
+		report.Status = "failed"
+		report.Error = err.Error()
+		db.Dao.Save(report)
+		return nil, err
+	}
+
+	// 4. 创建OpenAi实例
+	openAI := &OpenAi{
+		ctx:          s.ctx,
+		BaseUrl:      aiConfig.BaseUrl,
+		ApiKey:       aiConfig.ApiKey,
+		Model:        aiConfig.ModelName,
+		MaxTokens:    aiConfig.MaxTokens,
+		Temperature:  aiConfig.Temperature,
+		TimeOut:      aiConfig.TimeOut,
+		Prompt:       skillPrompt,
+		CrawlTimeOut: settingConfig.CrawlTimeOut,
+		KDays:        settingConfig.KDays,
+		BrowserPath:  settingConfig.BrowserPath,
+	}
+
+	//如果超时时间未设置，默认为300秒
+	if openAI.TimeOut <= 0 {
+		openAI.TimeOut = 300
+	}
+	if openAI.CrawlTimeOut <= 0 {
+		openAI.CrawlTimeOut = 60
+	}
+	if openAI.KDays < 30 {
+		openAI.KDays = 120
+	}
+
+	// 5. 发送开始事件
+	if eventHandler != nil {
+		eventHandler("start", map[string]interface{}{
+			"report_id": report.ID,
+			"message":   "开始分析市场数据...",
+		})
+	}
+
+	// 6. 构建消息列表
+	msg := s.buildMessages(skillPrompt, req.UserQuery)
+
+	// 7. 调用AI进行荐股分析
+	ch := make(chan map[string]any, 512)
+	doneChan := make(chan bool, 1) // 用于同步解析完成
+
+	go func() {
+		defer close(ch)
+		AskAiWithTools(openAI, nil, msg, ch, req.UserQuery, s.getStockPickTools())
+	}()
+
+	// 8. 处理流式响应 - 在同一个 goroutine 中解析推荐数据
+	go func() {
+		var fullResponse strings.Builder
+		for data := range ch {
+			if eventHandler != nil {
+				if strData, ok := data["content"].(string); ok && strData != "" {
+					fullResponse.WriteString(strData)
+					eventHandler("stream", data)
+				}
+			}
+		}
+
+		// AI响应完成后，解析推荐结果并更新数据库
+		logger.SugaredLogger.Infof("AI分析完成，响应长度: %d", fullResponse.Len())
+		if fullResponse.Len() > 0 {
+			if err := s.parseAndUpdateRecommendations(report, fullResponse.String()); err != nil {
+				logger.SugaredLogger.Errorf("解析和更新推荐数据失败: %v", err)
+				// 即使解析失败，也要设置完成状态，避免报告一直处于 processing 状态
+				report.Error = err.Error()
+			}
+		} else {
+			logger.SugaredLogger.Warn("AI响应为空，设置状态为失败")
+			report.Status = "failed"
+			report.Error = "AI响应为空"
+		}
+
+		// 9. 更新报告状态和AI模型信息
+		report.Status = "completed"
+		report.AIModel = aiConfig.ModelName
+		if err := db.Dao.Save(report).Error; err != nil {
+			logger.SugaredLogger.Errorf("更新荐股报告状态失败: %v", err)
+		}
+
+		logger.SugaredLogger.Infof("荐股报告 %d 处理完成", report.ID)
+		doneChan <- true
+	}()
+
+	return &StockPickResponse{
+		ReportID: report.ID,
+		StreamID: fmt.Sprintf("stock-pick-%d", report.ID),
+	}, nil
+}
+
+// buildMessages 构建消息列表
+func (s *StockPickService) buildMessages(skillPrompt, userQuery string) []map[string]interface{} {
+	msg := []map[string]interface{}{
+		{
+			"role":    "system",
+			"content": skillPrompt,
+		},
+	}
+
+	// 添加当前时间
+	msg = append(msg, map[string]interface{}{
+		"role":    "user",
+		"content": "当前时间",
+	})
+	msg = append(msg, map[string]interface{}{
+		"role":    "assistant",
+		"content": "当前本地时间是:" + time.Now().Format("2006-01-02 15:04:05"),
+	})
+
+	// 添加市场指数行情
+	msg = append(msg, map[string]interface{}{
+		"role":    "user",
+		"content": "当前市场指数行情",
+	})
+	msg = append(msg, map[string]interface{}{
+		"role":    "assistant",
+		"content": "当前市场指数行情情况如下：\n" + s.getMarketIndexInfo(),
+	})
+
+	// 添加用户查询
+	msg = append(msg, map[string]interface{}{
+		"role":    "user",
+		"content": userQuery,
+	})
+
+	return msg
+}
+
+// getMarketIndexInfo 获取市场指数信息
+func (s *StockPickService) getMarketIndexInfo() string {
+	var sb strings.Builder
+	sb.WriteString(GetZSInfo("上证指数", "sh000001", 30) + "\n")
+	sb.WriteString(GetZSInfo("深证成指", "sz399001", 30) + "\n")
+	sb.WriteString(GetZSInfo("创业板指数", "sz399006", 30) + "\n")
+	sb.WriteString(GetZSInfo("科创50", "sh000688", 30) + "\n")
+	sb.WriteString(GetZSInfo("沪深300指数", "sh000300", 30) + "\n")
+	return sb.String()
+}
+
+// getStockPickTools 获取荐股工具列表（从配置加载）
+func (s *StockPickService) getStockPickTools() []Tool {
+	var tools []Tool
+
+	// 加载工具配置
+	config, err := LoadToolConfig()
+	if err != nil {
+		logger.SugaredLogger.Errorf("加载工具配置失败: %v", err)
+		return s.getDefaultTools() // 使用默认配置
+	}
+
+	// 根据配置创建工具
+	for _, toolItem := range config.Tools {
+		if !toolItem.Enabled {
+			continue
+		}
+
+		tool, err := CreateTool(toolItem)
+		if err != nil {
+			logger.SugaredLogger.Errorf("创建工具失败 %s: %v", toolItem.Name, err)
+			continue
+		}
+
+		tools = append(tools, tool)
+	}
+
+	// 如果配置中没有工具，返回默认工具
+	if len(tools) == 0 {
+		logger.SugaredLogger.Warnf("工具配置为空，使用默认工具")
+		return s.getDefaultTools()
+	}
+
+	return tools
+}
+
+// getDefaultTools 获取默认工具列表（保持向后兼容）
+func (s *StockPickService) getDefaultTools() []Tool {
+	return []Tool{
+		{
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "SearchStockByIndicators",
+				Description: "根据自然语言筛选股票",
+				Parameters: FunctionParameters{
+					Type: "object",
+					Properties: map[string]any{
+						"words": map[string]string{
+							"type":        "string",
+							"description": "选股自然语言描述，例如：涨停、涨幅大于5%、科技股等",
+						},
+					},
+					Required: []string{"words"},
+				},
+			},
+		},
+		{
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "GetStockKLine",
+				Description: "获取股票K线数据",
+				Parameters: FunctionParameters{
+					Type: "object",
+					Properties: map[string]any{
+						"stockCode": map[string]string{
+							"type":        "string",
+							"description": "股票代码，如：sh000001",
+						},
+						"days": map[string]string{
+							"type":        "string",
+							"description": "获取多少天的K线数据，默认90天",
+						},
+					},
+					Required: []string{"days", "stockCode"},
+				},
+			},
+		},
+		{
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "InteractiveAnswer",
+				Description: "获取投资者与上市公司互动问答数据",
+				Parameters: FunctionParameters{
+					Type: "object",
+					Properties: map[string]any{
+						"page": map[string]string{
+							"type":        "string",
+							"description": "页码，默认1",
+						},
+						"pageSize": map[string]string{
+							"type":        "string",
+							"description": "每页数量，默认50",
+						},
+						"keyWord": map[string]string{
+							"type":        "string",
+							"description": "关键词",
+						},
+					},
+					Required: []string{"page", "pageSize"},
+				},
+			},
+		},
+		{
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "GetStockResearchReport",
+				Description: "获取个股研报",
+				Parameters: FunctionParameters{
+					Type: "object",
+					Properties: map[string]any{
+						"stockCode": map[string]string{
+							"type":        "string",
+							"description": "股票代码，如：sh000001",
+						},
+					},
+					Required: []string{"stockCode"},
+				},
+			},
+		},
+	}
+}
+
+// SaveReport 保存荐股报告
+func (s *StockPickService) SaveReport(report *models.StockPickReport) error {
+	return db.Dao.Save(report).Error
+}
+
+// GetReports 获取荐股报告列表
+func (s *StockPickService) GetReports(offset, limit int) ([]models.StockPickReport, int64, error) {
+	// 初始化为空数组，避免确保不返回 nil
+	reports := make([]models.StockPickReport, 0)
+	var total int64
+
+	logger.SugaredLogger.Infof("GetReports 调用: offset=%d, limit=%d", offset, limit)
+
+	// 先获取总数
+	if err := db.Dao.Model(&models.StockPickReport{}).Count(&total).Error; err != nil {
+		logger.SugaredLogger.Errorf("获取报告总数失败: %v", err)
+		return reports, total, err
+	}
+	logger.SugaredLogger.Infof("报告总数: %d", total)
+
+	// 查询分页数据
+	err := db.Dao.Order("created_at DESC").Offset(offset).Limit(limit).Find(&reports).Error
+	if err != nil {
+		logger.SugaredLogger.Errorf("查询报告列表失败: %v", err)
+		return reports, total, err
+	}
+
+	logger.SugaredLogger.Infof("查询到 %d 条报告", len(reports))
+	for i, r := range reports {
+		logger.SugaredLogger.Debugf("报告[%d]: ID=%d, QuerySummary=%s, Status=%s", i, r.ID, r.QuerySummary, r.Status)
+	}
+
+	return reports, total, err
+}
+
+// GetReport 获取单个报告
+func (s *StockPickService) GetReport(id uint) (*models.StockPickReport, error) {
+	var report models.StockPickReport
+	err := db.Dao.First(&report, id).Error
+	return &report, err
+}
+
+// DeleteReport 删除报告
+func (s *StockPickService) DeleteReport(id uint) error {
+	return db.Dao.Delete(&models.StockPickReport{}, id).Error
+}
+
+// loadSkillPrompt 加载Skill Prompt模板
+func (s *StockPickService) loadSkillPrompt() (string, error) {
+	// 尝试从data/skills/ai-stock-pick.md读取
+	skillPath := "data/skills/ai-stock-pick.md"
+
+	// 读取文件内容
+	bytes, err := os.ReadFile(skillPath)
+	if err != nil {
+		logger.SugaredLogger.Warnf("读取Skill Prompt文件失败，使用默认Prompt: %v", err)
+		return s.getDefaultPrompt(), nil
+	}
+
+	prompt := string(bytes)
+	if strings.TrimSpace(prompt) == "" {
+		return s.getDefaultPrompt(), nil
+	}
+
+	return prompt, nil
+}
+
+// getDefaultPrompt 获取默认Prompt
+func (s *StockPickService) getDefaultPrompt() string {
+	return `【角色设定】
+你是一位拥有20年实战经验的顶级证券分析师和AI选股专家，精通技术分析、基本面分析、市场心理学和量化交易。擅长发现成长股、捕捉行业轮动机会，在牛熊市中都能保持稳定收益。你的风格是价值投资与技术择时相结合，注重风险控制。
+
+【核心功能】
+市场分析维度：
+- 宏观经济（GDP/CPI/货币政策）
+- 行业景气度（产业链/政策红利/技术革新）
+- 资金流向（主力资金/北向资金/融资余额）
+
+个股三维诊断：
+- 基本面：PE/PB/ROE/现金流/护城河
+- 技术面：K线形态/均线系统/量价关系/指标背离
+- 资金面：主力动向/北向资金/融资余额/大宗交易
+
+【工作流程】
+第一阶段：市场环境分析
+- 分析当前大盘走势
+- 分析热门板块资金流向
+- 识别市场热点和风格特征
+
+第二阶段：候选股票筛选
+- 根据用户需求调用选股工具
+- 初步筛选出50-100只候选股票
+
+第三阶段：深度分析
+- 对前20-30只候选股票进行深度分析
+- 分析技术面（K线、趋势、量价关系）
+- 分析基本面（财务指标、业绩增长）
+- 综合评分和排序
+
+第四阶段：生成推荐报告
+- 筛选出3-5只最具潜力的股票
+- 生成完整的分析报告
+- 提供买入建议和风险提示
+
+【输出要求】
+请按照以下格式输出推荐股票列表：
+
+推荐股票列表：
+1. [股票代码] [股票名称] - [推荐理由]
+   - 当前价格：XX.XX
+   - 涨跌幅：XX.XX%
+   - 技术面分析：[简要分析]
+   - 基本面分析：[简要分析]
+   - 目标涨幅：XX%
+   - 风险提示：[风险提示]
+
+【注意事项】
+- 严格遵守监管要求，不做收益承诺
+- 区分投资建议与市场观点
+- 重要数据标注来源及更新时间
+- 根据用户认知水平调整专业术语密度
+- 提供风险提示，控制仓位建议
+`
+}
+
+// generateQuerySummary 生成需求摘要
+func generateQuerySummary(query string) string {
+	// 截取前50个字符
+	if len(query) > 50 {
+		return query[:50] + "..."
+	}
+	return query
+}
+
+// ExportToMarkdownContent 生成Markdown内容
+func (s *StockPickService) ExportToMarkdownContent(reportID uint) (string, error) {
+	report, err := s.GetReport(reportID)
+	if err != nil {
+		return "", err
+	}
+
+	var sb strings.Builder
+	sb.WriteString("# AI荐股报告\n\n")
+	sb.WriteString(fmt.Sprintf("**生成时间**: %s\n\n", report.CreatedAt.Format("2006-01-02 15:04:05")))
+	sb.WriteString(fmt.Sprintf("**选股需求**: %s\n\n", report.UserQuery))
+
+	if report.MarketAnalysis != "" {
+		sb.WriteString("## 市场环境分析\n\n")
+		sb.WriteString(report.MarketAnalysis)
+		sb.WriteString("\n\n")
+	}
+
+	if report.FilterLogic != "" {
+		sb.WriteString("## 筛选逻辑\n\n")
+		sb.WriteString(report.FilterLogic)
+		sb.WriteString("\n\n")
+	}
+
+	sb.WriteString("## 推荐股票\n\n")
+
+	// 尝试解析并格式化推荐列表
+	var recommendations []models.RecommendationItem
+	if err := json.Unmarshal([]byte(report.Recommendations), &recommendations); err == nil && len(recommendations) > 0 {
+		// 格式化推荐股票
+		for i, rec := range recommendations {
+			sb.WriteString(fmt.Sprintf("### %d. %s (%s)\n\n", i+1, rec.StockName, rec.StockCode))
+			sb.WriteString(fmt.Sprintf("- **当前价格**: %.2f元\n", rec.CurrentPrice))
+			sb.WriteString(fmt.Sprintf("- **涨跌幅**: %.2f%%\n", rec.PriceChange))
+
+			if rec.TargetPrice > 0 {
+				sb.WriteString(fmt.Sprintf("- **目标价位**: %.2f元\n", rec.TargetPrice))
+			}
+			if rec.TargetChangePercent > 0 {
+				sb.WriteString(fmt.Sprintf("- **目标涨幅**: %.2f%%\n", rec.TargetChangePercent))
+			}
+			if rec.Score > 0 {
+				sb.WriteString(fmt.Sprintf("- **综合评分**: %.1f/100\n", rec.Score))
+			}
+
+			if rec.Reason != "" {
+				sb.WriteString(fmt.Sprintf("\n**推荐理由**:\n%s\n\n", rec.Reason))
+			}
+			if rec.TechnicalAnalysis != "" {
+				sb.WriteString(fmt.Sprintf("**技术面分析**:\n%s\n\n", rec.TechnicalAnalysis))
+			}
+			if rec.FundamentalAnalysis != "" {
+				sb.WriteString(fmt.Sprintf("**基本面分析**:\n%s\n\n", rec.FundamentalAnalysis))
+			}
+			if rec.RiskTips != "" {
+				sb.WriteString(fmt.Sprintf("**风险提示**:\n%s\n\n", rec.RiskTips))
+			}
+
+			sb.WriteString("---\n\n")
+		}
+	} else {
+		// 解析失败，直接使用原始内容
+		sb.WriteString(report.Recommendations)
+	}
+
+	sb.WriteString("---\n\n")
+	sb.WriteString("*本报告由AI智能分析生成，仅供参考，不构成投资建议。股市有风险，投资需谨慎。*\n")
+
+	return sb.String(), nil
+}
+
+// ExportToMarkdown 保留原方法用于兼容
+func (s *StockPickService) ExportToMarkdown(reportID uint) (string, error) {
+	_, err := s.ExportToMarkdownContent(reportID)
+	if err != nil {
+		return "", err
+	}
+	timestamp := time.Now().Format("20060102-150405")
+	fileName := fmt.Sprintf("stock-pick-report-%d-%s.md", reportID, timestamp)
+	return fileName, nil
+}
+
+// UpdateReportWithRecommendations 更新报告推荐数据
+func (s *StockPickService) UpdateReportWithRecommendations(reportID uint, marketAnalysis, filterLogic string, recommendations []models.RecommendationItem) error {
+	report, err := s.GetReport(reportID)
+	if err != nil {
+		return err
+	}
+
+	report.MarketAnalysis = marketAnalysis
+	report.FilterLogic = filterLogic
+	report.TotalScanned = len(recommendations) * 10 // 估算值
+	report.CandidatesCount = len(recommendations)
+
+	// 序列化推荐列表
+	recJSON, err := json.Marshal(recommendations)
+	if err != nil {
+		return err
+	}
+	report.Recommendations = string(recJSON)
+
+	return db.Dao.Save(report).Error
+}
+
+// GetRecommendations 获取报告的推荐列表
+func (s *StockPickService) GetRecommendations(reportID uint) ([]models.RecommendationItem, error) {
+	report, err := s.GetReport(reportID)
+	if err != nil {
+		return nil, err
+	}
+
+	var recommendations []models.RecommendationItem
+	if err := json.Unmarshal([]byte(report.Recommendations), &recommendations); err != nil {
+		return nil, err
+	}
+
+	return recommendations, nil
+}
+
+// UpdateRecommendationFollowStatus 更新关注状态
+func (s *StockPickService) UpdateRecommendationFollowStatus(reportID uint, stockCode string, isFollowed bool) error {
+	report, err := s.GetReport(reportID)
+	if err != nil {
+		return err
+	}
+
+	var recommendations []models.RecommendationItem
+	if err := json.Unmarshal([]byte(report.Recommendations), &recommendations); err != nil {
+		return err
+	}
+
+	// 更新关注状态
+	for i := range recommendations {
+		if recommendations[i].StockCode == stockCode {
+			recommendations[i].IsFollowed = isFollowed
+			break
+		}
+	}
+
+	// 序列化并保存
+	recJSON, err := json.Marshal(recommendations)
+	if err != nil {
+		return err
+	}
+	report.Recommendations = string(recJSON)
+
+	return db.Dao.Save(report).Error
+}
+
+// GetFollowedStockCodes 获取已关注的股票代码
+func (s *StockPickService) GetFollowedStockCodes() ([]string, error) {
+	var codes []string
+	followedStocks := NewStockDataApi().GetFollowList(0)
+	if followedStocks != nil {
+		for _, stock := range *followedStocks {
+			codes = append(codes, stock.StockCode)
+		}
+	}
+	return codes, nil
+}
+
+// CheckStockFollowed 检查股票是否已关注
+func (s *StockPickService) CheckStockFollowed(stockCode string) bool {
+	stock := NewStockDataApi().GetFollowedStockByStockCode(stockCode)
+	return stock.CostPrice >= 0
+}
+
+// ParseRecommendationsFromAIContent 从AI内容解析推荐股票
+func (s *StockPickService) ParseRecommendationsFromAIContent(content string) ([]models.RecommendationItem, error) {
+	var recommendations []models.RecommendationItem
+
+	// 这里可以添加解析逻辑，从AI输出中提取结构化的推荐数据
+	// 简化版：如果AI输出格式不规范，返回空列表
+
+	// TODO: 实现更复杂的解析逻辑
+	// 可以使用正则表达式或自然语言处理来提取股票代码和相关信息
+
+	return recommendations, nil
+}
+
+// GetMarketData 获取市场数据（供AI分析使用）
+func (s *StockPickService) GetMarketData() map[string]interface{} {
+	data := make(map[string]interface{})
+
+	// 获取主要指数
+	data["market_indices"] = map[string]string{
+		"sh000001": GetZSInfo("上证指数", "sh000001", 30),
+		"sz399001": GetZSInfo("深证成指", "sz399001", 30),
+		"sz399006": GetZSInfo("创业板指数", "sz399006", 30),
+		"sh000688": GetZSInfo("科创50", "sh000688", 30),
+	}
+
+	// 获取宏观经济数据
+	gdp := NewMarketNewsApi().GetGDP()
+	if len(gdp.GDPResult.Data) > 0 {
+		data["gdp"] = gdp.GDPResult.Data[0]
+	}
+
+	cpi := NewMarketNewsApi().GetCPI()
+	if len(cpi.CPIResult.Data) > 0 {
+		data["cpi"] = cpi.CPIResult.Data[0]
+	}
+
+	return data
+}
+
+// ValidateAIConfig 验证AI配置
+func (s *StockPickService) ValidateAIConfig(aiConfigID uint) error {
+	settingConfig := GetSettingConfig()
+	if len(settingConfig.AiConfigs) == 0 {
+		return errors.New("未配置AI服务")
+	}
+
+	if aiConfigID > 0 {
+		found := lo.ContainsBy(settingConfig.AiConfigs, func(item *AIConfig) bool {
+			return item.ID == aiConfigID
+		})
+		if !found {
+			return errors.New("指定的AI配置不存在")
+		}
+	}
+
+	return nil
+}
+
+// FormatMarkdown 格式化Markdown输出
+func (s *StockPickService) FormatMarkdown(content string) string {
+	// 将换行符转换为Markdown格式
+	lines := strings.Split(content, "\n")
+	var sb strings.Builder
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed != "" {
+			// 如果行以数字和点开头，视为列表项
+			if len(trimmed) > 0 && trimmed[0] >= '1' && trimmed[0] <= '9' && len(trimmed) > 1 && trimmed[1] == '.' {
+				sb.WriteString(trimmed + "\n")
+			} else {
+				sb.WriteString(trimmed + "\n")
+			}
+		}
+	}
+
+	return sb.String()
+}
+
+// GetStockInfoByCode 根据股票代码获取股票信息
+func (s *StockPickService) GetStockInfoByCode(stockCode string) (string, string, error) {
+	stockData, err := NewStockDataApi().GetStockCodeRealTimeData(stockCode)
+	if err != nil || len(*stockData) == 0 {
+		return "", "", errors.New("获取股票信息失败")
+	}
+
+	stock := (*stockData)[0]
+	stockName := RemoveAllNonDigitChar(stockCode)
+
+	return stockName, stock.Price, nil
+}
+
+// FormatStockRecommendation 格式化股票推荐信息
+func (s *StockPickService) FormatStockRecommendation(rec models.RecommendationItem) string {
+	var sb strings.Builder
+
+	sb.WriteString(fmt.Sprintf("### %d. %s (%s)\n", rec.Rank, rec.StockName, rec.StockCode))
+	sb.WriteString(fmt.Sprintf("- **当前价格**: %.2f\n", rec.CurrentPrice))
+	sb.WriteString(fmt.Sprintf("- **涨跌幅**: %.2f%%\n", rec.PriceChange))
+
+	if rec.TargetPrice > 0 {
+		sb.WriteString(fmt.Sprintf("- **目标价位**: %.2f\n", rec.TargetPrice))
+	}
+
+	if rec.TargetChangePercent > 0 {
+		sb.WriteString(fmt.Sprintf("- **目标涨幅**: %.2f%%\n", rec.TargetChangePercent))
+	}
+
+	if rec.Score > 0 {
+		sb.WriteString(fmt.Sprintf("- **综合评分**: %.1f/100\n", rec.Score))
+	}
+
+	if rec.Reason != "" {
+		sb.WriteString(fmt.Sprintf("- **推荐理由**: %s\n", rec.Reason))
+	}
+
+	if rec.TechnicalAnalysis != "" {
+		sb.WriteString(fmt.Sprintf("- **技术面**: %s\n", rec.TechnicalAnalysis))
+	}
+
+	if rec.FundamentalAnalysis != "" {
+		sb.WriteString(fmt.Sprintf("- **基本面**: %s\n", rec.FundamentalAnalysis))
+	}
+
+	if rec.RiskTips != "" {
+		sb.WriteString(fmt.Sprintf("- **风险提示**: %s\n", rec.RiskTips))
+	}
+
+	sb.WriteString("\n")
+
+	return sb.String()
+}
+
+// GetStockPickStats 获取荐股统计信息
+func (s *StockPickService) GetStockPickStats() map[string]interface{} {
+	var total, completed, failed int64
+
+	db.Dao.Model(&models.StockPickReport{}).Count(&total)
+	db.Dao.Model(&models.StockPickReport{}).Where("status = ?", "completed").Count(&completed)
+	db.Dao.Model(&models.StockPickReport{}).Where("status = ?", "failed").Count(&failed)
+
+	return map[string]interface{}{
+		"total":     total,
+		"completed": completed,
+		"failed":    failed,
+		"success_rate": func() float64 {
+			if total == 0 {
+				return 0
+			}
+			return float64(completed) / float64(total) * 100
+		}(),
+	}
+}
+
+// SendToolCallEvent 发送工具调用事件
+func (s *StockPickService) SendToolCallEvent(toolName, status string) {
+	if s.ctx != nil {
+		runtime.EventsEmit(s.ctx, "ai-stock-pick-tool", map[string]interface{}{
+			"tool_name": toolName,
+			"status":    status,
+			"timestamp": time.Now().Unix(),
+		})
+	}
+}
+
+// StreamRecommendationUpdate 流式更新推荐结果
+func (s *StockPickService) StreamRecommendationUpdate(reportID uint, content string) {
+	if s.ctx != nil {
+		runtime.EventsEmit(s.ctx, "ai-stock-pick-update", map[string]interface{}{
+			"report_id": reportID,
+			"content":   content,
+			"timestamp": time.Now().Unix(),
+		})
+	}
+}
+
+// ClearOldReports 清理旧的报告（保留最近30天）
+func (s *StockPickService) ClearOldReports() error {
+	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
+	result := db.Dao.Where("created_at < ?", thirtyDaysAgo).Delete(&models.StockPickReport{})
+	if result.Error != nil {
+		return result.Error
+	}
+	logger.SugaredLogger.Infof("清理了%d条旧的荐股报告", result.RowsAffected)
+	return nil
+}
+
+// parseAndUpdateRecommendations 解析AI响应并更新到数据库
+func (s *StockPickService) parseAndUpdateRecommendations(report *models.StockPickReport, content string) error {
+	// 确保 report 不为 nil
+	if report == nil {
+		return errors.New("report 参数为 nil")
+	}
+
+	logger.SugaredLogger.Infof("开始解析AI响应，报告ID: %d", report.ID)
+
+	// 添加defer用于捕获panic
+	defer func() {
+		if r := recover(); r != nil {
+			logger.SugaredLogger.Errorf("parseAndUpdateRecommendations 发生panic: %v", r)
+		}
+	}()
+
+	// 检查输入参数
+	if content == "" {
+		logger.SugaredLogger.Warnf("报告ID %d 的AI响应内容为空", report.ID)
+		// 即使内容为空，也保存报告状态为已完成，但设置错误信息
+		report.Recommendations = "[]"
+		report.Error = "AI响应内容为空"
+		if err := db.Dao.Save(report).Error; err != nil {
+			logger.SugaredLogger.Errorf("保存荐股报告失败: %v", err)
+			return err
+		}
+		return nil
+	}
+
+	logger.SugaredLogger.Debugf("AI响应内容预览（前500字符）: %s", safeTruncate(content, 500))
+
+	// 解析市场环境分析和筛选逻辑
+	logger.SugaredLogger.Debugf("开始提取市场分析和筛选逻辑")
+	marketAnalysis, filterLogic := extractMarketAndFilterInfo(content)
+	logger.SugaredLogger.Debugf("市场分析长度: %d, 筛选逻辑长度: %d", len(marketAnalysis), len(filterLogic))
+
+	// 解析推荐股票列表
+	logger.SugaredLogger.Debugf("开始解析推荐股票列表")
+	recommendations := s.parseRecommendationsFromContent(content)
+	logger.SugaredLogger.Infof("解析到 %d 个推荐股票", len(recommendations))
+
+	// 更新报告数据
+	report.MarketAnalysis = marketAnalysis
+	report.FilterLogic = filterLogic
+	report.TotalScanned = len(recommendations) * 10 // 估算扫描数量
+	report.CandidatesCount = len(recommendations)
+
+	// 序列化推荐列表
+	logger.SugaredLogger.Debugf("开始序列化推荐列表，数量: %d", len(recommendations))
+	recJSON, err := json.Marshal(recommendations)
+	if err != nil {
+		logger.SugaredLogger.Errorf("序列化推荐列表失败: %v", err)
+		// 序列化失败时，将JSON字符串设为空，避免后续数据库保存失败
+		report.Recommendations = "[]"
+	} else {
+		report.Recommendations = string(recJSON)
+	}
+
+	// 保存到数据库
+	logger.SugaredLogger.Debugf("开始保存到数据库")
+	if err := db.Dao.Save(report).Error; err != nil {
+		logger.SugaredLogger.Errorf("保存荐股报告失败: %v", err)
+		return err
+	}
+
+	logger.SugaredLogger.Infof("荐股报告更新成功，推荐数量: %d", len(recommendations))
+
+	// 发送事件到前端
+	if s.ctx != nil {
+		logger.SugaredLogger.Debugf("发送事件到前端")
+		runtime.EventsEmit(s.ctx, "ai-stock-pick-update", map[string]interface{}{
+			"report_id":        report.ID,
+			"recommendations":  recommendations,
+			"market_analysis":  marketAnalysis,
+			"filter_logic":     filterLogic,
+			"total_scanned":    report.TotalScanned,
+			"candidates_count": report.CandidatesCount,
+			"status":           "completed",
+			"timestamp":        time.Now().Unix(),
+		})
+	}
+
+	return nil
+}
+
+// safeTruncate 安全截取字符串，防止panic
+func safeTruncate(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen] + "..."
+}
+
+// extractMarketAndFilterInfo 从内容中提取市场分析和筛选逻辑
+func extractMarketAndFilterInfo(content string) (marketAnalysis, filterLogic string) {
+	lines := strings.Split(content, "\n")
+
+	var marketBuilder strings.Builder
+	var filterBuilder strings.Builder
+	var inMarketSection bool
+	var inFilterSection bool
+	var inRecommendationSection bool
+
+	for _, line := range lines {
+		lowerLine := strings.ToLower(strings.TrimSpace(line))
+
+		// 检测章节开始
+		if strings.Contains(lowerLine, "市场环境分析") || strings.Contains(lowerLine, "市场分析") {
+			inMarketSection = true
+			inFilterSection = false
+			continue
+		}
+		if strings.Contains(lowerLine, "筛选逻辑") || strings.Contains(lowerLine, "筛选条件") {
+			inFilterSection = true
+			inMarketSection = false
+			continue
+		}
+		if strings.Contains(lowerLine, "推荐股票") || strings.Contains(lowerLine, "推荐列表") {
+			inRecommendationSection = true
+			inMarketSection = false
+			inFilterSection = false
+			continue
+		}
+
+		// 如果进入推荐章节，停止提取
+		if inRecommendationSection {
+			break
+		}
+
+		// 收集内容
+		if inMarketSection && strings.TrimSpace(line) != "" {
+			marketBuilder.WriteString(line + "\n")
+		}
+		if inFilterSection && strings.TrimSpace(line) != "" {
+			filterBuilder.WriteString(line + "\n")
+		}
+	}
+
+	return strings.TrimSpace(marketBuilder.String()), strings.TrimSpace(filterBuilder.String())
+}
+
+// extractJSONFromContent 从AI响应中提取JSON数据
+func extractJSONFromContent(content string) ([]models.RecommendationItem, bool) {
+	// 查找JSON块
+	jsonStart := strings.Index(content, "```json")
+	if jsonStart == -1 {
+		jsonStart = strings.Index(content, "{")
+	}
+	if jsonStart == -1 {
+		return nil, false
+	}
+
+	jsonEnd := strings.LastIndex(content, "```")
+	if jsonEnd == -1 || jsonEnd < jsonStart {
+		jsonEnd = strings.LastIndex(content, "}")
+	}
+	if jsonEnd == -1 {
+		return nil, false
+	}
+
+	// 提取JSON字符串
+	jsonStr := content[jsonStart:jsonEnd]
+	jsonStr = strings.TrimPrefix(jsonStr, "```json")
+	jsonStr = strings.TrimPrefix(jsonStr, "```")
+	jsonStr = strings.TrimSpace(jsonStr)
+
+	logger.SugaredLogger.Debugf("提取到的JSON字符串: %s", safeTruncate(jsonStr, 200))
+
+	// 解析JSON
+	var result map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
+		logger.SugaredLogger.Warnf("解析JSON失败: %v", err)
+		return nil, false
+	}
+
+	// 转换为RecommendationItem
+	if recs, ok := result["recommendations"].([]interface{}); ok {
+		var recommendations []models.RecommendationItem
+		for _, rec := range recs {
+			if recMap, ok := rec.(map[string]interface{}); ok {
+				item := models.RecommendationItem{
+					Rank:                len(recommendations) + 1,
+					StockCode:           getString(recMap, "stock_code"),
+					StockName:           getString(recMap, "stock_name"),
+					CurrentPrice:        getFloat(recMap, "current_price"),
+					PriceChange:         getFloat(recMap, "price_change"),
+					TargetPrice:         getFloat(recMap, "target_price"),
+					TargetChangePercent: getFloat(recMap, "target_change_percent"),
+					Reason:              getString(recMap, "reason"),
+					TechnicalAnalysis:   getString(recMap, "technical_analysis"),
+					FundamentalAnalysis: getString(recMap, "fundamental_analysis"),
+					RiskTips:            getString(recMap, "risk_tips"),
+					RiskLevel:           getString(recMap, "risk_level"),
+					Score:               getFloat(recMap, "score"),
+					IsFollowed:          false, // 后续更新
+				}
+				recommendations = append(recommendations, item)
+			}
+		}
+		return recommendations, true
+	}
+
+	return nil, false
+}
+
+// getString 从map中获取字符串值
+func getString(m map[string]interface{}, key string) string {
+	if val, ok := m[key]; ok {
+		if s, ok := val.(string); ok {
+			return s
+		}
+	}
+	return ""
+}
+
+// getFloat 从map中获取浮点数值
+func getFloat(m map[string]interface{}, key string) float64 {
+	if val, ok := m[key]; ok {
+		switch v := val.(type) {
+		case float64:
+			return v
+		case float32:
+			return float64(v)
+		case int:
+			return float64(v)
+		case int64:
+			return float64(v)
+		}
+	}
+	return 0
+}
+
+// parseRecommendationsFromContent 从内容中解析推荐股票
+func (s *StockPickService) parseRecommendationsFromContent(content string) []models.RecommendationItem {
+	logger.SugaredLogger.Infof("开始解析推荐内容，内容长度: %d", len(content))
+
+	// 优先尝试解析JSON格式
+	if recs, ok := extractJSONFromContent(content); ok {
+		logger.SugaredLogger.Infof("JSON解析成功，推荐数量: %d", len(recs))
+
+		// 更新关注状态
+		for i := range recs {
+			recs[i].IsFollowed = s.CheckStockFollowed(recs[i].StockCode)
+		}
+		return recs
+	}
+
+	// JSON解析失败，使用原有的文本解析逻辑
+	logger.SugaredLogger.Warn("JSON解析失败，使用文本解析")
+	return s.parseRecommendationsFromText(content)
+}
+
+// parseRecommendationsFromText 从文本格式解析推荐股票（原有逻辑）
+func (s *StockPickService) parseRecommendationsFromText(content string) []models.RecommendationItem {
+	logger.SugaredLogger.Infof("使用文本解析推荐内容，内容长度: %d", len(content))
+
+	var recommendations []models.RecommendationItem
+
+	lines := strings.Split(content, "\n")
+	logger.SugaredLogger.Debugf("内容分割为 %d 行", len(lines))
+
+	var currentRec *models.RecommendationItem
+	var detailBuilder strings.Builder
+	inRecommendationSection := false
+
+	for lineIdx, line := range lines {
+		trimmedLine := strings.TrimSpace(line)
+		lowerLine := strings.ToLower(trimmedLine)
+
+		// 检测推荐章节开始
+		if strings.Contains(lowerLine, "推荐股票") || strings.Contains(lowerLine, "推荐列表") {
+			inRecommendationSection = true
+			logger.SugaredLogger.Debugf("在行 %d 检测到推荐章节开始", lineIdx)
+			continue
+		}
+
+		if !inRecommendationSection {
+			continue
+		}
+
+		// 尝试解析推荐行: 格式 "1. [股票代码] [股票名称] - [推荐理由]"
+		if matches := parseRecommendationLine(trimmedLine); matches != nil {
+			// 保存上一个推荐
+			if currentRec != nil && detailBuilder.Len() > 0 {
+				currentRec.Reason = strings.TrimSpace(detailBuilder.String())
+				recommendations = append(recommendations, *currentRec)
+				logger.SugaredLogger.Debugf("添加推荐项，当前总数: %d", len(recommendations))
+			}
+
+			// 创建新推荐
+			rank := len(recommendations) + 1
+			stockCode := matches["stock_code"]
+			stockName := matches["stock_name"]
+			reason := matches["reason"]
+
+			logger.SugaredLogger.Debugf("解析到推荐项 %d: 代码=%s, 名称=%s", rank, stockCode, stockName)
+
+			currentRec = &models.RecommendationItem{
+				Rank:       rank,
+				StockCode:  stockCode,
+				StockName:  stockName,
+				Reason:     reason,
+				IsFollowed: s.CheckStockFollowed(stockCode),
+			}
+
+			// 尝试获取实时价格
+			logger.SugaredLogger.Debugf("尝试获取股票 %s 的实时数据", stockCode)
+			if stockInfo, err := NewStockDataApi().GetStockCodeRealTimeData(stockCode); err != nil {
+				logger.SugaredLogger.Warnf("获取股票 %s 实时数据失败: %v", stockCode, err)
+			} else if stockInfo == nil {
+				logger.SugaredLogger.Warnf("获取股票 %s 实时数据返回nil", stockCode)
+			} else if len(*stockInfo) == 0 {
+				logger.SugaredLogger.Warnf("获取股票 %s 实时数据返回空数组", stockCode)
+			} else {
+				stock := (*stockInfo)[0]
+				logger.SugaredLogger.Debugf("获取到股票数据: Price=%s, ChangePercent=%s", stock.Price, stock.ChangePercent)
+				if price, err := parsePrice(stock.Price); err == nil {
+					currentRec.CurrentPrice = price
+				} else {
+					logger.SugaredLogger.Warnf("解析股票 %s 价格失败: %v, 原始值: %s", stockCode, err, stock.Price)
+				}
+				currentRec.PriceChange = stock.ChangePercent
+			}
+
+			detailBuilder.Reset()
+		} else if currentRec != nil {
+			// 解析详细信息
+			parseDetailLine(trimmedLine, currentRec, &detailBuilder)
+		}
+	}
+
+	// 保存最后一个推荐
+	if currentRec != nil {
+		if detailBuilder.Len() > 0 {
+			currentRec.Reason = strings.TrimSpace(detailBuilder.String())
+		}
+		recommendations = append(recommendations, *currentRec)
+	}
+
+	logger.SugaredLogger.Infof("解析完成，共 %d 个推荐项", len(recommendations))
+	return recommendations
+}
+
+// parseRecommendationLine 解析推荐行
+func parseRecommendationLine(line string) map[string]string {
+	// 格式: "1. sh600000 浦发银行 - 稳健的基本面和良好的分红政策"
+	matches := make(map[string]string)
+
+	// 使用简单的字符串解析
+	parts := strings.SplitN(line, " ", 3)
+	if len(parts) >= 2 {
+		// 提取排名和股票代码
+		codePart := strings.Trim(parts[1], "[]")
+		if isValidStockCode(codePart) {
+			matches["stock_code"] = strings.ToUpper(codePart)
+		}
+
+		// 提取股票名称和理由
+		if len(parts) >= 3 {
+			rest := strings.Join(parts[2:], " ")
+			if idx := strings.Index(rest, "-"); idx > 0 {
+				matches["stock_name"] = strings.TrimSpace(rest[:idx])
+				matches["reason"] = strings.TrimSpace(rest[idx+1:])
+			} else {
+				matches["stock_name"] = rest
+			}
+		} else {
+			matches["stock_name"] = parts[2]
+		}
+	}
+
+	if len(matches["stock_code"]) > 0 {
+		return matches
+	}
+	return nil
+}
+
+// isValidStockCode 验证股票代码格式
+func isValidStockCode(code string) bool {
+	code = strings.ToLower(code)
+	return strings.HasPrefix(code, "sh") || strings.HasPrefix(code, "sz") ||
+		strings.HasPrefix(code, "hk") || strings.HasPrefix(code, "us")
+}
+
+// parseDetailLine 解析详细信息行
+func parseDetailLine(line string, rec *models.RecommendationItem, builder *strings.Builder) {
+	lowerLine := strings.ToLower(line)
+
+	if strings.Contains(lowerLine, "当前价格") || strings.Contains(lowerLine, "现价") {
+		if price, err := parsePriceFromLine(line); err == nil {
+			rec.CurrentPrice = price
+		}
+	} else if strings.Contains(lowerLine, "涨跌幅") {
+		if change, err := parsePriceFromLine(line); err == nil {
+			rec.PriceChange = change
+		}
+	} else if strings.Contains(lowerLine, "目标价位") || strings.Contains(lowerLine, "目标价") {
+		if price, err := parsePriceFromLine(line); err == nil {
+			rec.TargetPrice = price
+		}
+	} else if strings.Contains(lowerLine, "目标涨幅") {
+		if change, err := parsePriceFromLine(line); err == nil {
+			rec.TargetChangePercent = change
+		}
+	} else if strings.Contains(lowerLine, "评分") || strings.Contains(lowerLine, "综合评分") {
+		if score, err := parsePriceFromLine(line); err == nil {
+			rec.Score = score
+		}
+	} else if strings.Contains(lowerLine, "技术面") || strings.Contains(lowerLine, "技术面分析") {
+		techInfo := strings.TrimSpace(strings.TrimPrefix(line, "-"))
+		techInfo = strings.TrimSpace(strings.TrimPrefix(techInfo, "技术面分析："))
+		techInfo = strings.TrimSpace(strings.TrimPrefix(techInfo, "技术面："))
+		rec.TechnicalAnalysis = techInfo
+	} else if strings.Contains(lowerLine, "基本面") || strings.Contains(lowerLine, "基本面分析") {
+		fundInfo := strings.TrimSpace(strings.TrimPrefix(line, "-"))
+		fundInfo = strings.TrimSpace(strings.TrimPrefix(fundInfo, "基本面分析："))
+		fundInfo = strings.TrimSpace(strings.TrimPrefix(fundInfo, "基本面："))
+		rec.FundamentalAnalysis = fundInfo
+	} else if strings.Contains(lowerLine, "风险提示") || strings.Contains(lowerLine, "风险") {
+		riskInfo := strings.TrimSpace(strings.TrimPrefix(line, "-"))
+		riskInfo = strings.TrimSpace(strings.TrimPrefix(riskInfo, "风险提示："))
+		riskInfo = strings.TrimSpace(strings.TrimPrefix(riskInfo, "风险："))
+		rec.RiskTips = riskInfo
+	}
+}
+
+// parsePrice 从字符串解析价格
+func parsePrice(s string) (float64, error) {
+	var result float64
+	_, err := fmt.Sscanf(strings.TrimSpace(s), "%f", &result)
+	return result, err
+}
+
+// parsePriceFromLine 从行中解析价格
+func parsePriceFromLine(line string) (float64, error) {
+	// 提取冒号或中文冒号后的内容
+	if idx := strings.Index(line, ":"); idx >= 0 {
+		return parsePrice(line[idx+1:])
+	}
+	if idx := strings.Index(line, "："); idx >= 0 {
+		return parsePrice(line[idx+1:])
+	}
+	return 0, fmt.Errorf("无法解析价格")
+}
