@@ -137,10 +137,10 @@
   <!-- 历史记录抽屉 -->
   <n-drawer v-model:show="historyVisible" width="50%" placement="right">
     <template #header>
-      <n-text strong>历史推荐记录</n-text>
+      <n-text strong style="padding-left: 8px;">历史推荐记录</n-text>
     </template>
     <n-spin :show="loadingHistory">
-      <n-list v-if="historyList.length > 0">
+      <n-list v-if="historyList.length > 0" style="padding-left: 12px;">
         <n-list-item
           v-for="item in historyList"
           :key="item.ID"
@@ -167,7 +167,7 @@
           </n-thing>
         </n-list-item>
       </n-list>
-      <n-empty v-else description="暂无历史记录" />
+      <n-empty v-else description="暂无历史记录" style="padding-left: 12px;" />
     </n-spin>
   </n-drawer>
 </template>
@@ -677,18 +677,14 @@ async function getStats() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  min-height: 0;
 }
 
 .full-report-wrapper :deep(.n-scrollbar) {
   flex: 1;
-  min-height: 0;
 }
 
 .full-report-wrapper :deep(.n-scrollbar-container) {
   height: 100%;
-  width: 100%;
-  overflow: auto;
 }
 
 .md-preview-content {
@@ -697,6 +693,7 @@ async function getStats() {
   box-sizing: border-box;
   overflow-y: scroll;
   padding-right: 10px;
+  height: 100vh;
 }
 
 .simple-list-wrapper {
