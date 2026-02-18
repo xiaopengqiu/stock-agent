@@ -34,7 +34,7 @@ import InvestCalendarTimeLine from "./InvestCalendarTimeLine.vue";
 import ClsCalendarTimeLine from "./ClsCalendarTimeLine.vue";
 import SelectStock from "./SelectStock.vue";
 import Stockhotmap from "./stockhotmap.vue";
-import AiStockPickFixed from "./ai-stock-pick-fixed.vue";
+import AiStockPickFixed from "./ai-stock-pick.vue";
 
 const route = useRoute()
 const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
