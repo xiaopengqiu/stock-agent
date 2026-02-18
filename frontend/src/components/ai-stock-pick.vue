@@ -124,6 +124,7 @@
                   :data="simpleRecommendations"
                   :pagination="pagination"
                   size="small"
+                  :scroll-x="1200"
                 />
               </div>
             </div>
@@ -676,23 +677,35 @@ async function getStats() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0;
 }
 
 .full-report-wrapper :deep(.n-scrollbar) {
   flex: 1;
+  min-height: 0;
 }
 
 .full-report-wrapper :deep(.n-scrollbar-container) {
   height: 100%;
+  width: 100%;
+  overflow: auto;
 }
 
 .md-preview-content {
   padding: 0 10px;
   min-height: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.md-preview-content :deep(*) {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .simple-list-wrapper {
   flex: 1;
-  overflow-y: auto;
+  overflow: auto;
+  min-height: 0;
 }
 </style>
