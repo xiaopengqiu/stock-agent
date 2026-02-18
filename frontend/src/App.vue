@@ -391,6 +391,28 @@ const menuOptions = ref([
         key: 'market12',
         icon: renderIcon(FirefoxBrowser),
       },
+      {
+        label: () =>
+            h(
+                RouterLink,
+                {
+                  href: '#',
+                  to: {
+                    name: 'market',
+                    query: {
+                      name: "AI选股"
+                    }
+                  },
+                  onClick: () => {
+                    activeKey.value = 'market'
+                    EventsEmit("changeMarketTab", {ID: 0, name: 'AI选股'})
+                  },
+                },
+                {default: () => 'AI选股',}
+            ),
+        key: 'market13',
+        icon: renderIcon(Robot),
+      },
     ]
   },
   {

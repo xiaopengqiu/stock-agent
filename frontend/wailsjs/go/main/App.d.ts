@@ -4,6 +4,8 @@ import {data} from '../models';
 import {models} from '../models';
 import {context} from '../models';
 
+export function AIStockPickChat(arg1:string,arg2:number):Promise<string>;
+
 export function AddCronTask(arg1:data.FollowedStock):Promise<any>;
 
 export function AddGroup(arg1:data.Group):Promise<string>;
@@ -20,11 +22,15 @@ export function CheckSponsorCode(arg1:string):Promise<Record<string, any>>;
 
 export function CheckStockBaseInfo(arg1:context.Context):Promise<void>;
 
+export function CheckStockFollowed(arg1:string):Promise<boolean>;
+
 export function CheckUpdate(arg1:number):Promise<void>;
 
 export function ClsCalendar():Promise<Array<any>>;
 
 export function DelPrompt(arg1:number):Promise<string>;
+
+export function DeleteStockPickReport(arg1:number):Promise<string>;
 
 export function EMDictCode(arg1:string):Promise<Array<any>>;
 
@@ -32,9 +38,13 @@ export function ExportConfig():Promise<string>;
 
 export function ExportPrompts():Promise<string>;
 
+export function ExportStockPickReport(arg1:number,arg2:string):Promise<string>;
+
 export function Follow(arg1:string):Promise<string>;
 
 export function FollowFund(arg1:string):Promise<string>;
+
+export function FollowStockFromReport(arg1:number,arg2:string):Promise<string>;
 
 export function GetAIResponseResult(arg1:string):Promise<models.AIResponseResult>;
 
@@ -82,7 +92,17 @@ export function GetStockMinutePriceLineData(arg1:string,arg2:string):Promise<Rec
 
 export function GetStockMoneyTrendByDay(arg1:string,arg2:number):Promise<Array<Record<string, any>>>;
 
+export function GetStockPickRecommendations(arg1:number):Promise<Array<models.RecommendationItem>>;
+
+export function GetStockPickReport(arg1:number):Promise<models.StockPickReport>;
+
+export function GetStockPickReports(arg1:number,arg2:number):Promise<models.StockPickReportsResponse>;
+
+export function GetStockPickStats():Promise<Record<string, any>>;
+
 export function GetTelegraphList(arg1:string):Promise<any>;
+
+export function GetToolConfig():Promise<string>;
 
 export function GetVersionInfo():Promise<models.VersionInfo>;
 
@@ -116,6 +136,8 @@ export function ReFleshTelegraphList(arg1:string):Promise<any>;
 
 export function ReloadMCPTools():Promise<string>;
 
+export function ReloadTools():Promise<string>;
+
 export function RemoveGroup(arg1:number):Promise<string>;
 
 export function RemoveStockGroup(arg1:string,arg2:string,arg3:number):Promise<string>;
@@ -143,6 +165,8 @@ export function SetMCPConfig(arg1:string):Promise<string>;
 export function SetStockAICron(arg1:string,arg2:string):Promise<void>;
 
 export function SetStockSort(arg1:number,arg2:string):Promise<void>;
+
+export function SetToolConfig(arg1:string):Promise<string>;
 
 export function ShareAnalysis(arg1:string,arg2:string):Promise<string>;
 

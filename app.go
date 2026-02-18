@@ -58,8 +58,7 @@ func NewApp() *App {
 	cache := freecache.NewCache(cacheSize)
 	c := cron.New(cron.WithSeconds())
 	c.Start()
-	var tools []data.Tool
-	tools = AddTools(tools)
+	tools := loadToolsFromConfig()
 	return &App{
 		cache:             cache,
 		cron:              c,
@@ -67,6 +66,44 @@ func NewApp() *App {
 		AiTools:           tools,
 		PromptTemplateSvc: data.NewPromptTemplateApi(),
 	}
+}
+
+// loadToolsFromConfig loads tools from configuration file
+func loadToolsFromConfig() []data.Tool {
+	config, err := data.LoadToolConfig()
+	if err != nil {
+		logger.SugaredLogger.Warnf("Failed to load tool config, using default tools: %v", err)
+		return getDefaultBuiltinTools()
+	}
+
+	var tools []data.Tool
+	for _, item := range config.Tools {
+		if !item.Enabled {
+			continue
+		}
+
+		tool, err := data.CreateTool(item)
+		if err != nil {
+			logger.SugaredLogger.Errorf("Failed to create tool %s: %v", item.Name, err)
+			continue
+		}
+
+		tools = append(tools, tool)
+	}
+
+	if len(tools) == 0 {
+		logger.SugaredLogger.Warnf("No tools loaded from config, using default tools")
+		return getDefaultBuiltinTools()
+	}
+
+	logger.SugaredLogger.Infof("Loaded %d tools from config", len(tools))
+	return tools
+}
+
+// getDefaultBuiltinTools returns default built-in tools as fallback
+func getDefaultBuiltinTools() []data.Tool {
+	var tools []data.Tool
+	return AddTools(tools)
 }
 
 func AddTools(tools []data.Tool) []data.Tool {
@@ -1530,8 +1567,8 @@ func (a *App) GetMCPStatus() map[string]any {
 	result := make(map[string]any)
 	for name, state := range status {
 		result[name] = map[string]any{
-			"status":     state.Status,
-			"lastError":  state.LastError,
+			"status":      state.Status,
+			"lastError":   state.LastError,
 			"connectedAt": state.ConnectedAt,
 		}
 	}
@@ -1615,4 +1652,278 @@ func (a *App) GetMCPToolCount() int {
 // GetBuiltinToolCount returns the number of built-in tools
 func (a *App) GetBuiltinToolCount() int {
 	return agent.GetBuiltinToolCount()
+}
+
+// GetToolConfig returns current tool configuration as JSON
+func (a *App) GetToolConfig() string {
+	config, err := data.LoadToolConfig()
+	if err != nil {
+		logger.SugaredLogger.Errorf("Failed to load tool config: %v", err)
+		return "Failed to load tool configuration: " + err.Error()
+	}
+
+	configJSON, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		logger.SugaredLogger.Errorf("Failed to marshal tool config: %v", err)
+		return "Failed to serialize tool configuration: " + err.Error()
+	}
+
+	return string(configJSON)
+}
+
+// SetToolConfig updates tool configuration from JSON string
+func (a *App) SetToolConfig(configStr string) string {
+	// Validate JSON
+	var config data.ToolConfig
+	if err := json.Unmarshal([]byte(configStr), &config); err != nil {
+		logger.SugaredLogger.Errorf("Invalid tool config JSON: %v", err)
+		return "Invalid configuration format: " + err.Error()
+	}
+
+	// Validate configuration
+	if err := validateToolConfig(&config); err != nil {
+		logger.SugaredLogger.Errorf("Invalid tool config: %v", err)
+		return "Invalid configuration: " + err.Error()
+	}
+
+	// Save configuration
+	if err := data.SaveToolConfig(&config); err != nil {
+		logger.SugaredLogger.Errorf("Failed to save tool config: %v", err)
+		return "Failed to save configuration: " + err.Error()
+	}
+
+	logger.SugaredLogger.Infof("Tool config saved successfully")
+	return "Configuration saved successfully"
+}
+
+// ReloadTools reloads tools from configuration file
+func (a *App) ReloadTools() string {
+	// Invalidate cache
+	data.InvalidateToolConfigCache()
+
+	// Reload tools
+	tools := loadToolsFromConfig()
+
+	// Update AiTools
+	a.AiTools = tools
+
+	logger.SugaredLogger.Infof("Tools reloaded successfully, %d tools loaded", len(tools))
+	return fmt.Sprintf("Tools reloaded successfully, %d tools loaded", len(tools))
+}
+
+// validateToolConfig validates tool configuration
+func validateToolConfig(config *data.ToolConfig) error {
+	if config.Version == "" {
+		return fmt.Errorf("configuration version is required")
+	}
+
+	if len(config.Tools) == 0 {
+		return fmt.Errorf("at least one tool is required")
+	}
+
+	toolNames := make(map[string]bool)
+	for _, tool := range config.Tools {
+		if tool.Name == "" {
+			return fmt.Errorf("tool name is required")
+		}
+
+		if toolNames[tool.Name] {
+			return fmt.Errorf("duplicate tool name: %s", tool.Name)
+		}
+		toolNames[tool.Name] = true
+
+		validTypes := map[string]bool{
+			"builtin": true,
+			"mcp":     true,
+			"http":    true,
+		}
+		if !validTypes[tool.Type] {
+			return fmt.Errorf("invalid tool type: %s, must be one of builtin, mcp, http", tool.Type)
+		}
+	}
+
+	return nil
+}
+
+// AIStockPickChat starts an AI stock pick analysis session
+func (a *App) AIStockPickChat(query string, aiConfigID uint) (string, error) {
+	service := data.NewStockPickService(a.ctx)
+
+	// 定义事件处理器
+	eventHandler := func(eventType string, data interface{}) {
+		switch eventType {
+		case "start":
+			runtime.EventsEmit(a.ctx, "ai-stock-pick-start", data)
+		case "stream":
+			runtime.EventsEmit(a.ctx, "ai-stock-pick-stream", data)
+		case "tool":
+			runtime.EventsEmit(a.ctx, "ai-stock-pick-tool", data)
+		case "update":
+			runtime.EventsEmit(a.ctx, "ai-stock-pick-update", data)
+		}
+	}
+
+	req := data.StockPickRequest{
+		UserQuery:  query,
+		AIConfigID: aiConfigID,
+	}
+
+	resp, err := service.ProcessStockPick(req, eventHandler)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%d", resp.ReportID), nil
+}
+
+// GetStockPickReports returns stock pick reports with pagination
+func (a *App) GetStockPickReports(offset, limit int) (*models.StockPickReportsResponse, error) {
+	logger.SugaredLogger.Infof("App.GetStockPickReports 调用: offset=%d, limit=%d", offset, limit)
+
+	service := data.NewStockPickService(a.ctx)
+	reports, total, err := service.GetReports(offset, limit)
+	if err != nil {
+		logger.SugaredLogger.Errorf("service.GetReports 失败: %v", err)
+		return nil, err
+	}
+
+	logger.SugaredLogger.Infof("service.GetReports 返回: total=%d, reports长度=%d", total, len(reports))
+
+	// 转换为列表项格式
+	var items []models.StockPickReportItem
+	for _, report := range reports {
+		var recommendations []models.RecommendationItem
+		if report.Recommendations != "" {
+			json.Unmarshal([]byte(report.Recommendations), &recommendations)
+		}
+
+		items = append(items, models.StockPickReportItem{
+			ID:             report.ID,
+			CreatedAt:      report.CreatedAt,
+			QuerySummary:   report.QuerySummary,
+			RecommendCount: len(recommendations),
+			Status:         report.Status,
+		})
+	}
+
+	logger.SugaredLogger.Infof("App.GetStockPickReports 返回: items长度=%d, total=%d", len(items), total)
+
+	return &models.StockPickReportsResponse{
+		Items: items,
+		Total: total,
+	}, nil
+}
+
+// GetStockPickReport returns a single stock pick report
+func (a *App) GetStockPickReport(id uint) (*models.StockPickReport, error) {
+	service := data.NewStockPickService(a.ctx)
+	return service.GetReport(id)
+}
+
+// GetStockPickRecommendations returns recommendations for a report
+func (a *App) GetStockPickRecommendations(reportID uint) ([]models.RecommendationItem, error) {
+	service := data.NewStockPickService(a.ctx)
+	return service.GetRecommendations(reportID)
+}
+
+// FollowStockFromReport follows a stock from a recommendation report
+func (a *App) FollowStockFromReport(reportID uint, stockCode string) (string, error) {
+	service := data.NewStockPickService(a.ctx)
+
+	// 检查股票是否已关注
+	isFollowed := service.CheckStockFollowed(stockCode)
+	if isFollowed {
+		return "股票已在关注列表中", nil
+	}
+
+	// 关注股票
+	stockDataApi := data.NewStockDataApi()
+	result := stockDataApi.Follow(stockCode)
+
+	if result != "关注成功" {
+		return result, nil
+	}
+
+	// 更新报告中的关注状态
+	if err := service.UpdateRecommendationFollowStatus(reportID, stockCode, true); err != nil {
+		logger.SugaredLogger.Errorf("更新关注状态失败: %v", err)
+	}
+
+	return "关注成功", nil
+}
+
+// ExportStockPickReport exports a report to markdown file
+func (a *App) ExportStockPickReport(reportID uint, format string) (string, error) {
+	service := data.NewStockPickService(a.ctx)
+
+	// 生成Markdown内容
+	content, err := service.ExportToMarkdownContent(reportID)
+	if err != nil {
+		logger.SugaredLogger.Errorf("生成Markdown内容失败: %v", err)
+		return "", fmt.Errorf("生成报告内容失败: %w", err)
+	}
+
+	// 生成默认文件名
+	timestamp := time.Now().Format("20060102-150405")
+	defaultFileName := fmt.Sprintf("stock-pick-report-%d-%s.md", reportID, timestamp)
+
+	// 打开保存文件对话框
+	filePath, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:           "保存荐股报告",
+		DefaultFilename: defaultFileName,
+		Filters: []runtime.FileFilter{
+			{
+				DisplayName: "Markdown Files (*.md)",
+				Pattern:     "*.md",
+			},
+			{
+				DisplayName: "Text Files (*.txt)",
+				Pattern:     "*.txt",
+			},
+			{
+				DisplayName: "All Files (*.*)",
+				Pattern:     "*.*",
+			},
+		},
+	})
+
+	if err != nil {
+		logger.SugaredLogger.Errorf("打开保存对话框失败: %v", err)
+		return "", fmt.Errorf("打开保存对话框失败: %w", err)
+	}
+
+	if filePath == "" {
+		logger.SugaredLogger.Info("用户取消了保存操作")
+		return "用户取消了保存", nil
+	}
+
+	// 写入文件
+	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+		logger.SugaredLogger.Errorf("写入文件失败: %v", err)
+		return "", fmt.Errorf("保存文件失败: %w", err)
+	}
+
+	logger.SugaredLogger.Infof("报告导出成功: %s", filePath)
+	return fmt.Sprintf("已导出报告: %s", filePath), nil
+}
+
+// CheckStockFollowed checks if a stock is followed
+func (a *App) CheckStockFollowed(stockCode string) bool {
+	service := data.NewStockPickService(a.ctx)
+	return service.CheckStockFollowed(stockCode)
+}
+
+// GetStockPickStats returns stock pick statistics
+func (a *App) GetStockPickStats() map[string]interface{} {
+	service := data.NewStockPickService(a.ctx)
+	return service.GetStockPickStats()
+}
+
+// DeleteStockPickReport deletes a stock pick report
+func (a *App) DeleteStockPickReport(id uint) (string, error) {
+	service := data.NewStockPickService(a.ctx)
+	if err := service.DeleteReport(id); err != nil {
+		return "", err
+	}
+	return "报告已删除", nil
 }

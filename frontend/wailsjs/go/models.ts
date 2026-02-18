@@ -741,6 +741,200 @@ export namespace models {
 	        this.type = source["type"];
 	    }
 	}
+	export class RecommendationItem {
+	    rank: number;
+	    stock_code: string;
+	    stock_name: string;
+	    current_price: number;
+	    price_change: number;
+	    volume: number;
+	    market_value: number;
+	    technical_analysis: string;
+	    fundamental_analysis: string;
+	    reason: string;
+	    target_price: number;
+	    target_change_percent: number;
+	    risk_level: string;
+	    risk_tips: string;
+	    score: number;
+	    is_followed: boolean;
+	    macd: string;
+	    kdj: string;
+	    rsi: number;
+	    trend: string;
+	    pe: number;
+	    pb: number;
+	    roe: number;
+	    revenue_growth: number;
+	    profit_growth: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new RecommendationItem(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.rank = source["rank"];
+	        this.stock_code = source["stock_code"];
+	        this.stock_name = source["stock_name"];
+	        this.current_price = source["current_price"];
+	        this.price_change = source["price_change"];
+	        this.volume = source["volume"];
+	        this.market_value = source["market_value"];
+	        this.technical_analysis = source["technical_analysis"];
+	        this.fundamental_analysis = source["fundamental_analysis"];
+	        this.reason = source["reason"];
+	        this.target_price = source["target_price"];
+	        this.target_change_percent = source["target_change_percent"];
+	        this.risk_level = source["risk_level"];
+	        this.risk_tips = source["risk_tips"];
+	        this.score = source["score"];
+	        this.is_followed = source["is_followed"];
+	        this.macd = source["macd"];
+	        this.kdj = source["kdj"];
+	        this.rsi = source["rsi"];
+	        this.trend = source["trend"];
+	        this.pe = source["pe"];
+	        this.pb = source["pb"];
+	        this.roe = source["roe"];
+	        this.revenue_growth = source["revenue_growth"];
+	        this.profit_growth = source["profit_growth"];
+	    }
+	}
+	export class StockPickReport {
+	    id: number;
+	    // Go type: time
+	    created_at: any;
+	    // Go type: time
+	    updated_at: any;
+	    // Go type: time
+	    deleted_at: any;
+	    user_query: string;
+	    query_summary: string;
+	    market_analysis: string;
+	    filter_logic: string;
+	    total_scanned: number;
+	    candidates_count: number;
+	    recommendations: string;
+	    tools_used: string;
+	    ai_config_id: number;
+	    ai_model: string;
+	    status: string;
+	    error: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new StockPickReport(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.created_at = this.convertValues(source["created_at"], null);
+	        this.updated_at = this.convertValues(source["updated_at"], null);
+	        this.deleted_at = this.convertValues(source["deleted_at"], null);
+	        this.user_query = source["user_query"];
+	        this.query_summary = source["query_summary"];
+	        this.market_analysis = source["market_analysis"];
+	        this.filter_logic = source["filter_logic"];
+	        this.total_scanned = source["total_scanned"];
+	        this.candidates_count = source["candidates_count"];
+	        this.recommendations = source["recommendations"];
+	        this.tools_used = source["tools_used"];
+	        this.ai_config_id = source["ai_config_id"];
+	        this.ai_model = source["ai_model"];
+	        this.status = source["status"];
+	        this.error = source["error"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class StockPickReportItem {
+	    id: number;
+	    // Go type: time
+	    created_at: any;
+	    query_summary: string;
+	    recommend_count: number;
+	    status: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new StockPickReportItem(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.created_at = this.convertValues(source["created_at"], null);
+	        this.query_summary = source["query_summary"];
+	        this.recommend_count = source["recommend_count"];
+	        this.status = source["status"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class StockPickReportsResponse {
+	    items: StockPickReportItem[];
+	    total: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new StockPickReportsResponse(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.items = this.convertValues(source["items"], StockPickReportItem);
+	        this.total = source["total"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class VersionInfo {
 	    ID: number;
 	    // Go type: time

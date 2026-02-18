@@ -192,7 +192,7 @@ func (m MarketNewsApi) GetSinaNews(crawlTimeOut uint) *[]models.Telegraph {
 			if _, ok := lo.Find(telegraph.SubjectTags, func(item string) bool { return item == "焦点" }); ok {
 				telegraph.IsRed = true
 			}
-			logger.SugaredLogger.Infof("telegraph.SubjectTags:%v %s", telegraph.SubjectTags, telegraph.Content)
+			//logger.SugaredLogger.Infof("telegraph.SubjectTags:%v %s", telegraph.SubjectTags, telegraph.Content)
 
 			if telegraph.Content != "" {
 				telegraph.SentimentResult = AnalyzeSentiment(telegraph.Content).Description

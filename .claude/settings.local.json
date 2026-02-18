@@ -5,7 +5,12 @@
       "Bash(powershell:*)",
       "Bash(cmd /c \"dir /b /s /a-d E:\\\\技术学习\\\\myExercise\\\\stock-agent\\\\backend\\\\agent\\\\mcp\")",
       "Bash(wails dev:*)",
-      "Bash(npm run build)"
+      "Bash(npm run build)",
+      "Bash(wails build:*)",
+      "Bash(timeout:*)",
+      "Bash(wails generate:*)",
+      "Bash(ping:*)",
+      "Bash(dir:*)"
     ]
   }
 }

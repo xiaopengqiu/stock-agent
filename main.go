@@ -234,6 +234,7 @@ func AutoMigrate() {
 	db.Dao.AutoMigrate(&models.LongTigerRankData{})
 	db.Dao.AutoMigrate(&data.AIConfig{})
 	db.Dao.AutoMigrate(&models.BKDict{})
+	db.Dao.AutoMigrate(&models.StockPickReport{})
 
 	updateMultipleModel()
 
