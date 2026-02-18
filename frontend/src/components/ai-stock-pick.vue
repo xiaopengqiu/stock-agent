@@ -112,9 +112,9 @@
             <div style="flex: 1; overflow: hidden; min-height: 0; display: flex; flex-direction: column;">
               <!-- 完整报告视图 -->
               <div v-if="viewMode === 'full'" class="full-report-wrapper">
-                <n-scrollbar>
+
                   <MdPreview :modelValue="fullReport" :theme="darkTheme ? 'dark' : 'light'" class="md-preview-content"/>
-                </n-scrollbar>
+
               </div>
 
               <!-- 简洁列表视图 -->
@@ -692,15 +692,11 @@ async function getStats() {
 }
 
 .md-preview-content {
-  padding: 0 10px;
   min-height: 100%;
   max-width: 100%;
   box-sizing: border-box;
-}
-
-.md-preview-content :deep(*) {
-  max-width: 100%;
-  box-sizing: border-box;
+  overflow-y: scroll;
+  padding-right: 10px;
 }
 
 .simple-list-wrapper {
