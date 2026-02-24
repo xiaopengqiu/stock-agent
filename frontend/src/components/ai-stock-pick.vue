@@ -160,6 +160,7 @@
                   ghost
                   :loading="deletingIds.has(item.ID)"
                   @click.stop
+                  style="margin-right: 8px"
                 >
                   <template #icon>
                     <n-icon><component :is="TrashOutline"/></n-icon>
@@ -241,6 +242,7 @@ const notify = useNotification()
 
 // 状态管理
 const analyzing = ref(false)
+const firstTokenReceived = ref(false)
 const inputText = ref('')
 const messages = ref([
   {
@@ -406,6 +408,7 @@ async function sendMessage() {
 
   // 开始分析
   analyzing.value = true
+  firstTokenReceived.value = false
   fullReport.value = '正在分析市场数据...'
 
   try {
@@ -415,12 +418,18 @@ async function sendMessage() {
   } catch (error) {
     message.error('荐股分析失败: ' + error)
     analyzing.value = false
+    firstTokenReceived.value = false
   }
 }
 
 // 处理流式响应
 function handleStream(data) {
   if (data.content) {
+    // 收到第一个token时，停止loading状态
+    if (!firstTokenReceived.value) {
+      firstTokenReceived.value = true
+      analyzing.value = false
+    }
     // 更新最后一条AI消息
     const lastMessage = messages.value[messages.value.length - 1]
     if (lastMessage && lastMessage.role === 'assistant') {
