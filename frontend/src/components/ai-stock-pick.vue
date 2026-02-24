@@ -147,6 +147,29 @@
           clickable
           @click="viewHistoryReport(item.ID)"
         >
+          <template #suffix>
+            <n-popconfirm
+              positive-text="确认"
+              negative-text="取消"
+              @positive-click="handleDelete(item.ID)"
+            >
+              <template #trigger>
+                <n-button
+                  size="tiny"
+                  type="error"
+                  ghost
+                  :loading="deletingIds.has(item.ID)"
+                  @click.stop
+                >
+                  <template #icon>
+                    <n-icon><component :is="TrashOutline"/></n-icon>
+                  </template>
+                  删除
+                </n-button>
+              </template>
+              确定要删除这条历史记录吗？
+            </n-popconfirm>
+          </template>
           <n-thing>
             <template #header>
               <n-text>{{ item.QuerySummary }}</n-text>
@@ -182,7 +205,8 @@ import {
   FollowStockFromReport,
   ExportStockPickReport,
   CheckStockFollowed,
-  GetStockPickStats
+  GetStockPickStats,
+  DeleteStockPickReport
 } from "../../wailsjs/go/main/App"
 import {EventsOn, EventsOff} from "../../wailsjs/runtime"
 import {MdPreview} from "md-editor-v3"
@@ -206,10 +230,11 @@ import {
   NThing,
   NDropdown,
   NEmpty,
+  NPopconfirm,
   useMessage,
   useNotification
 } from "naive-ui"
-import {TimeOutline, DownloadOutline} from '@vicons/ionicons5'
+import {TimeOutline, DownloadOutline, TrashOutline} from '@vicons/ionicons5'
 
 const message = useMessage()
 const notify = useNotification()
@@ -237,6 +262,7 @@ const darkTheme = ref(false)
 const historyVisible = ref(false)
 const historyList = ref([])
 const loadingHistory = ref(false)
+const deletingIds = ref(new Set())
 
 // 导出选项
 const exportOptions = [
@@ -535,6 +561,29 @@ async function loadHistory() {
     historyList.value = []
   } finally {
     loadingHistory.value = false
+  }
+}
+
+// 删除历史记录
+async function handleDelete(id) {
+  if (deletingIds.value.has(id)) {
+    return
+  }
+
+  deletingIds.value.add(id)
+  try {
+    const result = await DeleteStockPickReport(id)
+    message.success('删除成功')
+    // 从列表中移除已删除的项
+    const index = historyList.value.findIndex(item => item.ID === id)
+    if (index !== -1) {
+      historyList.value.splice(index, 1)
+    }
+  } catch (error) {
+    console.error('删除失败:', error)
+    message.error('删除失败: ' + (error?.message || error || '未知错误'))
+  } finally {
+    deletingIds.value.delete(id)
   }
 }
 
