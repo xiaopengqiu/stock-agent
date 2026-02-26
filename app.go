@@ -1342,8 +1342,8 @@ func (a *App) SetStockAICron(cronText, stockCode string) {
 	if entryID, exists := a.cronEntrys[stockCode]; exists {
 		a.cron.Remove(entryID)
 	}
-	follow := data.NewStockDataApi().GetFollowedStockByStockCode(stockCode)
-	id, _ := a.cron.AddFunc(cronText, a.AddCronTask(follow))
+	follow, _ := data.NewStockDataApi().GetFollowedStockByStockCode(stockCode)
+	id, _ := a.cron.AddFunc(cronText, a.AddCronTask(*follow))
 	a.cronEntrys[stockCode] = id
 
 }
@@ -1792,14 +1792,12 @@ func (a *App) GetStockPickReports(offset, limit int) (*models.StockPickReportsRe
 	// 转换为列表项格式
 	var items []models.StockPickReportItem
 	for _, report := range reports {
-		// 使用 service.GetRecommendations 方法获取推荐数量，这样可以正确处理JSON和Markdown两种格式
-		recommendations, _ := service.GetRecommendations(report.ID)
 
 		items = append(items, models.StockPickReportItem{
 			ID:             report.ID,
 			CreatedAt:      report.CreatedAt,
 			QuerySummary:   report.QuerySummary,
-			RecommendCount: len(recommendations),
+			RecommendCount: len(report.Recommendations),
 			Status:         report.Status,
 		})
 	}

@@ -842,11 +842,12 @@ export namespace models {
 	    deleted_at: gorm.DeletedAt;
 	    user_query: string;
 	    query_summary: string;
+	    result: string;
 	    market_analysis: string;
 	    filter_logic: string;
 	    total_scanned: number;
 	    candidates_count: number;
-	    recommendations: string;
+	    recommendations: RecommendationItem[];
 	    tools_used: string;
 	    ai_config_id: number;
 	    ai_model: string;
@@ -865,11 +866,12 @@ export namespace models {
 	        this.deleted_at = this.convertValues(source["deleted_at"], gorm.DeletedAt);
 	        this.user_query = source["user_query"];
 	        this.query_summary = source["query_summary"];
+	        this.result = source["result"];
 	        this.market_analysis = source["market_analysis"];
 	        this.filter_logic = source["filter_logic"];
 	        this.total_scanned = source["total_scanned"];
 	        this.candidates_count = source["candidates_count"];
-	        this.recommendations = source["recommendations"];
+	        this.recommendations = this.convertValues(source["recommendations"], RecommendationItem);
 	        this.tools_used = source["tools_used"];
 	        this.ai_config_id = source["ai_config_id"];
 	        this.ai_model = source["ai_model"];

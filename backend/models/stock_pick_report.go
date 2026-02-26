@@ -1,7 +1,11 @@
 package models
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
 	"gorm.io/gorm"
+	"strings"
 	"time"
 )
 
@@ -17,13 +21,14 @@ type StockPickReport struct {
 	QuerySummary string `gorm:"type:text" json:"query_summary"`       // 需求摘要
 
 	// 分析结果
+	Result          string `gorm:"type:text" json:"result"`
 	MarketAnalysis  string `gorm:"type:text" json:"market_analysis"` // 市场环境分析
 	FilterLogic     string `gorm:"type:text" json:"filter_logic"`    // 筛选逻辑说明
 	TotalScanned    int    `json:"total_scanned"`                    // 扫描股票总数
 	CandidatesCount int    `json:"candidates_count"`                 // 候选股票数
 
-	// 推荐股票列表 (JSON)
-	Recommendations string `gorm:"type:text;not null" json:"recommendations"`
+	// 推荐股票列表
+	Recommendations []RecommendationItem `gorm:"type:text;serializer:json" json:"recommendations"`
 
 	// 使用的工具列表 (JSON)
 	ToolsUsed string `gorm:"type:text" json:"tools_used"`
@@ -73,6 +78,46 @@ type RecommendationItem struct {
 	ROE           float64 `json:"roe"`            // 净资产收益率
 	RevenueGrowth float64 `json:"revenue_growth"` // 营收增长率
 	ProfitGrowth  float64 `json:"profit_growth"`  // 利润增长率
+}
+
+type RecommendationItems struct {
+	Items []RecommendationItem
+	Raw   string // 兼容旧 text
+}
+
+func (r RecommendationItems) Value() (driver.Value, error) {
+	if len(r.Items) > 0 {
+		return json.Marshal(r.Items)
+	}
+	return r.Raw, nil
+}
+
+func (r *RecommendationItems) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("invalid type for RecommendationItems")
+	}
+
+	str := string(bytes)
+
+	// 尝试 JSON 解析
+	if strings.HasPrefix(strings.TrimSpace(str), "[") ||
+		strings.HasPrefix(strings.TrimSpace(str), "{") {
+
+		var items []RecommendationItem
+		if err := json.Unmarshal(bytes, &items); err == nil {
+			r.Items = items
+			return nil
+		}
+	}
+
+	// 走到这里说明是旧 text 数据
+	r.Raw = str
+	return nil
 }
 
 // ToolUsage 工具使用记录

@@ -43,10 +43,11 @@ type StockPickResponse struct {
 func (s *StockPickService) ProcessStockPick(req StockPickRequest, eventHandler func(eventType string, data interface{})) (*StockPickResponse, error) {
 	// 1. 创建报告记录
 	report := &models.StockPickReport{
-		UserQuery:    req.UserQuery,
-		QuerySummary: generateQuerySummary(req.UserQuery),
-		AIConfigID:   req.AIConfigID,
-		Status:       "processing",
+		UserQuery:       req.UserQuery,
+		QuerySummary:    generateQuerySummary(req.UserQuery),
+		AIConfigID:      req.AIConfigID,
+		Status:          "processing",
+		Recommendations: []models.RecommendationItem{}, // 初始化为空切片，避免NULL约束错误
 	}
 	if err := db.Dao.Create(report).Error; err != nil {
 		logger.SugaredLogger.Errorf("创建荐股报告失败: %v", err)
@@ -537,10 +538,10 @@ func (s *StockPickService) ExportToMarkdownContent(reportID uint) (string, error
 
 	sb.WriteString("## 推荐股票\n\n")
 
-	// 先尝试JSON解析（兼容历史数据）
-	var recommendations []models.RecommendationItem
-	if err := json.Unmarshal([]byte(report.Recommendations), &recommendations); err == nil && len(recommendations) > 0 {
-		// JSON格式数据，格式化推荐股票
+	// 使用已解析的推荐数据
+	recommendations := report.Recommendations
+	if len(recommendations) > 0 {
+		// 格式化推荐股票
 		for i, rec := range recommendations {
 			sb.WriteString(fmt.Sprintf("### %d. %s (%s)\n\n", i+1, rec.StockName, rec.StockCode))
 			sb.WriteString(fmt.Sprintf("- **当前价格**: %.2f元\n", rec.CurrentPrice))
@@ -575,8 +576,8 @@ func (s *StockPickService) ExportToMarkdownContent(reportID uint) (string, error
 			sb.WriteString("---\n\n")
 		}
 	} else {
-		// Markdown格式数据，直接使用原始内容
-		sb.WriteString(report.Recommendations)
+		// 没有推荐数据
+		sb.WriteString("暂无推荐股票")
 	}
 
 	sb.WriteString("---\n\n")
@@ -607,13 +608,7 @@ func (s *StockPickService) UpdateReportWithRecommendations(reportID uint, market
 	report.FilterLogic = filterLogic
 	report.TotalScanned = len(recommendations) * 10 // 估算值
 	report.CandidatesCount = len(recommendations)
-
-	// 序列化推荐列表
-	recJSON, err := json.Marshal(recommendations)
-	if err != nil {
-		return err
-	}
-	report.Recommendations = string(recJSON)
+	report.Recommendations = recommendations
 
 	return db.Dao.Save(report).Error
 }
@@ -625,14 +620,13 @@ func (s *StockPickService) GetRecommendations(reportID uint) ([]models.Recommend
 		return nil, err
 	}
 
-	// 先尝试JSON解析（兼容历史数据）
-	var recommendations []models.RecommendationItem
-	if err := json.Unmarshal([]byte(report.Recommendations), &recommendations); err == nil && len(recommendations) > 0 {
-		return recommendations, nil
+	// 直接返回已解析的推荐数据
+	if len(report.Recommendations) > 0 {
+		return report.Recommendations, nil
 	}
 
-	// JSON解析失败，尝试从markdown格式解析
-	logger.SugaredLogger.Infof("JSON解析失败，尝试从markdown解析推荐数据")
+	// 如果没有推荐数据，尝试从Result字段解析
+	logger.SugaredLogger.Infof("没有推荐数据，尝试从markdown解析推荐数据")
 	return s.parseRecommendationsFromMarkdown(report), nil
 }
 
@@ -643,29 +637,13 @@ func (s *StockPickService) UpdateRecommendationFollowStatus(reportID uint, stock
 		return err
 	}
 
-	// 先尝试JSON解析（兼容历史数据）
-	var recommendations []models.RecommendationItem
-	if err := json.Unmarshal([]byte(report.Recommendations), &recommendations); err == nil && len(recommendations) > 0 {
-		// JSON格式数据
-		for i := range recommendations {
-			if recommendations[i].StockCode == stockCode {
-				recommendations[i].IsFollowed = isFollowed
-				break
-			}
-		}
-
-		// 序列化并保存
-		recJSON, err := json.Marshal(recommendations)
-		if err != nil {
-			return err
-		}
-		report.Recommendations = string(recJSON)
-		return db.Dao.Save(report).Error
+	// 直接使用已解析的推荐数据
+	recommendations := report.Recommendations
+	if len(recommendations) == 0 {
+		// 如果没有推荐数据，从markdown解析
+		logger.SugaredLogger.Infof("没有推荐数据，从markdown更新关注状态")
+		recommendations = s.parseRecommendationsFromMarkdown(report)
 	}
-
-	// Markdown格式数据，从报告内容重新解析
-	logger.SugaredLogger.Infof("JSON解析失败，从markdown更新关注状态")
-	recommendations = s.parseRecommendationsFromMarkdown(report)
 
 	// 更新关注状态
 	for i := range recommendations {
@@ -675,13 +653,8 @@ func (s *StockPickService) UpdateRecommendationFollowStatus(reportID uint, stock
 		}
 	}
 
-	// 序列化并保存
-	recJSON, err := json.Marshal(recommendations)
-	if err != nil {
-		return err
-	}
-	report.Recommendations = string(recJSON)
-
+	// 保存更新后的推荐数据
+	report.Recommendations = recommendations
 	return db.Dao.Save(report).Error
 }
 
@@ -699,8 +672,8 @@ func (s *StockPickService) GetFollowedStockCodes() ([]string, error) {
 
 // CheckStockFollowed 检查股票是否已关注
 func (s *StockPickService) CheckStockFollowed(stockCode string) bool {
-	stock := NewStockDataApi().GetFollowedStockByStockCode(stockCode)
-	return stock.CostPrice >= 0
+	_, err := NewStockDataApi().GetFollowedStockByStockCode(stockCode)
+	return err == nil
 }
 
 // ParseRecommendationsFromAIContent 从AI内容解析推荐股票
@@ -910,7 +883,7 @@ func (s *StockPickService) parseAndUpdateRecommendations(report *models.StockPic
 	if content == "" {
 		logger.SugaredLogger.Warnf("报告ID %d 的AI响应内容为空", report.ID)
 		// 即使内容为空，也保存报告状态为已完成，但设置错误信息
-		report.Recommendations = "[]"
+		report.Recommendations = nil
 		report.Error = "AI响应内容为空"
 		if err := db.Dao.Save(report).Error; err != nil {
 			logger.SugaredLogger.Errorf("保存荐股报告失败: %v", err)
@@ -919,7 +892,7 @@ func (s *StockPickService) parseAndUpdateRecommendations(report *models.StockPic
 		return nil
 	}
 
-	logger.SugaredLogger.Debugf("AI响应内容预览（前500字符）: %s", safeTruncate(content, 500))
+	report.Result = content
 
 	// 解析市场环境分析和筛选逻辑
 	logger.SugaredLogger.Debugf("开始提取市场分析和筛选逻辑")
@@ -936,15 +909,7 @@ func (s *StockPickService) parseAndUpdateRecommendations(report *models.StockPic
 	report.FilterLogic = filterLogic
 	report.TotalScanned = len(recommendations) * 10 // 估算扫描数量
 	report.CandidatesCount = len(recommendations)
-
-	// 提取推荐股票部分的markdown格式
-	recMarkdown := extractRecommendationsMarkdown(content)
-	logger.SugaredLogger.Debugf("提取到推荐股票markdown长度: %d", len(recMarkdown))
-	report.Recommendations = recMarkdown
-
-	// 同时序列化JSON以备后用（兼容旧代码逻辑）
-	// 但不保存到数据库
-	_, _ = json.Marshal(recommendations)
+	report.Recommendations = recommendations
 
 	// 保存到数据库
 	logger.SugaredLogger.Debugf("开始保存到数据库")
@@ -1027,38 +992,6 @@ func extractMarketAndFilterInfo(content string) (marketAnalysis, filterLogic str
 	}
 
 	return strings.TrimSpace(marketBuilder.String()), strings.TrimSpace(filterBuilder.String())
-}
-
-// extractRecommendationsMarkdown 从内容中提取推荐股票部分的markdown
-func extractRecommendationsMarkdown(content string) string {
-	lines := strings.Split(content, "\n")
-
-	var recBuilder strings.Builder
-	inRecommendationSection := false
-
-	for _, line := range lines {
-		lowerLine := strings.ToLower(strings.TrimSpace(line))
-
-		// 检测推荐章节开始
-		if strings.Contains(lowerLine, "## 推荐股票") || strings.Contains(lowerLine, "## 推荐列表") {
-			inRecommendationSection = true
-			continue
-		}
-
-		// 检测推荐章节结束
-		if inRecommendationSection && strings.Contains(lowerLine, "## ") && !strings.Contains(lowerLine, "## 推荐") {
-			break
-		}
-
-		// 收集推荐股票部分的内容
-		if inRecommendationSection {
-			recBuilder.WriteString(line + "\n")
-		}
-	}
-
-	result := strings.TrimSpace(recBuilder.String())
-	logger.SugaredLogger.Debugf("提取到的推荐股票markdown长度: %d, 内容: %s", len(result), safeTruncate(result, 200))
-	return result
 }
 
 // extractJSONFromContent 从AI响应中提取JSON数据
@@ -1238,17 +1171,13 @@ func (s *StockPickService) parseRecommendationsFromMarkdown(report *models.Stock
 		content.WriteString("\n\n")
 	}
 
-	// 如果Recommendations是markdown格式，直接使用
-	if strings.Contains(report.Recommendations, "###") || strings.Contains(report.Recommendations, "##") {
-		content.WriteString("## 推荐股票\n\n")
-		content.WriteString(report.Recommendations)
-	} else {
-		// 尝试JSON解析失败的情况下，recommendations字段可能是旧格式
-		// 直接返回空列表
-		return []models.RecommendationItem{}
+	// 如果Result字段包含markdown格式的推荐，使用它
+	if strings.Contains(report.Result, "###") || strings.Contains(report.Result, "##") {
+		return s.parseRecommendationsFromContent(report.Result)
 	}
 
-	return s.parseRecommendationsFromContent(content.String())
+	// 没有可解析的推荐数据，返回空列表
+	return []models.RecommendationItem{}
 }
 
 // parseStockTitle 解析股票标题：### 1. 中芯国际 (sh688981)

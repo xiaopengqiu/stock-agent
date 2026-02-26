@@ -617,10 +617,18 @@ func (receiver StockDataApi) GetStockList(key string) []StockBasic {
 	return result
 }
 
-func (receiver StockDataApi) GetFollowedStockByStockCode(code string) FollowedStock {
+func (receiver StockDataApi) GetFollowedStockByStockCode(code string) (*FollowedStock, error) {
 	var result FollowedStock
-	db.Dao.Model(&FollowedStock{}).Where("stock_code = ?", strings.ToLower(code)).First(&result)
-	return result
+
+	err := db.Dao.
+		Where("stock_code = ?", strings.ToLower(code)).
+		First(&result).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // GB18030ToUTF8 GB18030 转换为 UTF8

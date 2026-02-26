@@ -15,7 +15,9 @@
       "Bash(git restore:*)",
       "Bash(ls:*)",
       "Bash(cd:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Bash(go test:*)",
+      "Bash(go run:*)"
     ]
   }
 }

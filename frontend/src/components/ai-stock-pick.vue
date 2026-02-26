@@ -307,7 +307,6 @@ const columns = [
     width: 80,
     render: (row) => h(NText, { type: row.price_change >= 0 ? 'success' : 'error' }, { default: () => `${row.price_change >= 0 ? '+' : ''}${row.price_change.toFixed(2)}%` })
   },
-  { title: '推荐理由', key: 'reason', ellipsis: { tooltip: true } },
   {
     title: '目标涨幅',
     key: 'target_change_percent',
@@ -330,7 +329,8 @@ const columns = [
       disabled: row.is_followed,
       onClick: () => handleFollow(row.stock_code)
     }, { default: () => row.is_followed ? '已关注' : '关注' })
-  }
+  },
+  { title: '推荐理由', key: 'reason', ellipsis: { tooltip: true } },
 ]
 
 // 分页配置
@@ -603,7 +603,7 @@ async function viewHistoryReport(id) {
     const report = await GetStockPickReport(id)
     if (report) {
       reportId.value = report.id
-      fullReport.value = formatReportToMarkdown(report)
+      fullReport.value = report.result
       const recs = await GetStockPickRecommendations(id)
       recommendations.value = recs || []
       historyVisible.value = false

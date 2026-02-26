@@ -555,7 +555,7 @@ func (o *OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptI
 			"stockName":     RemoveAllBlankChar(stock),
 			"stockCode":     RemoveAllBlankChar(stockCode),
 		}
-		followedStock := NewStockDataApi().GetFollowedStockByStockCode(stockCode)
+		followedStock, _ := NewStockDataApi().GetFollowedStockByStockCode(stockCode)
 		stockData, err := NewStockDataApi().GetStockCodeRealTimeData(stockCode)
 		if err == nil && len(*stockData) > 0 {
 			msg = append(msg, map[string]interface{}{
