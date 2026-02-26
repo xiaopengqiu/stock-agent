@@ -581,6 +581,16 @@ func (s *StockPickService) ExportToMarkdownContent(reportID uint) (string, error
 	}
 
 	sb.WriteString("---\n\n")
+
+	// 添加 AI 完整分析（Result 字段）
+	if report.Result != "" {
+		sb.WriteString("## AI 完整分析\n\n")
+		sb.WriteString("> 以下为 AI 生成的原始分析内容：\n\n")
+		sb.WriteString(report.Result)
+		sb.WriteString("\n\n")
+		sb.WriteString("---\n\n")
+	}
+
 	sb.WriteString("*本报告由AI智能分析生成，仅供参考，不构成投资建议。股市有风险，投资需谨慎。*\n")
 
 	return sb.String(), nil
