@@ -45,7 +45,7 @@ func (receiver Settings) TableName() string {
 }
 
 type AIConfig struct {
-	ID          uint `gorm:"primarykey"`
+	ID          uint `gorm:"primaryKey"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	Name        string  `json:"name"`

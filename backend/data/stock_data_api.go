@@ -561,7 +561,7 @@ func (receiver StockDataApi) SetStockAICron(cron string, stockCode string) {
 func (receiver StockDataApi) GetFollowList(groupId int) *[]FollowedStock {
 	//logger.SugaredLogger.Infof("GetFollowList %d", groupId)
 
-	var result *[]FollowedStock
+	var result []FollowedStock
 	if groupId == 0 {
 		db.Dao.Model(&FollowedStock{}).Order("sort asc,time desc").Find(&result)
 	} else {
@@ -572,7 +572,7 @@ func (receiver StockDataApi) GetFollowList(groupId int) *[]FollowedStock {
 		db.Dao.Model(&FollowedStock{}).Where("stock_code in ?", codes).Order("sort asc,time desc").Find(&result)
 		logger.SugaredLogger.Infof("GetFollowList %+v", result)
 	}
-	return result
+	return &result
 }
 
 func (receiver StockDataApi) GetStockList(key string) []StockBasic {

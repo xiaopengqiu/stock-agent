@@ -1792,10 +1792,8 @@ func (a *App) GetStockPickReports(offset, limit int) (*models.StockPickReportsRe
 	// 转换为列表项格式
 	var items []models.StockPickReportItem
 	for _, report := range reports {
-		var recommendations []models.RecommendationItem
-		if report.Recommendations != "" {
-			json.Unmarshal([]byte(report.Recommendations), &recommendations)
-		}
+		// 使用 service.GetRecommendations 方法获取推荐数量，这样可以正确处理JSON和Markdown两种格式
+		recommendations, _ := service.GetRecommendations(report.ID)
 
 		items = append(items, models.StockPickReportItem{
 			ID:             report.ID,

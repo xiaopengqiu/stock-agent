@@ -13,7 +13,9 @@
       "Bash(dir:*)",
       "Bash(git rm:*)",
       "Bash(git restore:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(cd:*)",
+      "Bash(sqlite3:*)"
     ]
   }
 }

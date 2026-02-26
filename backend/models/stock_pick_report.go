@@ -56,6 +56,7 @@ type RecommendationItem struct {
 	RiskLevel           string  `json:"risk_level"`            // 风险等级: 'low' | 'medium' | 'high'
 	RiskTips            string  `json:"risk_tips"`             // 风险提示
 	Score               float64 `json:"score"`                 // 综合评分 (0-100)
+	TradeSuggestion     string  `json:"trade_suggestion"`      // 买卖建议: '买入' | '卖出' | '观望'
 
 	// 关注状态
 	IsFollowed bool `json:"is_followed"`

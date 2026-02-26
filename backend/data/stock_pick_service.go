@@ -537,10 +537,10 @@ func (s *StockPickService) ExportToMarkdownContent(reportID uint) (string, error
 
 	sb.WriteString("## 推荐股票\n\n")
 
-	// 尝试解析并格式化推荐列表
+	// 先尝试JSON解析（兼容历史数据）
 	var recommendations []models.RecommendationItem
 	if err := json.Unmarshal([]byte(report.Recommendations), &recommendations); err == nil && len(recommendations) > 0 {
-		// 格式化推荐股票
+		// JSON格式数据，格式化推荐股票
 		for i, rec := range recommendations {
 			sb.WriteString(fmt.Sprintf("### %d. %s (%s)\n\n", i+1, rec.StockName, rec.StockCode))
 			sb.WriteString(fmt.Sprintf("- **当前价格**: %.2f元\n", rec.CurrentPrice))
@@ -554,6 +554,9 @@ func (s *StockPickService) ExportToMarkdownContent(reportID uint) (string, error
 			}
 			if rec.Score > 0 {
 				sb.WriteString(fmt.Sprintf("- **综合评分**: %.1f/100\n", rec.Score))
+			}
+			if rec.TradeSuggestion != "" {
+				sb.WriteString(fmt.Sprintf("- **买卖建议**: %s\n", rec.TradeSuggestion))
 			}
 
 			if rec.Reason != "" {
@@ -572,7 +575,7 @@ func (s *StockPickService) ExportToMarkdownContent(reportID uint) (string, error
 			sb.WriteString("---\n\n")
 		}
 	} else {
-		// 解析失败，直接使用原始内容
+		// Markdown格式数据，直接使用原始内容
 		sb.WriteString(report.Recommendations)
 	}
 
@@ -622,12 +625,15 @@ func (s *StockPickService) GetRecommendations(reportID uint) ([]models.Recommend
 		return nil, err
 	}
 
+	// 先尝试JSON解析（兼容历史数据）
 	var recommendations []models.RecommendationItem
-	if err := json.Unmarshal([]byte(report.Recommendations), &recommendations); err != nil {
-		return nil, err
+	if err := json.Unmarshal([]byte(report.Recommendations), &recommendations); err == nil && len(recommendations) > 0 {
+		return recommendations, nil
 	}
 
-	return recommendations, nil
+	// JSON解析失败，尝试从markdown格式解析
+	logger.SugaredLogger.Infof("JSON解析失败，尝试从markdown解析推荐数据")
+	return s.parseRecommendationsFromMarkdown(report), nil
 }
 
 // UpdateRecommendationFollowStatus 更新关注状态
@@ -637,10 +643,29 @@ func (s *StockPickService) UpdateRecommendationFollowStatus(reportID uint, stock
 		return err
 	}
 
+	// 先尝试JSON解析（兼容历史数据）
 	var recommendations []models.RecommendationItem
-	if err := json.Unmarshal([]byte(report.Recommendations), &recommendations); err != nil {
-		return err
+	if err := json.Unmarshal([]byte(report.Recommendations), &recommendations); err == nil && len(recommendations) > 0 {
+		// JSON格式数据
+		for i := range recommendations {
+			if recommendations[i].StockCode == stockCode {
+				recommendations[i].IsFollowed = isFollowed
+				break
+			}
+		}
+
+		// 序列化并保存
+		recJSON, err := json.Marshal(recommendations)
+		if err != nil {
+			return err
+		}
+		report.Recommendations = string(recJSON)
+		return db.Dao.Save(report).Error
 	}
+
+	// Markdown格式数据，从报告内容重新解析
+	logger.SugaredLogger.Infof("JSON解析失败，从markdown更新关注状态")
+	recommendations = s.parseRecommendationsFromMarkdown(report)
 
 	// 更新关注状态
 	for i := range recommendations {
@@ -912,16 +937,14 @@ func (s *StockPickService) parseAndUpdateRecommendations(report *models.StockPic
 	report.TotalScanned = len(recommendations) * 10 // 估算扫描数量
 	report.CandidatesCount = len(recommendations)
 
-	// 序列化推荐列表
-	logger.SugaredLogger.Debugf("开始序列化推荐列表，数量: %d", len(recommendations))
-	recJSON, err := json.Marshal(recommendations)
-	if err != nil {
-		logger.SugaredLogger.Errorf("序列化推荐列表失败: %v", err)
-		// 序列化失败时，将JSON字符串设为空，避免后续数据库保存失败
-		report.Recommendations = "[]"
-	} else {
-		report.Recommendations = string(recJSON)
-	}
+	// 提取推荐股票部分的markdown格式
+	recMarkdown := extractRecommendationsMarkdown(content)
+	logger.SugaredLogger.Debugf("提取到推荐股票markdown长度: %d", len(recMarkdown))
+	report.Recommendations = recMarkdown
+
+	// 同时序列化JSON以备后用（兼容旧代码逻辑）
+	// 但不保存到数据库
+	_, _ = json.Marshal(recommendations)
 
 	// 保存到数据库
 	logger.SugaredLogger.Debugf("开始保存到数据库")
@@ -1004,6 +1027,38 @@ func extractMarketAndFilterInfo(content string) (marketAnalysis, filterLogic str
 	}
 
 	return strings.TrimSpace(marketBuilder.String()), strings.TrimSpace(filterBuilder.String())
+}
+
+// extractRecommendationsMarkdown 从内容中提取推荐股票部分的markdown
+func extractRecommendationsMarkdown(content string) string {
+	lines := strings.Split(content, "\n")
+
+	var recBuilder strings.Builder
+	inRecommendationSection := false
+
+	for _, line := range lines {
+		lowerLine := strings.ToLower(strings.TrimSpace(line))
+
+		// 检测推荐章节开始
+		if strings.Contains(lowerLine, "## 推荐股票") || strings.Contains(lowerLine, "## 推荐列表") {
+			inRecommendationSection = true
+			continue
+		}
+
+		// 检测推荐章节结束
+		if inRecommendationSection && strings.Contains(lowerLine, "## ") && !strings.Contains(lowerLine, "## 推荐") {
+			break
+		}
+
+		// 收集推荐股票部分的内容
+		if inRecommendationSection {
+			recBuilder.WriteString(line + "\n")
+		}
+	}
+
+	result := strings.TrimSpace(recBuilder.String())
+	logger.SugaredLogger.Debugf("提取到的推荐股票markdown长度: %d, 内容: %s", len(result), safeTruncate(result, 200))
+	return result
 }
 
 // extractJSONFromContent 从AI响应中提取JSON数据
@@ -1097,24 +1152,156 @@ func getFloat(m map[string]interface{}, key string) float64 {
 	return 0
 }
 
-// parseRecommendationsFromContent 从内容中解析推荐股票
+// parseRecommendationsFromContent 从markdown内容解析推荐股票
 func (s *StockPickService) parseRecommendationsFromContent(content string) []models.RecommendationItem {
-	logger.SugaredLogger.Infof("开始解析推荐内容，内容长度: %d", len(content))
+	logger.SugaredLogger.Infof("开始解析markdown推荐内容，内容长度: %d", len(content))
 
-	// 优先尝试解析JSON格式
-	if recs, ok := extractJSONFromContent(content); ok {
-		logger.SugaredLogger.Infof("JSON解析成功，推荐数量: %d", len(recs))
+	var recommendations []models.RecommendationItem
 
-		// 更新关注状态
-		for i := range recs {
-			recs[i].IsFollowed = s.CheckStockFollowed(recs[i].StockCode)
+	lines := strings.Split(content, "\n")
+	logger.SugaredLogger.Debugf("内容分割为 %d 行", len(lines))
+
+	var currentRec *models.RecommendationItem
+	var inRecommendationSection bool
+
+	for lineIdx, line := range lines {
+		trimmedLine := strings.TrimSpace(line)
+		lowerLine := strings.ToLower(trimmedLine)
+
+		// 检测推荐章节开始
+		if strings.Contains(lowerLine, "## 推荐股票") || strings.Contains(lowerLine, "## 推荐列表") {
+			inRecommendationSection = true
+			logger.SugaredLogger.Debugf("在行 %d 检测到推荐章节开始", lineIdx)
+			continue
 		}
-		return recs
+
+		// 检测推荐章节结束
+		// 注意：不将"---"作为章节结束标志，因为它是股票之间的分隔符
+		if inRecommendationSection && strings.Contains(lowerLine, "## 投资建议") {
+			inRecommendationSection = false
+		}
+
+		if !inRecommendationSection {
+			continue
+		}
+
+		// 解析股票标题行：### 1. 中芯国际 (sh688981)
+		if strings.HasPrefix(trimmedLine, "###") && strings.Contains(trimmedLine, "(") && strings.Contains(trimmedLine, ")") {
+			// 保存上一个推荐
+			if currentRec != nil {
+				recommendations = append(recommendations, *currentRec)
+				logger.SugaredLogger.Debugf("添加推荐项，当前总数: %d", len(recommendations))
+			}
+
+			// 解析新的推荐股票
+			if rec, err := s.parseStockTitle(trimmedLine, len(recommendations)+1); err == nil {
+				currentRec = rec
+				logger.SugaredLogger.Debugf("解析到推荐项 %d: 代码=%s, 名称=%s", rec.Rank, rec.StockCode, rec.StockName)
+			} else {
+				logger.SugaredLogger.Warnf("解析股票标题失败: %v, 行内容: %s", err, trimmedLine)
+			}
+		} else if currentRec != nil {
+			// 解析详细信息
+			s.parseDetailLine(trimmedLine, currentRec)
+		}
 	}
 
-	// JSON解析失败，使用原有的文本解析逻辑
-	logger.SugaredLogger.Warn("JSON解析失败，使用文本解析")
-	return s.parseRecommendationsFromText(content)
+	// 保存最后一个推荐
+	if currentRec != nil {
+		recommendations = append(recommendations, *currentRec)
+		logger.SugaredLogger.Debugf("保存最后一个推荐项，总数: %d", len(recommendations))
+	}
+
+	// 更新关注状态
+	for i := range recommendations {
+		recommendations[i].IsFollowed = s.CheckStockFollowed(recommendations[i].StockCode)
+	}
+
+	logger.SugaredLogger.Infof("解析完成，共 %d 个推荐项", len(recommendations))
+	return recommendations
+}
+
+// parseRecommendationsFromMarkdown 从报告对象解析推荐股票（用于历史报告）
+func (s *StockPickService) parseRecommendationsFromMarkdown(report *models.StockPickReport) []models.RecommendationItem {
+	// 构建完整的markdown内容
+	var content strings.Builder
+
+	if report.MarketAnalysis != "" {
+		content.WriteString("## 市场环境分析\n\n")
+		content.WriteString(report.MarketAnalysis)
+		content.WriteString("\n\n")
+	}
+
+	if report.FilterLogic != "" {
+		content.WriteString("## 筛选逻辑\n\n")
+		content.WriteString(report.FilterLogic)
+		content.WriteString("\n\n")
+	}
+
+	// 如果Recommendations是markdown格式，直接使用
+	if strings.Contains(report.Recommendations, "###") || strings.Contains(report.Recommendations, "##") {
+		content.WriteString("## 推荐股票\n\n")
+		content.WriteString(report.Recommendations)
+	} else {
+		// 尝试JSON解析失败的情况下，recommendations字段可能是旧格式
+		// 直接返回空列表
+		return []models.RecommendationItem{}
+	}
+
+	return s.parseRecommendationsFromContent(content.String())
+}
+
+// parseStockTitle 解析股票标题：### 1. 中芯国际 (sh688981)
+func (s *StockPickService) parseStockTitle(line string, rank int) (*models.RecommendationItem, error) {
+	logger.SugaredLogger.Debugf("解析股票标题: %s, rank: %d", line, rank)
+
+	// 去除 ### 和可能的排名前缀
+	cleanLine := strings.TrimSpace(strings.TrimPrefix(line, "###"))
+	cleanLine = strings.TrimSpace(strings.TrimPrefix(cleanLine, fmt.Sprintf("%d.", rank)))
+	cleanLine = strings.TrimSpace(cleanLine)
+
+	logger.SugaredLogger.Debugf("清理后的标题: %s", cleanLine)
+
+	// 提取股票代码和名称：格式 "中芯国际 (sh688981)"
+	codeStartIdx := strings.LastIndex(cleanLine, "(")
+	codeEndIdx := strings.LastIndex(cleanLine, ")")
+
+	if codeStartIdx == -1 || codeEndIdx == -1 || codeStartIdx >= codeEndIdx {
+		logger.SugaredLogger.Warnf("股票标题格式不匹配: %s", line)
+		return nil, fmt.Errorf("无法解析股票标题格式: %s", line)
+	}
+
+	stockCode := strings.TrimSpace(cleanLine[codeStartIdx+1 : codeEndIdx])
+	stockName := strings.TrimSpace(cleanLine[:codeStartIdx])
+
+	logger.SugaredLogger.Debugf("提取到股票代码: %s, 股票名称: %s", stockCode, stockName)
+
+	if !isValidStockCode(stockCode) {
+		logger.SugaredLogger.Warnf("无效的股票代码: %s", stockCode)
+		return nil, fmt.Errorf("无效的股票代码格式: %s", stockCode)
+	}
+
+	// 创建推荐项
+	rec := &models.RecommendationItem{
+		Rank:       rank,
+		StockCode:  strings.ToUpper(stockCode),
+		StockName:  stockName,
+		IsFollowed: s.CheckStockFollowed(stockCode),
+	}
+
+	// 尝试获取实时价格
+	if stockInfo, err := NewStockDataApi().GetStockCodeRealTimeData(stockCode); err == nil && stockInfo != nil && len(*stockInfo) > 0 {
+		stock := (*stockInfo)[0]
+		if price, err := parsePrice(stock.Price); err == nil {
+			rec.CurrentPrice = price
+		}
+		rec.PriceChange = stock.ChangePercent
+		logger.SugaredLogger.Debugf("获取到实时价格: %s, 涨跌幅: %s", stock.Price, stock.ChangePercent)
+	} else {
+		logger.SugaredLogger.Warnf("获取股票 %s 实时价格失败: %v", stockCode, err)
+	}
+
+	return rec, nil
 }
 
 // parseRecommendationsFromText 从文本格式解析推荐股票（原有逻辑）
@@ -1192,7 +1379,7 @@ func (s *StockPickService) parseRecommendationsFromText(content string) []models
 			detailBuilder.Reset()
 		} else if currentRec != nil {
 			// 解析详细信息
-			parseDetailLine(trimmedLine, currentRec, &detailBuilder)
+			s.parseDetailLine(trimmedLine, currentRec)
 		}
 	}
 
@@ -1210,33 +1397,50 @@ func (s *StockPickService) parseRecommendationsFromText(content string) []models
 
 // parseRecommendationLine 解析推荐行
 func parseRecommendationLine(line string) map[string]string {
-	// 格式: "1. sh600000 浦发银行 - 稳健的基本面和良好的分红政策"
+	// 格式: "1. [股票代码] [股票名称] - [推荐理由]" 或 "1. 股票代码 股票名称 - 推荐理由"
 	matches := make(map[string]string)
 
-	// 使用简单的字符串解析
-	parts := strings.SplitN(line, " ", 3)
-	if len(parts) >= 2 {
-		// 提取排名和股票代码
-		codePart := strings.Trim(parts[1], "[]")
-		if isValidStockCode(codePart) {
-			matches["stock_code"] = strings.ToUpper(codePart)
-		}
-
-		// 提取股票名称和理由
-		if len(parts) >= 3 {
-			rest := strings.Join(parts[2:], " ")
-			if idx := strings.Index(rest, "-"); idx > 0 {
-				matches["stock_name"] = strings.TrimSpace(rest[:idx])
-				matches["reason"] = strings.TrimSpace(rest[idx+1:])
-			} else {
-				matches["stock_name"] = rest
-			}
-		} else {
-			matches["stock_name"] = parts[2]
+	// 首先去除排名前缀 (如 "1. ")
+	cleanLine := strings.TrimSpace(line)
+	if strings.Contains(cleanLine, ".") {
+		dotIdx := strings.Index(cleanLine, ".")
+		if dotIdx < 3 { // 排名前缀通常是 "1." 或 "12."
+			cleanLine = strings.TrimSpace(cleanLine[dotIdx+1:])
 		}
 	}
 
-	if len(matches["stock_code"]) > 0 {
+	// 解析股票代码 - 支持 [股票代码] 或 股票代码 格式
+	var stockCode string
+	var remaining string
+	if strings.HasPrefix(cleanLine, "[") && strings.Contains(cleanLine, "]") {
+		endIdx := strings.Index(cleanLine, "]")
+		stockCode = strings.TrimSpace(cleanLine[1:endIdx])
+		remaining = strings.TrimSpace(cleanLine[endIdx+1:])
+	} else {
+		// 找到第一个空格位置
+		spaceIdx := strings.Index(cleanLine, " ")
+		if spaceIdx > 0 {
+			stockCode = strings.TrimSpace(cleanLine[:spaceIdx])
+			remaining = strings.TrimSpace(cleanLine[spaceIdx+1:])
+		}
+	}
+
+	if stockCode == "" {
+		return nil
+	}
+
+	matches["stock_code"] = strings.ToUpper(stockCode)
+
+	// 解析股票名称和理由
+	if strings.Contains(remaining, "-") {
+		sepIdx := strings.Index(remaining, "-")
+		matches["stock_name"] = strings.TrimSpace(remaining[:sepIdx])
+		matches["reason"] = strings.TrimSpace(remaining[sepIdx+1:])
+	} else {
+		matches["stock_name"] = strings.TrimSpace(remaining)
+	}
+
+	if len(matches["stock_code"]) > 0 && len(matches["stock_name"]) > 0 {
 		return matches
 	}
 	return nil
@@ -1244,13 +1448,14 @@ func parseRecommendationLine(line string) map[string]string {
 
 // isValidStockCode 验证股票代码格式
 func isValidStockCode(code string) bool {
-	code = strings.ToLower(code)
-	return strings.HasPrefix(code, "sh") || strings.HasPrefix(code, "sz") ||
-		strings.HasPrefix(code, "hk") || strings.HasPrefix(code, "us")
+	//code = strings.ToLower(code)
+	//return strings.HasPrefix(code, "sh") || strings.HasPrefix(code, "sz") ||
+	//	strings.HasPrefix(code, "hk") || strings.HasPrefix(code, "us")
+	return true
 }
 
 // parseDetailLine 解析详细信息行
-func parseDetailLine(line string, rec *models.RecommendationItem, builder *strings.Builder) {
+func (s *StockPickService) parseDetailLine(line string, rec *models.RecommendationItem) {
 	lowerLine := strings.ToLower(line)
 
 	if strings.Contains(lowerLine, "当前价格") || strings.Contains(lowerLine, "现价") {
@@ -1265,29 +1470,16 @@ func parseDetailLine(line string, rec *models.RecommendationItem, builder *strin
 		if price, err := parsePriceFromLine(line); err == nil {
 			rec.TargetPrice = price
 		}
-	} else if strings.Contains(lowerLine, "目标涨幅") {
+	} else if strings.Contains(lowerLine, "上涨空间") || strings.Contains(lowerLine, "目标涨幅") {
 		if change, err := parsePriceFromLine(line); err == nil {
 			rec.TargetChangePercent = change
 		}
-	} else if strings.Contains(lowerLine, "评分") || strings.Contains(lowerLine, "综合评分") {
+	} else if strings.Contains(lowerLine, "综合评分") || strings.Contains(lowerLine, "评分") {
 		if score, err := parsePriceFromLine(line); err == nil {
 			rec.Score = score
 		}
-	} else if strings.Contains(lowerLine, "技术面") || strings.Contains(lowerLine, "技术面分析") {
-		techInfo := strings.TrimSpace(strings.TrimPrefix(line, "-"))
-		techInfo = strings.TrimSpace(strings.TrimPrefix(techInfo, "技术面分析："))
-		techInfo = strings.TrimSpace(strings.TrimPrefix(techInfo, "技术面："))
-		rec.TechnicalAnalysis = techInfo
-	} else if strings.Contains(lowerLine, "基本面") || strings.Contains(lowerLine, "基本面分析") {
-		fundInfo := strings.TrimSpace(strings.TrimPrefix(line, "-"))
-		fundInfo = strings.TrimSpace(strings.TrimPrefix(fundInfo, "基本面分析："))
-		fundInfo = strings.TrimSpace(strings.TrimPrefix(fundInfo, "基本面："))
-		rec.FundamentalAnalysis = fundInfo
-	} else if strings.Contains(lowerLine, "风险提示") || strings.Contains(lowerLine, "风险") {
-		riskInfo := strings.TrimSpace(strings.TrimPrefix(line, "-"))
-		riskInfo = strings.TrimSpace(strings.TrimPrefix(riskInfo, "风险提示："))
-		riskInfo = strings.TrimSpace(strings.TrimPrefix(riskInfo, "风险："))
-		rec.RiskTips = riskInfo
+	} else if strings.Contains(lowerLine, "买卖建议") {
+		rec.TradeSuggestion = parseTextValue(line)
 	}
 }
 
@@ -1308,4 +1500,16 @@ func parsePriceFromLine(line string) (float64, error) {
 		return parsePrice(line[idx+1:])
 	}
 	return 0, fmt.Errorf("无法解析价格")
+}
+
+// parseTextValue 解析文本值
+func parseTextValue(line string) string {
+	// 提取冒号后的内容
+	if idx := strings.Index(line, ":"); idx >= 0 {
+		return strings.TrimSpace(line[idx+1:])
+	}
+	if idx := strings.Index(line, "："); idx >= 0 {
+		return strings.TrimSpace(line[idx+1:])
+	}
+	return line
 }

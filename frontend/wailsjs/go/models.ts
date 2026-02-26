@@ -787,6 +787,7 @@ export namespace models {
 	    risk_level: string;
 	    risk_tips: string;
 	    score: number;
+	    trade_suggestion: string;
 	    is_followed: boolean;
 	    macd: string;
 	    kdj: string;
@@ -819,6 +820,7 @@ export namespace models {
 	        this.risk_level = source["risk_level"];
 	        this.risk_tips = source["risk_tips"];
 	        this.score = source["score"];
+	        this.trade_suggestion = source["trade_suggestion"];
 	        this.is_followed = source["is_followed"];
 	        this.macd = source["macd"];
 	        this.kdj = source["kdj"];
