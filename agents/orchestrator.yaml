@@ -1,0 +1,151 @@
+# OpenClaw Agent 编排配置
+# 基于文章描述的架构实现
+
+name: stock-agent-orchestrator
+description: "AI Agent 编排中枢 - 调度多个 Claude Code 子代理"
+version: "1.0.0"
+
+# 核心架构配置
+architecture:
+  # 编排层配置
+  orchestrator:
+    type: openclaw
+    maxConcurrentAgents: 5
+    contextWindow: 200000
+    
+  # 子代理集群配置
+  agentCluster:
+    # 数据获取代理
+    - name: dataCollector
+      type: claude-code
+      role: "股票数据获取专家"
+      description: "负责获取股票实时数据、K线、资讯等"
+      capabilities:
+        - stockPrice
+        - kLineData
+        - marketNews
+        - fundFlow
+      timeout: 30000
+      
+    # 分析推理代理
+    - name: marketAnalyst
+      type: claude-code
+      role: "股票市场分析师"
+      description: "基于AI大模型进行股票市场分析、情绪分析"
+      capabilities:
+        - sentimentAnalysis
+        - trendPrediction
+        - technicalAnalysis
+      timeout: 60000
+      
+    # 选股策略代理
+    - name: stockPicker
+      type: claude-code
+      role: "智能选股专家"
+      description: "根据策略和指标筛选优质股票"
+      capabilities:
+        - indicatorScreening
+        - strategyExecution
+        - portfolioOptimization
+      timeout: 45000
+      
+    # 报告生成代理
+    - name: reportGenerator
+      type: claude-code
+      role: "投研报告撰写专家"
+      description: "生成专业的股票分析报告、买卖点建议"
+      capabilities:
+        - reportWriting
+        - chartGeneration
+        - suggestionFormatting
+      timeout: 40000
+
+# 工作流定义
+workflows:
+  # 标准荐股工作流
+  stockPickWorkflow:
+    name: "智能荐股流程"
+    steps:
+      - id: marketData
+        agent: dataCollector
+        action: fetchMarketData
+        description: "获取市场最新数据"
+        
+      - id: marketAnalysis
+        agent: marketAnalyst
+        action: analyzeMarket
+        description: "分析市场趋势和情绪"
+        dependsOn: [marketData]
+        
+      - id: stockScreening
+        agent: stockPicker
+        action: screenStocks
+        description: "根据策略筛选股票"
+        dependsOn: [marketAnalysis]
+        
+      - id: reportGen
+        agent: reportGenerator
+        action: generateReport
+        description: "生成荐股报告"
+        dependsOn: [stockScreening]
+        
+  # 实时监控工作流
+  realTimeMonitoringWorkflow:
+    name: "实时股票监控"
+    steps:
+      - id: priceData
+        agent: dataCollector
+        action: fetchRealTimePrices
+        description: "获取实时价格数据"
+        
+      - id: alertCheck
+        agent: marketAnalyst
+        action: checkAlerts
+        description: "检查是否触发预警条件"
+        dependsOn: [priceData]
+
+# 上下文管理配置
+contextManagement:
+  # 会话上下文
+  sessionContext:
+    maxSize: 100000
+    ttl: 3600
+    
+  # 代码库上下文
+  codebaseContext:
+    maxFiles: 100
+    maxTokens: 50000
+    
+  # 股票数据上下文
+  stockDataContext:
+    cacheSize: 1000
+    refreshInterval: 300
+
+# 安全配置
+security:
+  # 代理权限控制
+  agentPermissions:
+    dataCollector:
+      - read:stockData
+      - read:marketNews
+    marketAnalyst:
+      - read:stockData
+      - write:analysisReport
+    stockPicker:
+      - read:stockData
+      - write:pickList
+    reportGenerator:
+      - read:all
+      - write:report
+
+# 监控和日志
+monitoring:
+  enabled: true
+  metrics:
+    - agentResponseTime
+    - workflowCompletionRate
+    - errorRate
+  logging:
+    level: info
+    destination: file
+    rotation: daily

@@ -29,6 +29,35 @@ import (
 // @Date 2025/1/16 13:19
 // @Desc
 // -----------------------------------------------------------------------------------
+
+// ToolExecutor 工具执行器 - 统一执行各种工具调用
+type ToolExecutor struct {
+	tools map[string]tool.InvokableTool
+}
+
+// NewToolExecutor 创建工具执行器
+func NewToolExecutor(tools map[string]tool.InvokableTool) *ToolExecutor {
+	return &ToolExecutor{
+		tools: tools,
+	}
+}
+
+// Execute 执行工具调用
+func (e *ToolExecutor) Execute(ctx context.Context, funcName string, arguments string) (string, error) {
+	t, ok := e.tools[funcName]
+	if !ok {
+		return "", fmt.Errorf("tool not found: %s", funcName)
+	}
+
+	result, err := t.Invoke(ctx, arguments)
+	if err != nil {
+		logger.SugaredLogger.Errorf("Tool execution failed: %s, error: %v", funcName, err)
+		return "", fmt.Errorf("tool execution failed: %w", err)
+	}
+
+	return result, nil
+}
+
 type OpenAi struct {
 	ctx              context.Context
 	BaseUrl          string  `json:"base_url"`
@@ -1006,7 +1035,7 @@ func AskAi(o *OpenAi, err error, messages []map[string]interface{}, ch chan map[
 
 	}
 }
-func AskAiWithTools(o *OpenAi, err error, messages []map[string]interface{}, ch chan map[string]any, question string, tools []Tool) {
+func AskAiWithTools(o *OpenAi, err error, messages []map[string]interface{}, ch chan map[string]any, question string, tools []Tool, executor *ToolExecutor) {
 	client := resty.New()
 	client.SetBaseURL(strutil.Trim(o.BaseUrl))
 	client.SetHeader("Authorization", "Bearer "+o.ApiKey)

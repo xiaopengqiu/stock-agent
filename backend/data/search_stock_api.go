@@ -67,6 +67,9 @@ func (s SearchStockApi) HotStrategy() map[string]any {
 		return map[string]any{}
 	}
 	respMap := map[string]any{}
-	json.Unmarshal(resp.Body(), &respMap)
+	err = json.Unmarshal(resp.Body(), &respMap)
+	if err != nil {
+		return nil
+	}
 	return respMap
 }

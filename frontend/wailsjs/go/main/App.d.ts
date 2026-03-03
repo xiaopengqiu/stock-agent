@@ -50,6 +50,8 @@ export function GetAIResponseResult(arg1:string):Promise<models.AIResponseResult
 
 export function GetAiConfigs():Promise<Array<data.AIConfig>>;
 
+export function GetAvailableTools():Promise<Array<data.ToolItem>>;
+
 export function GetBuiltinToolCount():Promise<number>;
 
 export function GetConfig():Promise<data.SettingConfig>;
@@ -142,11 +144,15 @@ export function RemoveGroup(arg1:number):Promise<string>;
 
 export function RemoveStockGroup(arg1:string,arg2:string,arg3:number):Promise<string>;
 
+export function ResetToolConfig():Promise<void>;
+
 export function SaveAIResponseResult(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:number):Promise<void>;
 
 export function SaveAsMarkdown(arg1:string,arg2:string):Promise<string>;
 
 export function SaveImage(arg1:string,arg2:string):Promise<string>;
+
+export function SaveToolConfig(arg1:data.ToolConfig):Promise<void>;
 
 export function SaveWordFile(arg1:string,arg2:string):Promise<string>;
 

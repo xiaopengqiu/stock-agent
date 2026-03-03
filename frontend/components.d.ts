@@ -42,5 +42,6 @@ declare module 'vue' {
     TChatContent: typeof import('@tdesign-vue-next/chat')['ChatContent']
     TChatLoading: typeof import('@tdesign-vue-next/chat')['ChatLoading']
     TChatSender: typeof import('@tdesign-vue-next/chat')['ChatSender']
+    ToolSettings: typeof import('./src/components/tool-settings.vue')['default']
   }
 }

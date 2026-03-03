@@ -93,6 +93,12 @@
                     完整报告
                   </n-button>
                   <n-button
+                    :type="viewMode === 'card' ? 'primary' : 'default'"
+                    @click="viewMode = 'card'"
+                  >
+                    卡片视图
+                  </n-button>
+                  <n-button
                     :type="viewMode === 'simple' ? 'primary' : 'default'"
                     @click="viewMode = 'simple'"
                   >
@@ -109,12 +115,155 @@
               </n-space>
             </template>
 
-            <div style="flex: 1; overflow: hidden; min-height: 0; display: flex; flex-direction: column;">
+            <div class="result-content-wrapper">
               <!-- 完整报告视图 -->
               <div v-if="viewMode === 'full'" class="full-report-wrapper">
-
+                <n-scrollbar style="height: 100%;">
                   <MdPreview :modelValue="fullReport" :theme="darkTheme ? 'dark' : 'light'" class="md-preview-content"/>
+                </n-scrollbar>
+              </div>
 
+              <!-- 卡片视图 - 买卖点展示 -->
+              <div v-else-if="viewMode === 'card'" class="card-view-wrapper">
+                <n-scrollbar style="height: 100%;">
+                  <div class="card-grid">
+                    <n-card
+                      v-for="(item, index) in cardRecommendations"
+                      :key="item.stockCode"
+                      class="stock-card"
+                      size="small"
+                      :segmented="{ content: true }"
+                    >
+                      <!-- 卡片头部 - 股票名称和代码 -->
+                      <template #header>
+                        <div class="card-header">
+                          <div class="stock-title">
+                            <span class="stock-name">{{ item.stockName }}</span>
+                            <span class="stock-code">{{ item.stockCode }}</span>
+                            <n-tag :type="getTradeSuggestionType(item.tradeSuggestion)" size="tiny" class="suggestion-tag">
+                              {{ item.tradeSuggestion }}
+                            </n-tag>
+                          </div>
+                          <div class="stock-price">
+                            <span class="current-price" :class="{ 'price-up': item.priceChange >= 0, 'price-down': item.priceChange < 0 }">
+                              {{ item.currentPrice.toFixed(2) }}
+                            </span>
+                            <span class="price-change" :class="{ 'price-up': item.priceChange >= 0, 'price-down': item.priceChange < 0 }">
+                              {{ item.priceChange >= 0 ? '+' : '' }}{{ item.priceChange.toFixed(2) }}%
+                            </span>
+                          </div>
+                        </div>
+                      </template>
+
+                      <!-- 买卖点信息区域 -->
+                      <div class="trading-points">
+                        <!-- 买入区域 -->
+                        <div class="trading-point buy-point">
+                          <div class="point-label">
+                            <n-icon size="14" color="#18a058">
+                              <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                              </svg>
+                            </n-icon>
+                            <span class="label-text">买入区间</span>
+                          </div>
+                          <div class="price-value buy-price">{{ item.buyPriceRange }}</div>
+                        </div>
+
+                        <!-- 目标价 -->
+                        <div class="trading-point target-point">
+                          <div class="point-label">
+                            <n-icon size="14" color="#2080f0">
+                              <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2-5.5l6-4.5-6-4.5z"/>
+                              </svg>
+                            </n-icon>
+                            <span class="label-text">目标价</span>
+                          </div>
+                          <div class="price-value target-price">{{ item.targetPrice.toFixed(2) }}</div>
+                          <div class="expected-return" :class="{ 'positive': item.expectedReturn > 0, 'negative': item.expectedReturn < 0 }">
+                            {{ item.expectedReturn >= 0 ? '+' : '' }}{{ item.expectedReturn.toFixed(1) }}%
+                          </div>
+                        </div>
+
+                        <!-- 止损价 -->
+                        <div class="trading-point stop-loss-point">
+                          <div class="point-label">
+                            <n-icon size="14" color="#d03050">
+                              <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                              </svg>
+                            </n-icon>
+                            <span class="label-text">止损价</span>
+                          </div>
+                          <div class="price-value stop-loss-price">{{ item.stopLossPrice.toFixed(2) }}</div>
+                          <div class="stop-loss-rate" v-if="item.stopLossRate">
+                            止损 {{ item.stopLossRate }}%
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 板块和推荐理由 -->
+                      <div class="stock-info">
+                        <div class="sector-concept" v-if="item.sectorConcept">
+                          <n-tag size="tiny" type="info" :bordered="false">
+                            {{ item.sectorConcept }}
+                          </n-tag>
+                        </div>
+                        <div class="reason" v-if="item.reason">
+                          <n-text depth="2" class="reason-text">
+                            {{ item.reason }}
+                          </n-text>
+                        </div>
+                      </div>
+
+                      <!-- 风险提示 -->
+                      <div class="risk-warning" v-if="item.riskTips">
+                        <n-alert type="warning" size="small" :bordered="false">
+                          <template #icon>
+                            <n-icon>
+                              <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2L1 21h22L12 2zm0 3.83l7.53 13.17H4.47L12 5.83z"/>
+                              </svg>
+                            </n-icon>
+                          </template>
+                          {{ item.riskTips }}
+                        </n-alert>
+                      </div>
+
+                      <!-- 备注 -->
+                      <div class="remarks" v-if="item.remarks">
+                        <n-text depth="3" class="remarks-text">
+                          {{ item.remarks }}
+                        </n-text>
+                      </div>
+
+                      <!-- 推荐时间 -->
+                      <div class="recommend-time">
+                        <n-text depth="3" class="time-text">
+                          推荐时间: {{ item.recommendedAt }}
+                        </n-text>
+                      </div>
+
+                      <!-- 卡片底部操作栏 -->
+                      <div class="card-footer">
+                        <n-space justify="space-between" align="center">
+                          <n-tag :type="item.isFollowed ? 'success' : 'default'" size="small">
+                            {{ item.isFollowed ? '已关注' : '未关注' }}
+                          </n-tag>
+                          <n-button
+                            size="small"
+                            :type="item.isFollowed ? 'default' : 'primary'"
+                            :disabled="item.isFollowed"
+                            @click="handleFollow(item.stockCode)"
+                          >
+                            {{ item.isFollowed ? '已关注' : '关注' }}
+                          </n-button>
+                        </n-space>
+                      </div>
+                    </n-card>
+                  </div>
+                </n-scrollbar>
               </div>
 
               <!-- 简洁列表视图 -->
@@ -123,8 +272,9 @@
                   :columns="columns"
                   :data="simpleRecommendations"
                   :pagination="pagination"
+                  :bordered="false"
+                  striped
                   size="small"
-                  :scroll-x="1200"
                 />
               </div>
             </div>
@@ -139,7 +289,7 @@
     <template #header>
       <n-text strong style="padding-left: 8px;">历史推荐记录</n-text>
     </template>
-    <n-spin :show="loadingHistory">
+    <n-spin :show="loadingHistory">\n      <n-scrollbar style="height: calc(100vh - 120px);">
       <n-list v-if="historyList.length > 0" style="padding-left: 12px;">
         <n-list-item
           v-for="item in historyList"
@@ -192,6 +342,7 @@
         </n-list-item>
       </n-list>
       <n-empty v-else description="暂无历史记录" style="padding-left: 12px;" />
+      </n-scrollbar>
     </n-spin>
   </n-drawer>
 </template>
@@ -232,6 +383,7 @@ import {
   NDropdown,
   NEmpty,
   NPopconfirm,
+  NAlert,
   useMessage,
   useNotification
 } from "naive-ui"
@@ -274,63 +426,122 @@ const exportOptions = [
   }
 ]
 
-// 简洁列表数据
+// 简洁列表数据 - 使用与卡片视图相同的字段
 const simpleRecommendations = computed(() => {
-  return recommendations.value.map((rec, index) => ({
-    key: rec.stock_code,
+  return cardRecommendations.value.map((item, index) => ({
+    key: item.stockCode,
     rank: index + 1,
-    stock_code: rec.stock_code,
-    stock_name: rec.stock_name,
-    current_price: rec.current_price,
-    price_change: rec.price_change,
-    reason: rec.reason,
-    target_change_percent: rec.target_change_percent,
-    score: rec.score,
-    is_followed: rec.is_followed
+    stockCode: item.stockCode,
+    stockName: item.stockName,
+    currentPrice: item.currentPrice,
+    priceChange: item.priceChange,
+    buyPriceRange: item.buyPriceRange,
+    targetPrice: item.targetPrice,
+    stopLossPrice: item.stopLossPrice,
+    expectedReturn: item.expectedReturn,
+    tradeSuggestion: item.tradeSuggestion,
+    sectorConcept: item.sectorConcept,
+    reason: item.reason,
+    recommendedAt: item.recommendedAt,
+    isFollowed: item.isFollowed
   }))
 })
 
-// 表格列配置
+// 卡片视图数据 - 包含买卖点信息
+const cardRecommendations = computed(() => {
+  return recommendations.value.map((rec, index) => {
+    // 计算目标涨幅和止损率
+    const currentPrice = rec.current_price || 0
+    const targetPrice = rec.target_price || (currentPrice * 1.1)
+    const stopLossPrice = rec.stop_loss_price || (currentPrice * 0.95)
+    const expectedReturn = currentPrice > 0 ? ((targetPrice - currentPrice) / currentPrice * 100) : 0
+    const stopLossRate = currentPrice > 0 ? ((currentPrice - stopLossPrice) / currentPrice * 100) : 0
+
+    return {
+      key: rec.stock_code || index,
+      stockName: rec.stock_name || '-',
+      stockCode: rec.stock_code || '-',
+      currentPrice: currentPrice,
+      recommendedPrice: rec.recommended_price || currentPrice,
+      previousClose: rec.previous_close || (currentPrice * 0.98),
+      priceChange: rec.price_change || 0,
+      buyPriceRange: rec.buy_price_range || `${(currentPrice * 0.98).toFixed(2)}-${(currentPrice * 1.02).toFixed(2)}`,
+      targetPrice: targetPrice,
+      stopLossPrice: stopLossPrice,
+      expectedReturn: expectedReturn,
+      stopLossRate: stopLossRate.toFixed(1),
+      sectorConcept: rec.sector_concept || rec.industry || '未知板块',
+      reason: rec.reason || rec.recommendation_reason || '',
+      riskTips: rec.risk_tips || rec.risk_warning || '',
+      tradeSuggestion: rec.trade_suggestion || rec.action || (expectedReturn > 5 ? '买入' : '观望'),
+      remarks: rec.remarks || '',
+      recommendedAt: formatTime(rec.recommended_at || rec.created_at || Date.now()),
+      isFollowed: rec.is_followed || false
+    }
+  })
+})
+
+// 获取操作建议标签类型
+function getTradeSuggestionType(suggestion) {
+  if (!suggestion) return 'default'
+  if (suggestion.includes('买入') || suggestion.includes('推荐')) return 'success'
+  if (suggestion.includes('卖出') || suggestion.includes('减持')) return 'error'
+  if (suggestion.includes('观望') || suggestion.includes('持有')) return 'warning'
+  return 'default'
+}
+
+// 表格列配置 - 简洁列表展示
 const columns = [
-  { title: '排名', key: 'rank', width: 60, sorter: (a, b) => a.rank - b.rank },
-  { title: '股票代码', key: 'stock_code', width: 100 },
-  { title: '股票名称', key: 'stock_name', width: 120 },
+  { title: '排名', key: 'rank', width: 50, fixed: 'left' },
+  { title: '股票代码', key: 'stockCode', width: 90, fixed: 'left' },
+  { title: '股票名称', key: 'stockName', width: 100 },
   {
     title: '现价',
-    key: 'current_price',
+    key: 'currentPrice',
     width: 80,
-    render: (row) => h(NText, { type: 'info' }, { default: () => row.current_price.toFixed(2) })
+    render: (row) => h(NText, { type: 'info' }, { default: () => row.currentPrice.toFixed(2) })
   },
   {
     title: '涨跌幅',
-    key: 'price_change',
+    key: 'priceChange',
     width: 80,
-    render: (row) => h(NText, { type: row.price_change >= 0 ? 'success' : 'error' }, { default: () => `${row.price_change >= 0 ? '+' : ''}${row.price_change.toFixed(2)}%` })
+    render: (row) => h(NText, { type: row.priceChange >= 0 ? 'success' : 'error' }, { default: () => `${row.priceChange >= 0 ? '+' : ''}${row.priceChange.toFixed(2)}%` })
+  },
+  { title: '买入区间', key: 'buyPriceRange', width: 120 },
+  {
+    title: '目标价',
+    key: 'targetPrice',
+    width: 80,
+    render: (row) => h(NText, { type: 'info' }, { default: () => row.targetPrice.toFixed(2) })
   },
   {
-    title: '目标涨幅',
-    key: 'target_change_percent',
+    title: '止损价',
+    key: 'stopLossPrice',
+    width: 80,
+    render: (row) => h(NText, { type: 'error' }, { default: () => row.stopLossPrice.toFixed(2) })
+  },
+  {
+    title: '预期收益',
+    key: 'expectedReturn',
     width: 90,
-    sorter: (a, b) => a.target_change_percent - b.target_change_percent
+    render: (row) => h(NText, { type: row.expectedReturn >= 0 ? 'success' : 'error' }, { default: () => `${row.expectedReturn >= 0 ? '+' : ''}${row.expectedReturn.toFixed(1)}%` })
   },
-  {
-    title: '评分',
-    key: 'score',
-    width: 80,
-    sorter: (a, b) => a.score - b.score
-  },
+  { title: '操作建议', key: 'tradeSuggestion', width: 80 },
+  { title: '板块概念', key: 'sectorConcept', width: 100, ellipsis: { tooltip: true } },
+  { title: '推荐理由', key: 'reason', width: 200, ellipsis: { tooltip: true } },
+  { title: '推荐时间', key: 'recommendedAt', width: 140 },
   {
     title: '操作',
-    key: 'is_followed',
+    key: 'actions',
     width: 80,
+    fixed: 'right',
     render: (row) => h(NButton, {
       size: 'tiny',
-      type: row.is_followed ? 'default' : 'primary',
-      disabled: row.is_followed,
-      onClick: () => handleFollow(row.stock_code)
-    }, { default: () => row.is_followed ? '已关注' : '关注' })
-  },
-  { title: '推荐理由', key: 'reason', ellipsis: { tooltip: true } },
+      type: row.isFollowed ? 'default' : 'primary',
+      disabled: row.isFollowed,
+      onClick: () => handleFollow(row.stockCode)
+    }, { default: () => row.isFollowed ? '已关注' : '关注' })
+  }
 ]
 
 // 分页配置
@@ -649,10 +860,23 @@ function formatReportToMarkdown(report) {
   return markdown
 }
 
-// 格式化时间
+// 格式化时间 - 支持多种时间格式
 function formatTime(timestamp) {
   if (!timestamp) return ''
-  const date = new Date(timestamp)
+
+  let date
+  if (typeof timestamp === 'string') {
+    // 处理 Go 时间字符串格式 (如 "2024-01-15T10:30:00+08:00" 或 "2024-01-15T10:30:00Z")
+    date = new Date(timestamp)
+  } else if (typeof timestamp === 'number') {
+    // 处理时间戳（毫秒或秒）
+    date = timestamp > 1e10 ? new Date(timestamp) : new Date(timestamp * 1000)
+  } else {
+    date = new Date(timestamp)
+  }
+
+  if (isNaN(date.getTime())) return ''
+
   return date.toLocaleString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
@@ -730,33 +954,266 @@ async function getStats() {
   overflow: hidden;
 }
 
-.full-report-wrapper {
+/* 推荐结果内容区包装器 - 实现滚动 */
+.result-content-wrapper {
   flex: 1;
+  overflow: hidden;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
-.full-report-wrapper :deep(.n-scrollbar) {
+.full-report-wrapper {
   flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  padding: 16px;
 }
 
-.full-report-wrapper :deep(.n-scrollbar-container) {
-  height: 100%;
+.full-report-wrapper :deep(.md-editor-preview-wrapper) {
+  padding-bottom: 40px;
 }
 
 .md-preview-content {
-  min-height: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  overflow-y: scroll;
-  padding-right: 10px;
-  height: 100vh;
+  padding-bottom: 60px;
+}
+
+.full-report-wrapper :deep(.md-editor-preview) {
+  padding-bottom: 40px;
 }
 
 .simple-list-wrapper {
   flex: 1;
   overflow: auto;
   min-height: 0;
+}
+
+/* 卡片视图样式 */
+.card-view-wrapper {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  padding: 16px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 16px;
+  padding: 4px;
+}
+
+.stock-card {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.stock-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* 卡片头部样式 */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.stock-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stock-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.stock-code {
+  font-size: 12px;
+  color: #999;
+  background: #f5f5f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.suggestion-tag {
+  font-weight: 500;
+}
+
+.stock-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.current-price {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.price-change {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.price-up {
+  color: #d03050;
+}
+
+.price-down {
+  color: #18a058;
+}
+
+/* 买卖点区域样式 */
+.trading-points {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.trading-point {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 6px;
+  background: white;
+}
+
+.point-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #666;
+}
+
+.label-text {
+  font-weight: 500;
+}
+
+.price-value {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.buy-price {
+  color: #18a058;
+}
+
+.target-price {
+  color: #2080f0;
+}
+
+.stop-loss-price {
+  color: #d03050;
+}
+
+.expected-return {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.expected-return.positive {
+  color: #18a058;
+  background: #e8f5e9;
+}
+
+.expected-return.negative {
+  color: #d03050;
+  background: #ffebee;
+}
+
+.stop-loss-rate {
+  font-size: 11px;
+  color: #d03050;
+  margin-top: 2px;
+}
+
+/* 股票信息区域 */
+.stock-info {
+  margin: 12px 0;
+}
+
+.sector-concept {
+  margin-bottom: 8px;
+}
+
+.reason {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.reason-text {
+  color: #333;
+}
+
+/* 风险提示区域 */
+.risk-warning {
+  margin: 8px 0;
+}
+
+/* 备注区域 */
+.remarks {
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.remarks-text {
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* 推荐时间 */
+.recommend-time {
+  margin: 8px 0;
+  text-align: right;
+}
+
+.time-text {
+  font-size: 11px;
+  color: #999;
+}
+
+/* 卡片底部 */
+.card-footer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* 响应式调整 */
+@media (max-width: 1200px) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trading-points {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

@@ -1,0 +1,321 @@
+# OpenClaw + Claude Code Agent 集群配置
+# 实现AI代理编排架构，提升stock-agent开发效率
+
+apiVersion: openclaw.io/v1
+kind: AgentCluster
+metadata:
+  name: stock-agent-cluster
+  description: "stock-agent AI代理集群系统"
+  version: "1.0.0"
+
+# 调度器配置
+scheduler:
+  type: "round-robin"  # 轮询调度
+  maxConcurrent: 5     # 最大并发任务数
+  timeout: "30m"       # 任务超时时间
+
+# 上下文管理
+context:
+  maxTokens: 200000    # 最大上下文令牌数
+  retention: "24h"     # 上下文保留时间
+  isolation: "session" # 会话级隔离
+
+---
+
+# Agent 定义
+
+# 1. 架构设计代理 (Architect Agent)
+apiVersion: openclaw.io/v1
+kind: Agent
+metadata:
+  name: architect-agent
+  role: system-architect
+  description: "负责系统架构设计、技术选型、代码审查"
+spec:
+  model: "claude-code"
+  temperature: 0.3
+  maxTokens: 4000
+  systemPrompt: |
+    你是 stock-agent 项目的系统架构师。
+    
+    ## 职责
+    1. 设计系统架构和技术方案
+    2. 审查代码质量和架构合理性
+    3. 指导技术选型和最佳实践
+    4. 确保代码符合 Go 和 Wails 框架规范
+    
+    ## 输出规范
+    - 所有设计方案必须包含架构图或伪代码
+    - 代码审查必须指出潜在问题和改进建议
+    - 技术决策必须有充分的理由说明
+    
+    ## 约束
+    - 优先考虑可维护性和可扩展性
+    - 避免过度设计，保持简洁
+    - 确保与现有代码库兼容
+
+triggers:
+  - type: "keyword"
+    patterns: ["架构设计", "技术选型", "代码审查", "重构建议"]
+  - type: "file"
+    patterns: ["*.go", "*.vue", "wails.json"]
+
+---
+
+# 2. 代码实现代理 (Implementer Agent)
+apiVersion: openclaw.io/v1
+kind: Agent
+metadata:
+  name: implementer-agent
+  role: code-implementer
+  description: "负责代码实现、功能开发、单元测试"
+spec:
+  model: "claude-code"
+  temperature: 0.2
+  maxTokens: 8000
+  systemPrompt: |
+    你是 stock-agent 项目的代码实现工程师。
+    
+    ## 职责
+    1. 根据需求文档和架构设计编写代码
+    2. 实现业务功能和技术特性
+    3. 编写单元测试和集成测试
+    4. 修复代码缺陷和性能问题
+    
+    ## 编码规范
+    - 遵循 Go 官方编码规范
+    - 使用 gofmt 格式化代码
+    - 函数名采用驼峰命名法
+    - 包名简洁明了
+    - 添加必要的注释说明
+    
+    ## 输出要求
+    - 代码必须可直接编译运行
+    - 包含必要的错误处理
+    - 提供单元测试示例
+    - 说明代码使用方式
+
+triggers:
+  - type: "keyword"
+    patterns: ["实现", "开发", "编码", "修复bug", "写代码"]
+  - type: "intent"
+    patterns: ["create", "implement", "fix", "refactor"]
+
+---
+
+# 3. 数据分析代理 (Analyst Agent)
+apiVersion: openclaw.io/v1
+kind: Agent
+metadata:
+  name: analyst-agent
+  role: data-analyst
+  description: "负责股票数据分析、市场研究、报告生成"
+spec:
+  model: "claude-code"
+  temperature: 0.4
+  maxTokens: 4000
+  systemPrompt: |
+    你是 stock-agent 项目的数据分析师。
+    
+    ## 职责
+    1. 分析股票市场数据和趋势
+    2. 研究行业板块和个股表现
+    3. 生成投资分析报告和荐股建议
+    4. 监控市场风险和机会
+    
+    ## 分析方法
+    - 技术分析：K线、均线、MACD、RSI等指标
+    - 基本面分析：财务报表、盈利能力、估值水平
+    - 资金流向：主力资金、北向资金、龙虎榜
+    - 市场情绪：热点概念、板块轮动、风险偏好
+    
+    ## 输出格式
+    - 提供结构化的分析报告
+    - 包含具体的数据和指标
+    - 给出明确的投资建议
+    - 说明风险因素和注意事项
+
+triggers:
+  - type: "keyword"
+    patterns: ["分析", "研究", "报告", "选股", "推荐"]
+  - type: "intent"
+    patterns: ["analyze", "research", "report", "recommend"]
+
+---
+
+# 4. 测试验证代理 (Tester Agent)
+apiVersion: openclaw.io/v1
+kind: Agent
+metadata:
+  name: tester-agent
+  role: quality-tester
+  description: "负责测试用例设计、自动化测试、质量验证"
+spec:
+  model: "claude-code"
+  temperature: 0.2
+  maxTokens: 4000
+  systemPrompt: |
+    你是 stock-agent 项目的质量测试工程师。
+    
+    ## 职责
+    1. 设计和编写测试用例
+    2. 执行单元测试、集成测试和端到端测试
+    3. 进行代码审查和质量检查
+    4. 发现和跟踪软件缺陷
+    
+    ## 测试类型
+    - 单元测试：测试函数和方法的正确性
+    - 集成测试：测试模块间的交互
+    - API测试：测试后端接口
+    - UI测试：测试前端界面
+    - 性能测试：测试系统响应速度
+    
+    ## 输出要求
+    - 测试用例覆盖主要功能路径
+    - 测试代码清晰易读
+    - 包含测试说明和预期结果
+    - 记录发现的缺陷和问题
+
+triggers:
+  - type: "keyword"
+    patterns: ["测试", "验证", "bug", "质量问题"]
+  - type: "intent"
+    patterns: ["test", "verify", "check", "validate"]
+
+---
+
+# Agent 间通信协议
+
+## 消息类型
+
+```yaml
+MessageTypes:
+  - TASK_ASSIGN:    # 任务分配
+      from: scheduler
+      to: agent
+      payload: { taskId, type, priority, context }
+  
+  - TASK_COMPLETE:  # 任务完成
+      from: agent
+      to: scheduler
+      payload: { taskId, result, duration, tokens }
+  
+  - CONTEXT_SYNC:   # 上下文同步
+      from: agent
+      to: context-manager
+      payload: { sessionId, delta, timestamp }
+  
+  - AGENT_QUERY:    # Agent间查询
+      from: agent
+      to: agent
+      payload: { query, context, responseChannel }
+```
+
+## 上下文管理
+
+```yaml
+ContextManagement:
+  isolation: "session"     # 会话级隔离
+  maxTokens: 200000      # 最大令牌数
+  retention: "24h"       # 保留时间
+  
+  strategies:
+    - SUMMARIZATION:     # 摘要策略
+        threshold: 0.8   # 触发阈值（80%上下文使用）
+        compressRatio: 0.5  # 压缩比例
+    
+    - ARCHIVAL:          # 归档策略
+        threshold: 0.95  # 触发阈值
+        archiveTo: "storage/sessions/"
+```
+
+## 任务调度算法
+
+```yaml
+SchedulingAlgorithm:
+  type: "priority-weighted-round-robin"
+  
+  weights:
+    priority: 0.4        # 优先级权重
+    agentLoad: 0.3       # Agent负载权重
+    contextAffinity: 0.2 # 上下文亲和性权重
+    estimatedTime: 0.1   # 预估时间权重
+  
+  constraints:
+    maxConcurrent: 5     # 最大并发数
+    maxQueueDepth: 100   # 最大队列深度
+    timeout: "30m"       # 任务超时时间
+```
+
+---
+
+# 部署配置
+
+## 环境变量
+
+```bash
+# OpenClaw 核心配置
+export OPENCLAW_GATEWAY_PORT=18789
+export OPENCLAW_CONTEXT_MAX_TOKENS=200000
+export OPENCLAW_SCHEDULER_MAX_CONCURRENT=5
+export OPENCLAW_AGENT_TIMEOUT=30m
+
+# Agent 模型配置
+export AGENT_ARCHITECT_MODEL="claude-code"
+export AGENT_IMPLEMENTER_MODEL="claude-code"
+export AGENT_ANALYST_MODEL="claude-code"
+export AGENT_TESTER_MODEL="claude-code"
+
+# 上下文存储
+export CONTEXT_STORAGE_PATH="./data/context"
+export CONTEXT_RETENTION=24h
+
+# 日志配置
+export LOG_LEVEL=info
+export LOG_FORMAT=json
+```
+
+## 启动命令
+
+```bash
+# 启动 OpenClaw 网关
+openclaw gateway start
+
+# 启动 Agent 集群（开发模式）
+openclaw agents start --config=./.agents/agent-cluster.yaml --dev
+
+# 启动 Agent 集群（生产模式）
+openclaw agents start --config=./.agents/agent-cluster.yaml
+
+# 查看 Agent 状态
+openclaw agents status
+
+# 停止 Agent 集群
+openclaw agents stop
+```
+
+## 监控与日志
+
+```yaml
+Monitoring:
+  metrics:
+    - agent_tasks_completed    # Agent完成任务数
+    - agent_tasks_failed      # Agent失败任务数
+    - agent_average_latency   # Agent平均响应时间
+    - context_tokens_used     # 上下文令牌使用量
+    - scheduler_queue_depth   # 调度器队列深度
+  
+  health_checks:
+    - agent_availability    # Agent可用性检查
+    - context_manager_health # 上下文管理器健康状态
+    - scheduler_health      # 调度器健康状态
+  
+  alerting:
+    - high_error_rate       # 高错误率告警
+    - queue_backlog         # 队列积压告警
+    - context_exhaustion    # 上下文耗尽告警
+```
+
+---
+
+*此配置文件定义了完整的 AI Agent 集群系统，包含5个专业 Agent、上下文管理、任务调度和监控体系。*

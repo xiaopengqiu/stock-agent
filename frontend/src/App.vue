@@ -22,7 +22,7 @@ import {
   NewspaperSharp, Notifications,
   PowerOutline, Pulse,
   ReorderTwoOutline,
-  SettingsOutline, Skull, SkullOutline, SkullSharp,
+  SettingsOutline, Skull, SkullOutline, SkullSharp, Hammer,
   SparklesOutline,
   StarOutline,
   Wallet, WarningOutline,
@@ -483,6 +483,26 @@ const menuOptions = ref([
         ),
     key: 'settings',
     icon: renderIcon(SettingsOutline),
+  },
+  {
+    label: () =>
+        h(
+            RouterLink,
+            {
+              to: {
+                name: 'tool-settings',
+                query: {
+                  name:"工具配置",
+                }
+              },
+              onClick: () => {
+                activeKey.value = 'tool-settings'
+              },
+            },
+            {default: () => '工具配置'}
+        ),
+    key: 'tool-settings',
+    icon: renderIcon(Hammer),
   },
   {
     label: () =>

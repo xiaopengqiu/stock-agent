@@ -24,7 +24,7 @@ var (
 	registryOnce   sync.Once
 )
 
-// GetToolRegistry returns global tool registry instance
+// GetToolRegistry returns global tool registry instance，注册已有工具信息
 func GetToolRegistry(ctx context.Context) *registry.Registry {
 	registryOnce.Do(func() {
 		globalRegistry = registry.NewRegistry(ctx)
@@ -81,17 +81,8 @@ func GetStockAiAgent(ctx *context.Context, aiConfig data.AIConfig) *react.Agent 
 		return nil
 	}
 
-	// Get tools from registry (includes both built-in and MCP tools)
-	toolReg := GetToolRegistry(*ctx)
-	allTools := toolReg.GetAllTools()
-
-	// Convert tools to BaseTool format
-	baseTools := make([]tool.BaseTool, 0, len(allTools))
-	for _, t := range allTools {
-		if baseT, ok := t.(tool.BaseTool); ok {
-			baseTools = append(baseTools, baseT)
-		}
-	}
+	// Get enabled tools from configuration
+	baseTools := GetEnabledTools(*ctx)
 
 	logger.SugaredLogger.Infof("Agent initialized with %d tools (built-in: %d, MCP: %d)",
 		len(baseTools),
@@ -123,12 +114,92 @@ func GetStockAiAgent(ctx *context.Context, aiConfig data.AIConfig) *react.Agent 
 	return agent
 }
 
+// GetEnabledTools returns all enabled tools from configuration
+// This includes both built-in and MCP tools that are enabled in config
+func GetEnabledTools(ctx context.Context) []tool.BaseTool {
+	// Load tool configuration
+	toolConfig, err := data.LoadToolConfig()
+	if err != nil {
+		logger.SugaredLogger.Warnf("Failed to load tool config, using all available tools: %v", err)
+		// Fall back to getting all tools from registry
+		return getAllToolsFromRegistry(ctx)
+	}
+
+	// Get tool registry
+	toolReg := GetToolRegistry(ctx)
+	allRegistryTools := toolReg.GetAllTools()
+
+	// Create a map of enabled tool names from config
+	enabledTools := make(map[string]bool)
+	for _, toolItem := range toolConfig.Tools {
+		if toolItem.Enabled {
+			enabledTools[toolItem.Name] = true
+		}
+	}
+
+	// Filter tools based on configuration
+	baseTools := make([]tool.BaseTool, 0)
+	for _, t := range allRegistryTools {
+		if baseT, ok := t.(tool.BaseTool); ok {
+			// Get tool name to check if it's enabled
+			info, err := baseT.Info(ctx)
+			if err != nil {
+				logger.SugaredLogger.Warnf("Failed to get tool info: %v", err)
+				continue
+			}
+
+			// Check if tool is enabled in config
+			if enabledTools[info.Name] {
+				baseTools = append(baseTools, baseT)
+			} else {
+				logger.SugaredLogger.Debugf("Tool %s is disabled in config, skipping", info.Name)
+			}
+		}
+	}
+
+	logger.SugaredLogger.Infof("Loaded %d enabled tools from configuration (total available: %d)",
+		len(baseTools), len(allRegistryTools))
+
+	return baseTools
+}
+
+// getAllToolsFromRegistry returns all tools from registry without filtering
+func getAllToolsFromRegistry(ctx context.Context) []tool.BaseTool {
+	toolReg := GetToolRegistry(ctx)
+	allTools := toolReg.GetAllTools()
+
+	baseTools := make([]tool.BaseTool, 0, len(allTools))
+	for _, t := range allTools {
+		if baseT, ok := t.(tool.BaseTool); ok {
+			baseTools = append(baseTools, baseT)
+		}
+	}
+
+	return baseTools
+}
+
 func intPtr(num int) *int {
 	return &num
 }
 
 func float32Ptrt(num float32) *float32 {
 	return &num
+}
+
+// GetBuiltinTools returns all built-in tools from the registry
+func GetBuiltinTools() []tool.InvokableTool {
+	if globalRegistry != nil {
+		return globalRegistry.GetBuiltins().GetAllTools()
+	}
+	return nil
+}
+
+// GetMCPTools returns all MCP tools from the registry
+func GetMCPTools() map[string]tool.InvokableTool {
+	if globalRegistry != nil {
+		return globalRegistry.GetMCPTools()
+	}
+	return nil
 }
 
 // ShutdownToolRegistry cleans up tool registry

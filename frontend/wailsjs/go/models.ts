@@ -658,6 +658,56 @@ export namespace data {
 		    return a;
 		}
 	}
+	export class ToolItem {
+	    name: string;
+	    type: string;
+	    enabled: boolean;
+	    config: Record<string, any>;
+	
+	    static createFrom(source: any = {}) {
+	        return new ToolItem(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.type = source["type"];
+	        this.enabled = source["enabled"];
+	        this.config = source["config"];
+	    }
+	}
+	export class ToolConfig {
+	    version: string;
+	    tools: ToolItem[];
+	
+	    static createFrom(source: any = {}) {
+	        return new ToolConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.version = source["version"];
+	        this.tools = this.convertValues(source["tools"], ToolItem);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 
 }
 
@@ -788,6 +838,14 @@ export namespace models {
 	    risk_tips: string;
 	    score: number;
 	    trade_suggestion: string;
+	    recommended_price: number;
+	    previous_close: number;
+	    buy_price_range: string;
+	    stop_loss_price: number;
+	    sector_concept: string;
+	    remarks: string;
+	    // Go type: time
+	    recommended_at: any;
 	    is_followed: boolean;
 	    macd: string;
 	    kdj: string;
@@ -821,6 +879,13 @@ export namespace models {
 	        this.risk_tips = source["risk_tips"];
 	        this.score = source["score"];
 	        this.trade_suggestion = source["trade_suggestion"];
+	        this.recommended_price = source["recommended_price"];
+	        this.previous_close = source["previous_close"];
+	        this.buy_price_range = source["buy_price_range"];
+	        this.stop_loss_price = source["stop_loss_price"];
+	        this.sector_concept = source["sector_concept"];
+	        this.remarks = source["remarks"];
+	        this.recommended_at = this.convertValues(source["recommended_at"], null);
 	        this.is_followed = source["is_followed"];
 	        this.macd = source["macd"];
 	        this.kdj = source["kdj"];
@@ -832,6 +897,24 @@ export namespace models {
 	        this.revenue_growth = source["revenue_growth"];
 	        this.profit_growth = source["profit_growth"];
 	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class StockPickReport {
 	    id: number;

@@ -1,0 +1,123 @@
+# Data Collector Agent Configuration
+# 股票数据获取专家 - 负责获取实时数据、K线、资讯等
+
+name: dataCollector
+description: "股票数据获取专家 - 负责获取股票实时数据、K线、资讯等"
+type: claude-code
+version: "1.0.0"
+
+# 代理角色定义
+role:
+  name: "股票数据获取专家"
+  expertise:
+    - 实时股票行情数据获取
+    - K线历史数据抓取
+    - 市场资讯和新闻采集
+    - 资金流向数据获取
+    - 龙虎榜数据抓取
+  responsibilities:
+    - 高效获取指定股票的实时价格数据
+    - 抓取历史K线数据用于技术分析
+    - 采集市场热点资讯和财经新闻
+    - 获取主力资金流向和龙虎榜数据
+    - 确保数据准确性和及时性
+
+# 能力清单
+capabilities:
+  - name: getStockPrice
+    description: "获取股票实时价格"
+    parameters:
+      - name: stockCode
+        type: string
+        description: "股票代码"
+        required: true
+    returns:
+      type: object
+      fields:
+        - name: currentPrice
+          type: number
+        - name: changePercent
+          type: number
+        - name: volume
+          type: number
+
+  - name: getKLineData
+    description: "获取K线历史数据"
+    parameters:
+      - name: stockCode
+        type: string
+        required: true
+      - name: period
+        type: string
+        enum: ["1d", "1w", "1M"]
+        default: "1d"
+      - name: count
+        type: number
+        default: 100
+    returns:
+      type: array
+      itemType: object
+
+  - name: getMarketNews
+    description: "获取市场资讯"
+    parameters:
+      - name: category
+        type: string
+        enum: ["market", "company", "industry", "global"]
+        default: "market"
+      - name: limit
+        type: number
+        default: 20
+    returns:
+      type: array
+
+  - name: getFundFlow
+    description: "获取资金流向数据"
+    parameters:
+      - name: market
+        type: string
+        enum: ["all", "sh", "sz", "hk", "us"]
+        default: "all"
+    returns:
+      type: object
+
+  - name: getLongHuBoard
+    description: "获取龙虎榜数据"
+    parameters:
+      - name: date
+        type: string
+        format: date
+    returns:
+      type: array
+
+# 工具配置
+tools:
+  builtin:
+    - name: QueryStockCodeInfo
+      enabled: true
+    - name: GetStockPriceInfo
+      enabled: true
+    - name: GetStockKLineData
+      enabled: true
+    - name: QueryMarketNews
+      enabled: true
+    - name: GetFundFlow
+      enabled: true
+    - name: GetLongHuBoard
+      enabled: true
+
+# 运行配置
+runtime:
+  timeout: 30000  # 30秒超时
+  maxRetries: 3
+  retryDelay: 1000
+  
+# 输出格式
+output:
+  format: json
+  includeMetadata: true
+  fields:
+    - data
+    - timestamp
+    - source
+    - confidence

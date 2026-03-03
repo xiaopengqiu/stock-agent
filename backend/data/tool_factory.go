@@ -57,17 +57,17 @@ func getBuiltinToolsMap() map[string]Tool {
 				},
 			},
 		},
-		"GetStockKLine": {
+		"QueryStockKLine": {
 			Type: "function",
 			Function: ToolFunction{
-				Name:        "GetStockKLine",
-				Description: "获取股票日K线数据。",
+				Name:        "QueryStockKLine",
+				Description: "获取股票K线数据。输入股票名称和K线周期，返回股票K线数据。",
 				Parameters: FunctionParameters{
 					Type: "object",
 					Properties: map[string]any{
 						"days": map[string]any{
 							"type":        "string",
-							"description": "日K数据条数",
+							"description": "日K数据条数。",
 						},
 						"stockCode": map[string]any{
 							"type":        "string",
@@ -78,10 +78,10 @@ func getBuiltinToolsMap() map[string]Tool {
 				},
 			},
 		},
-		"InteractiveAnswer": {
+		"QueryInteractiveAnswerData": {
 			Type: "function",
 			Function: ToolFunction{
-				Name:        "InteractiveAnswer",
+				Name:        "QueryInteractiveAnswerData",
 				Description: "获取投资者与上市公司互动问答的数据,反映当前投资者关注的热点问题",
 				Parameters: FunctionParameters{
 					Type: "object",
@@ -117,6 +117,136 @@ func getBuiltinToolsMap() map[string]Tool {
 						},
 					},
 					Required: []string{"stockCode"},
+				},
+			},
+		},
+		"SearchStockCode": {
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "QueryStockCodeInfo",
+				Description: "查询股票/指数信息(股票/指数名称,股票/指数代码,股票/指数拼音,股票/指数拼音首字母,股票/指数交易所等",
+				Parameters: FunctionParameters{
+					Type: "object",
+					Properties: map[string]any{
+						"searchWord": map[string]any{
+							"type":        "string",
+							"description": "股票搜索关键词",
+						},
+					},
+					Required: []string{"searchWord"},
+				},
+			},
+		},
+		"GetStockPriceInfo": {
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "QueryStockPriceInfo",
+				Description: "批量获取实时股价数据",
+				Parameters: FunctionParameters{
+					Type: "object",
+					Properties: map[string]any{
+						"stockCodes": map[string]any{
+							"type":        "string",
+							"description": "股票代码,多个,隔开,股票代码必须转化为sh或者sz或者hk开头的形式，例如：sz399001,sh600859",
+						},
+					},
+					Required: []string{"stockCodes"},
+				},
+			},
+		},
+		"GetStockNews": {
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "QueryStockNewsTool",
+				Description: "按关键词搜索相关市场资讯/新闻",
+				Parameters: FunctionParameters{
+					Type: "object",
+					Properties: map[string]any{
+						"searchWords": map[string]any{
+							"type":        "string",
+							"description": "搜索关键词(多个关键词使用空格分隔)",
+						},
+					},
+					Required: []string{"searchWords"},
+				},
+			},
+		},
+		"GetMarketNews": {
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "QueryMarketNews",
+				Description: "国内外市场资讯/电报/会议/事件",
+				Parameters: FunctionParameters{
+					Type:       "object",
+					Properties: map[string]any{},
+					Required:   []string{},
+				},
+			},
+		},
+		"GetEconomicData": {
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "QueryEconomicData",
+				Description: "查询宏观经济数据(GDP,CPI,PPI,PMI)",
+				Parameters: FunctionParameters{
+					Type: "object",
+					Properties: map[string]any{
+						"flag": map[string]any{
+							"type":        "string",
+							"description": "all:宏观经济数据(GDP,CPI,PPI,PMI);GDP:国内生产总值;CPI:居民消费价格指数;PPI:工业品出厂价格指数;PMI:采购经理人指数",
+						},
+					},
+					Required: []string{},
+				},
+			},
+		},
+		"GetFinancialReports": {
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "GetFinancialReport",
+				Description: "查询股票财务报表数据",
+				Parameters: FunctionParameters{
+					Type: "object",
+					Properties: map[string]any{
+						"stockCode": map[string]any{
+							"type":        "string",
+							"description": "股票代码（A股：sh,sz开头;港股hk开头,美股：us开头）不能批量查询",
+						},
+					},
+					Required: []string{"stockCode"},
+				},
+			},
+		},
+		"GetIndustryResearchReport": {
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "GetIndustryResearchReport",
+				Description: "获取行业/板块研究报告",
+				Parameters: FunctionParameters{
+					Type: "object",
+					Properties: map[string]any{
+						"name": map[string]any{
+							"type":        "string",
+							"description": "行业/板块行业名称",
+						},
+						"code": map[string]any{
+							"type":        "string",
+							"description": "行业/板块代码",
+						},
+					},
+					Required: []string{"code"},
+				},
+			},
+		},
+		"GetBKDict": {
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "QueryBKDictInfo",
+				Description: "获取所有板块/行业名称或者代码(bkCode,bkName)",
+				Parameters: FunctionParameters{
+					Type:       "object",
+					Properties: map[string]any{},
+					Required:   []string{},
 				},
 			},
 		},

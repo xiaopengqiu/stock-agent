@@ -13,6 +13,12 @@ import (
 	"github.com/cloudwego/eino/components/tool"
 )
 
+const (
+	builtinToolSuffix = "_Builtin"
+	mcpToolSuffix     = "_MCP"
+	httpToolSuffix    = "_HTTP"
+)
+
 // Registry manages both built-in and MCP tools
 type Registry struct {
 	mu         sync.RWMutex
@@ -25,7 +31,7 @@ type Registry struct {
 }
 
 // DefaultConfigPath is the default path for MCP configuration file
-const DefaultConfigPath = "data/mcp_config.json"
+const DefaultConfigPath = "data/tool/mcp_config.json"
 
 // NewRegistry creates a new tool registry
 func NewRegistry(ctx context.Context) *Registry {
@@ -43,8 +49,8 @@ func NewRegistry(ctx context.Context) *Registry {
 	}
 }
 
-// LoadConfig loads MCP configuration from file
-func (r *Registry) LoadConfig(path string) error {
+// LoadMCPConfig loads MCP configuration from file
+func (r *Registry) LoadMCPConfig(path string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -57,7 +63,7 @@ func (r *Registry) LoadConfig(path string) error {
 		logger.SugaredLogger.Infof("MCP config file not found at %s, using empty config", path)
 		r.config = &mcp.MCPConfig{
 			Enabled: false,
-			Servers:  []*mcp.MCPServerConfig{},
+			Servers: []*mcp.MCPServerConfig{},
 		}
 		return nil
 	}
@@ -84,7 +90,7 @@ func (r *Registry) LoadConfig(path string) error {
 // Initialize sets up the registry with built-in and MCP tools
 func (r *Registry) Initialize() error {
 	// Load config
-	if err := r.LoadConfig(""); err != nil {
+	if err := r.LoadMCPConfig(""); err != nil {
 		logger.SugaredLogger.Errorf("Failed to load MCP config: %v", err)
 		// Continue with empty config
 	}
@@ -124,6 +130,10 @@ func (r *Registry) LoadMCPTools() error {
 			continue
 		}
 
+		serverName := serverConfig.Name
+		serverName = serverName + mcpToolSuffix
+		serverConfig.Name = serverName
+
 		// Connect to server
 		if err := client.Connect(); err != nil {
 			logger.SugaredLogger.Errorf("Failed to connect to MCP server %s: %v", serverConfig.Name, err)
@@ -137,7 +147,7 @@ func (r *Registry) LoadMCPTools() error {
 		// Create tool adapters
 		adapters := mcp.CreateToolAdapters(client, serverConfig.Name)
 		for _, adapter := range adapters {
-			r.mcpTools[getToolName(adapter)] = adapter
+			r.mcpTools[getMCPToolName(adapter)] = adapter
 		}
 
 		logger.SugaredLogger.Infof("Loaded %d tools from MCP server %s", len(adapters), serverConfig.Name)
@@ -227,7 +237,7 @@ func (r *Registry) ReloadMCPTools() error {
 	r.mu.Unlock()
 
 	// Reload config
-	if err := r.LoadConfig(""); err != nil {
+	if err := r.LoadMCPConfig(""); err != nil {
 		return fmt.Errorf("failed to reload config: %w", err)
 	}
 
@@ -339,14 +349,14 @@ func (r *Registry) StartHealthCheckWatcher(interval time.Duration) {
 	}()
 }
 
-// getToolName extracts the tool name from a tool.InvokableTool
+// getMCPToolName extracts the mcp tool name from a tool.InvokableTool
 // This is a helper since tool.Info() requires context
-func getToolName(t tool.InvokableTool) string {
+func getMCPToolName(t tool.InvokableTool) string {
 	// We need to execute tool.Info() to get the name
 	// For now, use a default approach
 	info, err := t.Info(context.Background())
 	if err != nil {
 		return "unknown_tool"
 	}
-	return info.Name
+	return info.Name + mcpToolSuffix
 }

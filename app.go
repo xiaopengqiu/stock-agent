@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/cloudwego/eino/components/tool"
 	"go-stock/backend/agent"
 	"go-stock/backend/data"
 	"go-stock/backend/db"
@@ -38,6 +39,7 @@ type App struct {
 	cron              *cron.Cron
 	cronEntrys        map[string]cron.EntryID
 	AiTools           []data.Tool
+	AiInvokeTools     map[string]tool.InvokableTool
 	SponsorInfo       map[string]any
 	PromptTemplateSvc *data.PromptTemplateApi
 }
@@ -58,14 +60,96 @@ func NewApp() *App {
 	cache := freecache.NewCache(cacheSize)
 	c := cron.New(cron.WithSeconds())
 	c.Start()
-	tools := loadToolsFromConfig()
+	ctx := context.Background()
+	tools := agent.GetToolRegistry(ctx).GetAllTools()
+	aiInvokeTools := make(map[string]tool.InvokableTool)
+	for _, invokableTool := range tools {
+		info, err := invokableTool.Info(ctx)
+		if err != nil {
+			logger.SugaredLogger.Errorf("Failed to get tool info: %v", err)
+			continue
+		}
+		aiInvokeTools[info.Name] = invokableTool
+	}
+	var aiTools []data.Tool
+	for _, t := range ConvertInvokableToolsToDataTools(ctx, tools) {
+		if t.Type == "" {
+			continue
+		}
+		aiTools = append(aiTools, t)
+	}
+	logger.SugaredLogger.Infof("load tools %v", aiTools)
 	return &App{
 		cache:             cache,
 		cron:              c,
 		cronEntrys:        make(map[string]cron.EntryID),
-		AiTools:           tools,
+		AiTools:           aiTools,
+		AiInvokeTools:     aiInvokeTools,
 		PromptTemplateSvc: data.NewPromptTemplateApi(),
 	}
+}
+
+// ConvertInvokableToolsToDataTools 将 []tool.InvokableTool 转换为 []data.Tool
+func ConvertInvokableToolsToDataTools(ctx context.Context, invokableTools []tool.InvokableTool) []data.Tool {
+	if len(invokableTools) == 0 {
+		return nil
+	}
+
+	dataTools := make([]data.Tool, 0, len(invokableTools))
+
+	for _, t := range invokableTools {
+		dataTool, err := ConvertInvokableToolToDataTool(ctx, t)
+		if err != nil {
+			logger.SugaredLogger.Errorf("转换工具失败: %v", err)
+			continue
+		}
+		logger.SugaredLogger.Infof("InvokableTool: %v, Tool: %v", t, dataTool)
+		dataTools = append(dataTools, dataTool)
+	}
+
+	return dataTools
+}
+
+// ConvertInvokableToolToDataTool 将单个 tool.InvokableTool 转换为 data.Tool
+func ConvertInvokableToolToDataTool(ctx context.Context, t tool.InvokableTool) (data.Tool, error) {
+	info, err := t.Info(ctx)
+	if err != nil {
+		return data.Tool{}, fmt.Errorf("获取工具信息失败: %w", err)
+	}
+
+	// 转换参数定义
+	properties := make(map[string]any)
+
+	// 从 schema 中提取参数信息
+	if info.ParamsOneOf != nil {
+		sc, err := info.ParamsOneOf.ToJSONSchema()
+		if err != nil {
+			return data.Tool{}, err
+		}
+		for pair := sc.Properties.Oldest(); pair != nil; pair = pair.Next() {
+			param := pair.Key
+			value := pair.Value
+			prop := map[string]string{
+				"type":        value.Type,
+				"description": value.Description,
+			}
+			properties[param] = prop
+		}
+		return data.Tool{
+			Type: "function",
+			Function: data.ToolFunction{
+				Name:        info.Name,
+				Description: info.Desc,
+				Parameters: data.FunctionParameters{
+					Type:       "object",
+					Properties: properties,
+					Required:   sc.Required,
+				},
+			},
+		}, nil
+	}
+
+	return data.Tool{}, nil
 }
 
 // loadToolsFromConfig loads tools from configuration file
@@ -1551,7 +1635,6 @@ func (a *App) GetAiConfigs() []*data.AIConfig {
 	return data.GetSettingConfig().AiConfigs
 }
 
-// MCP Configuration Management
 // GetMCPEnabled returns whether MCP is enabled
 func (a *App) GetMCPEnabled() bool {
 	config := agent.GetToolRegistry(a.ctx)
@@ -1745,9 +1828,97 @@ func validateToolConfig(config *data.ToolConfig) error {
 	return nil
 }
 
+// GetAvailableTools returns all available tools from both built-in and MCP sources
+func (a *App) GetAvailableTools() []data.ToolItem {
+	var availableTools []data.ToolItem
+
+	// Get current config to check enabled status
+	config, err := data.LoadToolConfig()
+	enabledMap := make(map[string]bool)
+	if err == nil {
+		for _, tool := range config.Tools {
+			enabledMap[tool.Name] = tool.Enabled
+		}
+	}
+
+	// Get built-in tools from registry
+	builtinTools := agent.GetBuiltinTools()
+	for _, t := range builtinTools {
+		info, err := t.Info(a.ctx)
+		if err != nil {
+			continue
+		}
+
+		toolItem := data.ToolItem{
+			Name:    info.Name,
+			Type:    "builtin",
+			Enabled: enabledMap[info.Name],
+			Config:  map[string]interface{}{},
+		}
+		availableTools = append(availableTools, toolItem)
+	}
+
+	// Get MCP tools from registry
+	mcpTools := agent.GetMCPTools()
+	for name := range mcpTools {
+		toolItem := data.ToolItem{
+			Name:    name,
+			Type:    "mcp",
+			Enabled: enabledMap[name],
+			Config:  map[string]interface{}{},
+		}
+		availableTools = append(availableTools, toolItem)
+	}
+
+	logger.SugaredLogger.Infof("GetAvailableTools: found %d available tools", len(availableTools))
+	return availableTools
+}
+
+// SaveToolConfig saves the tool configuration and reloads tools
+func (a *App) SaveToolConfig(config *data.ToolConfig) error {
+	// Validate configuration
+	if config == nil {
+		return fmt.Errorf("configuration cannot be nil")
+	}
+
+	if config.Version == "" {
+		return fmt.Errorf("configuration version is required")
+	}
+
+	// Save configuration
+	if err := data.SaveToolConfig(config); err != nil {
+		logger.SugaredLogger.Errorf("Failed to save tool config: %v", err)
+		return fmt.Errorf("failed to save configuration: %w", err)
+	}
+
+	// Clear cache to ensure fresh data on next load
+	data.InvalidateToolConfigCache()
+
+	logger.SugaredLogger.Infof("Tool configuration saved successfully with %d tools", len(config.Tools))
+	return nil
+}
+
+// ResetToolConfig resets the tool configuration to default
+func (a *App) ResetToolConfig() error {
+	// Create default configuration
+	defaultConfig := data.GetDefaultToolConfig()
+
+	// Save default configuration
+	if err := data.SaveToolConfig(defaultConfig); err != nil {
+		logger.SugaredLogger.Errorf("Failed to reset tool config: %v", err)
+		return fmt.Errorf("failed to reset configuration: %w", err)
+	}
+
+	// Clear cache
+	data.InvalidateToolConfigCache()
+
+	logger.SugaredLogger.Infof("Tool configuration reset to default with %d tools", len(defaultConfig.Tools))
+	return nil
+}
+
 // AIStockPickChat starts an AI stock pick analysis session
 func (a *App) AIStockPickChat(query string, aiConfigID uint) (string, error) {
-	service := data.NewStockPickService(a.ctx)
+	service := data.NewStockPickServiceWithInvokeTool(a.ctx, a.AiTools, a.AiInvokeTools)
 
 	// 定义事件处理器
 	eventHandler := func(eventType string, data interface{}) {
@@ -1780,7 +1951,7 @@ func (a *App) AIStockPickChat(query string, aiConfigID uint) (string, error) {
 func (a *App) GetStockPickReports(offset, limit int) (*models.StockPickReportsResponse, error) {
 	logger.SugaredLogger.Infof("App.GetStockPickReports 调用: offset=%d, limit=%d", offset, limit)
 
-	service := data.NewStockPickService(a.ctx)
+	service := data.NewStockPickServiceWithInvokeTool(a.ctx, a.AiTools, a.AiInvokeTools)
 	reports, total, err := service.GetReports(offset, limit)
 	if err != nil {
 		logger.SugaredLogger.Errorf("service.GetReports 失败: %v", err)
@@ -1814,7 +1985,7 @@ func (a *App) GetStockPickReports(offset, limit int) (*models.StockPickReportsRe
 func (a *App) GetStockPickReport(id uint) (*models.StockPickReport, error) {
 	logger.SugaredLogger.Infof("GetStockPickReport 调用: id=%d", id)
 
-	service := data.NewStockPickService(a.ctx)
+	service := data.NewStockPickServiceWithInvokeTool(a.ctx, a.AiTools, a.AiInvokeTools)
 	report, err := service.GetReport(id)
 	if err != nil {
 		logger.SugaredLogger.Errorf("GetStockPickReport 失败: id=%d, error=%v", id, err)
@@ -1826,13 +1997,13 @@ func (a *App) GetStockPickReport(id uint) (*models.StockPickReport, error) {
 
 // GetStockPickRecommendations returns recommendations for a report
 func (a *App) GetStockPickRecommendations(reportID uint) ([]models.RecommendationItem, error) {
-	service := data.NewStockPickService(a.ctx)
+	service := data.NewStockPickServiceWithInvokeTool(a.ctx, a.AiTools, a.AiInvokeTools)
 	return service.GetRecommendations(reportID)
 }
 
 // FollowStockFromReport follows a stock from a recommendation report
 func (a *App) FollowStockFromReport(reportID uint, stockCode string) (string, error) {
-	service := data.NewStockPickService(a.ctx)
+	service := data.NewStockPickServiceWithInvokeTool(a.ctx, a.AiTools, a.AiInvokeTools)
 
 	// 检查股票是否已关注
 	isFollowed := service.CheckStockFollowed(stockCode)
@@ -1858,7 +2029,7 @@ func (a *App) FollowStockFromReport(reportID uint, stockCode string) (string, er
 
 // ExportStockPickReport exports a report to markdown file
 func (a *App) ExportStockPickReport(reportID uint, format string) (string, error) {
-	service := data.NewStockPickService(a.ctx)
+	service := data.NewStockPickServiceWithInvokeTool(a.ctx, a.AiTools, a.AiInvokeTools)
 
 	// 生成Markdown内容
 	content, err := service.ExportToMarkdownContent(reportID)
@@ -1913,19 +2084,19 @@ func (a *App) ExportStockPickReport(reportID uint, format string) (string, error
 
 // CheckStockFollowed checks if a stock is followed
 func (a *App) CheckStockFollowed(stockCode string) bool {
-	service := data.NewStockPickService(a.ctx)
+	service := data.NewStockPickServiceWithInvokeTool(a.ctx, a.AiTools, a.AiInvokeTools)
 	return service.CheckStockFollowed(stockCode)
 }
 
 // GetStockPickStats returns stock pick statistics
 func (a *App) GetStockPickStats() map[string]interface{} {
-	service := data.NewStockPickService(a.ctx)
+	service := data.NewStockPickServiceWithInvokeTool(a.ctx, a.AiTools, a.AiInvokeTools)
 	return service.GetStockPickStats()
 }
 
 // DeleteStockPickReport deletes a stock pick report
 func (a *App) DeleteStockPickReport(id uint) (string, error) {
-	service := data.NewStockPickService(a.ctx)
+	service := data.NewStockPickServiceWithInvokeTool(a.ctx, a.AiTools, a.AiInvokeTools)
 	if err := service.DeleteReport(id); err != nil {
 		return "", err
 	}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cloudwego/eino/components/tool"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"go-stock/backend/models"
@@ -17,14 +18,34 @@ import (
 	"gorm.io/gorm"
 )
 
+// ToolProvider 工具提供者接口，用于从外部获取工具列表
+type ToolProvider interface {
+	GetTools() []Tool
+}
+
 // StockPickService AI荐股服务
 type StockPickService struct {
-	ctx context.Context
+	ctx           context.Context
+	AiTools       []Tool
+	AiInvokeTools map[string]tool.InvokableTool
 }
 
 // NewStockPickService 创建荐股服务
 func NewStockPickService(ctx context.Context) *StockPickService {
-	return &StockPickService{ctx: ctx}
+	return &StockPickService{ctx: ctx, AiTools: nil}
+}
+
+func NewStockPickServiceWithTool(ctx context.Context, tools []Tool) *StockPickService {
+	return &StockPickService{ctx: ctx, AiTools: tools}
+}
+
+func NewStockPickServiceWithInvokeTool(ctx context.Context, tools []Tool, invokeTools map[string]tool.InvokableTool) *StockPickService {
+	return &StockPickService{ctx: ctx, AiTools: tools, AiInvokeTools: invokeTools}
+}
+
+// SetToolProvider 设置工具提供者
+func (s *StockPickService) SetToolProvider(tools []Tool) {
+	s.AiTools = tools
 }
 
 // StockPickRequest 荐股请求
@@ -125,7 +146,7 @@ func (s *StockPickService) ProcessStockPick(req StockPickRequest, eventHandler f
 
 	go func() {
 		defer close(ch)
-		AskAiWithTools(openAI, nil, msg, ch, req.UserQuery, s.getStockPickTools())
+		AskAiWithTools(openAI, nil, msg, ch, req.UserQuery, s.AiTools)
 	}()
 
 	// 8. 处理流式响应 - 在同一个 goroutine 中解析推荐数据
@@ -218,127 +239,6 @@ func (s *StockPickService) getMarketIndexInfo() string {
 	sb.WriteString(GetZSInfo("科创50", "sh000688", 30) + "\n")
 	sb.WriteString(GetZSInfo("沪深300指数", "sh000300", 30) + "\n")
 	return sb.String()
-}
-
-// getStockPickTools 获取荐股工具列表（从配置加载）
-func (s *StockPickService) getStockPickTools() []Tool {
-	var tools []Tool
-
-	// 加载工具配置
-	config, err := LoadToolConfig()
-	if err != nil {
-		logger.SugaredLogger.Errorf("加载工具配置失败: %v", err)
-		return s.getDefaultTools() // 使用默认配置
-	}
-
-	// 根据配置创建工具
-	for _, toolItem := range config.Tools {
-		if !toolItem.Enabled {
-			continue
-		}
-
-		tool, err := CreateTool(toolItem)
-		if err != nil {
-			logger.SugaredLogger.Errorf("创建工具失败 %s: %v", toolItem.Name, err)
-			continue
-		}
-
-		tools = append(tools, tool)
-	}
-
-	// 如果配置中没有工具，返回默认工具
-	if len(tools) == 0 {
-		logger.SugaredLogger.Warnf("工具配置为空，使用默认工具")
-		return s.getDefaultTools()
-	}
-
-	return tools
-}
-
-// getDefaultTools 获取默认工具列表（保持向后兼容）
-func (s *StockPickService) getDefaultTools() []Tool {
-	return []Tool{
-		{
-			Type: "function",
-			Function: ToolFunction{
-				Name:        "SearchStockByIndicators",
-				Description: "根据自然语言筛选股票",
-				Parameters: FunctionParameters{
-					Type: "object",
-					Properties: map[string]any{
-						"words": map[string]string{
-							"type":        "string",
-							"description": "选股自然语言描述，例如：涨停、涨幅大于5%、科技股等",
-						},
-					},
-					Required: []string{"words"},
-				},
-			},
-		},
-		{
-			Type: "function",
-			Function: ToolFunction{
-				Name:        "GetStockKLine",
-				Description: "获取股票K线数据",
-				Parameters: FunctionParameters{
-					Type: "object",
-					Properties: map[string]any{
-						"stockCode": map[string]string{
-							"type":        "string",
-							"description": "股票代码，如：sh000001",
-						},
-						"days": map[string]string{
-							"type":        "string",
-							"description": "获取多少天的K线数据，默认90天",
-						},
-					},
-					Required: []string{"days", "stockCode"},
-				},
-			},
-		},
-		{
-			Type: "function",
-			Function: ToolFunction{
-				Name:        "InteractiveAnswer",
-				Description: "获取投资者与上市公司互动问答数据",
-				Parameters: FunctionParameters{
-					Type: "object",
-					Properties: map[string]any{
-						"page": map[string]string{
-							"type":        "string",
-							"description": "页码，默认1",
-						},
-						"pageSize": map[string]string{
-							"type":        "string",
-							"description": "每页数量，默认50",
-						},
-						"keyWord": map[string]string{
-							"type":        "string",
-							"description": "关键词",
-						},
-					},
-					Required: []string{"page", "pageSize"},
-				},
-			},
-		},
-		{
-			Type: "function",
-			Function: ToolFunction{
-				Name:        "GetStockResearchReport",
-				Description: "获取个股研报",
-				Parameters: FunctionParameters{
-					Type: "object",
-					Properties: map[string]any{
-						"stockCode": map[string]string{
-							"type":        "string",
-							"description": "股票代码，如：sh000001",
-						},
-					},
-					Required: []string{"stockCode"},
-				},
-			},
-		},
-	}
 }
 
 // SaveReport 保存荐股报告

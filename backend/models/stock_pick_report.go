@@ -63,6 +63,15 @@ type RecommendationItem struct {
 	Score               float64 `json:"score"`                 // 综合评分 (0-100)
 	TradeSuggestion     string  `json:"trade_suggestion"`      // 买卖建议: '买入' | '卖出' | '观望'
 
+	// 新增字段 - 买卖点建议
+	RecommendedPrice float64   `gorm:"type:decimal(10,2)" json:"recommended_price"` // 推荐时价
+	PreviousClose    float64   `gorm:"type:decimal(10,2)" json:"previous_close"`    // 昨收价
+	BuyPriceRange    string    `gorm:"type:varchar(50)" json:"buy_price_range"`     // AI建议买入价区间
+	StopLossPrice    float64   `gorm:"type:decimal(10,2)" json:"stop_loss_price"`   // AI建议止损价
+	SectorConcept    string    `gorm:"type:varchar(200)" json:"sector_concept"`     // 板块概念
+	Remarks          string    `gorm:"type:text" json:"remarks"`                      // 备注
+	RecommendedAt    time.Time `gorm:"index" json:"recommended_at"`                 // 推荐时间
+
 	// 关注状态
 	IsFollowed bool `json:"is_followed"`
 

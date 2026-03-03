@@ -14,13 +14,61 @@
       "config": {}
     },
     {
-      "name": "F",
+      "name": "InteractiveAnswer",
       "type": "builtin",
       "enabled": true,
       "config": {}
     },
     {
       "name": "GetStockResearchReport",
+      "type": "builtin",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "name": "SearchStockCode",
+      "type": "builtin",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "name": "GetStockPriceInfo",
+      "type": "builtin",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "name": "GetMarketNews",
+      "type": "builtin",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "name": "GetStockNews",
+      "type": "builtin",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "name": "GetFinancialReport",
+      "type": "builtin",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "name": "GetIndustryResearchReport",
+      "type": "builtin",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "name": "QueryBKDictInfo",
+      "type": "builtin",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "name": "QueryEconomicData",
       "type": "builtin",
       "enabled": true,
       "config": {}

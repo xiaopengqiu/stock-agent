@@ -2,8 +2,8 @@ package registry
 
 import (
 	"context"
-	"go-stock/backend/agent/tools"
 	"github.com/cloudwego/eino/components/tool"
+	"go-stock/backend/agent/tools"
 )
 
 // Builtins provides all built-in tools for the application
@@ -18,23 +18,23 @@ func NewBuiltins() *Builtins {
 	}
 
 	// Register all built-in tools
-	b.registerTool(tools.GetQueryEconomicDataTool())
-	b.registerTool(tools.GetQueryStockPriceInfoTool())
-	b.registerTool(tools.GetQueryStockCodeInfoTool())
-	b.registerTool(tools.GetQueryMarketNewsTool())
-	b.registerTool(tools.GetChoiceStockByIndicatorsTool())
-	b.registerTool(tools.GetStockKLineTool())
-	b.registerTool(tools.GetInteractiveAnswerDataTool())
-	b.registerTool(tools.GetFinancialReportTool())
-	b.registerTool(tools.GetQueryStockNewsTool())
-	b.registerTool(tools.GetIndustryResearchReportTool())
-	b.registerTool(tools.GetQueryBKDictTool())
+	b.registerBuiltinTool(tools.GetQueryEconomicDataTool())
+	b.registerBuiltinTool(tools.GetQueryStockPriceInfoTool())
+	b.registerBuiltinTool(tools.GetQueryStockCodeInfoTool())
+	b.registerBuiltinTool(tools.GetQueryMarketNewsTool())
+	b.registerBuiltinTool(tools.GetChoiceStockByIndicatorsTool())
+	b.registerBuiltinTool(tools.GetStockKLineTool())
+	b.registerBuiltinTool(tools.GetInteractiveAnswerDataTool())
+	b.registerBuiltinTool(tools.GetFinancialReportTool())
+	b.registerBuiltinTool(tools.GetQueryStockNewsTool())
+	b.registerBuiltinTool(tools.GetIndustryResearchReportTool())
+	b.registerBuiltinTool(tools.GetQueryBKDictTool())
 
 	return b
 }
 
-// registerTool adds a built-in tool to the registry
-func (b *Builtins) registerTool(t tool.InvokableTool) {
+// registerBuiltinTool adds a built-in tool to the registry
+func (b *Builtins) registerBuiltinTool(t tool.InvokableTool) {
 	if t == nil {
 		return
 	}
@@ -47,7 +47,9 @@ func (b *Builtins) registerTool(t tool.InvokableTool) {
 		return
 	}
 
-	b.tools[info.Name] = t
+	builtinToolName := info.Name
+	builtinToolName = builtinToolName + builtinToolSuffix
+	b.tools[builtinToolName] = t
 }
 
 // GetAllTools returns all built-in tools

@@ -17,7 +17,13 @@
       "Bash(cd:*)",
       "Bash(sqlite3:*)",
       "Bash(go test:*)",
-      "Bash(go run:*)"
+      "Bash(go run:*)",
+      "Bash(go vet:*)",
+      "Bash(awk NR>=115 && NR<=125:*)",
+      "Bash(curl:*)",
+      "Bash(./build/bin/go-stock.exe:*)",
+      "Bash(pkill:*)",
+      "Bash(go doc:*)"
     ]
   }
 }

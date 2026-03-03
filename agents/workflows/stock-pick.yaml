@@ -1,0 +1,224 @@
+# 智能荐股工作流配置
+# OpenClaw + Claude Code Agent 编排
+
+name: 智能荐股工作流
+description: 完整的AI荐股流程，从市场分析到生成报告
+version: "1.0.0"
+
+# 全局配置
+globals:
+  timeout: 300000  # 5分钟总超时
+  retryPolicy:
+    maxRetries: 3
+    retryDelay: 5000
+  
+# 上下文管理
+context:
+  type: shared  # shared | isolated | hierarchical
+  persistence: true
+  maxSize: 100000  # tokens
+
+# 工作流步骤
+steps:
+  # ========== 第一阶段：数据收集 ==========
+  - id: step-1
+    name: 收集市场数据
+    description: 获取市场最新行情、新闻、资金流向
+    agent: data-collector
+    action: fetchMarketData
+    inputs:
+      - name: marketTypes
+        value: ["A", "HK", "US"]
+      - name: dataTypes
+        value: ["price", "news", "fundFlow", "longHuBoard"]
+    timeout: 30000
+    retry: 2
+    onError: continue  # 部分失败继续执行
+    outputs:
+      - name: marketData
+        type: object
+
+  - id: step-2
+    name: 收集个股数据
+    description: 获取关注股票的详细数据
+    agent: data-collector
+    action: fetchStockData
+    inputs:
+      - name: stockList
+        fromContext: followedStocks  # 从上下文获取关注列表
+      - name: dataTypes
+        value: ["price", "kline", "financial", "research"]
+    timeout: 30000
+    dependsOn: []
+    outputs:
+      - name: stockData
+        type: object
+
+  # ========== 第二阶段：市场分析 ==========
+  - id: step-3
+    name: 分析市场趋势
+    description: 基于AI分析市场整体趋势和情绪
+    agent: market-analyst
+    action: analyzeMarket
+    inputs:
+      - name: marketData
+        fromStep: step-1
+        field: marketData
+      - name: analysisType
+        value: ["trend", "sentiment", "hotSectors"]
+    timeout: 60000
+    dependsOn:
+      - step-1
+    outputs:
+      - name: marketAnalysis
+        type: object
+
+  - id: step-4
+    name: 识别热点板块
+    description: 分析当前市场热点板块和概念
+    agent: market-analyst
+    action: identifyHotSectors
+    inputs:
+      - name: marketData
+        fromStep: step-1
+        field: marketData
+      - name: marketAnalysis
+        fromStep: step-3
+        field: marketAnalysis
+    timeout: 45000
+    dependsOn:
+      - step-1
+      - step-3
+    outputs:
+      - name: hotSectors
+        type: array
+
+  # ========== 第三阶段：选股策略 ==========
+  - id: step-5
+    name: 筛选优质股票
+    description: 根据策略筛选符合条件的股票
+    agent: stock-picker
+    action: screenStocks
+    inputs:
+      - name: stockData
+        fromStep: step-2
+        field: stockData
+      - name: hotSectors
+        fromStep: step-4
+        field: hotSectors
+      - name: marketAnalysis
+        fromStep: step-3
+        field: marketAnalysis
+      - name: strategy
+        value:
+          type: "multiFactor"
+          factors:
+            - technical: 0.3
+            - fundamental: 0.4
+            - sentiment: 0.3
+    timeout: 45000
+    dependsOn:
+      - step-2
+      - step-3
+      - step-4
+    outputs:
+      - name: screenedStocks
+        type: array
+
+  - id: step-6
+    name: 优化股票组合
+    description: 优化选股结果，控制风险
+    agent: stock-picker
+    action: optimizePortfolio
+    inputs:
+      - name: screenedStocks
+        fromStep: step-5
+        field: screenedStocks
+      - name: constraints
+        value:
+          maxStocks: 10
+          riskLevel: "medium"
+          diversification: true
+    timeout: 30000
+    dependsOn:
+      - step-5
+    outputs:
+      - name: optimizedStocks
+        type: array
+
+  # ========== 第四阶段：报告生成 ==========
+  - id: step-7
+    name: 生成荐股报告
+    description: 生成专业的荐股分析报告
+    agent: report-generator
+    action: generateReport
+    inputs:
+      - name: optimizedStocks
+        fromStep: step-6
+        field: optimizedStocks
+      - name: marketAnalysis
+        fromStep: step-3
+        field: marketAnalysis
+      - name: hotSectors
+        fromStep: step-4
+        field: hotSectors
+      - name: reportTemplate
+        value: "professional"  # professional | concise | detailed
+    timeout: 40000
+    dependsOn:
+      - step-3
+      - step-4
+      - step-6
+    outputs:
+      - name: report
+        type: object
+
+  - id: step-8
+    name: 格式化买卖点建议
+    description: 格式化买卖点建议，便于展示
+    agent: report-generator
+    action: formatSuggestions
+    inputs:
+      - name: report
+        fromStep: step-7
+        field: report
+      - name: format
+        value:
+          type: "table"  # table | card | list
+          includeReason: true
+          includeRisk: true
+    timeout: 20000
+    dependsOn:
+      - step-7
+    outputs:
+      - name: formattedReport
+        type: object
+      - name: finalOutput
+        type: object
+        publish: true  # 标记为最终输出
+
+# ========== 工作流事件和钩子 ==========
+events:
+  onWorkflowStart:
+    action: log
+    message: "荐股工作流开始执行"
+    
+  onWorkflowComplete:
+    action: log
+    message: "荐股工作流执行完成"
+    
+  onStepError:
+    action: retry
+    maxRetries: 2
+    fallback: continue  # 失败后继续执行后续步骤
+    
+  onStepTimeout:
+    action: abort  # 超时后终止工作流
+
+# ========== 输出定义 ==========
+outputs:
+  - name: finalReport
+    fromStep: step-8
+    field: finalOutput
+    description: "最终荐股报告，包含完整的分析结果和买卖点建议"
+    type: object

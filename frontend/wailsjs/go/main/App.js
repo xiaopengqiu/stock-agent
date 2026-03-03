@@ -94,6 +94,10 @@ export function GetAiConfigs() {
   return window['go']['main']['App']['GetAiConfigs']();
 }
 
+export function GetAvailableTools() {
+  return window['go']['main']['App']['GetAvailableTools']();
+}
+
 export function GetBuiltinToolCount() {
   return window['go']['main']['App']['GetBuiltinToolCount']();
 }
@@ -278,6 +282,10 @@ export function RemoveStockGroup(arg1, arg2, arg3) {
   return window['go']['main']['App']['RemoveStockGroup'](arg1, arg2, arg3);
 }
 
+export function ResetToolConfig() {
+  return window['go']['main']['App']['ResetToolConfig']();
+}
+
 export function SaveAIResponseResult(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['main']['App']['SaveAIResponseResult'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
@@ -288,6 +296,10 @@ export function SaveAsMarkdown(arg1, arg2) {
 
 export function SaveImage(arg1, arg2) {
   return window['go']['main']['App']['SaveImage'](arg1, arg2);
+}
+
+export function SaveToolConfig(arg1) {
+  return window['go']['main']['App']['SaveToolConfig'](arg1);
 }
 
 export function SaveWordFile(arg1, arg2) {

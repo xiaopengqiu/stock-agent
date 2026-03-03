@@ -85,6 +85,11 @@ func LoadToolConfig() (*ToolConfig, error) {
 
 // getDefaultToolConfig 获取默认工具配置
 func getDefaultToolConfig() *ToolConfig {
+	return GetDefaultToolConfig()
+}
+
+// GetDefaultToolConfig 获取默认工具配置（导出版本）
+func GetDefaultToolConfig() *ToolConfig {
 	return &ToolConfig{
 		Version: "1.0",
 		Tools: []ToolItem{
@@ -110,6 +115,57 @@ func getDefaultToolConfig() *ToolConfig {
 				Name:    "GetStockResearchReport",
 				Type:    "builtin",
 				Enabled: true,
+				Config:  map[string]interface{}{},
+			},
+			// ========== 高优先级工具 ==========
+			{
+				Name:    "SearchStockCode",
+				Type:    "builtin",
+				Enabled: true,
+				Config:  map[string]interface{}{},
+			},
+			{
+				Name:    "GetStockPriceInfo",
+				Type:    "builtin",
+				Enabled: true,
+				Config:  map[string]interface{}{},
+			},
+			{
+				Name:    "GetMarketNews",
+				Type:    "builtin",
+				Enabled: true,
+				Config:  map[string]interface{}{},
+			},
+			// ========== 中优先级工具 ==========
+			{
+				Name:    "GetStockNews",
+				Type:    "builtin",
+				Enabled: true,
+				Config:  map[string]interface{}{},
+			},
+			{
+				Name:    "GetFinancialReports",
+				Type:    "builtin",
+				Enabled: true,
+				Config:  map[string]interface{}{},
+			},
+			{
+				Name:    "GetIndustryResearchReport",
+				Type:    "builtin",
+				Enabled: true,
+				Config:  map[string]interface{}{},
+			},
+			// ========== 低优先级工具（数据/字典类）==========
+			{
+				Name:    "GetEconomicData",
+				Type:    "builtin",
+				Enabled: false,
+				Config:  map[string]interface{}{},
+			},
+			{
+				Name:    "GetBKDict",
+				Type:    "builtin",
+				Enabled: false,
 				Config:  map[string]interface{}{},
 			},
 		},
