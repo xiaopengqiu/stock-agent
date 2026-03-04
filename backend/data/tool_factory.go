@@ -250,6 +250,44 @@ func getBuiltinToolsMap() map[string]Tool {
 				},
 			},
 		},
+		"QueryHKStockPrice": {
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "QueryHKStockPrice",
+				Description: "查询港股实时价格数据，支持港股通标的和主要港股。港股价格对A+H股两地上市的科技公司、医药股、金融股有重要参考价值。",
+				Parameters: FunctionParameters{
+					Type: "object",
+					Properties: map[string]any{
+						"stockCodes": map[string]any{
+							"type":        "string",
+							"description": "港股代码，多个用逗号分隔。支持格式：00700、0700.HK、hk00700。港股通标的如：腾讯(00700)、美团(03690)、小米(01810)等",
+						},
+					},
+					Required: []string{"stockCodes"},
+				},
+			},
+		},
+		"QueryShareholderCount": {
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "QueryShareholderCount",
+				Description: "查询股票的股东人数变化和筹码集中度，是判断主力吸筹或出货的重要指标。股东人数减少通常表示筹码集中（主力吸筹），股东人数增加表示筹码分散（主力出货）。对判断股票主力动向和支撑压力位有重要参考价值。",
+				Parameters: FunctionParameters{
+					Type: "object",
+					Properties: map[string]any{
+						"stockCode": map[string]any{
+							"type":        "string",
+							"description": "股票代码，支持格式：sh600000、600000、000001。例如：平安银行(sz000001)、贵州茅台(sh600519)",
+						},
+						"quarters": map[string]any{
+							"type":        "integer",
+							"description": "查询最近多少个季度的数据，默认4个季度。建议取值范围：2-8个季度",
+						},
+					},
+					Required: []string{"stockCode"},
+				},
+			},
+		},
 	}
 }
 

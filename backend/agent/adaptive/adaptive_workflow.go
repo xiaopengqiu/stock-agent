@@ -1,10 +1,10 @@
 package adaptive
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"go-stock/backend/logger"
+	"sync"
 	"time"
 )
 
@@ -12,13 +12,13 @@ import (
 type FailureType string
 
 const (
-	FailureTypeTimeout      FailureType = "timeout"       // 超时
-	FailureTypeException    FailureType = "exception"     // 异常
-	FailureTypeValidation   FailureType = "validation"    // 验证失败
-	FailureTypeResource     FailureType = "resource"      // 资源不足
-	FailureTypeDependency   FailureType = "dependency"    // 依赖失败
-	FailureTypeLogic        FailureType = "logic"         // 逻辑错误
-	FailureTypeUnknown      FailureType = "unknown"       // 未知
+	FailureTypeTimeout    FailureType = "timeout"    // 超时
+	FailureTypeException  FailureType = "exception"  // 异常
+	FailureTypeValidation FailureType = "validation" // 验证失败
+	FailureTypeResource   FailureType = "resource"   // 资源不足
+	FailureTypeDependency FailureType = "dependency" // 依赖失败
+	FailureTypeLogic      FailureType = "logic"      // 逻辑错误
+	FailureTypeUnknown    FailureType = "unknown"    // 未知
 )
 
 // FailureRecord 失败记录
@@ -38,16 +38,16 @@ type FailureRecord struct {
 
 // AdaptationStrategy 自适应策略
 type AdaptationStrategy struct {
-	ID              string                 `json:"id"`
-	Name            string                 `json:"name"`
-	Description     string                 `json:"description"`
-	ApplicableTypes []FailureType          `json:"applicableTypes"`
-	Conditions      []StrategyCondition    `json:"conditions"`
-	Actions         []StrategyAction       `json:"actions"`
-	Priority        int                    `json:"priority"`
-	Enabled         bool                   `json:"enabled"`
-	SuccessRate     float64                `json:"successRate"`
-	UsageCount      int                    `json:"usageCount"`
+	ID              string              `json:"id"`
+	Name            string              `json:"name"`
+	Description     string              `json:"description"`
+	ApplicableTypes []FailureType       `json:"applicableTypes"`
+	Conditions      []StrategyCondition `json:"conditions"`
+	Actions         []StrategyAction    `json:"actions"`
+	Priority        int                 `json:"priority"`
+	Enabled         bool                `json:"enabled"`
+	SuccessRate     float64             `json:"successRate"`
+	UsageCount      int                 `json:"usageCount"`
 }
 
 // StrategyCondition 策略条件
@@ -67,24 +67,24 @@ type StrategyAction struct {
 
 // AdaptiveEngine 自适应引擎
 type AdaptiveEngine struct {
-	failureHistory  []FailureRecord
-	strategies      []AdaptationStrategy
-	learningModel   *LearningModel
-	mutex           sync.RWMutex
-	config          *AdaptiveConfig
+	failureHistory []FailureRecord
+	strategies     []AdaptationStrategy
+	learningModel  *LearningModel
+	mutex          sync.RWMutex
+	config         *AdaptiveConfig
 }
 
 // AdaptiveConfig 自适应配置
 type AdaptiveConfig struct {
-	MaxHistorySize       int           `json:"maxHistorySize"`
-	LearningRate         float64       `json:"learningRate"`
+	MaxHistorySize         int           `json:"maxHistorySize"`
+	LearningRate           float64       `json:"learningRate"`
 	StrategyUpdateInterval time.Duration `json:"strategyUpdateInterval"`
-	MinConfidence        float64       `json:"minConfidence"`
+	MinConfidence          float64       `json:"minConfidence"`
 }
 
 // LearningModel 学习模型
 type LearningModel struct {
-	FailurePatterns   map[string]PatternStats   `json:"failurePatterns"`
+	FailurePatterns   map[string]PatternStats    `json:"failurePatterns"`
 	StrategyOutcomes  map[string]StrategyOutcome `json:"strategyOutcomes"`
 	ContextEmbeddings map[string][]float64       `json:"contextEmbeddings"`
 }
@@ -357,7 +357,7 @@ func (e *AdaptiveEngine) evaluateCondition(condition StrategyCondition, record F
 func compareValues(a, b interface{}) int {
 	// 尝试转换为float64进行比较
 	var aFloat, bFloat float64
-	
+
 	switch v := a.(type) {
 	case int:
 		aFloat = float64(v)
@@ -368,7 +368,7 @@ func compareValues(a, b interface{}) int {
 	default:
 		return 0
 	}
-	
+
 	switch v := b.(type) {
 	case int:
 		bFloat = float64(v)
@@ -379,7 +379,7 @@ func compareValues(a, b interface{}) int {
 	default:
 		return 0
 	}
-	
+
 	if aFloat < bFloat {
 		return -1
 	} else if aFloat > bFloat {
@@ -449,13 +449,13 @@ func (e *AdaptiveEngine) ExecuteAdaptation(record FailureRecord, strategy *Adapt
 
 // AdaptationResult 自适应结果
 type AdaptationResult struct {
-	ID             string            `json:"id"`
-	OriginalRecord FailureRecord     `json:"originalRecord"`
+	ID             string              `json:"id"`
+	OriginalRecord FailureRecord       `json:"originalRecord"`
 	StrategyUsed   *AdaptationStrategy `json:"strategyUsed"`
-	Actions        []ExecutedAction  `json:"actions"`
-	Success        bool              `json:"success"`
-	Error          error             `json:"error,omitempty"`
-	Timestamp      time.Time         `json:"timestamp"`
+	Actions        []ExecutedAction    `json:"actions"`
+	Success        bool                `json:"success"`
+	Error          error               `json:"error,omitempty"`
+	Timestamp      time.Time           `json:"timestamp"`
 }
 
 // ExecutedAction 执行的动作
@@ -731,7 +731,7 @@ func (e *AdaptiveEngine) ImportLearningModel(data []byte) error {
 	defer e.mutex.Unlock()
 
 	var model struct {
-		FailurePatterns   map[string]PatternStats   `json:"failurePatterns"`
+		FailurePatterns   map[string]PatternStats    `json:"failurePatterns"`
 		StrategyOutcomes  map[string]StrategyOutcome `json:"strategyOutcomes"`
 		ContextEmbeddings map[string][]float64       `json:"contextEmbeddings"`
 	}

@@ -29,6 +29,8 @@ func NewBuiltins() *Builtins {
 	b.registerBuiltinTool(tools.GetQueryStockNewsTool())
 	b.registerBuiltinTool(tools.GetIndustryResearchReportTool())
 	b.registerBuiltinTool(tools.GetQueryBKDictTool())
+	b.registerBuiltinTool(tools.GetQueryHKStockPriceTool())     // 港股价格查询工具
+	b.registerBuiltinTool(tools.GetQueryShareholderCountTool()) // 股东人数查询工具
 
 	return b
 }

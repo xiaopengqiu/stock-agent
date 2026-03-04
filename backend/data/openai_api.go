@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cloudwego/eino/components/tool"
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"go-stock/backend/models"
+	"go-stock/backend/toolexec"
 	"go-stock/backend/util"
 	"strings"
 	"sync"
@@ -30,32 +32,36 @@ import (
 // @Desc
 // -----------------------------------------------------------------------------------
 
-// ToolExecutor 工具执行器 - 统一执行各种工具调用
-type ToolExecutor struct {
-	tools map[string]tool.InvokableTool
-}
+// ToolExecutor 统一从 toolexec 包导入
+type ToolExecutor = toolexec.ToolExecutor
 
-// NewToolExecutor 创建工具执行器
-func NewToolExecutor(tools map[string]tool.InvokableTool) *ToolExecutor {
-	return &ToolExecutor{
-		tools: tools,
+// NewToolExecutor 统一从 toolexec 包导入
+var NewToolExecutor = toolexec.NewToolExecutor
+
+// GlobalAiInvokeTools 全局的可调用工具映射
+// 在应用启动时由 app.go 初始化，供 AskAiWithTools 使用
+var GlobalAiInvokeTools map[string]tool.InvokableTool
+
+// globalToolExecutor 全局工具执行器（懒加载）
+var globalToolExecutor *ToolExecutor
+
+// SetGlobalAiInvokeTools 设置全局可调用工具
+// 在应用启动时调用，初始化全局工具映射
+func SetGlobalAiInvokeTools(tools map[string]tool.InvokableTool) {
+	GlobalAiInvokeTools = tools
+	// 创建全局工具执行器
+	if tools != nil {
+		globalToolExecutor = NewToolExecutor(tools)
+		logger.SugaredLogger.Infof("GlobalToolExecutor initialized with %d tools", globalToolExecutor.GetToolCount())
+	} else {
+		logger.SugaredLogger.Warn("SetGlobalAiInvokeTools called with nil tools")
 	}
 }
 
-// Execute 执行工具调用
-func (e *ToolExecutor) Execute(ctx context.Context, funcName string, arguments string) (string, error) {
-	t, ok := e.tools[funcName]
-	if !ok {
-		return "", fmt.Errorf("tool not found: %s", funcName)
-	}
-
-	result, err := t.Invoke(ctx, arguments)
-	if err != nil {
-		logger.SugaredLogger.Errorf("Tool execution failed: %s, error: %v", funcName, err)
-		return "", fmt.Errorf("tool execution failed: %w", err)
-	}
-
-	return result, nil
+// GetGlobalToolExecutor 获取全局工具执行器
+// 如果尚未初始化，返回 nil
+func GetGlobalToolExecutor() *ToolExecutor {
+	return globalToolExecutor
 }
 
 type OpenAi struct {
@@ -376,6 +382,7 @@ func (o *OpenAi) NewSummaryStockNewsStreamWithTools(userQuestion string, sysProm
 			"role":    "user",
 			"content": userQuestion,
 		})
+		// 使用全局工具执行器
 		AskAiWithTools(o, errors.New(""), msg, ch, userQuestion, tools)
 	}()
 	return ch
@@ -886,6 +893,7 @@ func (o *OpenAi) NewChatStream(stock, stockCode, userQuestion string, sysPromptI
 		//reqJson, _ := json.Marshal(msg)
 		//logger.SugaredLogger.Errorf("Stream request: \n%s\n", reqJson)
 		if tools != nil && len(tools) > 0 {
+			// 使用全局工具执行器
 			AskAiWithTools(o, err, msg, ch, question, tools)
 		} else {
 			AskAi(o, err, msg, ch, question)
@@ -1035,7 +1043,17 @@ func AskAi(o *OpenAi, err error, messages []map[string]interface{}, ch chan map[
 
 	}
 }
-func AskAiWithTools(o *OpenAi, err error, messages []map[string]interface{}, ch chan map[string]any, question string, tools []Tool, executor *ToolExecutor) {
+func AskAiWithTools(o *OpenAi, err error, messages []map[string]interface{}, ch chan map[string]any, question string, tools []Tool, executor ...*ToolExecutor) {
+	// 优先使用传入的 executor，如果没有则使用全局 executor
+	var exec *ToolExecutor
+	if len(executor) > 0 && executor[0] != nil {
+		exec = executor[0]
+	} else if globalToolExecutor != nil {
+		exec = globalToolExecutor
+		logger.SugaredLogger.Infof("Using global ToolExecutor with %d tools", exec.GetToolCount())
+	} else {
+		logger.SugaredLogger.Error("No ToolExecutor available (neither parameter nor global)")
+	}
 	client := resty.New()
 	client.SetBaseURL(strutil.Trim(o.BaseUrl))
 	client.SetHeader("Authorization", "Bearer "+o.ApiKey)
@@ -1171,55 +1189,30 @@ func AskAiWithTools(o *OpenAi, err error, messages []map[string]interface{}, ch 
 					if choice.FinishReason == "tool_calls" {
 						logger.SugaredLogger.Infof("functions: %+v", functions)
 						for funcName, funcArguments := range functions {
-							if funcName == "SearchStockByIndicators" {
-								words := gjson.Get(funcArguments, "words").String()
+							// 使用 ToolExecutor 统一执行工具
+							if exec == nil {
+								logger.SugaredLogger.Errorf("ToolExecutor is nil, cannot execute tool: %s", funcName)
+								continue
+							}
 
-								ch <- map[string]any{
-									"code":     1,
-									"question": question,
-									"chatId":   streamResponse.Id,
-									"model":    streamResponse.Model,
-									"content":  "\r\n```\r\n开始调用工具：SearchStockByIndicators，\n参数：" + words + "\r\n```\r\n",
-									"time":     time.Now().Format(time.DateTime),
-								}
+							// 记录工具调用
+							logger.SugaredLogger.Infof("Executing tool via executor: %s", funcName)
 
-								content := "无符合条件的数据"
-								res := NewSearchStockApi(words).SearchStock(random.RandInt(5, 10))
-								if convertor.ToString(res["code"]) == "100" {
-									resData := res["data"].(map[string]any)
-									result := resData["result"].(map[string]any)
-									dataList := result["dataList"].([]any)
-									columns := result["columns"].([]any)
-									headers := map[string]string{}
-									for _, v := range columns {
-										//logger.SugaredLogger.Infof("v:%+v", v)
-										d := v.(map[string]any)
-										//logger.SugaredLogger.Infof("key:%s title:%s dateMsg:%s unit:%s", d["key"], d["title"], d["dateMsg"], d["unit"])
-										title := convertor.ToString(d["title"])
-										if convertor.ToString(d["dateMsg"]) != "" {
-											title = title + "[" + convertor.ToString(d["dateMsg"]) + "]"
-										}
-										if convertor.ToString(d["unit"]) != "" {
-											title = title + "(" + convertor.ToString(d["unit"]) + ")"
-										}
-										headers[d["key"].(string)] = title
-									}
-									table := &[]map[string]any{}
-									for _, v := range dataList {
-										d := v.(map[string]any)
-										tmp := map[string]any{}
-										for key, title := range headers {
-											tmp[title] = convertor.ToString(d[key])
-										}
-										*table = append(*table, tmp)
-									}
-									jsonData, _ := json.Marshal(*table)
-									markdownTable, _ := JSONToMarkdownTable(jsonData)
-									//logger.SugaredLogger.Infof("markdownTable=\n%s", markdownTable)
-									content = "\r\n### 工具筛选出的股票数据：\r\n" + markdownTable + "\r\n"
-								}
-								logger.SugaredLogger.Infof("SearchStockByIndicators:words:%s  --> \n%s", words, content)
+							// 发送工具调用开始通知到前端
+							ch <- map[string]any{
+								"code":     1,
+								"question": question,
+								"chatId":   streamResponse.Id,
+								"model":    streamResponse.Model,
+								"content":  "\r\n```\r\n开始调用工具：" + funcName + "，\n参数：" + funcArguments + "\r\n```\r\n",
+								"time":     time.Now().Format(time.DateTime),
+							}
 
+							// 通过 executor 执行工具
+							result, execErr := exec.Execute(o.ctx, funcName, funcArguments)
+							if execErr != nil {
+								logger.SugaredLogger.Errorf("Tool execution failed: %s, error: %v", funcName, execErr)
+								// Add error to messages
 								messages = append(messages, map[string]interface{}{
 									"role":    "assistant",
 									"content": currentAIContent.String(),
@@ -1238,300 +1231,36 @@ func AskAiWithTools(o *OpenAi, err error, messages []map[string]interface{}, ch 
 								})
 								messages = append(messages, map[string]interface{}{
 									"role":         "tool",
-									"content":      content,
+									"content":      fmt.Sprintf("Error: %v", execErr),
 									"tool_call_id": currentCallId,
 								})
-
-								//ch <- map[string]any{
-								//	"code":     1,
-								//	"question": question,
-								//	"chatId":   streamResponse.Id,
-								//	"model":    streamResponse.Model,
-								//	"content":  "\r\n```\r\n调用工具：SearchStockByIndicators，\n结果：" + content + "\r\n```\r\n",
-								//	"time":     time.Now().Format(time.DateTime),
-								//}
-
+								continue
 							}
 
-							if funcName == "GetStockKLine" {
-								stockCode := gjson.Get(funcArguments, "stockCode").String()
-								days := gjson.Get(funcArguments, "days").String()
-								ch <- map[string]any{
-									"code":     1,
-									"question": question,
-									"chatId":   streamResponse.Id,
-									"model":    streamResponse.Model,
-									"content":  "\r\n```\r\n开始调用工具：GetStockKLine，\n参数：" + stockCode + "," + days + "\r\n```\r\n",
-									"time":     time.Now().Format(time.DateTime),
-								}
-								toIntDay, err := convertor.ToInt(days)
-								if err != nil {
-									toIntDay = 90
-								}
-
-								if strutil.HasPrefixAny(stockCode, []string{"sz", "sh", "hk", "us", "gb_"}) {
-									K := &[]KLineData{}
-									if strutil.HasPrefixAny(stockCode, []string{"sz", "sh"}) {
-										K = NewStockDataApi().GetKLineData(stockCode, "240", o.KDays)
-									}
-									if strutil.HasPrefixAny(stockCode, []string{"hk", "us", "gb_"}) {
-										K = NewStockDataApi().GetHK_KLineData(stockCode, "day", o.KDays)
-									}
-									Kmap := &[]map[string]any{}
-									for _, kline := range *K {
-										mapk := make(map[string]any, 6)
-										mapk["日期"] = kline.Day
-										mapk["开盘价"] = kline.Open
-										mapk["最高价"] = kline.High
-										mapk["最低价"] = kline.Low
-										mapk["收盘价"] = kline.Close
-										Volume, _ := convertor.ToFloat(kline.Volume)
-										mapk["成交量(万手)"] = Volume / 10000.00 / 100.00
-										*Kmap = append(*Kmap, mapk)
-									}
-									jsonData, _ := json.Marshal(Kmap)
-									markdownTable, _ := JSONToMarkdownTable(jsonData)
-									logger.SugaredLogger.Infof("getKLineData=\n%s", markdownTable)
-
-									messages = append(messages, map[string]interface{}{
-										"role":    "assistant",
-										"content": currentAIContent.String(),
-										"tool_calls": []map[string]any{
-											{
-												"id":           currentCallId,
-												"tool_call_id": currentCallId,
-												"type":         "function",
-												"function": map[string]string{
-													"name":       funcName,
-													"arguments":  funcArguments,
-													"parameters": funcArguments,
-												},
-											},
-										},
-									})
-									res := "\r\n ### " + stockCode + convertor.ToString(toIntDay) + "日K线数据：\r\n" + markdownTable + "\r\n"
-									messages = append(messages, map[string]interface{}{
-										"role":         "tool",
-										"content":      res,
+							// Success - add result to messages
+							messages = append(messages, map[string]interface{}{
+								"role":    "assistant",
+								"content": currentAIContent.String(),
+								"tool_calls": []map[string]any{
+									{
+										"id":           currentCallId,
 										"tool_call_id": currentCallId,
-									})
-									logger.SugaredLogger.Infof("GetStockKLine:stockCode:%s days:%s --> \n%s", stockCode, days, res)
-
-									//ch <- map[string]any{
-									//	"code":     1,
-									//	"question": question,
-									//	"chatId":   streamResponse.Id,
-									//	"model":    streamResponse.Model,
-									//	"content":  "\r\n```\r\n调用工具：GetStockKLine，\n结果：" + res + "\r\n```\r\n",
-									//	"time":     time.Now().Format(time.DateTime),
-									//}
-								} else {
-									messages = append(messages, map[string]interface{}{
-										"role":    "assistant",
-										"content": currentAIContent.String(),
-										"tool_calls": []map[string]any{
-											{
-												"id":           currentCallId,
-												"tool_call_id": currentCallId,
-												"type":         "function",
-												"function": map[string]string{
-													"name":       funcName,
-													"arguments":  funcArguments,
-													"parameters": funcArguments,
-												},
-											},
-										},
-									})
-									messages = append(messages, map[string]interface{}{
-										"role":         "tool",
-										"content":      "无数据，可能股票代码错误。（A股：sh,sz开头;港股hk开头,美股：us开头）",
-										"tool_call_id": currentCallId,
-									})
-								}
-							}
-
-							if funcName == "InteractiveAnswer" {
-								page := gjson.Get(funcArguments, "page").String()
-								pageSize := gjson.Get(funcArguments, "pageSize").String()
-								keyWord := gjson.Get(funcArguments, "keyWord").String()
-								ch <- map[string]any{
-									"code":     1,
-									"question": question,
-									"chatId":   streamResponse.Id,
-									"model":    streamResponse.Model,
-									"content":  "\r\n```\r\n开始调用工具：InteractiveAnswer，\n参数：" + page + "," + pageSize + "," + keyWord + "\r\n```\r\n",
-									"time":     time.Now().Format(time.DateTime),
-								}
-								pageNo, err := convertor.ToInt(page)
-								if err != nil {
-									pageNo = 1
-								}
-								pageSizeNum, err := convertor.ToInt(pageSize)
-								if err != nil {
-									pageSizeNum = 50
-								}
-								datas := NewMarketNewsApi().InteractiveAnswer(int(pageNo), int(pageSizeNum), keyWord)
-								content := util.MarkdownTableWithTitle("投资互动数据", datas.Results)
-								logger.SugaredLogger.Infof("InteractiveAnswer=\n%s", content)
-								messages = append(messages, map[string]interface{}{
-									"role":    "assistant",
-									"content": currentAIContent.String(),
-									"tool_calls": []map[string]any{
-										{
-											"id":           currentCallId,
-											"tool_call_id": currentCallId,
-											"type":         "function",
-											"function": map[string]string{
-												"name":       funcName,
-												"arguments":  funcArguments,
-												"parameters": funcArguments,
-											},
+										"type":         "function",
+										"function": map[string]string{
+											"name":       funcName,
+											"arguments":  funcArguments,
+											"parameters": funcArguments,
 										},
 									},
-								})
-								messages = append(messages, map[string]interface{}{
-									"role":         "tool",
-									"content":      content,
-									"tool_call_id": currentCallId,
-								})
-							}
-							//
-							//if funcName == "QueryBKDictInfo" {
-							//	ch <- map[string]any{
-							//		"code":     1,
-							//		"question": question,
-							//		"chatId":   streamResponse.Id,
-							//		"model":    streamResponse.Model,
-							//		"content":  "\r\n```\r\n开始调用工具：QueryBKDictInfo，\n参数：" + funcArguments + "\r\n```\r\n",
-							//		"time":     time.Now().Format(time.DateTime),
-							//	}
-							//	res := NewMarketNewsApi().EMDictCode("016", freecache.NewCache(100))
-							//	bytes, err := json.Marshal(res)
-							//	if err != nil {
-							//		return
-							//	}
-							//	dict := &[]models.BKDict{}
-							//	json.Unmarshal(bytes, dict)
-							//	md := util.MarkdownTableWithTitle("行业/板块代码", dict)
-							//	logger.SugaredLogger.Infof("行业/板块代码=\n%s", md)
-							//	messages = append(messages, map[string]interface{}{
-							//		"role":    "assistant",
-							//		"content": currentAIContent.String(),
-							//		"tool_calls": []map[string]any{
-							//			{
-							//				"id":           currentCallId,
-							//				"tool_call_id": currentCallId,
-							//				"type":         "function",
-							//				"function": map[string]string{
-							//					"name":       funcName,
-							//					"arguments":  funcArguments,
-							//					"parameters": funcArguments,
-							//				},
-							//			},
-							//		},
-							//	})
-							//	messages = append(messages, map[string]interface{}{
-							//		"role":         "tool",
-							//		"content":      md,
-							//		"tool_call_id": currentCallId,
-							//	})
-							//}
-
-							//if funcName == "GetIndustryResearchReport" {
-							//	bkCode := gjson.Get(funcArguments, "bkCode").String()
-							//	ch <- map[string]any{
-							//		"code":     1,
-							//		"question": question,
-							//		"chatId":   streamResponse.Id,
-							//		"model":    streamResponse.Model,
-							//		"content":  "\r\n```\r\n开始调用工具：GetIndustryResearchReport，\n参数：" + bkCode + "\r\n```\r\n",
-							//		"time":     time.Now().Format(time.DateTime),
-							//	}
-							//	bkCode = strutil.ReplaceWithMap(bkCode, map[string]string{
-							//		"-":   "",
-							//		"_":   "",
-							//		"bk":  "",
-							//		"BK":  "",
-							//		"bk0": "",
-							//		"BK0": "",
-							//	})
-							//
-							//	logger.SugaredLogger.Debugf("code:%s", bkCode)
-							//	codeStr := convertor.ToString(bkCode)
-							//	res := NewMarketNewsApi().IndustryResearchReport(codeStr, 7)
-							//	md := strings.Builder{}
-							//	for _, a := range res {
-							//		d := a.(map[string]any)
-							//		md.WriteString(NewMarketNewsApi().GetIndustryReportInfo(d["infoCode"].(string)))
-							//	}
-							//	logger.SugaredLogger.Infof("bkCode:%s IndustryResearchReport:\n %s", bkCode, md.String())
-							//	messages = append(messages, map[string]interface{}{
-							//		"role":    "assistant",
-							//		"content": currentAIContent.String(),
-							//		"tool_calls": []map[string]any{
-							//			{
-							//				"id":           currentCallId,
-							//				"tool_call_id": currentCallId,
-							//				"type":         "function",
-							//				"function": map[string]string{
-							//					"name":       funcName,
-							//					"arguments":  funcArguments,
-							//					"parameters": funcArguments,
-							//				},
-							//			},
-							//		},
-							//	})
-							//	messages = append(messages, map[string]interface{}{
-							//		"role":         "tool",
-							//		"content":      md.String(),
-							//		"tool_call_id": currentCallId,
-							//	})
-							//}
-
-							if funcName == "GetStockResearchReport" {
-								stockCode := gjson.Get(funcArguments, "stockCode").String()
-								ch <- map[string]any{
-									"code":     1,
-									"question": question,
-									"chatId":   streamResponse.Id,
-									"model":    streamResponse.Model,
-									"content":  "\r\n```\r\n开始调用工具：GetStockResearchReport，\n参数：" + stockCode + "\r\n```\r\n",
-									"time":     time.Now().Format(time.DateTime),
-								}
-								res := NewMarketNewsApi().StockResearchReport(stockCode, 7)
-								md := strings.Builder{}
-								for _, a := range res {
-									logger.SugaredLogger.Debugf("value: %+v", a)
-									d := a.(map[string]any)
-									logger.SugaredLogger.Debugf("value: %s  infoCode:%s", d["title"], d["infoCode"])
-									md.WriteString(NewMarketNewsApi().GetIndustryReportInfo(d["infoCode"].(string)))
-								}
-								logger.SugaredLogger.Infof("stockCode:%s StockResearchReport:\n %s", stockCode, md.String())
-								messages = append(messages, map[string]interface{}{
-									"role":    "assistant",
-									"content": currentAIContent.String(),
-									"tool_calls": []map[string]any{
-										{
-											"id":           currentCallId,
-											"tool_call_id": currentCallId,
-											"type":         "function",
-											"function": map[string]string{
-												"name":       funcName,
-												"arguments":  funcArguments,
-												"parameters": funcArguments,
-											},
-										},
-									},
-								})
-								messages = append(messages, map[string]interface{}{
-									"role":         "tool",
-									"content":      md.String(),
-									"tool_call_id": currentCallId,
-								})
-							}
-
+								},
+							})
+							messages = append(messages, map[string]interface{}{
+								"role":         "tool",
+								"content":      result,
+								"tool_call_id": currentCallId,
+							})
 						}
-						AskAiWithTools(o, err, messages, ch, question, tools)
+						AskAiWithTools(o, err, messages, ch, question, tools, exec)
 					}
 
 					if choice.FinishReason == "stop" {

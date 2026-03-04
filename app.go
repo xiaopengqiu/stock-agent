@@ -44,16 +44,6 @@ type App struct {
 	PromptTemplateSvc *data.PromptTemplateApi
 }
 
-type ConfigWithPrompt struct {
-	Config  *data.SettingConfig
-	Prompts *[]models.PromptTemplate `json:"prompts"`
-}
-
-func (c ConfigWithPrompt) Export() string {
-	d, _ := json.MarshalIndent(c, "", "    ")
-	return string(d)
-}
-
 // NewApp creates a new App application struct
 func NewApp() *App {
 	cacheSize := 512 * 1024
@@ -79,6 +69,8 @@ func NewApp() *App {
 		aiTools = append(aiTools, t)
 	}
 	logger.SugaredLogger.Infof("load tools %v", aiTools)
+	// 初始化全局可调用工具，供 AskAiWithTools 使用
+	data.SetGlobalAiInvokeTools(aiInvokeTools)
 	return &App{
 		cache:             cache,
 		cron:              c,

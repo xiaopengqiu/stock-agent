@@ -9,6 +9,7 @@ import (
 	"go-stock/backend/db"
 	"go-stock/backend/logger"
 	"go-stock/backend/models"
+	"go-stock/backend/toolexec"
 	"os"
 	"strings"
 	"time"
@@ -28,15 +29,6 @@ type StockPickService struct {
 	ctx           context.Context
 	AiTools       []Tool
 	AiInvokeTools map[string]tool.InvokableTool
-}
-
-// NewStockPickService 创建荐股服务
-func NewStockPickService(ctx context.Context) *StockPickService {
-	return &StockPickService{ctx: ctx, AiTools: nil}
-}
-
-func NewStockPickServiceWithTool(ctx context.Context, tools []Tool) *StockPickService {
-	return &StockPickService{ctx: ctx, AiTools: tools}
 }
 
 func NewStockPickServiceWithInvokeTool(ctx context.Context, tools []Tool, invokeTools map[string]tool.InvokableTool) *StockPickService {
@@ -146,7 +138,8 @@ func (s *StockPickService) ProcessStockPick(req StockPickRequest, eventHandler f
 
 	go func() {
 		defer close(ch)
-		AskAiWithTools(openAI, nil, msg, ch, req.UserQuery, s.AiTools)
+		executor := toolexec.NewToolExecutor(s.AiInvokeTools)
+		AskAiWithTools(openAI, nil, msg, ch, req.UserQuery, s.AiTools, executor)
 	}()
 
 	// 8. 处理流式响应 - 在同一个 goroutine 中解析推荐数据
