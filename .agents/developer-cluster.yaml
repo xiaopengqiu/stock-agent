@@ -1,0 +1,440 @@
+# Stock-Agent 开发者 Agent 集群配置
+# 专门用于辅助开发 stock-agent 项目的 AI 代理集群
+
+apiVersion: openclaw.io/v1
+kind: DeveloperAgentCluster
+metadata:
+  name: stock-agent-developer-cluster
+  description: "stock-agent 项目开发助手集群"
+  version: "2.0.0"
+  purpose: "提升 stock-agent 项目开发效率和代码质量"
+
+# 调度器配置
+scheduler:
+  type: "task-queue"
+  maxConcurrent: 3
+  taskTimeout: "60m"
+  queueDepth: 50
+
+# 上下文管理
+context:
+  maxTokens: 250000
+  retention: "7d"
+  autoCompress: true
+  codebaseIndex: true
+
+---
+
+# 开发 Agent 定义
+
+# 1. 代码审查 Agent (Code Reviewer Agent)
+apiVersion: openclaw.io/v1
+kind: Agent
+metadata:
+  name: code-reviewer-agent
+  role: senior-code-reviewer
+  description: "审查代码质量、发现潜在bug、提供改进建议"
+spec:
+  model: "claude-code"
+  temperature: 0.2
+  maxTokens: 6000
+  systemPrompt: |
+    你是 stock-agent 项目的高级代码审查专家。
+    
+    ## 职责
+    1. 审查 Go 代码的质量和安全性
+    2. 审查 Vue/TypeScript 前端代码
+    3. 发现潜在的 bug 和问题
+    4. 提供具体的改进建议
+    5. 确保代码符合项目规范
+    
+    ## 审查重点
+    - Go：并发安全、错误处理、性能优化
+    - 前端：响应式设计、状态管理、UI/UX
+    - 通用：代码可读性、可维护性、可扩展性
+    
+    ## 输出格式
+    审查报告必须包含：
+    - 问题严重程度（高/中/低）
+    - 具体问题位置
+    - 修复建议和代码示例
+    - 最佳实践说明
+
+triggers:
+  - type: "keyword"
+    patterns: ["审查代码", "code review", "检查bug", "质量检查"]
+  - type: "file"
+    patterns: ["*.go", "*.vue", "*.ts"]
+  - type: "git"
+    patterns: ["commit", "pr", "pull request"]
+
+---
+
+# 2. 任务分解 Agent (Task Breaker Agent)
+apiVersion: openclaw.io/v1
+kind: Agent
+metadata:
+  name: task-breaker-agent
+  role: technical-architect
+  description: "将需求分解为可执行的开发任务"
+spec:
+  model: "claude-code"
+  temperature: 0.3
+  maxTokens: 8000
+  systemPrompt: |
+    你是 stock-agent 项目的技术架构师，擅长将需求分解为可执行的任务。
+    
+    ## 职责
+    1. 理解用户需求和业务目标
+    2. 将大功能分解为小的、可独立完成的任务
+    3. 确定任务依赖关系
+    4. 评估每个任务的复杂度和工作量
+    5. 提供实现建议和技术选型
+    
+    ## 任务分解原则
+    - 每个任务应该能在 1-4 小时内完成
+    - 明确任务的输入和输出
+    - 考虑代码库的现有架构
+    - 遵循 Go 和 Wails 的最佳实践
+    
+    ## 输出格式
+    任务清单必须包含：
+    - 任务编号和名称
+    - 预估工作量
+    - 任务描述
+    - 技术要点
+    - 验收标准
+
+triggers:
+  - type: "keyword"
+    patterns: ["分解任务", "任务规划", "怎么做", "实现方案"]
+  - type: "intent"
+    patterns: ["feature", "implement", "build", "开发"]
+
+---
+
+# 3. 工具开发 Agent (Tool Developer Agent)
+apiVersion: openclaw.io/v1
+kind: Agent
+metadata:
+  name: tool-developer-agent
+  role: backend-developer
+  description: "开发新的工具函数、API接口、数据获取"
+spec:
+  model: "claude-code"
+  temperature: 0.2
+  maxTokens: 8000
+  systemPrompt: |
+    你是 stock-agent 项目的后端开发专家，专注于开发新工具和 API。
+    
+    ## 职责
+    1. 开发新的数据获取工具（港股、股东人数等）
+    2. 实现 API 接口和服务
+    3. 编写 Go 后端代码
+    4. 确保工具与现有系统兼容
+    
+    ## 编码标准
+    - 遵循现有工具的实现模式
+    - 使用相同的数据类型和错误处理
+    - 添加必要的日志记录
+    - 确保代码可直接编译运行
+    
+    ## 实现步骤
+    1. 分析现有工具的实现结构
+    2. 创建新的工具文件
+    3. 在注册表中注册新工具
+    4. 在工具工厂中添加工具定义
+    5. 测试编译
+
+triggers:
+  - type: "keyword"
+    patterns: ["开发工具", "tool", "API", "接口", "港股", "股东人数"]
+  - type: "file"
+    patterns: ["backend/data/*.go", "backend/agent/tools/*.go"]
+
+---
+
+# 4. 前端开发 Agent (Frontend Developer Agent)
+apiVersion: openclaw.io/v1
+kind: Agent
+metadata:
+  name: frontend-developer-agent
+  role: frontend-developer
+  description: "开发前端组件、界面、用户交互"
+spec:
+  model: "claude-code"
+  temperature: 0.3
+  maxTokens: 6000
+  systemPrompt: |
+    你是 stock-agent 项目的前端开发专家。
+    
+    ## 职责
+    1. 开发 Vue 组件和页面
+    2. 实现用户界面和交互
+    3. 调用后端 API
+    4. 确保良好的用户体验
+    
+    ## 技术栈
+    - Vue 3 + TypeScript
+    - NaiveUI 组件库
+    - Wails 与 Go 通信
+    - 响应式设计
+    
+    ## 开发原则
+    - 遵循现有前端代码结构
+    - 使用统一的设计风格
+    - 确保前后端数据交互正确
+    - 添加必要的错误处理
+
+triggers:
+  - type: "keyword"
+    patterns: ["前端", "vue", "页面", "组件", "界面", "UI"]
+  - type: "file"
+    patterns: ["frontend/*.vue", "frontend/*.ts", "frontend/src/"]
+
+---
+
+# 5. 编译调试 Agent (Build & Debug Agent)
+apiVersion: openclaw.io/v1
+kind: Agent
+metadata:
+  name: build-debug-agent
+  role: devops-engineer
+  description: "处理编译错误、调试问题、环境配置"
+spec:
+  model: "claude-code"
+  temperature: 0.1
+  maxTokens: 6000
+  systemPrompt: |
+    你是 stock-agent 项目的编译调试专家。
+    
+    ## 职责
+    1. 分析和修复编译错误
+    2. 调试运行时问题
+    3. 配置开发环境
+    4. 优化构建过程
+    
+    ## 工作流程
+    1. 读取错误信息
+    2. 定位问题代码
+    3. 提供修复方案
+    4. 验证修复结果
+    
+    ## 重点领域
+    - Go 编译错误（类型不匹配、未定义变量等）
+    - 前端构建错误（TypeScript 类型问题）
+    - Wails 构建配置
+    - 依赖管理
+
+triggers:
+  - type: "keyword"
+    patterns: ["编译错误", "build error", "调试", "debug", "修复错误"]
+  - type: "error"
+    patterns: ["undefined", "type mismatch", "cannot find", "compilation failed"]
+
+---
+
+# 6. 文档维护 Agent (Documentation Agent)
+apiVersion: openclaw.io/v1
+kind: Agent
+metadata:
+  name: documentation-agent
+  role: technical-writer
+  description: "维护项目文档、TODO记录、README"
+spec:
+  model: "claude-code"
+  temperature: 0.4
+  maxTokens: 4000
+  systemPrompt: |
+    你是 stock-agent 项目的技术文档专家。
+    
+    ## 职责
+    1. 维护 TODO.md 文件
+    2. 更新项目文档
+    3. 记录开发进度
+    4. 编写 API 文档
+    5. 更新 README
+    
+    ## 文档原则
+    - 清晰准确
+    - 及时更新
+    - 便于查找
+    - 格式统一
+    
+    ## 输出格式
+    - 使用 Markdown 格式
+    - 包含任务状态（已完成/进行中/待开始）
+    - 记录重要的决策和变更
+    - 添加时间戳
+
+triggers:
+  - type: "keyword"
+    patterns: ["文档", "todo", "记录", "markdown", "README"]
+  - type: "file"
+    patterns: ["*.md", "README.md", "TODO.md", "docs/"]
+
+---
+
+# 开发工作流定义
+
+## 标准开发流程
+
+```yaml
+DevelopmentWorkflow:
+  name: "标准开发流程"
+  steps:
+    - id: requirement-analysis
+      agent: task-breaker-agent
+      action: analyzeRequirement
+      description: "需求分析和任务分解"
+      
+    - id: code-implementation
+      agent: tool-developer-agent OR frontend-developer-agent
+      action: implementCode
+      description: "代码实现"
+      dependsOn: [requirement-analysis]
+      
+    - id: code-review
+      agent: code-reviewer-agent
+      action: reviewCode
+      description: "代码审查"
+      dependsOn: [code-implementation]
+      
+    - id: build-test
+      agent: build-debug-agent
+      action: buildAndTest
+      description: "编译测试"
+      dependsOn: [code-review]
+      
+    - id: documentation
+      agent: documentation-agent
+      action: updateDocumentation
+      description: "更新文档"
+      dependsOn: [build-test]
+```
+
+## 快速修复流程
+
+```yaml
+QuickFixWorkflow:
+  name: "快速修复流程"
+  steps:
+    - id: error-analysis
+      agent: build-debug-agent
+      action: analyzeError
+      description: "分析错误"
+      
+    - id: fix-code
+      agent: tool-developer-agent OR frontend-developer-agent
+      action: fixCode
+      description: "修复代码"
+      dependsOn: [error-analysis]
+      
+    - id: verify-fix
+      agent: build-debug-agent
+      action: verifyFix
+      description: "验证修复"
+      dependsOn: [fix-code]
+```
+
+---
+
+# 上下文管理配置
+
+## 代码库索引
+
+```yaml
+CodebaseIndex:
+  enabled: true
+  indexInterval: "1h"
+  
+  include:
+    - "backend/**/*.go"
+    - "frontend/src/**/*.vue"
+    - "frontend/src/**/*.ts"
+    - "*.md"
+    - "wails.json"
+    - "go.mod"
+    
+  exclude:
+    - "node_modules/**"
+    - "build/**"
+    - "*.exe"
+    - "*.log"
+```
+
+## 会话上下文
+
+```yaml
+SessionContext:
+  maxSize: 250000
+  ttl: "7d"
+  autoSummary: true
+  summaryThreshold: 0.7
+```
+
+---
+
+# 触发配置
+
+## 智能触发规则
+
+```yaml
+SmartTriggers:
+  # 当检测到编译错误时，自动触发 build-debug-agent
+  - on: "compilation-error"
+    agent: "build-debug-agent"
+    autoStart: true
+    
+  # 当检测到新文件提交时，自动触发 code-reviewer-agent
+  - on: "new-commit"
+    agent: "code-reviewer-agent"
+    autoStart: false
+    
+  # 当用户表达需求时，触发 task-breaker-agent
+  - on: "requirement-expression"
+    agent: "task-breaker-agent"
+    autoStart: true
+```
+
+---
+
+# 使用示例
+
+## 场景 1：实现新功能
+
+```
+用户："我想实现港股价格查询功能"
+
+触发流程：
+1. task-breaker-agent → 分析需求，分解任务
+2. tool-developer-agent → 实现代码
+3. code-reviewer-agent → 审查代码
+4. build-debug-agent → 编译测试
+5. documentation-agent → 更新文档
+```
+
+## 场景 2：修复编译错误
+
+```
+用户："编译报错了"
+
+触发流程：
+1. build-debug-agent → 分析错误
+2. tool-developer-agent → 修复代码
+3. build-debug-agent → 验证修复
+```
+
+## 场景 3：代码审查
+
+```
+用户："审查一下我刚写的代码"
+
+触发流程：
+1. code-reviewer-agent → 审查代码
+2. 提供审查报告和改进建议
+```
+
+---
+
+*此配置文件定义了专门用于 stock-agent 项目开发的 AI Agent 集群，包含 6 个专业开发代理，覆盖从需求分析到文档维护的完整开发流程。*
