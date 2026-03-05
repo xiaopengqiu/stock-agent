@@ -12,16 +12,16 @@ import (
 
 // Client represents an MCP client connection
 type Client struct {
-	config          *MCPServerConfig
-	transport       Transport
-	transportType   TransportType
-	requestID       int64
-	mu              sync.Mutex
-	initialized     bool
-	state           ConnectionState
-	tools           map[string]Tool
-	ctx             context.Context
-	cancel          context.CancelFunc
+	config        *MCPServerConfig
+	transport     Transport
+	transportType TransportType
+	requestID     int64
+	mu            sync.Mutex
+	initialized   bool
+	state         ConnectionState
+	tools         map[string]Tool
+	ctx           context.Context
+	cancel        context.CancelFunc
 }
 
 // NewClient creates a new MCP client

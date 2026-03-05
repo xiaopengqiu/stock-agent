@@ -29,8 +29,13 @@ func NewBuiltins() *Builtins {
 	b.registerBuiltinTool(tools.GetQueryStockNewsTool())
 	b.registerBuiltinTool(tools.GetIndustryResearchReportTool())
 	b.registerBuiltinTool(tools.GetQueryBKDictTool())
-	b.registerBuiltinTool(tools.GetQueryHKStockPriceTool())     // 港股价格查询工具
-	b.registerBuiltinTool(tools.GetQueryShareholderCountTool()) // 股东人数查询工具
+	b.registerBuiltinTool(tools.GetQueryHKStockPriceTool())               // 港股价格查询工具
+	b.registerBuiltinTool(tools.GetQueryShareholderCountTool())           // 股东人数查询工具
+	b.registerBuiltinTool(tools.GetNewsList2Tool())                       // 获取新闻列表（带刷新）
+	b.registerBuiltinTool(tools.GetTelegraphListWithPagingTool())         // 分页获取电报列表
+	b.registerBuiltinTool(tools.GetTradingViewNewsDetailTool())         // 获取TradingView新闻详情
+	b.registerBuiltinTool(tools.GetSecuritiesCompanyOpinionContentTool()) // 获取券商观点内容
+	b.registerBuiltinTool(tools.GetNews24HoursListTool())                 // 获取24小时内的新闻列表
 
 	return b
 }

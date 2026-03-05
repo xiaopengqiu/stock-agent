@@ -232,14 +232,16 @@ type Prompt struct {
 type Telegraph struct {
 	gorm.Model
 	Time            string          `json:"time"`
-	Content         string          `json:"content"`
+	DataTime        *time.Time      `json:"dataTime" gorm:"index"`
+	Title           string          `json:"title" gorm:"index"`
+	Content         string          `json:"content" gorm:"index"`
 	SubjectTags     []string        `json:"subjects" gorm:"-:all"`
 	StocksTags      []string        `json:"stocks" gorm:"-:all"`
-	IsRed           bool            `json:"isRed"`
+	IsRed           bool            `json:"isRed" gorm:"index"`
 	Url             string          `json:"url"`
-	Source          string          `json:"source"`
+	Source          string          `json:"source" gorm:"index"`
 	TelegraphTags   []TelegraphTags `json:"tags" gorm:"-:migration;foreignKey:TelegraphId"`
-	SentimentResult string          `json:"sentimentResult" gorm:"-:all"`
+	SentimentResult string          `json:"sentimentResult" gorm:"index"`
 }
 type TelegraphTags struct {
 	gorm.Model
@@ -329,6 +331,23 @@ type TVNews struct {
 		Name   string `json:"name"`
 		LogoId string `json:"logo_id"`
 	} `json:"provider"`
+}
+
+type TVNewsDetail struct {
+	ShortDescription string `json:"shortDescription"`
+	Tags             []struct {
+		Title string `json:"title"`
+		Args  []struct {
+			Id    string `json:"id"`
+			Value string `json:"value"`
+		} `json:"args"`
+	} `json:"tags"`
+	Copyright string `json:"copyright"`
+	Id        string `json:"id"`
+	Title     string `json:"title"`
+	Published int    `json:"published"`
+	Urgency   int    `json:"urgency"`
+	StoryPath string `json:"storyPath"`
 }
 
 type XUEQIUHot struct {
@@ -700,4 +719,34 @@ type BKDict struct {
 
 func (b BKDict) TableName() string {
 	return "bk_dict"
+}
+
+type SecuritiesCompanyOpinionResp struct {
+	Hits        int                             `json:"hits"`
+	Size        int                             `json:"size"`
+	Data        []*SecuritiesCompanyOpinionData `json:"data"`
+	TotalPage   int                             `json:"TotalPage"`
+	AuthorName  string                          `json:"authorName"`
+	PageNo      int                             `json:"pageNo"`
+	OrgSName    string                          `json:"orgSName"`
+	CurrentYear int                             `json:"currentYear"`
+}
+
+type SecuritiesCompanyOpinionData struct {
+	Id           int64       `json:"id"`
+	Title        string      `json:"title"`
+	Author       interface{} `json:"author"`
+	OrgName      string      `json:"orgName"`
+	OrgCode      string      `json:"orgCode"`
+	OrgSName     string      `json:"orgSName"`
+	PublishDate  string      `json:"publishDate"`
+	EncodeUrl    string      `json:"encodeUrl"`
+	Researcher   string      `json:"researcher"`
+	Market       string      `json:"market"`
+	IndustryCode string      `json:"industryCode"`
+	IndustryName string      `json:"industryName"`
+	AuthorID     interface{} `json:"authorID"`
+	Count        int         `json:"count"`
+	OrgType      string      `json:"orgType"`
+	OpinionData  string      `json:"opinionData"`
 }

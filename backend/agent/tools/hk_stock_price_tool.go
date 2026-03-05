@@ -69,22 +69,22 @@ func (t ToolQueryHKStockPrice) InvokableRun(ctx context.Context, argumentsInJSON
 // normalizeHKStockCode 将各种格式的港股代码统一为hk开头
 func normalizeHKStockCode(code string) string {
 	code = strings.TrimSpace(strings.ToUpper(code))
-	
+
 	// 去除.HK后缀
 	if strings.HasSuffix(code, ".HK") {
 		code = strings.TrimSuffix(code, ".HK")
 	}
-	
+
 	// 去除hk前缀
 	if strings.HasPrefix(code, "HK") {
 		code = code[2:]
 	}
-	
+
 	// 补足5位代码
 	for len(code) < 5 {
 		code = "0" + code
 	}
-	
+
 	return "hk" + code
 }
 

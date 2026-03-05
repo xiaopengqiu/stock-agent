@@ -47,7 +47,7 @@ func (t ToolQueryShareholderCount) InvokableRun(ctx context.Context, argumentsIn
 	}
 
 	stockCode := GetStockCode(parms["stockCode"].(string))
-	
+
 	quarters := 4
 	if q, ok := parms["quarters"]; ok && q != nil {
 		if qFloat, ok := q.(float64); ok {
@@ -101,7 +101,7 @@ func (t ToolQueryShareholderCount) analyzeShareholderTrend(data *data.Shareholde
 		"trend_direction":     "unknown",
 		"concentration_level": "unknown",
 		"signal_strength":     "neutral",
-		"interpretation":    "",
+		"interpretation":      "",
 	}
 
 	if data == nil || len(data.QuarterlyData) < 2 {
@@ -112,7 +112,7 @@ func (t ToolQueryShareholderCount) analyzeShareholderTrend(data *data.Shareholde
 	// 计算最新季度与上季度的变化
 	latest := data.QuarterlyData[0]
 	previous := data.QuarterlyData[1]
-	
+
 	changePercent := 0.0
 	if previous.Count > 0 {
 		changePercent = float64(latest.Count-previous.Count) / float64(previous.Count) * 100
@@ -179,9 +179,9 @@ type ShareholderCountData struct {
 }
 
 type QuarterlyShareholderInfo struct {
-	Quarter    string  // 季度，如 "2025Q3"
-	Count      int     // 股东人数
-	AvgShares  float64 // 人均持股
-	Change     int     // 较上季度变化
-	ChangePct  float64 // 变化百分比
+	Quarter   string  // 季度，如 "2025Q3"
+	Count     int     // 股东人数
+	AvgShares float64 // 人均持股
+	Change    int     // 较上季度变化
+	ChangePct float64 // 变化百分比
 }

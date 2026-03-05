@@ -118,14 +118,14 @@
             <div class="result-content-wrapper">
               <!-- 完整报告视图 -->
               <div v-if="viewMode === 'full'" class="full-report-wrapper">
-                <n-scrollbar style="height: 100%;">
+                <n-scrollbar class="scrollbar-container">
                   <MdPreview :modelValue="fullReport" :theme="darkTheme ? 'dark' : 'light'" class="md-preview-content"/>
                 </n-scrollbar>
               </div>
 
               <!-- 卡片视图 - 买卖点展示 -->
               <div v-else-if="viewMode === 'card'" class="card-view-wrapper">
-                <n-scrollbar style="height: 100%;">
+                <n-scrollbar class="scrollbar-container">
                   <div class="card-grid">
                     <n-card
                       v-for="(item, index) in cardRecommendations"
@@ -968,6 +968,8 @@ async function getStats() {
   overflow: hidden;
   min-height: 0;
   padding: 16px;
+  display: flex;
+  flex-direction: column;
 }
 
 .full-report-wrapper :deep(.md-editor-preview-wrapper) {
@@ -984,6 +986,13 @@ async function getStats() {
   padding-bottom: 40px;
 }
 
+/* 滚动条容器 - 在flex布局中占据剩余空间 */
+.scrollbar-container {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .simple-list-wrapper {
   flex: 1;
   overflow: auto;
@@ -996,6 +1005,8 @@ async function getStats() {
   overflow: hidden;
   min-height: 0;
   padding: 16px;
+  display: flex;
+  flex-direction: column;
 }
 
 .card-grid {

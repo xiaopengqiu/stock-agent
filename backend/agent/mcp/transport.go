@@ -256,10 +256,10 @@ func (t *StdioTransport) readStderr() {
 
 // HTTPTransport implements MCP communication via HTTP (for remote MCP servers)
 type HTTPTransport struct {
-	baseURL  string
-	headers  map[string]string
-	client   *http.Client
-	mu       sync.Mutex
+	baseURL   string
+	headers   map[string]string
+	client    *http.Client
+	mu        sync.Mutex
 	connected bool
 }
 
@@ -270,9 +270,9 @@ func NewHTTPTransport(ctx context.Context, config *MCPServerConfig) (*HTTPTransp
 	}
 
 	transport := &HTTPTransport{
-		baseURL:   config.URL,
-		headers:   config.Headers,
-		client:    &http.Client{
+		baseURL: config.URL,
+		headers: config.Headers,
+		client: &http.Client{
 			Timeout: 30 * time.Second,
 		},
 		connected: false,

@@ -69,7 +69,7 @@ type RecommendationItem struct {
 	BuyPriceRange    string    `gorm:"type:varchar(50)" json:"buy_price_range"`     // AI建议买入价区间
 	StopLossPrice    float64   `gorm:"type:decimal(10,2)" json:"stop_loss_price"`   // AI建议止损价
 	SectorConcept    string    `gorm:"type:varchar(200)" json:"sector_concept"`     // 板块概念
-	Remarks          string    `gorm:"type:text" json:"remarks"`                      // 备注
+	Remarks          string    `gorm:"type:text" json:"remarks"`                    // 备注
 	RecommendedAt    time.Time `gorm:"index" json:"recommended_at"`                 // 推荐时间
 
 	// 关注状态

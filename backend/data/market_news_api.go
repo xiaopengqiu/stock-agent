@@ -8,6 +8,7 @@ import (
 	"go-stock/backend/logger"
 	"go-stock/backend/models"
 	"go-stock/backend/util"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -31,6 +32,71 @@ type MarketNewsApi struct {
 
 func NewMarketNewsApi() *MarketNewsApi {
 	return &MarketNewsApi{}
+}
+
+func (m MarketNewsApi) TelegraphList(crawlTimeOut int64) *[]models.Telegraph {
+	url := "https://www.cls.cn/nodeapi/telegraphList"
+	res := map[string]any{}
+	_, _ = resty.New().SetTimeout(time.Duration(crawlTimeOut)*time.Second).R().
+		SetHeader("Referer", "https://www.cls.cn/").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60").
+		SetResult(&res).
+		Get(url)
+	var telegraphs []models.Telegraph
+
+	if v, _ := convertor.ToInt(res["error"]); v == 0 {
+		if res["data"] == nil {
+			return m.GetNewTelegraph(30)
+		}
+		data := res["data"].(map[string]any)
+		rollData := data["roll_data"].([]any)
+		for _, v := range rollData {
+			news := v.(map[string]any)
+			ctime, _ := convertor.ToInt(news["ctime"])
+			dataTime := time.Unix(ctime, 0).Local()
+			telegraph := models.Telegraph{
+				Title:           news["title"].(string),
+				Content:         news["content"].(string),
+				Time:            dataTime.Format("15:04:05"),
+				DataTime:        &dataTime,
+				Url:             news["shareurl"].(string),
+				Source:          "财联社电报",
+				IsRed:           (news["level"].(string)) != "C",
+				SentimentResult: AnalyzeSentiment(news["content"].(string)).Description,
+			}
+			cnt := int64(0)
+			if telegraph.Title == "" {
+				db.Dao.Model(telegraph).Where("content=?", telegraph.Content).Count(&cnt)
+			} else {
+				db.Dao.Model(telegraph).Where("title=?", telegraph.Title).Count(&cnt)
+			}
+			if cnt > 0 {
+				continue
+			}
+			telegraphs = append(telegraphs, telegraph)
+			db.Dao.Model(&models.Telegraph{}).Create(&telegraph)
+			logger.SugaredLogger.Debugf("telegraph: %+v", &telegraph)
+			if news["subjects"] == nil {
+				continue
+			}
+			subjects := news["subjects"].([]any)
+			for _, subject := range subjects {
+				name := subject.(map[string]any)["subject_name"].(string)
+				tag := &models.Tags{
+					Name: name,
+					Type: "subject",
+				}
+				db.Dao.Model(tag).Where("name=? and type=?", name, "subject").FirstOrCreate(&tag)
+				db.Dao.Model(models.TelegraphTags{}).Where("telegraph_id=? and tag_id=?", telegraph.ID, tag.ID).FirstOrCreate(&models.TelegraphTags{
+					TelegraphId: telegraph.ID,
+					TagId:       tag.ID,
+				})
+			}
+
+		}
+	}
+
+	return &telegraphs
 }
 
 func (m MarketNewsApi) GetNewTelegraph(crawlTimeOut int64) *[]models.Telegraph {
@@ -937,4 +1003,117 @@ func (m MarketNewsApi) CailianpressWeb(searchWords string) *models.CailianpressW
 	logger.SugaredLogger.Debug(res)
 
 	return res
+}
+
+func (m MarketNewsApi) GetNewsList2(source string, limit int) *[]*models.Telegraph {
+	NewMarketNewsApi().TelegraphList(30)
+	news := &[]*models.Telegraph{}
+	if source != "" {
+		db.Dao.Model(news).Preload("TelegraphTags").Where("source=?", source).Order("data_time desc,is_red desc").Limit(limit).Find(news)
+	} else {
+		db.Dao.Model(news).Preload("TelegraphTags").Order("data_time desc,is_red desc").Limit(limit).Find(news)
+	}
+	for _, item := range *news {
+		tags := &[]models.Tags{}
+		db.Dao.Model(&models.Tags{}).Where("id in ?", lo.Map(item.TelegraphTags, func(item models.TelegraphTags, index int) uint {
+			return item.TagId
+		})).Find(&tags)
+		tagNames := lo.Map(*tags, func(item models.Tags, index int) string {
+			return item.Name
+		})
+		item.SubjectTags = tagNames
+		logger.SugaredLogger.Infof("tagNames %v ，SubjectTags：%s", tagNames, item.SubjectTags)
+	}
+	return news
+}
+
+func (m MarketNewsApi) GetTelegraphListWithPaging(source string, page, pageSize int) *[]*models.Telegraph {
+	offset := (page - 1) * pageSize
+
+	news := &[]*models.Telegraph{}
+	if source != "" {
+		db.Dao.Model(news).Preload("TelegraphTags").Where("source=?", source).Order("data_time desc,time desc").Limit(pageSize).Offset(offset).Find(news)
+	} else {
+		db.Dao.Model(news).Preload("TelegraphTags").Order("data_time desc,time desc").Limit(pageSize).Offset(offset).Find(news)
+	}
+	for _, item := range *news {
+		tags := &[]models.Tags{}
+		db.Dao.Model(&models.Tags{}).Where("id in ?", lo.Map(item.TelegraphTags, func(item models.TelegraphTags, index int) uint {
+			return item.TagId
+		})).Find(&tags)
+		tagNames := lo.Map(*tags, func(item models.Tags, index int) string {
+			return item.Name
+		})
+		item.SubjectTags = tagNames
+		logger.SugaredLogger.Infof("tagNames %v ，SubjectTags：%s", tagNames, item.SubjectTags)
+	}
+	return news
+}
+
+func (m MarketNewsApi) TradingViewNewsDetail(id string) *models.TVNewsDetail {
+	newsDetail := &models.TVNewsDetail{}
+	newsUrl := fmt.Sprintf("https://news-headlines.tradingview.com/v3/story?id=%s&lang=zh-Hans", url.QueryEscape(id))
+
+	client := resty.New()
+	config := GetSettingConfig()
+	if config.HttpProxyEnabled && config.HttpProxy != "" {
+		client.SetProxy(config.HttpProxy)
+	}
+	request := client.SetTimeout(time.Duration(3) * time.Second).R()
+	_, err := request.
+		SetHeader("Host", "news-headlines.tradingview.com").
+		SetHeader("Origin", "https://cn.tradingview.com").
+		SetHeader("Referer", "https://cn.tradingview.com/").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0) Gecko/20100101 Firefox/146.0").
+		SetResult(newsDetail).
+		Get(newsUrl)
+	if err != nil {
+		logger.SugaredLogger.Errorf("TradingViewNewsDetail err:%s", err.Error())
+		return newsDetail
+	}
+	logger.SugaredLogger.Infof("resp:%+v", newsDetail)
+	return newsDetail
+}
+
+func (m MarketNewsApi) GetSecuritiesCompanyOpinionContent(OrgSName, encodeUrl string) string {
+	url := "https://data.eastmoney.com/report/zw_brokerreport.jshtml?encodeUrl=" + encodeUrl
+	resp, _ := resty.New().R().
+		SetHeader("Host", "data.eastmoney.com").
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0").
+		Get(url)
+	body := resp.Body()
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(string(body)))
+	title, _ := doc.Find("div.c-title").Html()
+	content, _ := doc.Find("div.ctx-content").Html()
+	markdown, err := util.HTMLToMarkdown("<h1>" + OrgSName + "</h1>" + title + content)
+	if err != nil {
+	}
+	return markdown
+}
+
+func (m MarketNewsApi) GetNews24HoursList(source string, limit int) *[]*models.Telegraph {
+	news := &[]*models.Telegraph{}
+	if source != "" {
+		db.Dao.Model(news).Preload("TelegraphTags").Where("source=? and created_at>?", source, time.Now().Add(-24*time.Hour)).Order("data_time desc,is_red desc").Limit(limit).Find(news)
+	} else {
+		db.Dao.Model(news).Preload("TelegraphTags").Where("created_at>?", time.Now().Add(-24*time.Hour)).Order("data_time desc,is_red desc").Limit(limit).Find(news)
+	}
+	uniqueNews := make([]*models.Telegraph, 0)
+	seenContent := make(map[string]bool)
+	for _, item := range *news {
+		tags := &[]models.Tags{}
+		db.Dao.Model(&models.Tags{}).Where("id in ?", lo.Map(item.TelegraphTags, func(item models.TelegraphTags, index int) uint {
+			return item.TagId
+		})).Find(&tags)
+		tagNames := lo.Map(*tags, func(item models.Tags, index int) string {
+			return item.Name
+		})
+		item.SubjectTags = tagNames
+		contentKey := strings.TrimSpace(item.Content)
+		if contentKey != "" && !seenContent[contentKey] {
+			seenContent[contentKey] = true
+			uniqueNews = append(uniqueNews, item)
+		}
+	}
+	return &uniqueNews
 }
