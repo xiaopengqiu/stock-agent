@@ -115,3 +115,7 @@ frontend/package.json.md5
 /.claude
 /skills
 temp*
+
+# Go executable files
+go-stock.exe
+stock-agent.exe
