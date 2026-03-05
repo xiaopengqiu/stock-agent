@@ -479,7 +479,7 @@ const cardRecommendations = computed(() => {
       riskTips: rec.risk_tips || rec.risk_warning || '',
       tradeSuggestion: rec.trade_suggestion || rec.action || (expectedReturn > 5 ? '买入' : '观望'),
       remarks: rec.remarks || '',
-      recommendedAt: formatTime(rec.recommended_at || rec.created_at || Date.now()),
+      recommendedAt: formatTime(rec.created_at || Date.now()),
       isFollowed: rec.is_followed || false
     }
   })
