@@ -118,15 +118,18 @@
             <div class="result-content-wrapper">
               <!-- 完整报告视图 -->
               <div v-if="viewMode === 'full'" class="full-report-wrapper">
-                <n-scrollbar class="scrollbar-container">
-                  <MdPreview :modelValue="fullReport" :theme="darkTheme ? 'dark' : 'light'" class="md-preview-content"/>
+                <n-scrollbar style="height: calc(100vh - 280px);">
+                  <div style="padding: 16px; padding-bottom: 60px;">
+                    <MdPreview :modelValue="fullReport" :theme="darkTheme ? 'dark' : 'light'" class="md-preview-content"/>
+                  </div>
                 </n-scrollbar>
               </div>
 
               <!-- 卡片视图 - 买卖点展示 -->
               <div v-else-if="viewMode === 'card'" class="card-view-wrapper">
-                <n-scrollbar class="scrollbar-container">
-                  <div class="card-grid">
+                <n-scrollbar style="height: calc(100vh - 280px);">
+                  <div style="padding: 16px; padding-bottom: 60px;">
+                    <div class="card-grid">
                     <n-card
                       v-for="(item, index) in cardRecommendations"
                       :key="item.stockCode"
@@ -262,6 +265,7 @@
                         </n-space>
                       </div>
                     </n-card>
+                    </div>
                   </div>
                 </n-scrollbar>
               </div>
