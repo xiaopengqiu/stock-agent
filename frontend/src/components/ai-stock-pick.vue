@@ -257,10 +257,9 @@
                           <n-button
                             size="small"
                             :type="item.isFollowed ? 'default' : 'primary'"
-                            :disabled="item.isFollowed"
                             @click="handleFollow(item.stockCode)"
                           >
-                            {{ item.isFollowed ? '已关注' : '关注' }}
+                            {{ item.isFollowed ? '取消关注' : '关注' }}
                           </n-button>
                         </n-space>
                       </div>
@@ -359,6 +358,7 @@ import {
   GetStockPickReport,
   GetStockPickRecommendations,
   FollowStockFromReport,
+  UnfollowStockFromReport,
   ExportStockPickReport,
   CheckStockFollowed,
   GetStockPickStats,
@@ -542,9 +542,8 @@ const columns = [
     render: (row) => h(NButton, {
       size: 'tiny',
       type: row.isFollowed ? 'default' : 'primary',
-      disabled: row.isFollowed,
       onClick: () => handleFollow(row.stockCode)
-    }, { default: () => row.isFollowed ? '已关注' : '关注' })
+    }, { default: () => row.isFollowed ? '取消关注' : '关注' })
   }
 ]
 
@@ -905,19 +904,29 @@ async function exportReport(format) {
   }
 }
 
-// 一键关注
+// 一键关注/取消关注
 async function handleFollow(stockCode) {
   try {
-    const result = await FollowStockFromReport(reportId.value, stockCode)
-    message.success(result)
-
-    // 更新关注状态
+    // 找到对应股票
     const index = recommendations.value.findIndex(r => r.stock_code === stockCode)
-    if (index !== -1) {
-      recommendations.value[index].is_followed = true
+    const isCurrentlyFollowed = index !== -1 && recommendations.value[index].is_followed
+
+    let result
+    if (isCurrentlyFollowed) {
+      result = await UnfollowStockFromReport(reportId.value, stockCode)
+      message.success(result)
+      if (index !== -1) {
+        recommendations.value[index].is_followed = false
+      }
+    } else {
+      result = await FollowStockFromReport(reportId.value, stockCode)
+      message.success(result)
+      if (index !== -1) {
+        recommendations.value[index].is_followed = true
+      }
     }
   } catch (error) {
-    message.error('关注失败: ' + error)
+    message.error('操作失败: ' + error)
   }
 }
 

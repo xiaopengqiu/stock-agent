@@ -1121,6 +1121,15 @@ func (s *StockPickService) parseStockTitle(line string, rank int) (*models.Recom
 		IsFollowed: s.CheckStockFollowed(stockCode),
 	}
 
+	// 获取股票基础信息（包含板块信息）
+	if stockBasic := s.getStockBasicInfo(stockCode); stockBasic != nil {
+		rec.SectorConcept = stockBasic.Industry
+		if stockBasic.Industry == "" && stockBasic.Area != "" {
+			rec.SectorConcept = stockBasic.Area
+		}
+		logger.SugaredLogger.Debugf("获取到股票板块信息: %s", rec.SectorConcept)
+	}
+
 	// 尝试获取实时价格
 	if stockInfo, err := NewStockDataApi().GetStockCodeRealTimeData(stockCode); err == nil && stockInfo != nil && len(*stockInfo) > 0 {
 		stock := (*stockInfo)[0]
@@ -1344,4 +1353,91 @@ func parseTextValue(line string) string {
 		return strings.TrimSpace(line[idx+1:])
 	}
 	return line
+}
+
+// getStockBasicInfo 获取股票基础信息
+func (s *StockPickService) getStockBasicInfo(stockCode string) *StockBasic {
+	var stock StockBasic
+
+	// 处理股票代码格式转换
+	tsCode := convertToTsCode(stockCode)
+	symbol := extractSymbol(stockCode)
+
+	logger.SugaredLogger.Debugf("查询股票基础信息: 原始代码=%s, TS代码=%s, Symbol=%s", stockCode, tsCode, symbol)
+
+	// 尝试多种代码格式查询
+	err := db.Dao.Where("ts_code = ? OR symbol = ?", tsCode, symbol).First(&stock).Error
+	if err != nil {
+		logger.SugaredLogger.Debugf("获取股票 %s 基础信息失败: %v", stockCode, err)
+		// 尝试只查询symbol
+		err = db.Dao.Where("symbol = ?", symbol).First(&stock).Error
+		if err != nil {
+			logger.SugaredLogger.Debugf("通过symbol查询也失败: %v", err)
+			return nil
+		}
+	}
+
+	logger.SugaredLogger.Debugf("获取到股票基础信息: 代码=%s, 名称=%s, 行业=%s, 地域=%s",
+		stock.TsCode, stock.Name, stock.Industry, stock.Area)
+
+	return &stock
+}
+
+// convertToTsCode 转换为Tushare格式
+// 例如: "600519" -> "600519.SH", "sh600519" -> "600519.SH"
+func convertToTsCode(code string) string {
+	code = strings.ToUpper(strings.TrimSpace(code))
+
+	// 已经是TS格式
+	if strings.Contains(code, ".") {
+		return code
+	}
+
+	// sh前缀
+	if strings.HasPrefix(code, "SH") {
+		return strings.TrimPrefix(code, "SH") + ".SH"
+	}
+
+	// sz前缀
+	if strings.HasPrefix(code, "SZ") {
+		return strings.TrimPrefix(code, "SZ") + ".SZ"
+	}
+
+	// hk前缀
+	if strings.HasPrefix(code, "HK") {
+		return strings.TrimPrefix(code, "HK") + ".HK"
+	}
+
+	// us前缀
+	if strings.HasPrefix(code, "US") {
+		return strings.TrimPrefix(code, "US") + ".US"
+	}
+
+	// 根据代码长度判断
+	if len(code) == 6 {
+		if strings.HasPrefix(code, "6") {
+			return code + ".SH"
+		}
+		return code + ".SZ"
+	}
+
+	return code
+}
+
+// extractSymbol 提取纯数字代码
+func extractSymbol(code string) string {
+	code = strings.ToUpper(strings.TrimSpace(code))
+
+	// 移除交易所后缀
+	if idx := strings.Index(code, "."); idx != -1 {
+		code = code[:idx]
+	}
+
+	// 移除sh/sz/hk/us前缀
+	code = strings.TrimPrefix(code, "SH")
+	code = strings.TrimPrefix(code, "SZ")
+	code = strings.TrimPrefix(code, "HK")
+	code = strings.TrimPrefix(code, "US")
+
+	return code
 }

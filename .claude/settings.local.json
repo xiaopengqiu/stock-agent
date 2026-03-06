@@ -29,7 +29,12 @@
       "Bash(git push:*)",
       "Bash(gh pr:*)",
       "Bash(go version:*)",
-      "Bash(go get:*)"
+      "Bash(go get:*)",
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "Skill(browser-use)",
+      "Bash(npm install:*)",
+      "Bash(grep:*)"
     ]
   }
 }

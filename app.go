@@ -2019,6 +2019,32 @@ func (a *App) FollowStockFromReport(reportID uint, stockCode string) (string, er
 	return "关注成功", nil
 }
 
+// UnfollowStockFromReport unfollows a stock from a recommendation report
+func (a *App) UnfollowStockFromReport(reportID uint, stockCode string) (string, error) {
+	service := data.NewStockPickServiceWithInvokeTool(a.ctx, a.AiTools, a.AiInvokeTools)
+
+	// 检查股票是否已关注
+	isFollowed := service.CheckStockFollowed(stockCode)
+	if !isFollowed {
+		return "该股票未被关注", nil
+	}
+
+	// 取消关注股票
+	stockDataApi := data.NewStockDataApi()
+	result := stockDataApi.UnFollow(stockCode)
+
+	if result != "取消关注成功" {
+		return result, nil
+	}
+
+	// 更新报告中的关注状态
+	if err := service.UpdateRecommendationFollowStatus(reportID, stockCode, false); err != nil {
+		logger.SugaredLogger.Errorf("更新关注状态失败: %v", err)
+	}
+
+	return "已取消关注", nil
+}
+
 // ExportStockPickReport exports a report to markdown file
 func (a *App) ExportStockPickReport(reportID uint, format string) (string, error) {
 	service := data.NewStockPickServiceWithInvokeTool(a.ctx, a.AiTools, a.AiInvokeTools)

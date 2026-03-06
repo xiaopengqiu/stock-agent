@@ -366,6 +366,10 @@ export function UnFollowFund(arg1) {
   return window['go']['main']['App']['UnFollowFund'](arg1);
 }
 
+export function UnfollowStockFromReport(arg1, arg2) {
+  return window['go']['main']['App']['UnfollowStockFromReport'](arg1, arg2);
+}
+
 export function UpdateConfig(arg1) {
   return window['go']['main']['App']['UpdateConfig'](arg1);
 }
