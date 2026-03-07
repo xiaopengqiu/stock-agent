@@ -119,3 +119,7 @@ temp*
 # Go executable files
 go-stock.exe
 stock-agent.exe
+
+# openclaw
+TOOLS.md
+AGENTS.md

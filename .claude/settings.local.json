@@ -34,7 +34,8 @@
       "WebSearch",
       "Skill(browser-use)",
       "Bash(npm install:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(./ralph.sh:*)"
     ]
   }
 }

@@ -31,6 +31,7 @@ declare module 'vue' {
     MultiStockComparison: typeof import('./src/components/MultiStockComparison.vue')['default']
     NewsList: typeof import('./src/components/newsList.vue')['default']
     PositionAllocationPie: typeof import('./src/components/PositionAllocationPie.vue')['default']
+    PositionAnalysis: typeof import('./src/components/position-analysis.vue')['default']
     RankTable: typeof import('./src/components/rankTable.vue')['default']
     RecommendationWordCloud: typeof import('./src/components/RecommendationWordCloud.vue')['default']
     ReportViewer: typeof import('./src/components/ReportViewer.vue')['default']

@@ -825,6 +825,125 @@ export namespace models {
 		    return a;
 		}
 	}
+	export class Position {
+	    id: number;
+	    // Go type: time
+	    created_at: any;
+	    // Go type: time
+	    updated_at: any;
+	    deleted_at: gorm.DeletedAt;
+	    stock_code: string;
+	    stock_name: string;
+	    quantity: number;
+	    buy_price: number;
+	    // Go type: time
+	    buy_date: any;
+	    current_price: number;
+	    profit_loss: number;
+	    profit_loss_pct: number;
+	    market_value: number;
+	    notes: string;
+	    is_active: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new Position(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.created_at = this.convertValues(source["created_at"], null);
+	        this.updated_at = this.convertValues(source["updated_at"], null);
+	        this.deleted_at = this.convertValues(source["deleted_at"], gorm.DeletedAt);
+	        this.stock_code = source["stock_code"];
+	        this.stock_name = source["stock_name"];
+	        this.quantity = source["quantity"];
+	        this.buy_price = source["buy_price"];
+	        this.buy_date = this.convertValues(source["buy_date"], null);
+	        this.current_price = source["current_price"];
+	        this.profit_loss = source["profit_loss"];
+	        this.profit_loss_pct = source["profit_loss_pct"];
+	        this.market_value = source["market_value"];
+	        this.notes = source["notes"];
+	        this.is_active = source["is_active"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class PositionAnalysis {
+	    id: number;
+	    // Go type: time
+	    created_at: any;
+	    // Go type: time
+	    updated_at: any;
+	    deleted_at: gorm.DeletedAt;
+	    position_id: number;
+	    overall_advice: string;
+	    confidence: number;
+	    suggested_buy_price?: number;
+	    suggested_sell_price?: number;
+	    stop_loss_price?: number;
+	    technical_analysis: string;
+	    fundamental_analysis: string;
+	    risk_analysis: string;
+	    raw_response: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new PositionAnalysis(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.created_at = this.convertValues(source["created_at"], null);
+	        this.updated_at = this.convertValues(source["updated_at"], null);
+	        this.deleted_at = this.convertValues(source["deleted_at"], gorm.DeletedAt);
+	        this.position_id = source["position_id"];
+	        this.overall_advice = source["overall_advice"];
+	        this.confidence = source["confidence"];
+	        this.suggested_buy_price = source["suggested_buy_price"];
+	        this.suggested_sell_price = source["suggested_sell_price"];
+	        this.stop_loss_price = source["stop_loss_price"];
+	        this.technical_analysis = source["technical_analysis"];
+	        this.fundamental_analysis = source["fundamental_analysis"];
+	        this.risk_analysis = source["risk_analysis"];
+	        this.raw_response = source["raw_response"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class Prompt {
 	    ID: number;
 	    name: string;

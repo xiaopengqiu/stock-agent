@@ -34,14 +34,16 @@ import (
 
 // App struct
 type App struct {
-	ctx               context.Context
-	cache             *freecache.Cache
-	cron              *cron.Cron
-	cronEntrys        map[string]cron.EntryID
-	AiTools           []data.Tool
-	AiInvokeTools     map[string]tool.InvokableTool
-	SponsorInfo       map[string]any
-	PromptTemplateSvc *data.PromptTemplateApi
+	ctx                 context.Context
+	cache               *freecache.Cache
+	cron                *cron.Cron
+	cronEntrys          map[string]cron.EntryID
+	AiTools             []data.Tool
+	AiInvokeTools       map[string]tool.InvokableTool
+	SponsorInfo         map[string]any
+	PromptTemplateSvc   *data.PromptTemplateApi
+	PositionSvc         *data.PositionService
+	PositionAnalysisSvc *data.PositionAnalysisService
 }
 
 // NewApp creates a new App application struct
@@ -72,12 +74,14 @@ func NewApp() *App {
 	// 初始化全局可调用工具，供 AskAiWithTools 使用
 	data.SetGlobalAiInvokeTools(aiInvokeTools)
 	return &App{
-		cache:             cache,
-		cron:              c,
-		cronEntrys:        make(map[string]cron.EntryID),
-		AiTools:           aiTools,
-		AiInvokeTools:     aiInvokeTools,
-		PromptTemplateSvc: data.NewPromptTemplateApi(),
+		cache:               cache,
+		cron:                c,
+		cronEntrys:          make(map[string]cron.EntryID),
+		AiTools:             aiTools,
+		AiInvokeTools:       aiInvokeTools,
+		PromptTemplateSvc:   data.NewPromptTemplateApi(),
+		PositionSvc:         data.NewPositionService(),
+		PositionAnalysisSvc: data.NewPositionAnalysisService(ctx),
 	}
 }
 
@@ -2147,4 +2151,90 @@ func (a *App) DeleteStockPickReport(id uint) (string, error) {
 		return "", err
 	}
 	return "报告已删除", nil
+}
+
+// ========== Position Service Wails Bindings ==========
+
+// AddPosition adds a new position
+func (a *App) AddPosition(pos *models.Position) (string, error) {
+	if err := a.PositionSvc.AddPosition(pos); err != nil {
+		return "", err
+	}
+	return "持仓添加成功", nil
+}
+
+// UpdatePosition updates an existing position
+func (a *App) UpdatePosition(id uint, pos *models.Position) (string, error) {
+	if err := a.PositionSvc.UpdatePosition(id, pos); err != nil {
+		return "", err
+	}
+	return "持仓更新成功", nil
+}
+
+// DeletePosition deletes a position
+func (a *App) DeletePosition(id uint) (string, error) {
+	if err := a.PositionSvc.DeletePosition(id); err != nil {
+		return "", err
+	}
+	return "持仓删除成功", nil
+}
+
+// GetPositions gets all active positions
+func (a *App) GetPositions() ([]*models.Position, error) {
+	return a.PositionSvc.GetPositions()
+}
+
+// GetPositionByID gets a position by ID
+func (a *App) GetPositionByID(id uint) (*models.Position, error) {
+	return a.PositionSvc.GetPositionByID(id)
+}
+
+// RefreshPositions refreshes all position prices
+func (a *App) RefreshPositions() (string, error) {
+	if err := a.PositionSvc.RefreshPositions(); err != nil {
+		return "", err
+	}
+	return "持仓数据刷新成功", nil
+}
+
+// GetPositionSummary gets position summary statistics
+func (a *App) GetPositionSummary() (map[string]interface{}, error) {
+	totalMV, totalPL, count, err := a.PositionSvc.GetPositionSummary()
+	if err != nil {
+		return nil, err
+	}
+	return map[string]interface{}{
+		"total_market_value": totalMV,
+		"total_profit_loss":  totalPL,
+		"position_count":     count,
+	}, nil
+}
+
+// AddPositionFromRecommendation adds a position from a stock recommendation
+func (a *App) AddPositionFromRecommendation(stockCode, stockName string, buyPrice float64, quantity int, notes string) (*models.Position, error) {
+	return a.PositionSvc.AddFromRecommendation(stockCode, stockName, buyPrice, quantity, notes)
+}
+
+// AnalyzePosition analyzes a single position and returns the analysis
+func (a *App) AnalyzePosition(positionID uint, aiConfigID uint) (*models.PositionAnalysis, error) {
+	position, err := a.PositionSvc.GetPositionByID(positionID)
+	if err != nil {
+		return nil, err
+	}
+	return a.PositionAnalysisSvc.AnalyzePosition(position, aiConfigID)
+}
+
+// GetPositionAnalysis gets the latest analysis for a position
+func (a *App) GetPositionAnalysis(positionID uint) (*models.PositionAnalysis, error) {
+	return a.PositionAnalysisSvc.GetPositionAnalysis(positionID)
+}
+
+// GetLatestPositionAnalyses gets the latest analysis for all active positions
+func (a *App) GetLatestPositionAnalyses() ([]*models.PositionAnalysis, error) {
+	return a.PositionAnalysisSvc.GetLatestPositionAnalyses()
+}
+
+// AnalyzeAllPositions analyzes all active positions
+func (a *App) AnalyzeAllPositions(aiConfigID uint) ([]*models.PositionAnalysis, error) {
+	return a.PositionAnalysisSvc.AnalyzeAllPositions(aiConfigID)
 }

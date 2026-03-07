@@ -870,6 +870,12 @@ func (s *StockPickService) parseAndUpdateRecommendations(report *models.StockPic
 	report.CandidatesCount = len(recommendations)
 	report.Recommendations = recommendations
 
+	// 使用AI报告解析器解析结构化分析
+	logger.SugaredLogger.Infof("开始使用AI报告解析器解析结构化分析")
+	parser := NewAIReportParser()
+	parser.ParseBatch(content, report.Recommendations)
+	logger.SugaredLogger.Infof("AI报告解析器解析完成")
+
 	// 保存到数据库
 	logger.SugaredLogger.Debugf("开始保存到数据库")
 	if err := db.Dao.Save(report).Error; err != nil {

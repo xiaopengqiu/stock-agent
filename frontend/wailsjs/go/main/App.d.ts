@@ -10,9 +10,17 @@ export function AddCronTask(arg1:data.FollowedStock):Promise<any>;
 
 export function AddGroup(arg1:data.Group):Promise<string>;
 
+export function AddPosition(arg1:models.Position):Promise<string>;
+
+export function AddPositionFromRecommendation(arg1:string,arg2:string,arg3:number,arg4:number,arg5:string):Promise<models.Position>;
+
 export function AddPrompt(arg1:models.Prompt):Promise<string>;
 
 export function AddStockGroup(arg1:number,arg2:string):Promise<string>;
+
+export function AnalyzeAllPositions(arg1:number):Promise<Array<models.PositionAnalysis>>;
+
+export function AnalyzePosition(arg1:number,arg2:number):Promise<models.PositionAnalysis>;
 
 export function AnalyzeSentiment(arg1:string):Promise<data.SentimentResult>;
 
@@ -29,6 +37,8 @@ export function CheckUpdate(arg1:number):Promise<void>;
 export function ClsCalendar():Promise<Array<any>>;
 
 export function DelPrompt(arg1:number):Promise<string>;
+
+export function DeletePosition(arg1:number):Promise<string>;
 
 export function DeleteStockPickReport(arg1:number):Promise<string>;
 
@@ -70,6 +80,8 @@ export function GetIndustryMoneyRankSina(arg1:string,arg2:string):Promise<Array<
 
 export function GetIndustryRank(arg1:string,arg2:number):Promise<Array<any>>;
 
+export function GetLatestPositionAnalyses():Promise<Array<models.PositionAnalysis>>;
+
 export function GetMCPConfig():Promise<string>;
 
 export function GetMCPEnabled():Promise<boolean>;
@@ -79,6 +91,14 @@ export function GetMCPStatus():Promise<Record<string, any>>;
 export function GetMCPToolCount():Promise<number>;
 
 export function GetMoneyRankSina(arg1:string):Promise<Array<Record<string, any>>>;
+
+export function GetPositionAnalysis(arg1:number):Promise<models.PositionAnalysis>;
+
+export function GetPositionByID(arg1:number):Promise<models.Position>;
+
+export function GetPositionSummary():Promise<Record<string, any>>;
+
+export function GetPositions():Promise<Array<models.Position>>;
 
 export function GetPromptTemplates(arg1:string,arg2:string):Promise<any>;
 
@@ -136,6 +156,8 @@ export function OpenURL(arg1:string):Promise<void>;
 
 export function ReFleshTelegraphList(arg1:string):Promise<any>;
 
+export function RefreshPositions():Promise<string>;
+
 export function ReloadMCPTools():Promise<string>;
 
 export function ReloadTools():Promise<string>;
@@ -191,3 +213,5 @@ export function UnfollowStockFromReport(arg1:number,arg2:string):Promise<string>
 export function UpdateConfig(arg1:data.SettingConfig):Promise<string>;
 
 export function UpdateGroupSort(arg1:number,arg2:number):Promise<boolean>;
+
+export function UpdatePosition(arg1:number,arg2:models.Position):Promise<string>;

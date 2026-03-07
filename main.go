@@ -235,6 +235,8 @@ func AutoMigrate() {
 	db.Dao.AutoMigrate(&data.AIConfig{})
 	db.Dao.AutoMigrate(&models.BKDict{})
 	db.Dao.AutoMigrate(&models.StockPickReport{})
+	db.Dao.AutoMigrate(&models.Position{})
+	db.Dao.AutoMigrate(&models.PositionAnalysis{})
 
 	updateMultipleModel()
 

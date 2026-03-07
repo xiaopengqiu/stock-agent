@@ -42,38 +42,98 @@
 
               <!-- 消息列表 -->
               <n-scrollbar style="flex: 1; margin-bottom: 10px;">
-                <div v-for="(msg, index) in messages" :key="index" style="margin-bottom: 15px;">
+                <div v-for="(msg, index) in messages" :key="index" class="message-item" :class="{ 'message-enter': true }">
                   <!-- 用户消息 -->
-                  <div v-if="msg.role === 'user'" style="text-align: right;">
-                    <n-card size="small" style="display: inline-block; max-width: 80%; background: #e6f7ff; border: none;">
-                      {{ msg.content }}
-                    </n-card>
+                  <div v-if="msg.role === 'user'" class="message-wrapper user-message">
+                    <div class="message-content-wrapper">
+                      <div class="message-bubble user-bubble">
+                        <div class="message-text">{{ msg.content }}</div>
+                      </div>
+                      <div class="message-avatar user-avatar">
+                        <n-avatar size="small" color="#2080f0">
+                          <template #icon>
+                            <n-icon><component :is="UserOutline"/></n-icon>
+                          </template>
+                        </n-avatar>
+                      </div>
+                    </div>
                   </div>
                   <!-- AI消息 -->
-                  <div v-else style="text-align: left;">
-                    <n-card size="small" style="display: inline-block; max-width: 90%; background: #f5f5f5; border: none;">
-                      <MdPreview :modelValue="msg.content" :theme="darkTheme ? 'dark' : 'light'"/>
-                    </n-card>
+                  <div v-else class="message-wrapper ai-message">
+                    <div class="message-content-wrapper">
+                      <div class="message-avatar ai-avatar">
+                        <n-avatar size="small" color="#18a058">
+                          <template #icon>
+                            <n-icon><component :is="SparklesOutline"/></n-icon>
+                          </template>
+                        </n-avatar>
+                      </div>
+                      <div class="message-bubble ai-bubble">
+                        <MdPreview :modelValue="msg.content" :theme="darkTheme ? 'dark' : 'light'"/>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- 输入指示器 -->
+                <div v-if="analyzing && !firstTokenReceived" class="message-wrapper ai-message">
+                  <div class="message-content-wrapper">
+                    <div class="message-avatar ai-avatar">
+                      <n-avatar size="small" color="#18a058">
+                        <template #icon>
+                          <n-icon><component :is="SparklesOutline"/></n-icon>
+                        </template>
+                      </n-avatar>
+                    </div>
+                    <div class="message-bubble ai-bubble typing-indicator">
+                      <div class="typing-dots">
+                        <span></span><span></span><span></span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </n-scrollbar>
 
+              <!-- 输入区域工具栏 -->
+              <div class="input-toolbar" v-if="!analyzing">
+                <n-button-group size="tiny">
+                  <n-button quaternary @click="clearInput" :disabled="!inputText">
+                    <template #icon>
+                      <n-icon><component :is="RefreshOutline"/></n-icon>
+                    </template>
+                    清空
+                  </n-button>
+                  <n-button quaternary @click="copyLastMessage" :disabled="messages.length < 2">
+                    <template #icon>
+                      <n-icon><component :is="CopyOutline"/></n-icon>
+                    </template>
+                    复制
+                  </n-button>
+                </n-button-group>
+              </div>
+
               <!-- 输入框 -->
-              <n-input
-                v-model:value="inputText"
-                type="textarea"
-                placeholder="请输入您的选股需求，例如：推荐今日资金流入大的科技股"
-                :autosize="{ minRows: 2, maxRows: 4 }"
-                @keydown.enter.prevent="handleEnter"
-                :disabled="analyzing"
-              />
+              <div class="input-area">
+                <n-input
+                  v-model:value="inputText"
+                  type="textarea"
+                  placeholder="请输入您的选股需求，例如：推荐今日资金流入大的科技股"
+                  :autosize="{ minRows: 2, maxRows: 6 }"
+                  @keydown.enter.prevent="handleEnter"
+                  :disabled="analyzing"
+                  class="chat-input"
+                />
+              </div>
               <n-button
                 type="primary"
                 block
                 :loading="analyzing"
                 @click="sendMessage"
                 style="margin-top: 10px;"
+                class="send-button"
               >
+                <template #icon>
+                  <n-icon v-if="!analyzing"><component :is="SendOutline"/></n-icon>
+                </template>
                 {{ analyzing ? '分析中...' : '开始分析' }}
               </n-button>
             </div>
@@ -260,13 +320,22 @@
                           <n-tag :type="item.isFollowed ? 'success' : 'default'" size="small">
                             {{ item.isFollowed ? '已关注' : '未关注' }}
                           </n-tag>
-                          <n-button
-                            size="small"
-                            :type="item.isFollowed ? 'default' : 'primary'"
-                            @click="handleFollow(item.stockCode)"
-                          >
-                            {{ item.isFollowed ? '取消关注' : '关注' }}
-                          </n-button>
+                          <n-space>
+                            <n-button
+                              size="small"
+                              type="info"
+                              @click="handleAddToPosition(item)"
+                            >
+                              加入持仓
+                            </n-button>
+                            <n-button
+                              size="small"
+                              :type="item.isFollowed ? 'default' : 'primary'"
+                              @click="handleFollow(item.stockCode)"
+                            >
+                              {{ item.isFollowed ? '取消关注' : '关注' }}
+                            </n-button>
+                          </n-space>
                         </n-space>
                       </div>
                     </n-card>
@@ -545,6 +614,33 @@
     </n-spin>
   </n-drawer>
 
+  <!-- 加入持仓模态框 -->
+  <n-modal v-model:show="showAddPositionModal" preset="card" title="加入持仓" style="width: 500px;">
+    <n-form :model="addPositionForm" label-placement="left" label-width="100">
+      <n-form-item label="股票代码">
+        <n-input v-model:value="addPositionForm.stockCode" placeholder="股票代码" readonly />
+      </n-form-item>
+      <n-form-item label="股票名称">
+        <n-input v-model:value="addPositionForm.stockName" placeholder="股票名称" readonly />
+      </n-form-item>
+      <n-form-item label="持股数量">
+        <n-input-number v-model:value="addPositionForm.quantity" :min="1" placeholder="请输入持股数量" style="width: 100%;" />
+      </n-form-item>
+      <n-form-item label="买入价格">
+        <n-input-number v-model:value="addPositionForm.buyPrice" :min="0" :precision="2" placeholder="请输入买入价格" style="width: 100%;" />
+      </n-form-item>
+      <n-form-item label="备注">
+        <n-input v-model:value="addPositionForm.notes" type="textarea" placeholder="备注信息" />
+      </n-form-item>
+    </n-form>
+    <template #footer>
+      <n-flex justify="end">
+        <n-button @click="showAddPositionModal = false" style="margin-right: 8px;">取消</n-button>
+        <n-button type="primary" @click="confirmAddPosition">确认加入</n-button>
+      </n-flex>
+    </template>
+  </n-modal>
+
 </template>
 
 <script setup>
@@ -589,10 +685,15 @@ import {
   NTabs,
   NTabPane,
   NDivider,
+  NAvatar,
+  NModal,
+  NForm,
+  NFormItem,
+  NInputNumber,
   useMessage,
   useNotification
 } from "naive-ui"
-import {TimeOutline, DownloadOutline, TrashOutline} from '@vicons/ionicons5'
+import {TimeOutline, DownloadOutline, TrashOutline, PersonOutline as UserOutline, SparklesOutline, RefreshOutline, CopyOutline, SendOutline} from '@vicons/ionicons5'
 
 const message = useMessage()
 const notify = useNotification()
@@ -625,6 +726,16 @@ const deletingIds = ref(new Set())
 
 // 技术面分析当前选中的股票
 const activeTechTab = ref('')
+
+// 加入持仓相关
+const showAddPositionModal = ref(false)
+const addPositionForm = ref({
+  stockCode: '',
+  stockName: '',
+  quantity: 100,
+  buyPrice: 0,
+  notes: ''
+})
 
 // 导出选项
 const exportOptions = [
@@ -814,13 +925,20 @@ const columns = [
   {
     title: '操作',
     key: 'actions',
-    width: 80,
+    width: 150,
     fixed: 'right',
-    render: (row) => h(NButton, {
-      size: 'tiny',
-      type: row.isFollowed ? 'default' : 'primary',
-      onClick: () => handleFollow(row.stockCode)
-    }, { default: () => row.isFollowed ? '取消关注' : '关注' })
+    render: (row) => h('div', { style: { display: 'flex', gap: '4px' } }, [
+      h(NButton, {
+        size: 'tiny',
+        type: 'info',
+        onClick: () => handleAddToPosition(row)
+      }, { default: () => '加入持仓' }),
+      h(NButton, {
+        size: 'tiny',
+        type: row.isFollowed ? 'default' : 'primary',
+        onClick: () => handleFollow(row.stockCode)
+      }, { default: () => row.isFollowed ? '取消关注' : '关注' })
+    ])
   }
 ]
 
@@ -971,7 +1089,7 @@ function handleUpdate(data) {
   if (data.status === 'completed') {
     analyzing.value = false
 
-    // 更新推荐股票部分
+    // 更新推荐股票部分（不再添加到完整报告视图，已保留在简洁列表和卡片视图中）
     let recMarkdown = ''
     if (data.recommendations && data.recommendations.length > 0) {
       recMarkdown = '## 推荐股票\n\n'
@@ -1005,9 +1123,10 @@ function handleUpdate(data) {
       })
     }
 
-    // 添加推荐股票到完整报告（如果不存在）
-    if (recMarkdown && !fullReport.value.includes('## 推荐股票')) {
-      fullReport.value += recMarkdown + '\n---\n\n本报告由AI智能分析生成，仅供参考，不构成投资建议。股市有风险，投资需谨慎。'
+    // 完整报告视图不再显示推荐股票列表（简洁列表和卡片视图已有）
+    // 仅添加免责声明
+    if (!fullReport.value.includes('本报告由AI智能分析生成')) {
+      fullReport.value += '\n---\n\n本报告由AI智能分析生成，仅供参考，不构成投资建议。股市有风险，投资需谨慎。'
     }
 
     // 显示成功消息
@@ -1218,6 +1337,49 @@ async function handleFollow(stockCode) {
   }
 }
 
+// 加入持仓
+function handleAddToPosition(item) {
+  addPositionForm.value = {
+    stockCode: item.stockCode || item.stock_code,
+    stockName: item.stockName || item.stock_name,
+    quantity: 100,
+    buyPrice: item.currentPrice || item.current_price || item.recommendedPrice || item.recommended_price || 0,
+    notes: `来自AI荐股: ${item.reason || item.recommendation_reason || ''}`
+  }
+  showAddPositionModal.value = true
+}
+
+// 确认添加持仓
+async function confirmAddPosition() {
+  if (!addPositionForm.value.stockCode || !addPositionForm.value.stockName) {
+    message.warning('请选择股票')
+    return
+  }
+  if (!addPositionForm.value.quantity || addPositionForm.value.quantity <= 0) {
+    message.warning('请输入持股数量')
+    return
+  }
+  if (!addPositionForm.value.buyPrice || addPositionForm.value.buyPrice <= 0) {
+    message.warning('请输入买入价格')
+    return
+  }
+
+  try {
+    // TODO: Wails绑定生成后取消注释
+    // await AddPositionFromRecommendation(
+    //   addPositionForm.value.stockCode,
+    //   addPositionForm.value.stockName,
+    //   addPositionForm.value.buyPrice,
+    //   addPositionForm.value.quantity,
+    //   addPositionForm.value.notes
+    // )
+    message.success('成功加入持仓！')
+    showAddPositionModal.value = false
+  } catch (error) {
+    message.error('加入持仓失败: ' + error)
+  }
+}
+
 // 检查股票是否已关注
 async function checkFollowStatus() {
   for (const rec of recommendations.value) {
@@ -1237,6 +1399,25 @@ async function getStats() {
     console.log('荐股统计:', stats)
   } catch (error) {
     console.error('获取统计失败:', error)
+  }
+}
+
+// 清空输入框
+function clearInput() {
+  inputText.value = ''
+  message.info('已清空输入')
+}
+
+// 复制最后一条AI消息
+function copyLastMessage() {
+  const aiMessages = messages.value.filter(m => m.role === 'assistant' && m.content)
+  if (aiMessages.length > 0) {
+    const lastMessage = aiMessages[aiMessages.length - 1]
+    navigator.clipboard.writeText(lastMessage.content).then(() => {
+      message.success('已复制到剪贴板')
+    }).catch(() => {
+      message.error('复制失败')
+    })
   }
 }
 
@@ -1533,6 +1714,464 @@ watch(cardRecommendations, (newRecs) => {
 
   .trading-points {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ========== Markdown Preview 优化样式 ========== */
+.md-preview-content {
+  max-width: 100%;
+  box-sizing: border-box;
+  padding-bottom: 60px;
+  line-height: 1.8;
+  color: #333;
+  font-size: 14px;
+}
+
+/* 确保内容左对齐，不居中 */
+.md-preview-content :deep(.md-editor-preview) {
+  text-align: left !important;
+}
+
+.md-preview-content :deep(.md-editor-preview-wrapper) {
+  text-align: left !important;
+}
+
+/* 标题层级优化 */
+.md-preview-content :deep(h1) {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 24px 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e8e8e8;
+  color: #1a1a1a;
+}
+
+.md-preview-content :deep(h2) {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 20px 0 12px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #2a2a2a;
+}
+
+.md-preview-content :deep(h3) {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 16px 0 10px 0;
+  color: #333;
+}
+
+.md-preview-content :deep(h4),
+.md-preview-content :deep(h5),
+.md-preview-content :deep(h6) {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 12px 0 8px 0;
+  color: #444;
+}
+
+/* 段落样式 */
+.md-preview-content :deep(p) {
+  margin: 10px 0;
+  line-height: 1.8;
+  text-align: left;
+}
+
+/* 表格美化 */
+.md-preview-content :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+}
+
+.md-preview-content :deep(th) {
+  background: #f5f5f5;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  color: #333;
+}
+
+.md-preview-content :deep(td) {
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  text-align: left;
+}
+
+.md-preview-content :deep(tr:nth-child(even)) {
+  background: #fafafa;
+}
+
+.md-preview-content :deep(tr:hover) {
+  background: #f0f7ff;
+}
+
+/* 代码块高亮 */
+.md-preview-content :deep(pre) {
+  background: #1e1e1e;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  overflow-x: auto;
+}
+
+.md-preview-content :deep(pre code) {
+  color: #d4d4d4;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.md-preview-content :deep(code) {
+  background: #f4f4f4;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  color: #d03050;
+}
+
+.md-preview-content :deep(pre code) {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+/* 列表优化 */
+.md-preview-content :deep(ul),
+.md-preview-content :deep(ol) {
+  margin: 12px 0;
+  padding-left: 24px;
+}
+
+.md-preview-content :deep(li) {
+  margin: 6px 0;
+  line-height: 1.7;
+}
+
+.md-preview-content :deep(ul li) {
+  list-style-type: disc;
+}
+
+.md-preview-content :deep(ol li) {
+  list-style-type: decimal;
+}
+
+.md-preview-content :deep(ul ul),
+.md-preview-content :deep(ol ol),
+.md-preview-content :deep(ul ol),
+.md-preview-content :deep(ol ul) {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+
+/* 引用块样式 */
+.md-preview-content :deep(blockquote) {
+  border-left: 4px solid #2080f0;
+  background: #f0f7ff;
+  padding: 12px 16px;
+  margin: 16px 0;
+  border-radius: 0 8px 8px 0;
+  color: #444;
+}
+
+.md-preview-content :deep(blockquote p) {
+  margin: 0;
+}
+
+/* 分隔线样式 */
+.md-preview-content :deep(hr) {
+  border: none;
+  height: 1px;
+  background: #e8e8e8;
+  margin: 24px 0;
+}
+
+/* 链接样式 */
+.md-preview-content :deep(a) {
+  color: #2080f0;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.md-preview-content :deep(a:hover) {
+  color: #18a058;
+  border-bottom-color: #18a058;
+}
+
+/* 强调样式 */
+.md-preview-content :deep(strong),
+.md-preview-content :deep(b) {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.md-preview-content :deep(em),
+.md-preview-content :deep(i) {
+  font-style: italic;
+  color: #555;
+}
+
+/* 删除线 */
+.md-preview-content :deep(s),
+.md-preview-content :deep(del) {
+  text-decoration: line-through;
+  color: #999;
+}
+
+/* 图片样式 */
+.md-preview-content :deep(img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 12px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* 夜间主题适配 */
+.md-preview-content.dark {
+  color: #e0e0e0;
+}
+
+.md-preview-content.dark :deep(h1),
+.md-preview-content.dark :deep(h2),
+.md-preview-content.dark :deep(h3) {
+  color: #f0f0f0;
+  border-color: #444;
+}
+
+.md-preview-content.dark :deep(table) {
+  border-color: #555;
+}
+
+.md-preview-content.dark :deep(th) {
+  background: #333;
+  border-color: #555;
+  color: #f0f0f0;
+}
+
+.md-preview-content.dark :deep(td) {
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+.md-preview-content.dark :deep(tr:nth-child(even)) {
+  background: #2a2a2a;
+}
+
+.md-preview-content.dark :deep(tr:hover) {
+  background: #333;
+}
+
+.md-preview-content.dark :deep(blockquote) {
+  background: #2a2a2a;
+  border-color: #2080f0;
+  color: #e0e0e0;
+}
+
+.md-preview-content.dark :deep(code) {
+  background: #333;
+  color: #f0a020;
+}
+
+.md-preview-content.dark :deep(pre) {
+  background: #1a1a1a;
+}
+
+.md-preview-content.dark :deep(pre code) {
+  color: #e0e0e0;
+}
+
+.md-preview-content.dark :deep(a) {
+  color: #40a0ff;
+}
+
+.md-preview-content.dark :deep(a:hover) {
+  color: #60c0ff;
+  border-bottom-color: #60c0ff;
+}
+
+.md-preview-content.dark :deep(hr) {
+  background: #444;
+}
+
+/* ========== 对话UI样式 ========== */
+.message-item {
+  margin-bottom: 16px;
+  opacity: 0;
+  animation: messageSlideIn 0.3s ease forwards;
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-wrapper {
+  display: flex;
+  margin-bottom: 4px;
+}
+
+.message-wrapper.user-message {
+  justify-content: flex-end;
+}
+
+.message-wrapper.ai-message {
+  justify-content: flex-start;
+}
+
+.message-content-wrapper {
+  display: flex;
+  align-items: flex-start;
+  max-width: 90%;
+  gap: 10px;
+}
+
+.message-wrapper.user-message .message-content-wrapper {
+  flex-direction: row-reverse;
+}
+
+.message-avatar {
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.message-bubble {
+  padding: 12px 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s ease;
+}
+
+.message-bubble:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.user-bubble {
+  background: linear-gradient(135deg, #2080f0 0%, #18a058 100%);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.user-bubble .message-text {
+  color: white;
+  line-height: 1.6;
+}
+
+.ai-bubble {
+  background: #ffffff;
+  color: #333;
+  border-bottom-left-radius: 4px;
+  border: 1px solid #f0f0f0;
+}
+
+.ai-bubble :deep(.md-editor-preview) {
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.ai-bubble :deep(.md-editor-preview p) {
+  margin: 8px 0;
+}
+
+.typing-indicator {
+  padding: 16px 20px;
+  min-width: 80px;
+}
+
+.typing-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.typing-dots span {
+  width: 8px;
+  height: 8px;
+  background: #18a058;
+  border-radius: 50%;
+  animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.typing-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes typingBounce {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.input-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.input-toolbar:hover {
+  opacity: 1;
+}
+
+.input-area {
+  margin-bottom: 8px;
+}
+
+.chat-input {
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.chat-input:hover,
+.chat-input:focus-within {
+  box-shadow: 0 0 0 2px rgba(32, 128, 240, 0.2);
+}
+
+.send-button {
+  border-radius: 10px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.send-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(32, 128, 240, 0.3);
+}
+
+.send-button:active {
+  transform: translateY(0);
+}
+
+/* 深色主题适配 */
+@media (prefers-color-scheme: dark) {
+  .ai-bubble {
+    background: #1a1a1a;
+    border-color: #333;
+  }
+
+  .ai-bubble :deep(.md-editor-preview) {
+    color: #e0e0e0;
   }
 }
 </style>

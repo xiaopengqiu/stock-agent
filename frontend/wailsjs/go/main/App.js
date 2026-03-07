@@ -14,12 +14,28 @@ export function AddGroup(arg1) {
   return window['go']['main']['App']['AddGroup'](arg1);
 }
 
+export function AddPosition(arg1) {
+  return window['go']['main']['App']['AddPosition'](arg1);
+}
+
+export function AddPositionFromRecommendation(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['AddPositionFromRecommendation'](arg1, arg2, arg3, arg4, arg5);
+}
+
 export function AddPrompt(arg1) {
   return window['go']['main']['App']['AddPrompt'](arg1);
 }
 
 export function AddStockGroup(arg1, arg2) {
   return window['go']['main']['App']['AddStockGroup'](arg1, arg2);
+}
+
+export function AnalyzeAllPositions(arg1) {
+  return window['go']['main']['App']['AnalyzeAllPositions'](arg1);
+}
+
+export function AnalyzePosition(arg1, arg2) {
+  return window['go']['main']['App']['AnalyzePosition'](arg1, arg2);
 }
 
 export function AnalyzeSentiment(arg1) {
@@ -52,6 +68,10 @@ export function ClsCalendar() {
 
 export function DelPrompt(arg1) {
   return window['go']['main']['App']['DelPrompt'](arg1);
+}
+
+export function DeletePosition(arg1) {
+  return window['go']['main']['App']['DeletePosition'](arg1);
 }
 
 export function DeleteStockPickReport(arg1) {
@@ -134,6 +154,10 @@ export function GetIndustryRank(arg1, arg2) {
   return window['go']['main']['App']['GetIndustryRank'](arg1, arg2);
 }
 
+export function GetLatestPositionAnalyses() {
+  return window['go']['main']['App']['GetLatestPositionAnalyses']();
+}
+
 export function GetMCPConfig() {
   return window['go']['main']['App']['GetMCPConfig']();
 }
@@ -152,6 +176,22 @@ export function GetMCPToolCount() {
 
 export function GetMoneyRankSina(arg1) {
   return window['go']['main']['App']['GetMoneyRankSina'](arg1);
+}
+
+export function GetPositionAnalysis(arg1) {
+  return window['go']['main']['App']['GetPositionAnalysis'](arg1);
+}
+
+export function GetPositionByID(arg1) {
+  return window['go']['main']['App']['GetPositionByID'](arg1);
+}
+
+export function GetPositionSummary() {
+  return window['go']['main']['App']['GetPositionSummary']();
+}
+
+export function GetPositions() {
+  return window['go']['main']['App']['GetPositions']();
 }
 
 export function GetPromptTemplates(arg1, arg2) {
@@ -266,6 +306,10 @@ export function ReFleshTelegraphList(arg1) {
   return window['go']['main']['App']['ReFleshTelegraphList'](arg1);
 }
 
+export function RefreshPositions() {
+  return window['go']['main']['App']['RefreshPositions']();
+}
+
 export function ReloadMCPTools() {
   return window['go']['main']['App']['ReloadMCPTools']();
 }
@@ -376,4 +420,8 @@ export function UpdateConfig(arg1) {
 
 export function UpdateGroupSort(arg1, arg2) {
   return window['go']['main']['App']['UpdateGroupSort'](arg1, arg2);
+}
+
+export function UpdatePosition(arg1, arg2) {
+  return window['go']['main']['App']['UpdatePosition'](arg1, arg2);
 }
