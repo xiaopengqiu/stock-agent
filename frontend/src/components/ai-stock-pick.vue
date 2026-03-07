@@ -257,18 +257,9 @@
                       <!-- 卡片底部操作栏 -->
                       <div class="card-footer">
                         <n-space justify="space-between" align="center">
-                          <n-space>
-                            <n-tag :type="item.isFollowed ? 'success' : 'default'" size="small">
-                              {{ item.isFollowed ? '已关注' : '未关注' }}
-                            </n-tag>
-                            <n-button
-                              size="small"
-                              type="tertiary"
-                              @click="showKlineDrawer(item)"
-                            >
-                              查看详情
-                            </n-button>
-                          </n-space>
+                          <n-tag :type="item.isFollowed ? 'success' : 'default'" size="small">
+                            {{ item.isFollowed ? '已关注' : '未关注' }}
+                          </n-tag>
                           <n-button
                             size="small"
                             :type="item.isFollowed ? 'default' : 'primary'"
@@ -286,36 +277,82 @@
                       <span style="font-size: 14px; font-weight: 600;">📊 数据分析</span>
                     </n-divider>
                     
-                    <n-collapse v-if="cardRecommendations.length > 0" style="margin-top: 16px;">
+                    <n-collapse v-if="cardRecommendations.length > 0" style="margin-top: 16px;" :default-expanded-names="['technical']">
                       <!-- 技术面分析 -->
-                      <n-collapse-item title="技术面分析" name="technical">
+                      <n-collapse-item title="📊 技术面分析" name="technical">
                         <div style="padding: 16px 0;">
-                          <n-grid :x-gap="16" :y-gap="16" :cols="1" responsive="screen">
-                            <n-grid-item span="1">
-                              <n-card size="small" title="技术指标概览">
-                                <div v-for="(item, index) in cardRecommendations.slice(0, 3)" :key="`tech-${item.stockCode}`" style="margin-bottom: 12px;">
-                                  <n-text strong>{{ item.stockName }} ({{ item.stockCode }})</n-text>
-                                  <div style="margin-top: 8px;">
-                                    <n-tag size="small" v-if="item.technicalAnalysis" style="margin-right: 8px; margin-bottom: 4px;">
-                                      {{ item.trend === 'up' ? '📈 上升趋势' : item.trend === 'down' ? '📉 下降趋势' : '➡️ 震荡' }}
-                                    </n-tag>
-                                    <n-tag size="small" v-if="item.rsi" style="margin-right: 8px; margin-bottom: 4px;">
-                                      RSI: {{ item.rsi.toFixed(1) }}
-                                    </n-tag>
-                                    <n-tag size="small" v-if="item.macd" style="margin-right: 8px; margin-bottom: 4px;">
-                                      MACD: {{ item.macd }}
-                                    </n-tag>
-                                    <n-tag size="small" v-if="item.kdj" style="margin-right: 8px; margin-bottom: 4px;">
-                                      KDJ: {{ item.kdj }}
-                                    </n-tag>
-                                  </div>
-                                  <n-text v-if="item.technicalAnalysis" type="info" depth="3" style="display: block; margin-top: 8px;">
-                                    {{ item.technicalAnalysis }}
-                                  </n-text>
-                                </div>
-                              </n-card>
-                            </n-grid-item>
-                          </n-grid>
+                          <n-tabs type="line" animated v-model:value="activeTechTab">
+                            <n-tab-pane v-for="item in cardRecommendations.slice(0, 5)" :key="item.stockCode" :name="item.stockCode" :tab="item.stockName">
+                              <div style="padding: 8px 0;">
+                                <!-- K线图 -->
+                                <n-card title="K线走势" size="small" style="margin-bottom: 16px;">
+                                  <KLineChart
+                                    :code="item.stockCode"
+                                    :name="item.stockName"
+                                    :dark-theme="darkTheme"
+                                    :chart-height="350"
+                                    :k-days="90"
+                                  />
+                                </n-card>
+
+                                <!-- 技术指标 -->
+                                <n-grid :x-gap="16" :y-gap="16" :cols="2" responsive="screen">
+                                  <n-grid-item span="1">
+                                    <n-card size="small" title="技术指标">
+                                      <div style="margin-bottom: 8px;">
+                                        <n-tag size="small" type="info" style="margin-right: 8px; margin-bottom: 4px;">
+                                          {{ item.trend === 'up' ? '📈 上升趋势' : item.trend === 'down' ? '📉 下降趋势' : '➡️ 震荡' }}
+                                        </n-tag>
+                                        <n-tag size="small" v-if="item.rsi" style="margin-right: 8px; margin-bottom: 4px;" :type="getRsiType(item.rsi)">
+                                          RSI: {{ item.rsi.toFixed(1) }}
+                                        </n-tag>
+                                        <n-tag size="small" v-if="item.macd" style="margin-right: 8px; margin-bottom: 4px;">
+                                          MACD: {{ item.macd }}
+                                        </n-tag>
+                                        <n-tag size="small" v-if="item.kdj" style="margin-right: 8px; margin-bottom: 4px;">
+                                          KDJ: {{ item.kdj }}
+                                        </n-tag>
+                                      </div>
+                                      <n-text v-if="item.technicalAnalysis" type="info" depth="3">
+                                        {{ item.technicalAnalysis }}
+                                      </n-text>
+                                    </n-card>
+                                  </n-grid-item>
+
+                                  <n-grid-item span="1">
+                                    <n-card size="small" title="价格目标">
+                                      <n-space vertical style="width: 100%;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                          <n-text depth="2">当前价格</n-text>
+                                          <n-text strong style="font-size: 16px;">{{ item.currentPrice?.toFixed(2) }}</n-text>
+                                        </div>
+                                        <n-divider style="margin: 8px 0;" />
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                          <n-text depth="2">目标价</n-text>
+                                          <n-text strong type="success">{{ item.targetPrice?.toFixed(2) }}</n-text>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                          <n-text depth="2">预期涨幅</n-text>
+                                          <n-tag :type="item.targetChangePercent >= 0 ? 'success' : 'error'" size="small">
+                                            {{ item.targetChangePercent >= 0 ? '+' : '' }}{{ item.targetChangePercent?.toFixed(1) }}%
+                                          </n-tag>
+                                        </div>
+                                        <n-divider style="margin: 8px 0;" />
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                          <n-text depth="2">止损价</n-text>
+                                          <n-text strong type="error">{{ item.stopLossPrice?.toFixed(2) }}</n-text>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                          <n-text depth="2">止损幅度</n-text>
+                                          <n-tag type="error" size="small">-{{ item.stopLossRate }}%</n-tag>
+                                        </div>
+                                      </n-space>
+                                    </n-card>
+                                  </n-grid-item>
+                                </n-grid>
+                              </div>
+                            </n-tab-pane>
+                          </n-tabs>
                         </div>
                       </n-collapse-item>
                       
@@ -508,133 +545,10 @@
     </n-spin>
   </n-drawer>
 
-  <!-- K线详情抽屉 -->
-  <n-drawer v-model:show="klineDrawerVisible" width="80%" placement="bottom">
-    <template #header>
-      <n-text strong style="padding-left: 8px;">
-        {{ currentStock?.stockName || '股票详情' }} ({{ currentStock?.stockCode || '' }})
-      </n-text>
-    </template>
-    <n-scrollbar style="height: calc(100vh - 100px);">
-      <div style="padding: 16px;">
-        <!-- K线图 -->
-        <div v-if="currentStock">
-          <KLineChart
-            :code="currentStock.stockCode"
-            :name="currentStock.stockName"
-            :dark-theme="darkTheme"
-            :chart-height="400"
-          />
-        </div>
-        
-        <!-- 技术指标详情 -->
-        <n-divider title-placement="left" style="margin-top: 24px;">
-          <span style="font-size: 14px; font-weight: 600;">技术指标</span>
-        </n-divider>
-        <n-grid :x-gap="16" :y-gap="16" :cols="2" responsive="screen" v-if="currentStock">
-          <n-grid-item span="1">
-            <n-card size="small" title="技术面分析">
-              <div style="margin-bottom: 8px;">
-                <n-tag size="small" v-if="currentStock.trend" style="margin-right: 8px; margin-bottom: 4px;">
-                  {{ currentStock.trend === 'up' ? '📈 上升趋势' : currentStock.trend === 'down' ? '📉 下降趋势' : '➡️ 震荡' }}
-                </n-tag>
-                <n-tag size="small" v-if="currentStock.rsi" style="margin-right: 8px; margin-bottom: 4px;">
-                  RSI: {{ currentStock.rsi.toFixed(1) }}
-                </n-tag>
-                <n-tag size="small" v-if="currentStock.macd" style="margin-right: 8px; margin-bottom: 4px;">
-                  MACD: {{ currentStock.macd }}
-                </n-tag>
-                <n-tag size="small" v-if="currentStock.kdj" style="margin-right: 8px; margin-bottom: 4px;">
-                  KDJ: {{ currentStock.kdj }}
-                </n-tag>
-              </div>
-              <n-text v-if="currentStock.technicalAnalysis" type="info" depth="3">
-                {{ currentStock.technicalAnalysis }}
-              </n-text>
-            </n-card>
-          </n-grid-item>
-          
-          <n-grid-item span="1">
-            <n-card size="small" title="基本面分析">
-              <div style="margin-bottom: 8px;">
-                <n-tag size="small" v-if="currentStock.pe" style="margin-right: 8px; margin-bottom: 4px;">
-                  PE: {{ currentStock.pe.toFixed(2) }}
-                </n-tag>
-                <n-tag size="small" v-if="currentStock.pb" style="margin-right: 8px; margin-bottom: 4px;">
-                  PB: {{ currentStock.pb.toFixed(2) }}
-                </n-tag>
-                <n-tag size="small" v-if="currentStock.roe" style="margin-right: 8px; margin-bottom: 4px;">
-                  ROE: {{ currentStock.roe.toFixed(1) }}%
-                </n-tag>
-                <n-tag size="small" v-if="currentStock.revenueGrowth" style="margin-right: 8px; margin-bottom: 4px;">
-                  营收增长: {{ currentStock.revenueGrowth >= 0 ? '+' : '' }}{{ currentStock.revenueGrowth.toFixed(1) }}%
-                </n-tag>
-                <n-tag size="small" v-if="currentStock.profitGrowth" style="margin-right: 8px; margin-bottom: 4px;">
-                  利润增长: {{ currentStock.profitGrowth >= 0 ? '+' : '' }}{{ currentStock.profitGrowth.toFixed(1) }}%
-                </n-tag>
-              </div>
-              <n-text v-if="currentStock.fundamentalAnalysis" type="info" depth="3">
-                {{ currentStock.fundamentalAnalysis }}
-              </n-text>
-            </n-card>
-          </n-grid-item>
-        </n-grid>
-
-        <!-- 筹码分析 -->
-        <n-divider title-placement="left" style="margin-top: 24px;">
-          <span style="font-size: 14px; font-weight: 600;">筹码分析</span>
-        </n-divider>
-        <n-card size="small" v-if="currentStock">
-          <n-text strong>{{ currentStock.stockName }}</n-text>
-          <n-text v-if="currentStock.shareHolderAnalysis" type="info" depth="3" style="display: block; margin-top: 8px;">
-            {{ currentStock.shareHolderAnalysis }}
-          </n-text>
-          <n-text v-else type="info" depth="3" style="display: block; margin-top: 8px; color: #999;">
-            暂无筹码分析数据
-          </n-text>
-        </n-card>
-
-        <!-- 舆情动态 -->
-        <n-divider title-placement="left" style="margin-top: 24px;">
-          <span style="font-size: 14px; font-weight: 600;">舆情动态</span>
-        </n-divider>
-        <n-card size="small" v-if="currentStock">
-          <n-text strong>{{ currentStock.stockName }}</n-text>
-          <n-text v-if="currentStock.newsAnalysis" type="info" depth="3" style="display: block; margin-top: 8px;">
-            {{ currentStock.newsAnalysis }}
-          </n-text>
-          <n-text v-else type="info" depth="3" style="display: block; margin-top: 8px; color: #999;">
-            暂无舆情数据
-          </n-text>
-        </n-card>
-
-        <!-- 风险分析 -->
-        <n-divider title-placement="left" style="margin-top: 24px;">
-          <span style="font-size: 14px; font-weight: 600;">风险分析</span>
-        </n-divider>
-        <n-card size="small" v-if="currentStock">
-          <n-flex justify="space-between" align="center" style="margin-bottom: 12px;">
-            <n-text strong>{{ currentStock.stockName }}</n-text>
-            <n-tag :type="currentStock.riskLevel === 'low' ? 'success' : currentStock.riskLevel === 'medium' ? 'warning' : 'error'" size="small">
-              {{ currentStock.riskLevel === 'low' ? '低风险' : currentStock.riskLevel === 'medium' ? '中风险' : '高风险' }}
-            </n-tag>
-          </n-flex>
-          <div style="margin-bottom: 8px;">
-            <n-text type="info" depth="3">
-              目标价: {{ currentStock.targetPrice?.toFixed(2) }} ({{ currentStock.targetChangePercent >= 0 ? '+' : '' }}{{ currentStock.targetChangePercent?.toFixed(1) }}%)
-            </n-text>
-          </div>
-          <n-alert v-if="currentStock.riskTips" type="warning" size="small" :bordered="false">
-            {{ currentStock.riskTips }}
-          </n-alert>
-        </n-card>
-      </div>
-    </n-scrollbar>
-  </n-drawer>
 </template>
 
 <script setup>
-import {ref, onMounted, onBeforeUnmount, h, computed} from 'vue'
+import {ref, onMounted, onBeforeUnmount, h, computed, watch} from 'vue'
 import {
   AIStockPickChat,
   GetStockPickReports,
@@ -672,6 +586,9 @@ import {
   NEmpty,
   NPopconfirm,
   NAlert,
+  NTabs,
+  NTabPane,
+  NDivider,
   useMessage,
   useNotification
 } from "naive-ui"
@@ -706,9 +623,8 @@ const historyList = ref([])
 const loadingHistory = ref(false)
 const deletingIds = ref(new Set())
 
-// K线详情抽屉相关
-const klineDrawerVisible = ref(false)
-const currentStock = ref(null)
+// 技术面分析当前选中的股票
+const activeTechTab = ref('')
 
 // 导出选项
 const exportOptions = [
@@ -844,6 +760,14 @@ function getTradeSuggestionType(suggestion) {
   if (suggestion.includes('买入') || suggestion.includes('推荐')) return 'success'
   if (suggestion.includes('卖出') || suggestion.includes('减持')) return 'error'
   if (suggestion.includes('观望') || suggestion.includes('持有')) return 'warning'
+  return 'default'
+}
+
+// 获取RSI标签类型
+function getRsiType(rsi) {
+  if (!rsi) return 'default'
+  if (rsi > 70) return 'error' // 超买
+  if (rsi < 30) return 'success' // 超卖
   return 'default'
 }
 
@@ -1316,12 +1240,12 @@ async function getStats() {
   }
 }
 
-// 显示K线抽屉
-function showKlineDrawer(stock) {
-  // 保存原始引用，保持与原数据结构的兼容性
-  currentStock.value = stock
-  klineDrawerVisible.value = true
-}
+// 监听推荐股票变化，设置默认选中的技术面分析标签
+watch(cardRecommendations, (newRecs) => {
+  if (newRecs && newRecs.length > 0) {
+    activeTechTab.value = newRecs[0].stockCode
+  }
+}, { immediate: true })
 </script>
 
 <style scoped>
