@@ -43,18 +43,25 @@ function  handleKLine(code,name){
     const categoryData = [];
     const values = [];
     const volumns=[];
+    if (!result || !Array.isArray(result)) {
+      console.warn("K线数据格式不正确:", result);
+      return;
+    }
     for (let i = 0; i < result.length; i++) {
       let resultElement=result[i]
       //console.log("resultElement:{}",resultElement)
-      categoryData.push(resultElement.day)
-      let flag=resultElement.close>resultElement.open?1:-1
-      values.push([
-        resultElement.open,
-        resultElement.close,
-        resultElement.low,
-        resultElement.high
-      ])
-      volumns.push([i,resultElement.volume/10000,flag])
+      // 兼容 Go 返回的大写字段名 (Day/Open/High/Low/Close/Volume)
+      const day = resultElement.day || resultElement.Day;
+      const open = parseFloat(resultElement.open || resultElement.Open || 0);
+      const close = parseFloat(resultElement.close || resultElement.Close || 0);
+      const low = parseFloat(resultElement.low || resultElement.Low || 0);
+      const high = parseFloat(resultElement.high || resultElement.High || 0);
+      const volume = parseFloat(resultElement.volume || resultElement.Volume || 0);
+
+      categoryData.push(day);
+      let flag = close > open ? 1 : -1;
+      values.push([open, close, low, high]);
+      volumns.push([i, volume / 10000, flag]);
     }
     ////console.log("categoryData",categoryData)
     ////console.log("values",values)

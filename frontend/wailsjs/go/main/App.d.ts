@@ -84,9 +84,9 @@ export function GetPromptTemplates(arg1:string,arg2:string):Promise<any>;
 
 export function GetSponsorInfo():Promise<Record<string, any>>;
 
-export function GetStockCommonKLine(arg1:string,arg2:string,arg3:number):Promise<any>;
+export function GetStockCommonKLine(arg1:string,arg2:string,arg3:number):Promise<Array<data.KLineData>>;
 
-export function GetStockKLine(arg1:string,arg2:string,arg3:number):Promise<any>;
+export function GetStockKLine(arg1:string,arg2:string,arg3:number):Promise<Array<data.KLineData>>;
 
 export function GetStockList(arg1:string):Promise<Array<data.StockBasic>>;
 

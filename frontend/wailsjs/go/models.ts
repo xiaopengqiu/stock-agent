@@ -338,6 +338,28 @@ export namespace data {
 	
 	
 	
+	export class KLineData {
+	    day: string;
+	    open: string;
+	    high: string;
+	    low: string;
+	    close: string;
+	    volume: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new KLineData(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.day = source["day"];
+	        this.open = source["open"];
+	        this.high = source["high"];
+	        this.low = source["low"];
+	        this.close = source["close"];
+	        this.volume = source["volume"];
+	    }
+	}
 	export class SentimentResult {
 	    Score: number;
 	    Category: number;

@@ -11,6 +11,14 @@ import (
 //-----------------------------------------------------------------------------------
 
 func GetStockCode(dcCode string) string {
+	// 如果已经有前缀，直接转为小写返回
+	lowerCode := strings.ToLower(dcCode)
+	if strings.HasPrefix(lowerCode, "sh") || strings.HasPrefix(lowerCode, "sz") ||
+		strings.HasPrefix(lowerCode, "bj") || strings.HasPrefix(lowerCode, "hk") ||
+		strings.HasPrefix(lowerCode, "us") || strings.HasPrefix(lowerCode, "gb_") {
+		return lowerCode
+	}
+
 	if strutil.ContainsAny(dcCode, []string{"."}) {
 		sp := strings.Split(dcCode, ".")
 		return strings.ToLower(sp[1] + sp[0])

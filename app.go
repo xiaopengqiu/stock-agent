@@ -1474,8 +1474,31 @@ func (a *App) RemoveGroup(groupId int) string {
 	}
 }
 
-func (a *App) GetStockKLine(stockCode, stockName string, days int64) *[]data.KLineData {
-	return data.NewStockDataApi().GetHK_KLineData(stockCode, "day", days)
+func (a *App) GetStockKLine(stockCode, stockName string, days int64) []data.KLineData {
+	logger.SugaredLogger.Infof("GetStockKLine called with stockCode: %s, stockName: %s, days: %d", stockCode, stockName, days)
+
+	var result *[]data.KLineData
+	lowerCode := strings.ToLower(stockCode)
+
+	// 根据股票代码前缀选择合适的数据源
+	if strings.HasPrefix(lowerCode, "sh") || strings.HasPrefix(lowerCode, "sz") {
+		// A股使用新浪接口，确保股票代码是小写
+		apiCode := strings.ToLower(stockCode)
+		logger.SugaredLogger.Infof("Using Sina API for A-share with code: %s", apiCode)
+		result = data.NewStockDataApi().GetKLineData(apiCode, "240", days)
+	} else {
+		// 港股/美股使用腾讯接口
+		logger.SugaredLogger.Infof("Using Tencent API for HK/US stock with code: %s", stockCode)
+		result = data.NewStockDataApi().GetHK_KLineData(stockCode, "day", days)
+	}
+
+	if result == nil {
+		logger.SugaredLogger.Warnf("GetStockKLine returned nil result")
+		return []data.KLineData{}
+	}
+
+	logger.SugaredLogger.Infof("GetStockKLine returned %d records", len(*result))
+	return *result
 }
 
 func (a *App) GetStockMinutePriceLineData(stockCode, stockName string) map[string]any {
@@ -1488,8 +1511,13 @@ func (a *App) GetStockMinutePriceLineData(stockCode, stockName string) map[strin
 	return res
 }
 
-func (a *App) GetStockCommonKLine(stockCode, stockName string, days int64) *[]data.KLineData {
-	return data.NewStockDataApi().GetCommonKLineData(stockCode, "day", days)
+func (a *App) GetStockCommonKLine(stockCode, stockName string, days int64) []data.KLineData {
+	// 注意：返回值改为非指针类型，避免 Wails 序列化问题
+	result := data.NewStockDataApi().GetCommonKLineData(stockCode, "day", days)
+	if result == nil {
+		return []data.KLineData{}
+	}
+	return *result
 }
 
 func (a *App) GetTelegraphList(source string) *[]*models.Telegraph {

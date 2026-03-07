@@ -1424,28 +1424,50 @@ func (receiver StockDataApi) GetHK_KLineData(stockCode string, kLineType string,
 		return K
 	}
 	if res["data"] != nil && code == 0 {
-		data := res["data"].(map[string]interface{})[stockCode].(map[string]interface{})
-		if data != nil {
-			var day []any
-			if data["qfqday"] != nil {
-				day = data["qfqday"].([]any)
-			}
-			if data["day"] != nil {
-				day = data["day"].([]any)
-			}
-			for _, v := range day {
-				if v != nil {
-					vv := v.([]any)
-					KLine := &KLineData{
-						Day:    convertor.ToString(vv[0]),
-						Open:   convertor.ToString(vv[1]),
-						Close:  convertor.ToString(vv[2]),
-						High:   convertor.ToString(vv[3]),
-						Low:    convertor.ToString(vv[4]),
-						Volume: convertor.ToString(vv[5]),
-					}
-					*K = append(*K, *KLine)
+		// 使用安全的类型断言
+		dataMap, ok := res["data"].(map[string]interface{})
+		if !ok {
+			logger.SugaredLogger.Errorf("res[data] is not a map[string]interface{}")
+			return K
+		}
+		stockData, ok := dataMap[stockCode]
+		if !ok {
+			logger.SugaredLogger.Errorf("data[%s] not found", stockCode)
+			return K
+		}
+		stockDataMap, ok := stockData.(map[string]interface{})
+		if !ok {
+			logger.SugaredLogger.Errorf("data[%s] is not a map[string]interface{}", stockCode)
+			return K
+		}
+
+		var day []any
+		if stockDataMap["qfqday"] != nil {
+			day, _ = stockDataMap["qfqday"].([]any)
+		}
+		if day == nil && stockDataMap["day"] != nil {
+			day, _ = stockDataMap["day"].([]any)
+		}
+		if day == nil {
+			logger.SugaredLogger.Errorf("no qfqday or day data found")
+			return K
+		}
+
+		for _, v := range day {
+			if v != nil {
+				vv, ok := v.([]any)
+				if !ok || len(vv) < 6 {
+					continue
 				}
+				KLine := &KLineData{
+					Day:    convertor.ToString(vv[0]),
+					Open:   convertor.ToString(vv[1]),
+					Close:  convertor.ToString(vv[2]),
+					High:   convertor.ToString(vv[3]),
+					Low:    convertor.ToString(vv[4]),
+					Volume: convertor.ToString(vv[5]),
+				}
+				*K = append(*K, *KLine)
 			}
 		}
 	}
@@ -1724,28 +1746,50 @@ func (receiver StockDataApi) GetCommonKLineData(stockCode string, kLineType stri
 		return K
 	}
 	if res["data"] != nil && code == 0 {
-		data := res["data"].(map[string]interface{})[stockCode].(map[string]interface{})
-		if data != nil {
-			var day []any
-			if data["qfqday"] != nil {
-				day = data["qfqday"].([]any)
-			}
-			if data["day"] != nil {
-				day = data["day"].([]any)
-			}
-			for _, v := range day {
-				if v != nil {
-					vv := v.([]any)
-					KLine := &KLineData{
-						Day:    convertor.ToString(vv[0]),
-						Open:   convertor.ToString(vv[1]),
-						Close:  convertor.ToString(vv[2]),
-						High:   convertor.ToString(vv[3]),
-						Low:    convertor.ToString(vv[4]),
-						Volume: convertor.ToString(vv[5]),
-					}
-					*K = append(*K, *KLine)
+		// 使用安全的类型断言
+		dataMap, ok := res["data"].(map[string]interface{})
+		if !ok {
+			logger.SugaredLogger.Errorf("res[data] is not a map[string]interface{}")
+			return K
+		}
+		stockData, ok := dataMap[stockCode]
+		if !ok {
+			logger.SugaredLogger.Errorf("data[%s] not found", stockCode)
+			return K
+		}
+		stockDataMap, ok := stockData.(map[string]interface{})
+		if !ok {
+			logger.SugaredLogger.Errorf("data[%s] is not a map[string]interface{}", stockCode)
+			return K
+		}
+
+		var day []any
+		if stockDataMap["qfqday"] != nil {
+			day, _ = stockDataMap["qfqday"].([]any)
+		}
+		if day == nil && stockDataMap["day"] != nil {
+			day, _ = stockDataMap["day"].([]any)
+		}
+		if day == nil {
+			logger.SugaredLogger.Errorf("no qfqday or day data found")
+			return K
+		}
+
+		for _, v := range day {
+			if v != nil {
+				vv, ok := v.([]any)
+				if !ok || len(vv) < 6 {
+					continue
 				}
+				KLine := &KLineData{
+					Day:    convertor.ToString(vv[0]),
+					Open:   convertor.ToString(vv[1]),
+					Close:  convertor.ToString(vv[2]),
+					High:   convertor.ToString(vv[3]),
+					Low:    convertor.ToString(vv[4]),
+					Volume: convertor.ToString(vv[5]),
+				}
+				*K = append(*K, *KLine)
 			}
 		}
 	}
