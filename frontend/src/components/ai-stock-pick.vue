@@ -30,32 +30,32 @@
             <!-- 对话区域主容器 - 使用固定高度布局 -->
             <div class="chat-container">
               <!-- 工具列表展示 -->
-              <div class="tools-section" v-if="toolsList.length > 0">
-                <n-card size="small">
-                  <template #header>
-                    <n-flex align="center">
-                      <n-icon :size="16" style="margin-right: 5px">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                          <path fill="currentColor" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l0.01,0.05C19.14,12.94,19.14,12.94,19.14,12.94z M17.83,18.82c-0.13,0.18-0.28,0.35-0.45,0.5l-0.03-0.03C17.56,19.12,17.69,18.97,17.83,18.82z M11.81,14.56c-0.07-0.34-0.1-0.69-0.1-1.04c0-0.36,0.04-0.71,0.11-1.06C11.85,13.22,11.82,13.89,11.81,14.56z M14.46,15.38c-0.15-0.31-0.28-0.64-0.39-0.99l-0.05,0.02C14.07,14.73,14.25,15.05,14.46,15.38z M7.16,13.21c0.02-0.26,0.05-0.52,0.09-0.77C7.17,12.82,7.16,13.02,7.16,13.21z M5.52,15.12c0.09-0.26,0.2-0.51,0.31-0.76L5.74,14.41C5.63,14.64,5.56,14.89,5.52,15.12z M10.77,17.87c-0.05-0.28-0.09-0.57-0.12-0.86l-0.02,0.03C10.66,17.31,10.71,17.59,10.77,17.87z M13.41,18.4c-0.11-0.23-0.23-0.45-0.33-0.69l-0.04,0.01C13.16,17.95,13.28,18.16,13.41,18.4z M16.54,16.36l-0.03-0.04c-0.14,0.16-0.28,0.33-0.45,0.48c0.18-0.17,0.33-0.35,0.48-0.51V16.36z M16.16,17.52l-0.01-0.01c-0.15,0.16-0.31,0.31-0.49,0.45c0.19-0.15,0.36-0.31,0.52-0.47L16.16,17.52z M15.01,18.64c-0.14,0.14-0.29,0.28-0.46,0.4l0.02-0.02C14.75,18.89,14.88,18.77,15.01,18.64z M18.4,16.3l-0.01-0.01c-0.14,0.16-0.28,0.32-0.43,0.46c0.16-0.15,0.31-0.31,0.45-0.47L18.4,16.3z"/>
-                          <path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8S16.41,20,12,20z M12,6c-3.31,0-6,2.69-6,6s2.69,6,6,6s6-2.69,6-6S15.31,6,12,6z"/>
-                        </svg>
-                      </n-icon>
-                      <span>可用工具</span>
-                    </n-flex>
-                  </template>
-                  <n-space>
-                    <n-tag
-                      v-for="tool in toolsList"
-                      :key="tool"
-                      :type="getToolStatus(tool)"
-                      size="small"
-                      :bordered="false"
-                    >
-                      {{ tool }}
-                    </n-tag>
-                  </n-space>
-                </n-card>
-              </div>
+<!--              <div class="tools-section" v-if="toolsList.length > 0">-->
+<!--                <n-card size="small">-->
+<!--                  <template #header>-->
+<!--                    <n-flex align="center">-->
+<!--                      <n-icon :size="16" style="margin-right: 5px">-->
+<!--                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">-->
+<!--                          <path fill="currentColor" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l0.01,0.05C19.14,12.94,19.14,12.94,19.14,12.94z M17.83,18.82c-0.13,0.18-0.28,0.35-0.45,0.5l-0.03-0.03C17.56,19.12,17.69,18.97,17.83,18.82z M11.81,14.56c-0.07-0.34-0.1-0.69-0.1-1.04c0-0.36,0.04-0.71,0.11-1.06C11.85,13.22,11.82,13.89,11.81,14.56z M14.46,15.38c-0.15-0.31-0.28-0.64-0.39-0.99l-0.05,0.02C14.07,14.73,14.25,15.05,14.46,15.38z M7.16,13.21c0.02-0.26,0.05-0.52,0.09-0.77C7.17,12.82,7.16,13.02,7.16,13.21z M5.52,15.12c0.09-0.26,0.2-0.51,0.31-0.76L5.74,14.41C5.63,14.64,5.56,14.89,5.52,15.12z M10.77,17.87c-0.05-0.28-0.09-0.57-0.12-0.86l-0.02,0.03C10.66,17.31,10.71,17.59,10.77,17.87z M13.41,18.4c-0.11-0.23-0.23-0.45-0.33-0.69l-0.04,0.01C13.16,17.95,13.28,18.16,13.41,18.4z M16.54,16.36l-0.03-0.04c-0.14,0.16-0.28,0.33-0.45,0.48c0.18-0.17,0.33-0.35,0.48-0.51V16.36z M16.16,17.52l-0.01-0.01c-0.15,0.16-0.31,0.31-0.49,0.45c0.19-0.15,0.36-0.31,0.52-0.47L16.16,17.52z M15.01,18.64c-0.14,0.14-0.29,0.28-0.46,0.4l0.02-0.02C14.75,18.89,14.88,18.77,15.01,18.64z M18.4,16.3l-0.01-0.01c-0.14,0.16-0.28,0.32-0.43,0.46c0.16-0.15,0.31-0.31,0.45-0.47L18.4,16.3z"/>-->
+<!--                          <path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8S16.41,20,12,20z M12,6c-3.31,0-6,2.69-6,6s2.69,6,6,6s6-2.69,6-6S15.31,6,12,6z"/>-->
+<!--                        </svg>-->
+<!--                      </n-icon>-->
+<!--                      <span>可用工具</span>-->
+<!--                    </n-flex>-->
+<!--                  </template>-->
+<!--                  <n-space>-->
+<!--                    <n-tag-->
+<!--                      v-for="tool in toolsList"-->
+<!--                      :key="tool"-->
+<!--                      :type="getToolStatus(tool)"-->
+<!--                      size="small"-->
+<!--                      :bordered="false"-->
+<!--                    >-->
+<!--                      {{ tool }}-->
+<!--                    </n-tag>-->
+<!--                  </n-space>-->
+<!--                </n-card>-->
+<!--              </div>-->
 
               <!-- 消息列表区域 - 可滚动 -->
               <div class="messages-section">
@@ -353,6 +353,24 @@
                         </n-text>
                       </div>
 
+                      <!-- 舆情动态分析 -->
+                      <div class="analysis-section" v-if="item.sentimentAnalysis">
+                        <n-divider style="margin: 12px 0;">
+                          <span style="font-size: 12px; color: #666;">📰 舆情动态</span>
+                        </n-divider>
+                        <n-text depth="2" class="analysis-text" style="white-space: pre-wrap;">
+                          {{ getDisplaySentiment(item.sentimentAnalysis, item.stockCode) }}
+                        </n-text>
+                        <n-button
+                          v-if="item.sentimentAnalysis.length > 100"
+                          text size="tiny"
+                          @click="toggleSentimentExpand(item.stockCode)"
+                          style="margin-top: 4px;"
+                        >
+                          {{ expandedSentiment.has(item.stockCode) ? '收起' : '展开详情' }}
+                        </n-button>
+                      </div>
+
                       <!-- 风险提示 -->
                       <div class="risk-warning" v-if="item.riskTips">
                         <n-alert type="warning" size="small" :bordered="false">
@@ -556,9 +574,16 @@
                               <n-card size="small" title="相关新闻与资讯">
                                 <div v-for="(item, index) in cardRecommendations.slice(0, 3)" :key="`news-${item.stockCode}`" style="margin-bottom: 16px;">
                                   <n-text strong>{{ item.stockName }} ({{ item.stockCode }})</n-text>
-                                  <n-text v-if="item.newsAnalysis" type="info" depth="3" style="display: block; margin-top: 8px;">
-                                    {{ item.newsAnalysis }}
+                                  <n-text v-if="item.sentimentAnalysis" type="info" depth="3" style="display: block; margin-top: 8px; white-space: pre-wrap;">
+                                    {{ getDisplaySentiment(item.sentimentAnalysis, `panel-${item.stockCode}`) }}
                                   </n-text>
+                                  <n-button
+                                    v-if="item.sentimentAnalysis && item.sentimentAnalysis.length > 100"
+                                    text size="tiny"
+                                    @click="toggleSentimentExpand(`panel-${item.stockCode}`)"
+                                  >
+                                    {{ expandedSentiment.has(`panel-${item.stockCode}`) ? '收起' : '展开详情' }}
+                                  </n-button>
                                   <n-text v-else type="info" depth="3" style="display: block; margin-top: 8px; color: #999;">
                                     暂无舆情数据
                                   </n-text>
@@ -721,7 +746,8 @@ import {
   ExportStockPickReport,
   CheckStockFollowed,
   GetStockPickStats,
-  DeleteStockPickReport
+  DeleteStockPickReport,
+  AddPositionFromRecommendation
 } from "../../wailsjs/go/main/App"
 import KLineChart from "./KLineChart.vue"
 import {EventsOn, EventsOff} from "../../wailsjs/runtime"
@@ -865,6 +891,27 @@ const deletingIds = ref(new Set())
 // 技术面分析当前选中的股票
 const activeTechTab = ref('')
 
+// 舆情分析展开状态
+const expandedSentiment = ref(new Set())
+
+// 切换舆情分析展开状态
+function toggleSentimentExpand(stockCode) {
+  if (expandedSentiment.value.has(stockCode)) {
+    expandedSentiment.value.delete(stockCode)
+  } else {
+    expandedSentiment.value.add(stockCode)
+  }
+}
+
+// 获取舆情分析展示内容（默认显示前100字符）
+function getDisplaySentiment(content, stockCode) {
+  if (!content) return ''
+  if (expandedSentiment.value.has(stockCode) || content.length <= 100) {
+    return content
+  }
+  return content.substring(0, 100) + '...'
+}
+
 // 加入持仓相关
 const showAddPositionModal = ref(false)
 const addPositionForm = ref({
@@ -993,7 +1040,7 @@ const cardRecommendations = computed(() => {
     // 筹码分析数据
     rec.shareHolderAnalysis = rec.shareholder_analysis || ''
     // 舆情动态
-    rec.newsAnalysis = rec.news_analysis || ''
+    rec.sentimentAnalysis = rec.sentiment_analysis || ''
     // 风险等级
     rec.riskLevel = riskLevel
     rec.recommendedAt = formatTime(rec.created_at || Date.now())
@@ -1566,14 +1613,13 @@ async function confirmAddPosition() {
   }
 
   try {
-    // TODO: Wails绑定生成后取消注释
-    // await AddPositionFromRecommendation(
-    //   addPositionForm.value.stockCode,
-    //   addPositionForm.value.stockName,
-    //   addPositionForm.value.buyPrice,
-    //   addPositionForm.value.quantity,
-    //   addPositionForm.value.notes
-    // )
+    await AddPositionFromRecommendation(
+      addPositionForm.value.stockCode,
+      addPositionForm.value.stockName,
+      addPositionForm.value.buyPrice,
+      addPositionForm.value.quantity,
+      addPositionForm.value.notes
+    )
     message.success('成功加入持仓！')
     showAddPositionModal.value = false
   } catch (error) {

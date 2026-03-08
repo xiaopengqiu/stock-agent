@@ -413,6 +413,28 @@ const menuOptions = ref([
         key: 'market13',
         icon: renderIcon(Robot),
       },
+      {
+        label: () =>
+            h(
+                RouterLink,
+                {
+                  href: '#',
+                  to: {
+                    name: 'market',
+                    query: {
+                      name: "持仓分析"
+                    }
+                  },
+                  onClick: () => {
+                    activeKey.value = 'market'
+                    EventsEmit("changeMarketTab", {ID: 0, name: '持仓分析'})
+                  },
+                },
+                {default: () => '持仓分析',}
+            ),
+        key: 'market14',
+        icon: renderIcon(Wallet),
+      },
     ]
   },
   {
