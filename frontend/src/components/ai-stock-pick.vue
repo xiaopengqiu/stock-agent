@@ -1,10 +1,23 @@
 <template>
-  <n-spin :show="analyzing">
-    <div style="height: calc(100vh - 200px)">
-      <n-row :gutter="16">
+    <div style="height: calc(100vh - 200px); display: flex; flex-direction: column;">
+      <!-- 顶部分析状态提示 -->
+      <div v-if="analyzing" style="margin-bottom: 12px;">
+        <n-alert type="info" :bordered="false">
+          <template #icon>
+            <n-icon><component :is="SparklesOutline"/></n-icon>
+          </template>
+          <n-space>
+            <span>AI正在分析市场数据，请稍候...</span>
+            <div class="typing-dots" style="margin-top: 4px;">
+              <span></span><span></span><span></span>
+            </div>
+          </n-space>
+        </n-alert>
+      </div>
+      <n-row :gutter="16" style="flex: 1; min-height: 0; overflow: hidden;">
         <!-- 左侧对话区域 -->
-        <n-col :span="12" style="height: 100%">
-          <n-card title="AI对话" style="height: 100%">
+        <n-col :span="12" class="chat-column">
+          <n-card title="AI对话" class="chat-card">
             <template #header-extra>
               <n-button size="small" @click="showHistory">
                 <template #icon>
@@ -13,136 +26,154 @@
                 历史记录
               </n-button>
             </template>
-            <div style="height: 100%; display: flex; flex-direction: column;">
+
+            <!-- 对话区域主容器 - 使用固定高度布局 -->
+            <div class="chat-container">
               <!-- 工具列表展示 -->
-              <n-card v-if="toolsList.length > 0" size="small" style="margin-bottom: 10px;">
-                <template #header>
-                  <n-flex align="center">
-                    <n-icon :size="16" style="margin-right: 5px">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l0.01,0.05C19.14,12.94,19.14,12.94,19.14,12.94z M17.83,18.82c-0.13,0.18-0.28,0.35-0.45,0.5l-0.03-0.03C17.56,19.12,17.69,18.97,17.83,18.82z M11.81,14.56c-0.07-0.34-0.1-0.69-0.1-1.04c0-0.36,0.04-0.71,0.11-1.06C11.85,13.22,11.82,13.89,11.81,14.56z M14.46,15.38c-0.15-0.31-0.28-0.64-0.39-0.99l-0.05,0.02C14.07,14.73,14.25,15.05,14.46,15.38z M7.16,13.21c0.02-0.26,0.05-0.52,0.09-0.77C7.17,12.82,7.16,13.02,7.16,13.21z M5.52,15.12c0.09-0.26,0.2-0.51,0.31-0.76L5.74,14.41C5.63,14.64,5.56,14.89,5.52,15.12z M10.77,17.87c-0.05-0.28-0.09-0.57-0.12-0.86l-0.02,0.03C10.66,17.31,10.71,17.59,10.77,17.87z M13.41,18.4c-0.11-0.23-0.23-0.45-0.33-0.69l-0.04,0.01C13.16,17.95,13.28,18.16,13.41,18.4z M16.54,16.36l-0.03-0.04c-0.14,0.16-0.28,0.33-0.45,0.48c0.18-0.17,0.33-0.35,0.48-0.51V16.36z M16.16,17.52l-0.01-0.01c-0.15,0.16-0.31,0.31-0.49,0.45c0.19-0.15,0.36-0.31,0.52-0.47L16.16,17.52z M15.01,18.64c-0.14,0.14-0.29,0.28-0.46,0.4l0.02-0.02C14.75,18.89,14.88,18.77,15.01,18.64z M18.4,16.3l-0.01-0.01c-0.14,0.16-0.28,0.32-0.43,0.46c0.16-0.15,0.31-0.31,0.45-0.47L18.4,16.3z"/>
-                        <path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8S16.41,20,12,20z M12,6c-3.31,0-6,2.69-6,6s2.69,6,6,6s6-2.69,6-6S15.31,6,12,6z"/>
-                      </svg>
-                    </n-icon>
-                    <span>可用工具</span>
-                  </n-flex>
-                </template>
-                <n-space>
-                  <n-tag
-                    v-for="tool in toolsList"
-                    :key="tool"
-                    :type="getToolStatus(tool)"
-                    size="small"
-                    :bordered="false"
-                  >
-                    {{ tool }}
-                  </n-tag>
-                </n-space>
-              </n-card>
-
-              <!-- 消息列表 -->
-              <n-scrollbar style="flex: 1; margin-bottom: 10px;">
-                <div v-for="(msg, index) in messages" :key="index" class="message-item" :class="{ 'message-enter': true }">
-                  <!-- 用户消息 -->
-                  <div v-if="msg.role === 'user'" class="message-wrapper user-message">
-                    <div class="message-content-wrapper">
-                      <div class="message-bubble user-bubble">
-                        <div class="message-text">{{ msg.content }}</div>
-                      </div>
-                      <div class="message-avatar user-avatar">
-                        <n-avatar size="small" color="#2080f0">
-                          <template #icon>
-                            <n-icon><component :is="UserOutline"/></n-icon>
-                          </template>
-                        </n-avatar>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- AI消息 -->
-                  <div v-else class="message-wrapper ai-message">
-                    <div class="message-content-wrapper">
-                      <div class="message-avatar ai-avatar">
-                        <n-avatar size="small" color="#18a058">
-                          <template #icon>
-                            <n-icon><component :is="SparklesOutline"/></n-icon>
-                          </template>
-                        </n-avatar>
-                      </div>
-                      <div class="message-bubble ai-bubble">
-                        <MdPreview :modelValue="msg.content" :theme="darkTheme ? 'dark' : 'light'"/>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <!-- 输入指示器 -->
-                <div v-if="analyzing && !firstTokenReceived" class="message-wrapper ai-message">
-                  <div class="message-content-wrapper">
-                    <div class="message-avatar ai-avatar">
-                      <n-avatar size="small" color="#18a058">
-                        <template #icon>
-                          <n-icon><component :is="SparklesOutline"/></n-icon>
-                        </template>
-                      </n-avatar>
-                    </div>
-                    <div class="message-bubble ai-bubble typing-indicator">
-                      <div class="typing-dots">
-                        <span></span><span></span><span></span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </n-scrollbar>
-
-              <!-- 输入区域工具栏 -->
-              <div class="input-toolbar" v-if="!analyzing">
-                <n-button-group size="tiny">
-                  <n-button quaternary @click="clearInput" :disabled="!inputText">
-                    <template #icon>
-                      <n-icon><component :is="RefreshOutline"/></n-icon>
-                    </template>
-                    清空
-                  </n-button>
-                  <n-button quaternary @click="copyLastMessage" :disabled="messages.length < 2">
-                    <template #icon>
-                      <n-icon><component :is="CopyOutline"/></n-icon>
-                    </template>
-                    复制
-                  </n-button>
-                </n-button-group>
+              <div class="tools-section" v-if="toolsList.length > 0">
+                <n-card size="small">
+                  <template #header>
+                    <n-flex align="center">
+                      <n-icon :size="16" style="margin-right: 5px">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                          <path fill="currentColor" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l0.01,0.05C19.14,12.94,19.14,12.94,19.14,12.94z M17.83,18.82c-0.13,0.18-0.28,0.35-0.45,0.5l-0.03-0.03C17.56,19.12,17.69,18.97,17.83,18.82z M11.81,14.56c-0.07-0.34-0.1-0.69-0.1-1.04c0-0.36,0.04-0.71,0.11-1.06C11.85,13.22,11.82,13.89,11.81,14.56z M14.46,15.38c-0.15-0.31-0.28-0.64-0.39-0.99l-0.05,0.02C14.07,14.73,14.25,15.05,14.46,15.38z M7.16,13.21c0.02-0.26,0.05-0.52,0.09-0.77C7.17,12.82,7.16,13.02,7.16,13.21z M5.52,15.12c0.09-0.26,0.2-0.51,0.31-0.76L5.74,14.41C5.63,14.64,5.56,14.89,5.52,15.12z M10.77,17.87c-0.05-0.28-0.09-0.57-0.12-0.86l-0.02,0.03C10.66,17.31,10.71,17.59,10.77,17.87z M13.41,18.4c-0.11-0.23-0.23-0.45-0.33-0.69l-0.04,0.01C13.16,17.95,13.28,18.16,13.41,18.4z M16.54,16.36l-0.03-0.04c-0.14,0.16-0.28,0.33-0.45,0.48c0.18-0.17,0.33-0.35,0.48-0.51V16.36z M16.16,17.52l-0.01-0.01c-0.15,0.16-0.31,0.31-0.49,0.45c0.19-0.15,0.36-0.31,0.52-0.47L16.16,17.52z M15.01,18.64c-0.14,0.14-0.29,0.28-0.46,0.4l0.02-0.02C14.75,18.89,14.88,18.77,15.01,18.64z M18.4,16.3l-0.01-0.01c-0.14,0.16-0.28,0.32-0.43,0.46c0.16-0.15,0.31-0.31,0.45-0.47L18.4,16.3z"/>
+                          <path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8S16.41,20,12,20z M12,6c-3.31,0-6,2.69-6,6s2.69,6,6,6s6-2.69,6-6S15.31,6,12,6z"/>
+                        </svg>
+                      </n-icon>
+                      <span>可用工具</span>
+                    </n-flex>
+                  </template>
+                  <n-space>
+                    <n-tag
+                      v-for="tool in toolsList"
+                      :key="tool"
+                      :type="getToolStatus(tool)"
+                      size="small"
+                      :bordered="false"
+                    >
+                      {{ tool }}
+                    </n-tag>
+                  </n-space>
+                </n-card>
               </div>
 
-              <!-- 输入框 -->
-              <div class="input-area">
-                <n-input
-                  v-model:value="inputText"
-                  type="textarea"
-                  placeholder="请输入您的选股需求，例如：推荐今日资金流入大的科技股"
-                  :autosize="{ minRows: 2, maxRows: 6 }"
-                  @keydown.enter.prevent="handleEnter"
-                  :disabled="analyzing"
-                  class="chat-input"
-                />
+              <!-- 消息列表区域 - 可滚动 -->
+              <div class="messages-section">
+                <div ref="messagesContainer" class="messages-scroll-container">
+                  <div class="messages-content">
+                    <div v-for="(msg, index) in messages" :key="index" class="message-item">
+                      <!-- 用户消息 -->
+                      <div v-if="msg.role === 'user'" class="message-wrapper user-message">
+                        <div class="message-content-wrapper">
+                          <div class="message-bubble user-bubble">
+                            <div class="message-text">{{ msg.content }}</div>
+                          </div>
+                          <div class="message-avatar user-avatar">
+                            <n-avatar size="small" color="#2080f0">
+                              <template #icon>
+                                <n-icon><component :is="UserOutline"/></n-icon>
+                              </template>
+                            </n-avatar>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- AI消息 -->
+                      <div v-else class="message-wrapper ai-message">
+                        <div class="message-content-wrapper">
+                          <div class="message-avatar ai-avatar">
+                            <n-avatar size="small" color="#18a058">
+                              <template #icon>
+                                <n-icon><component :is="SparklesOutline"/></n-icon>
+                              </template>
+                            </n-avatar>
+                          </div>
+                          <div class="message-bubble ai-bubble">
+                            <MdPreview :modelValue="msg.content" :theme="darkTheme ? 'dark' : 'light'"/>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- 输入指示器 -->
+                    <div v-if="analyzing && !firstTokenReceived" class="message-wrapper ai-message">
+                      <div class="message-content-wrapper">
+                        <div class="message-avatar ai-avatar">
+                          <n-avatar size="small" color="#18a058">
+                            <template #icon>
+                              <n-icon><component :is="SparklesOutline"/></n-icon>
+                            </template>
+                          </n-avatar>
+                        </div>
+                        <div class="message-bubble ai-bubble typing-indicator">
+                          <div class="typing-dots">
+                            <span></span><span></span><span></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- 底部占位，确保最后一条消息不被遮挡 -->
+                    <div style="height: 8px;"></div>
+                  </div>
+                </div>
               </div>
-              <n-button
-                type="primary"
-                block
-                :loading="analyzing"
-                @click="sendMessage"
-                style="margin-top: 10px;"
-                class="send-button"
-              >
-                <template #icon>
-                  <n-icon v-if="!analyzing"><component :is="SendOutline"/></n-icon>
-                </template>
-                {{ analyzing ? '分析中...' : '开始分析' }}
-              </n-button>
+
+              <!-- 底部输入区域 - 固定 -->
+              <div class="input-section">
+                <!-- 输入区域工具栏 -->
+                <div class="input-toolbar" v-if="!analyzing">
+                  <n-button-group size="tiny">
+                    <n-button quaternary @click="clearInput" :disabled="!inputText">
+                      <template #icon>
+                        <n-icon><component :is="RefreshOutline"/></n-icon>
+                      </template>
+                      清空输入
+                    </n-button>
+                    <n-button quaternary @click="clearChat" :disabled="messages.length <= 1">
+                      <template #icon>
+                        <n-icon><component :is="TrashOutline"/></n-icon>
+                      </template>
+                      清空对话
+                    </n-button>
+                    <n-button quaternary @click="copyLastMessage" :disabled="messages.length < 2">
+                      <template #icon>
+                        <n-icon><component :is="CopyOutline"/></n-icon>
+                      </template>
+                      复制
+                    </n-button>
+                  </n-button-group>
+                </div>
+
+                <!-- 输入框 -->
+                <div class="input-area">
+                  <n-input
+                    v-model:value="inputText"
+                    type="textarea"
+                    placeholder="请输入您的选股需求，例如：推荐今日资金流入大的科技股"
+                    :autosize="{ minRows: 2, maxRows: 6 }"
+                    @keydown.enter.prevent="handleEnter"
+                    :disabled="analyzing"
+                    class="chat-input"
+                  />
+                </div>
+                <n-button
+                  type="primary"
+                  block
+                  :loading="analyzing"
+                  @click="sendMessage"
+                  class="send-button"
+                >
+                  <template #icon>
+                    <n-icon v-if="!analyzing"><component :is="SendOutline"/></n-icon>
+                  </template>
+                  {{ analyzing ? '分析中...' : '开始分析' }}
+                </n-button>
+              </div>
             </div>
           </n-card>
         </n-col>
 
         <!-- 右侧推荐结果区域 -->
-        <n-col :span="12" style="height: 100%; display: flex; flex-direction: column;">
-          <n-card title="推荐结果" style="height: 100%; display: flex; flex-direction: column;">
+        <n-col :span="12" class="chat-column">
+          <n-card title="推荐结果" class="chat-card">
             <template #header-extra>
               <n-space>
                 <n-button-group size="small">
@@ -284,6 +315,26 @@
                             {{ item.reason }}
                           </n-text>
                         </div>
+                      </div>
+
+                      <!-- 技术面分析 -->
+                      <div class="analysis-section" v-if="item.technicalAnalysis">
+                        <n-divider style="margin: 12px 0;">
+                          <span style="font-size: 12px; color: #666;">📊 技术面分析</span>
+                        </n-divider>
+                        <n-text depth="2" class="analysis-text">
+                          {{ item.technicalAnalysis }}
+                        </n-text>
+                      </div>
+
+                      <!-- 基本面分析 -->
+                      <div class="analysis-section" v-if="item.fundamentalAnalysis">
+                        <n-divider style="margin: 12px 0;">
+                          <span style="font-size: 12px; color: #666;">📈 基本面分析</span>
+                        </n-divider>
+                        <n-text depth="2" class="analysis-text">
+                          {{ item.fundamentalAnalysis }}
+                        </n-text>
                       </div>
 
                       <!-- 风险提示 -->
@@ -550,7 +601,6 @@
         </n-col>
       </n-row>
     </div>
-  </n-spin>
 
   <!-- 历史记录抽屉 -->
   <n-drawer v-model:show="historyVisible" width="50%" placement="right">
@@ -644,7 +694,7 @@
 </template>
 
 <script setup>
-import {ref, onMounted, onBeforeUnmount, h, computed, watch} from 'vue'
+import {ref, onMounted, onBeforeUnmount, h, computed, watch, nextTick} from 'vue'
 import {
   AIStockPickChat,
   GetStockPickReports,
@@ -698,10 +748,71 @@ import {TimeOutline, DownloadOutline, TrashOutline, PersonOutline as UserOutline
 const message = useMessage()
 const notify = useNotification()
 
+// 缓存键名
+const CACHE_KEY = 'ai-stock-pick-cache'
+
+// 从缓存恢复状态
+function restoreFromCache() {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY)
+    if (cached) {
+      const data = JSON.parse(cached)
+      // 检查缓存是否在1小时内
+      if (data.timestamp && Date.now() - data.timestamp < 3600000) {
+        if (data.messages && data.messages.length > 0) {
+          messages.value = data.messages
+        }
+        if (data.recommendations && data.recommendations.length > 0) {
+          recommendations.value = data.recommendations
+        }
+        if (data.fullReport) {
+          fullReport.value = data.fullReport
+        }
+        if (data.reportId) {
+          reportId.value = data.reportId
+        }
+        if (data.viewMode) {
+          viewMode.value = data.viewMode
+        }
+        console.log('从缓存恢复了AI荐股状态')
+      }
+    }
+  } catch (e) {
+    console.warn('恢复缓存失败:', e)
+  }
+}
+
+// 保存状态到缓存
+function saveToCache() {
+  try {
+    const data = {
+      timestamp: Date.now(),
+      messages: messages.value,
+      recommendations: recommendations.value,
+      fullReport: fullReport.value,
+      reportId: reportId.value,
+      viewMode: viewMode.value
+    }
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data))
+  } catch (e) {
+    console.warn('保存缓存失败:', e)
+  }
+}
+
+// 清除缓存
+function clearCache() {
+  try {
+    localStorage.removeItem(CACHE_KEY)
+  } catch (e) {
+    console.warn('清除缓存失败:', e)
+  }
+}
+
 // 状态管理
 const analyzing = ref(false)
 const firstTokenReceived = ref(false)
 const inputText = ref('')
+const messagesContainer = ref(null)
 const messages = ref([
   {
     id: 1,
@@ -713,10 +824,20 @@ const messages = ref([
 const toolsList = ref([])
 const toolStatus = ref({})
 const recommendations = ref([])
-const viewMode = ref('full')
+const viewMode = ref('card') // 默认改为卡片视图
 const fullReport = ref('')
 const reportId = ref(null)
 const darkTheme = ref(false)
+
+// 滚动到底部
+function scrollToBottom() {
+  nextTick(() => {
+    if (messagesContainer.value) {
+      // 直接操作原生滚动容器
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    }
+  })
+}
 
 // 历史记录相关
 const historyVisible = ref(false)
@@ -834,7 +955,7 @@ const cardRecommendations = computed(() => {
     rec.stopLossPrice = stopLossPrice
     rec.expectedReturn = expectedReturn
     rec.stopLossRate = stopLossRate.toFixed(1)
-    rec.sectorConcept = rec.sector_concept || rec.industry || '未知板块'
+    rec.sectorConcept = rec.sector_concept || rec.industry || ''
     rec.reason = rec.reason || rec.recommendation_reason || ''
     rec.riskTips = rec.risk_tips || rec.risk_warning || ''
     rec.tradeSuggestion = rec.trade_suggestion || rec.action || (expectedReturn > 5 ? '买入' : '观望')
@@ -964,11 +1085,18 @@ const availableTools = [
 onMounted(() => {
   initEventListeners()
   toolsList.value = availableTools
+  restoreFromCache()
 })
 
 onBeforeUnmount(() => {
   cleanupEventListeners()
+  saveToCache()
 })
+
+// 监听数据变化，自动保存缓存
+watch([messages, recommendations, fullReport, viewMode], () => {
+  saveToCache()
+}, { deep: true, flush: 'post' })
 
 // 事件监听
 function initEventListeners() {
@@ -1408,6 +1536,23 @@ function clearInput() {
   message.info('已清空输入')
 }
 
+// 清空聊天记录
+function clearChat() {
+  messages.value = [
+    {
+      id: 1,
+      role: 'assistant',
+      content: '请告诉我您的选股需求，例如：\n\n- 推荐今日资金流入大的科技股\n- 寻找市盈率低于20且业绩增长的银行股\n- 推荐近期创新高的新能源龙头股',
+      timestamp: Date.now()
+    }
+  ]
+  recommendations.value = []
+  fullReport.value = ''
+  reportId.value = null
+  clearCache()
+  message.success('已清空聊天记录')
+}
+
 // 复制最后一条AI消息
 function copyLastMessage() {
   const aiMessages = messages.value.filter(m => m.role === 'assistant' && m.content)
@@ -1427,20 +1572,122 @@ watch(cardRecommendations, (newRecs) => {
     activeTechTab.value = newRecs[0].stockCode
   }
 }, { immediate: true })
+
+// 监听消息变化，自动滚动到底部
+watch(messages, () => {
+  scrollToBottom()
+}, { deep: true })
 </script>
 
 <style scoped>
-.n-card {
+/* ========== 左侧对话区域新布局样式 ========== */
+
+/* 列容器 */
+.chat-column {
   height: 100%;
+  min-height: 0;
+}
+
+/* 卡片容器 */
+.chat-card {
+  height: calc(100vh - 180px);
   display: flex;
   flex-direction: column;
 }
 
-.n-card > :deep(.n-card__content) {
+.chat-card > :deep(.n-card__content) {
   flex: 1;
+  overflow: hidden;
+  padding: 16px;
+  min-height: 0;
+}
+
+/* 主对话容器 - 使用 flex 垂直布局 */
+.chat-container {
+  height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* 工具列表区域 */
+.tools-section {
+  flex-shrink: 0;
+  margin-bottom: 12px;
+}
+
+/* 消息列表区域 - 占据剩余空间并可滚动 */
+.messages-section {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 原生滚动容器 - 使用原生滚动替代 n-scrollbar */
+.messages-scroll-container {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: auto;
+  /* 自定义滚动条样式 */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.3) transparent;
+}
+
+/* Webkit 浏览器滚动条样式 */
+.messages-scroll-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.messages-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messages-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.2);
+  border-radius: 3px;
+}
+
+.messages-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.3);
+}
+
+/* 右侧结果区域滚动条样式 */
+.result-scrollbar {
+  height: 100%;
+  width: 100%;
+}
+
+.result-scrollbar > :deep(.n-scrollbar-container) {
+  height: 100% !important;
+}
+
+.messages-content {
+  padding: 4px;
+  /* 确保内容正确流动 */
+  min-width: 100%;
+  box-sizing: border-box;
+}
+
+/* 底部输入区域 - 固定高度 */
+.input-section {
+  flex-shrink: 0;
+}
+
+.input-toolbar {
+  margin-bottom: 8px;
+}
+
+.input-area {
+  margin-bottom: 10px;
+}
+
+.send-button {
+  margin-top: 0 !important;
 }
 
 /* 推荐结果内容区包装器 - 实现滚动 */
@@ -1682,6 +1929,18 @@ watch(cardRecommendations, (newRecs) => {
   font-style: italic;
 }
 
+/* 分析部分样式 */
+.analysis-section {
+  margin: 8px 0;
+}
+
+.analysis-text {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #444;
+  display: block;
+}
+
 /* 推荐时间 */
 .recommend-time {
   margin: 8px 0;
@@ -1725,14 +1984,36 @@ watch(cardRecommendations, (newRecs) => {
   line-height: 1.8;
   color: #333;
   font-size: 14px;
-}
-
-/* 确保内容左对齐，不居中 */
-.md-preview-content :deep(.md-editor-preview) {
   text-align: left !important;
 }
 
-.md-preview-content :deep(.md-editor-preview-wrapper) {
+/* 确保所有内容左对齐，不居中 - 最高优先级 */
+.md-preview-content :deep(.md-editor-preview),
+.full-report-wrapper :deep(.md-editor-preview),
+.md-preview-content :deep(.md-editor-preview-wrapper),
+.full-report-wrapper :deep(.md-editor-preview-wrapper),
+.md-preview-content :deep(.md-editor-preview *),
+.full-report-wrapper :deep(.md-editor-preview *),
+.md-preview-content :deep(.md-editor-preview-wrapper *),
+.full-report-wrapper :deep(.md-editor-preview-wrapper *) {
+  text-align: left !important;
+}
+
+/* 强制覆盖可能的居中样式 */
+.md-preview-content :deep(.md-editor-preview h1),
+.md-preview-content :deep(.md-editor-preview h2),
+.md-preview-content :deep(.md-editor-preview h3),
+.md-preview-content :deep(.md-editor-preview h4),
+.md-preview-content :deep(.md-editor-preview h5),
+.md-preview-content :deep(.md-editor-preview h6),
+.md-preview-content :deep(.md-editor-preview p),
+.md-preview-content :deep(.md-editor-preview li),
+.md-preview-content :deep(.md-editor-preview div),
+.md-preview-content :deep(.md-editor-preview blockquote),
+.md-preview-content :deep(.md-editor-preview pre),
+.md-preview-content :deep(.md-editor-preview table),
+.md-preview-content :deep(.md-editor-preview ul),
+.md-preview-content :deep(.md-editor-preview ol) {
   text-align: left !important;
 }
 
@@ -2082,6 +2363,29 @@ watch(cardRecommendations, (newRecs) => {
 
 .ai-bubble :deep(.md-editor-preview p) {
   margin: 8px 0;
+}
+
+/* 确保 Markdown 内容不会破坏滚动 */
+.ai-bubble :deep(.md-editor-preview-wrapper) {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.ai-bubble :deep(.md-editor-preview) {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* 确保代码块可以水平滚动 */
+.ai-bubble :deep(pre) {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* 确保表格可以水平滚动 */
+.ai-bubble :deep(.md-editor-preview-wrapper table) {
+  display: block;
+  overflow-x: auto;
 }
 
 .typing-indicator {

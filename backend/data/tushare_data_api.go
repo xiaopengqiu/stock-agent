@@ -30,6 +30,12 @@ func NewTushareApi(config *SettingConfig) *TushareApi {
 
 // GetDaily tushare A股日线行情
 func (receiver TushareApi) GetDaily(tsCode, startDate, endDate string, crawlTimeOut int64) string {
+	// 防御性检查：config不能为nil
+	if receiver.config == nil {
+		logger.SugaredLogger.Error("Tushare config is nil")
+		return ""
+	}
+
 	//logger.SugaredLogger.Debugf("tushare daily request: ts_code=%s, start_date=%s, end_date=%s", tsCode, startDate, endDate)
 	fields := "ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount"
 	resp := &TushareStockBasicResponse{}
@@ -248,6 +254,11 @@ func (api TushareApi) GetShareholderCount(stockCode string, quarters int) (*Shar
 
 // queryShareholderCountFromTushare 从Tushare查询股东人数
 func (api TushareApi) queryShareholderCountFromTushare(stockCode string, quarters int) (*ShareholderCountData, error) {
+	// 防御性检查：config不能为nil
+	if api.config == nil {
+		return nil, fmt.Errorf("Tushare config is nil")
+	}
+
 	// Tushare的stk_holdernumber接口
 	fields := "ts_code,end_date,holder_num,holder_nums"
 

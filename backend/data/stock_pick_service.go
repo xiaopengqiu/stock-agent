@@ -424,16 +424,36 @@ func (s *StockPickService) getDefaultPrompt() string {
 【输出要求】
 请按照以下格式输出推荐股票列表：
 
-推荐股票列表：
-1. [股票代码] [股票名称] - [推荐理由]
-   - 当前价格：XX.XX
-   - 涨跌幅：XX.XX%
-   - 技术面分析：[结合K线数据的详细分析，包括趋势、支撑位、压力位、指标信号等]
-   - 基本面分析：[结合财报的详细分析，包括PE、PB、ROE、业绩增长等]
-   - 筹码分析：[股东人数变化、筹码集中度分析]
-   - 舆情动态：[如有相关新闻，简要总结]
-   - 目标涨幅：XX%
-   - 风险提示：[风险提示]
+## 推荐股票
+
+### 1. [股票名称] ([股票代码])
+
+**推荐理由**：
+[详细的推荐理由，说明为什么推荐这只股票]
+
+**板块概念**：
+[股票所属板块或行业概念]
+
+- **当前价格**：XX.XX
+- **涨跌幅**：XX.XX%
+- **目标价位**：XX.XX
+- **目标涨幅**：XX%
+- **综合评分**：XX/100
+- **买卖建议**：[买入/观望/卖出]
+
+**技术面分析**：
+[结合K线数据的详细分析，包括趋势、支撑位、压力位、指标信号等]
+
+**基本面分析**：
+[结合财报的详细分析，包括PE、PB、ROE、业绩增长等]
+
+**风险提示**：
+[具体的风险提示内容]
+
+---
+
+### 2. [股票名称] ([股票代码])
+[同上格式...]
 
 【数据分析要求】
 - 技术面分析必须基于实际K线数据，提到具体的价格点位、均线数值、成交量变化
@@ -1061,6 +1081,8 @@ func (s *StockPickService) parseRecommendationsFromContent(content string) []mod
 
 	var currentRec *models.RecommendationItem
 	var inRecommendationSection bool
+	var currentSection string // 当前正在收集的内容类型: "reason", "technical", "fundamental", "risk"
+	var contentBuilder strings.Builder
 
 	for lineIdx, line := range lines {
 		trimmedLine := strings.TrimSpace(line)
@@ -1075,7 +1097,8 @@ func (s *StockPickService) parseRecommendationsFromContent(content string) []mod
 
 		// 检测推荐章节结束
 		// 注意：不将"---"作为章节结束标志，因为它是股票之间的分隔符
-		if inRecommendationSection && strings.Contains(lowerLine, "## 投资建议") {
+		if inRecommendationSection && strings.HasPrefix(lowerLine, "## ") && !strings.Contains(lowerLine, "推荐股票") && !strings.Contains(lowerLine, "推荐列表") {
+			// 遇到其他二级标题，结束推荐章节
 			inRecommendationSection = false
 		}
 
@@ -1085,11 +1108,16 @@ func (s *StockPickService) parseRecommendationsFromContent(content string) []mod
 
 		// 解析股票标题行：### 1. 中芯国际 (sh688981)
 		if strings.HasPrefix(trimmedLine, "###") && strings.Contains(trimmedLine, "(") && strings.Contains(trimmedLine, ")") {
-			// 保存上一个推荐
+			// 保存上一个推荐的收集内容
 			if currentRec != nil {
+				s.finalizeRecContent(currentRec, currentSection, &contentBuilder)
 				recommendations = append(recommendations, *currentRec)
 				logger.SugaredLogger.Debugf("添加推荐项，当前总数: %d", len(recommendations))
 			}
+
+			// 重置收集器
+			currentSection = ""
+			contentBuilder.Reset()
 
 			// 解析新的推荐股票
 			if rec, err := s.parseStockTitle(trimmedLine, len(recommendations)+1); err == nil {
@@ -1097,15 +1125,72 @@ func (s *StockPickService) parseRecommendationsFromContent(content string) []mod
 				logger.SugaredLogger.Debugf("解析到推荐项 %d: 代码=%s, 名称=%s", rec.Rank, rec.StockCode, rec.StockName)
 			} else {
 				logger.SugaredLogger.Warnf("解析股票标题失败: %v, 行内容: %s", err, trimmedLine)
+				currentRec = nil
 			}
-		} else if currentRec != nil {
-			// 解析详细信息
+			continue
+		}
+
+		if currentRec == nil {
+			continue
+		}
+
+		// 检查是否是分隔符
+		if trimmedLine == "---" || trimmedLine == "***" {
+			continue
+		}
+
+		// 检测新的内容区块标题（粗体标题）
+		isSectionHeader := false
+		if (strings.HasPrefix(trimmedLine, "**") && strings.HasSuffix(trimmedLine, "**")) ||
+			(strings.HasPrefix(trimmedLine, "**") && strings.Contains(trimmedLine, "：")) ||
+			(strings.HasPrefix(trimmedLine, "**") && strings.Contains(trimmedLine, ":")) {
+
+			// 先保存上一个区块的内容
+			s.finalizeRecContent(currentRec, currentSection, &contentBuilder)
+			contentBuilder.Reset()
+
+			// 检测新区块类型
+			sectionTitle := strings.ToLower(trimmedLine)
+			if strings.Contains(sectionTitle, "推荐理由") {
+				currentSection = "reason"
+				isSectionHeader = true
+			} else if strings.Contains(sectionTitle, "技术面") {
+				currentSection = "technical"
+				isSectionHeader = true
+			} else if strings.Contains(sectionTitle, "基本面") {
+				currentSection = "fundamental"
+				isSectionHeader = true
+			} else if strings.Contains(sectionTitle, "风险") {
+				currentSection = "risk"
+				isSectionHeader = true
+			} else if strings.Contains(sectionTitle, "板块") || strings.Contains(sectionTitle, "行业") || strings.Contains(sectionTitle, "概念") {
+				currentSection = "sector"
+				isSectionHeader = true
+			}
+
+			// 尝试用单行解析方式也解析一下
+			s.parseDetailLine(trimmedLine, currentRec)
+		}
+
+		if isSectionHeader {
+			continue
+		}
+
+		// 如果有当前正在收集的区块，继续收集内容
+		if currentSection != "" && trimmedLine != "" {
+			if contentBuilder.Len() > 0 {
+				contentBuilder.WriteString("\n")
+			}
+			contentBuilder.WriteString(trimmedLine)
+		} else {
+			// 没有指定区块，尝试单行解析
 			s.parseDetailLine(trimmedLine, currentRec)
 		}
 	}
 
 	// 保存最后一个推荐
 	if currentRec != nil {
+		s.finalizeRecContent(currentRec, currentSection, &contentBuilder)
 		recommendations = append(recommendations, *currentRec)
 		logger.SugaredLogger.Debugf("保存最后一个推荐项，总数: %d", len(recommendations))
 	}
@@ -1117,6 +1202,37 @@ func (s *StockPickService) parseRecommendationsFromContent(content string) []mod
 
 	logger.SugaredLogger.Infof("解析完成，共 %d 个推荐项", len(recommendations))
 	return recommendations
+}
+
+// finalizeRecContent 完成内容收集并填充到推荐项
+func (s *StockPickService) finalizeRecContent(rec *models.RecommendationItem, section string, builder *strings.Builder) {
+	content := strings.TrimSpace(builder.String())
+	if content == "" {
+		return
+	}
+
+	switch section {
+	case "reason":
+		if rec.Reason == "" || len(content) > len(rec.Reason) {
+			rec.Reason = content
+		}
+	case "technical":
+		if rec.TechnicalAnalysis == "" || len(content) > len(rec.TechnicalAnalysis) {
+			rec.TechnicalAnalysis = content
+		}
+	case "fundamental":
+		if rec.FundamentalAnalysis == "" || len(content) > len(rec.FundamentalAnalysis) {
+			rec.FundamentalAnalysis = content
+		}
+	case "risk":
+		if rec.RiskTips == "" || len(content) > len(rec.RiskTips) {
+			rec.RiskTips = content
+		}
+	case "sector":
+		if rec.SectorConcept == "" || len(content) > len(rec.SectorConcept) {
+			rec.SectorConcept = content
+		}
+	}
 }
 
 // parseRecommendationsFromMarkdown 从报告对象解析推荐股票（用于历史报告）
@@ -1360,29 +1476,62 @@ func isValidStockCode(code string) bool {
 // parseDetailLine 解析详细信息行
 func (s *StockPickService) parseDetailLine(line string, rec *models.RecommendationItem) {
 	lowerLine := strings.ToLower(line)
+	trimmedLine := strings.TrimSpace(line)
+
+	// 检查是否是标签行（如 "- 技术面分析：..."）
+	isLabeledLine := strings.HasPrefix(trimmedLine, "-") || strings.HasPrefix(trimmedLine, "•") || strings.HasPrefix(trimmedLine, "*")
+	if isLabeledLine {
+		trimmedLine = strings.TrimSpace(strings.TrimLeft(trimmedLine, "-•*"))
+		lowerLine = strings.ToLower(trimmedLine)
+	}
 
 	if strings.Contains(lowerLine, "当前价格") || strings.Contains(lowerLine, "现价") {
-		if price, err := parsePriceFromLine(line); err == nil {
+		if price, err := parsePriceFromLine(trimmedLine); err == nil {
 			rec.CurrentPrice = price
 		}
 	} else if strings.Contains(lowerLine, "涨跌幅") {
-		if change, err := parsePriceFromLine(line); err == nil {
+		if change, err := parsePriceFromLine(trimmedLine); err == nil {
 			rec.PriceChange = change
 		}
 	} else if strings.Contains(lowerLine, "目标价位") || strings.Contains(lowerLine, "目标价") {
-		if price, err := parsePriceFromLine(line); err == nil {
+		if price, err := parsePriceFromLine(trimmedLine); err == nil {
 			rec.TargetPrice = price
 		}
 	} else if strings.Contains(lowerLine, "上涨空间") || strings.Contains(lowerLine, "目标涨幅") {
-		if change, err := parsePriceFromLine(line); err == nil {
+		if change, err := parsePriceFromLine(trimmedLine); err == nil {
 			rec.TargetChangePercent = change
 		}
 	} else if strings.Contains(lowerLine, "综合评分") || strings.Contains(lowerLine, "评分") {
-		if score, err := parsePriceFromLine(line); err == nil {
+		if score, err := parsePriceFromLine(trimmedLine); err == nil {
 			rec.Score = score
 		}
 	} else if strings.Contains(lowerLine, "买卖建议") {
-		rec.TradeSuggestion = parseTextValue(line)
+		rec.TradeSuggestion = parseTextValue(trimmedLine)
+	} else if strings.Contains(lowerLine, "板块") || strings.Contains(lowerLine, "行业") || strings.Contains(lowerLine, "概念") {
+		// 解析板块/行业/概念信息
+		if value := parseTextValue(trimmedLine); value != "" {
+			// 如果当前还没有板块信息，或者这个更详细，则更新
+			if rec.SectorConcept == "" || len(value) > len(rec.SectorConcept) {
+				rec.SectorConcept = value
+			}
+		}
+	} else if strings.Contains(lowerLine, "推荐理由") {
+		// 推荐理由通常是多行的，这里先收集第一行
+		if value := parseTextValue(trimmedLine); value != "" {
+			rec.Reason = value
+		}
+	} else if strings.Contains(lowerLine, "技术面分析") || strings.Contains(lowerLine, "技术面") {
+		if value := parseTextValue(trimmedLine); value != "" {
+			rec.TechnicalAnalysis = value
+		}
+	} else if strings.Contains(lowerLine, "基本面分析") || strings.Contains(lowerLine, "基本面") {
+		if value := parseTextValue(trimmedLine); value != "" {
+			rec.FundamentalAnalysis = value
+		}
+	} else if strings.Contains(lowerLine, "风险提示") || strings.Contains(lowerLine, "风险分析") {
+		if value := parseTextValue(trimmedLine); value != "" {
+			rec.RiskTips = value
+		}
 	}
 }
 

@@ -56,7 +56,7 @@ func (t ToolQueryShareholderCount) InvokableRun(ctx context.Context, argumentsIn
 	}
 
 	// 调用数据API获取股东人数数据
-	tushareApi := data.NewTushareApi(nil)
+	tushareApi := data.NewTushareApi(data.GetSettingConfig())
 	shareholderData, err := tushareApi.GetShareholderCount(stockCode, quarters)
 	if err != nil {
 		// 如果tushare获取失败，尝试从其他数据源获取

@@ -35,7 +35,8 @@
       "Skill(browser-use)",
       "Bash(npm install:*)",
       "Bash(grep:*)",
-      "Bash(./ralph.sh:*)"
+      "Bash(./ralph.sh:*)",
+      "Bash(tasklist:*)"
     ]
   }
 }
