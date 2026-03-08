@@ -88,7 +88,23 @@
                             </n-avatar>
                           </div>
                           <div class="message-bubble ai-bubble">
-                            <MdPreview :modelValue="msg.content" :theme="darkTheme ? 'dark' : 'light'"/>
+                            <!-- 如果有fullContent，则显示摘要，可以点击查看完整报告 -->
+                            <div v-if="msg.fullContent" class="ai-summary-content">
+                              <p style="margin: 0; line-height: 1.6;">{{ msg.content }}</p>
+                              <n-button
+                                v-if="recommendations.length > 0"
+                                quaternary size="tiny"
+                                style="margin-top: 8px;"
+                                @click="viewMode = 'card'"
+                              >
+                                <template #icon>
+                                  <n-icon><component :is="EyeOutline"/></n-icon>
+                                </template>
+                                查看右侧推荐结果
+                              </n-button>
+                            </div>
+                            <!-- 如果没有fullContent，则正常显示Markdown -->
+                            <MdPreview v-else :modelValue="msg.content" :theme="darkTheme ? 'dark' : 'light'"/>
                           </div>
                         </div>
                       </div>
@@ -743,7 +759,7 @@ import {
   useMessage,
   useNotification
 } from "naive-ui"
-import {TimeOutline, DownloadOutline, TrashOutline, PersonOutline as UserOutline, SparklesOutline, RefreshOutline, CopyOutline, SendOutline} from '@vicons/ionicons5'
+import {TimeOutline, DownloadOutline, TrashOutline, PersonOutline as UserOutline, SparklesOutline, RefreshOutline, CopyOutline, SendOutline, EyeOutline} from '@vicons/ionicons5'
 
 const message = useMessage()
 const notify = useNotification()
@@ -818,6 +834,7 @@ const messages = ref([
     id: 1,
     role: 'assistant',
     content: '请告诉我您的选股需求，例如：\n\n- 推荐今日资金流入大的科技股\n- 寻找市盈率低于20且业绩增长的银行股\n- 推荐近期创新高的新能源龙头股',
+    fullContent: null,
     timestamp: Date.now()
   }
 ])
@@ -1134,6 +1151,7 @@ async function sendMessage() {
   messages.value.push({
     role: 'user',
     content: query,
+    fullContent: null,
     timestamp: Date.now()
   })
 
@@ -1144,6 +1162,7 @@ async function sendMessage() {
   const aiMessage = {
     role: 'assistant',
     content: '',
+    fullContent: '',
     timestamp: Date.now()
   }
   messages.value.push(aiMessage)
@@ -1172,10 +1191,16 @@ function handleStream(data) {
       firstTokenReceived.value = true
       analyzing.value = false
     }
-    // 更新最后一条AI消息
+    // 更新最后一条AI消息的完整内容
     const lastMessage = messages.value[messages.value.length - 1]
     if (lastMessage && lastMessage.role === 'assistant') {
-      lastMessage.content += data.content
+      // 保存完整内容，但不直接显示
+      if (!lastMessage.fullContent) {
+        lastMessage.fullContent = ''
+      }
+      lastMessage.fullContent += data.content
+      // 显示简短提示
+      lastMessage.content = 'AI正在分析中，详情请查看右侧推荐结果...'
     }
     fullReport.value += data.content
   }
@@ -1257,6 +1282,12 @@ function handleUpdate(data) {
       fullReport.value += '\n---\n\n本报告由AI智能分析生成，仅供参考，不构成投资建议。股市有风险，投资需谨慎。'
     }
 
+    // 更新最后一条AI消息为一句话总结
+    const lastMessage = messages.value[messages.value.length - 1]
+    if (lastMessage && lastMessage.role === 'assistant') {
+      lastMessage.content = extractOneLineSummary(fullReport.value, data.recommendations)
+    }
+
     // 显示成功消息
     notify.success({
       title: 'AI分析完成',
@@ -1266,6 +1297,48 @@ function handleUpdate(data) {
 
     message.success(`AI荐股分析完成！推荐${data.candidates_count || 0}只股票`)
   }
+}
+
+// 从完整报告中提取一句话摘要
+function extractOneLineSummary(fullContent, recs) {
+  // 如果有推荐数据，优先基于推荐数据生成摘要
+  if (recs && recs.length > 0) {
+    const stockNames = recs.slice(0, 3).map(r => r.stock_name || r.stockName).filter(Boolean)
+    const count = recs.length
+    let summary = `AI分析完成，共推荐${count}只股票`
+    if (stockNames.length > 0) {
+      summary += `：${stockNames.join('、')}`
+      if (count > 3) {
+        summary += `等${count}只`
+      }
+    }
+    // 添加涨跌幅信息
+    const upCount = recs.filter(r => (r.price_change || r.priceChange) >= 0).length
+    summary += `，其中${upCount}只上涨，${count - upCount}只下跌。`
+    summary += `详情请查看右侧推荐结果。`
+    return summary
+  }
+
+  // 如果没有推荐数据，尝试从报告内容中提取
+  if (!fullContent) return 'AI分析中...'
+
+  // 尝试提取市场环境分析的第一句话
+  const marketMatch = fullContent.match(/## 市场环境分析\s*([\s\S]*?)(?=\n##|$)/)
+  if (marketMatch && marketMatch[1]) {
+    const firstSentence = marketMatch[1].trim().split(/[。！？.!?]/)[0]
+    if (firstSentence && firstSentence.length > 10) {
+      return firstSentence + '。详情请查看右侧推荐结果。'
+    }
+  }
+
+  // 尝试提取推荐股票部分
+  const recMatch = fullContent.match(/## 推荐股票列表\s*([\s\S]*?)(?=\n##|$)/)
+  if (recMatch && recMatch[1]) {
+    return 'AI分析完成，已为您选出推荐股票。详情请查看右侧推荐结果。'
+  }
+
+  // 回退到通用摘要
+  return 'AI分析完成，请查看右侧推荐结果了解详情。'
 }
 
 // 获取工具状态

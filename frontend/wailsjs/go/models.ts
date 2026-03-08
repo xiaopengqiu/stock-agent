@@ -972,6 +972,7 @@ export namespace models {
 	    market_value: number;
 	    technical_analysis: string;
 	    fundamental_analysis: string;
+	    sentiment_analysis: string;
 	    reason: string;
 	    target_price: number;
 	    target_change_percent: number;
@@ -1013,6 +1014,7 @@ export namespace models {
 	        this.market_value = source["market_value"];
 	        this.technical_analysis = source["technical_analysis"];
 	        this.fundamental_analysis = source["fundamental_analysis"];
+	        this.sentiment_analysis = source["sentiment_analysis"];
 	        this.reason = source["reason"];
 	        this.target_price = source["target_price"];
 	        this.target_change_percent = source["target_change_percent"];

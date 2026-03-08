@@ -55,6 +55,7 @@ type RecommendationItem struct {
 	// 分析内容
 	TechnicalAnalysis   string  `json:"technical_analysis"`    // 技术面分析
 	FundamentalAnalysis string  `json:"fundamental_analysis"`  // 基本面分析
+	SentimentAnalysis   string  `json:"sentiment_analysis"`    // 舆情动态分析
 	Reason              string  `json:"reason"`                // 推荐理由
 	TargetPrice         float64 `json:"target_price"`          // 目标价位
 	TargetChangePercent float64 `json:"target_change_percent"` // 目标涨幅

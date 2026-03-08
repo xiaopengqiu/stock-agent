@@ -204,6 +204,8 @@ export function StockResearchReport(arg1:string):Promise<Array<any>>;
 
 export function SummaryStockNews(arg1:string,arg2:number,arg3:any,arg4:boolean):Promise<void>;
 
+export function SyncFollowedToPositions():Promise<string>;
+
 export function UnFollow(arg1:string):Promise<string>;
 
 export function UnFollowFund(arg1:string):Promise<string>;

@@ -2238,3 +2238,8 @@ func (a *App) GetLatestPositionAnalyses() ([]*models.PositionAnalysis, error) {
 func (a *App) AnalyzeAllPositions(aiConfigID uint) ([]*models.PositionAnalysis, error) {
 	return a.PositionAnalysisSvc.AnalyzeAllPositions(aiConfigID)
 }
+
+// SyncFollowedToPositions syncs followed stocks with cost price and volume to positions
+func (a *App) SyncFollowedToPositions() (string, error) {
+	return a.PositionSvc.SyncFollowedToPositions()
+}

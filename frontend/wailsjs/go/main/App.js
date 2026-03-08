@@ -402,6 +402,10 @@ export function SummaryStockNews(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['SummaryStockNews'](arg1, arg2, arg3, arg4);
 }
 
+export function SyncFollowedToPositions() {
+  return window['go']['main']['App']['SyncFollowedToPositions']();
+}
+
 export function UnFollow(arg1) {
   return window['go']['main']['App']['UnFollow'](arg1);
 }
