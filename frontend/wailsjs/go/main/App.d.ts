@@ -20,6 +20,8 @@ export function AddStockGroup(arg1:number,arg2:string):Promise<string>;
 
 export function AnalyzeAllPositions(arg1:number):Promise<Array<models.PositionAnalysis>>;
 
+export function AnalyzePortfolio(arg1:number):Promise<models.PortfolioAnalysis>;
+
 export function AnalyzePosition(arg1:number,arg2:number):Promise<models.PositionAnalysis>;
 
 export function AnalyzeSentiment(arg1:string):Promise<data.SentimentResult>;
@@ -79,6 +81,8 @@ export function GetHotStrategy():Promise<Record<string, any>>;
 export function GetIndustryMoneyRankSina(arg1:string,arg2:string):Promise<Array<Record<string, any>>>;
 
 export function GetIndustryRank(arg1:string,arg2:number):Promise<Array<any>>;
+
+export function GetLatestPortfolioAnalysis():Promise<models.PortfolioAnalysis>;
 
 export function GetLatestPositionAnalyses():Promise<Array<models.PositionAnalysis>>;
 

@@ -36,7 +36,12 @@
       "Bash(npm install:*)",
       "Bash(grep:*)",
       "Bash(./ralph.sh:*)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "Bash(openclaw status:*)",
+      "Bash(openclaw update:*)",
+      "Bash(npm i:*)",
+      "Bash(openclaw:*)",
+      "Bash(npx openclaw:*)"
     ]
   }
 }

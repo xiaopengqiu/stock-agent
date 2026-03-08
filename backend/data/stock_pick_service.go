@@ -136,9 +136,11 @@ func (s *StockPickService) ProcessStockPick(req StockPickRequest, eventHandler f
 	ch := make(chan map[string]any, 512)
 	doneChan := make(chan bool, 1) // 用于同步解析完成
 
+	// 创建工具执行器
+	executor := toolexec.NewToolExecutor(s.AiInvokeTools)
+
 	go func() {
 		defer close(ch)
-		executor := toolexec.NewToolExecutor(s.AiInvokeTools)
 		AskAiWithTools(openAI, nil, msg, ch, req.UserQuery, s.AiTools, executor)
 	}()
 
@@ -154,10 +156,19 @@ func (s *StockPickService) ProcessStockPick(req StockPickRequest, eventHandler f
 			}
 		}
 
+		// 保存工具调用结果
+		if toolResultsJSON, err := executor.GetResultsJSON(); err == nil {
+			report.ToolCallResults = toolResultsJSON
+			logger.SugaredLogger.Infof("保存工具调用结果，长度: %d", len(toolResultsJSON))
+		} else {
+			logger.SugaredLogger.Warnf("序列化工具调用结果失败: %v", err)
+		}
+
 		// AI响应完成后，解析推荐结果并更新数据库
 		logger.SugaredLogger.Infof("AI分析完成，响应长度: %d", fullResponse.Len())
 		if fullResponse.Len() > 0 {
-			if err := s.parseAndUpdateRecommendations(report, fullResponse.String()); err != nil {
+			// 传递工具调用结果给解析函数
+			if err := s.parseAndUpdateRecommendations(report, fullResponse.String(), executor.GetResults()); err != nil {
 				logger.SugaredLogger.Errorf("解析和更新推荐数据失败: %v", err)
 				// 即使解析失败，也要设置完成状态，避免报告一直处于 processing 状态
 				report.Error = err.Error()
@@ -843,7 +854,7 @@ func (s *StockPickService) ClearOldReports() error {
 }
 
 // parseAndUpdateRecommendations 解析AI响应并更新到数据库
-func (s *StockPickService) parseAndUpdateRecommendations(report *models.StockPickReport, content string) error {
+func (s *StockPickService) parseAndUpdateRecommendations(report *models.StockPickReport, content string, toolResults *models.ToolCallResultsCollection) error {
 	// 确保 report 不为 nil
 	if report == nil {
 		return errors.New("report 参数为 nil")
@@ -890,10 +901,10 @@ func (s *StockPickService) parseAndUpdateRecommendations(report *models.StockPic
 	report.CandidatesCount = len(recommendations)
 	report.Recommendations = recommendations
 
-	// 使用AI报告解析器解析结构化分析
+	// 使用AI报告解析器解析结构化分析，传入工具调用结果
 	logger.SugaredLogger.Infof("开始使用AI报告解析器解析结构化分析")
 	parser := NewAIReportParser()
-	parser.ParseBatch(content, report.Recommendations)
+	parser.ParseBatchWithToolResults(content, report.Recommendations, toolResults)
 	logger.SugaredLogger.Infof("AI报告解析器解析完成")
 
 	// 保存到数据库

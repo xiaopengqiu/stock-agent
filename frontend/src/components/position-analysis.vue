@@ -13,7 +13,9 @@ import {
   GetPositionAnalysis,
   AnalyzeAllPositions,
   GetLatestPositionAnalyses,
-  SyncFollowedToPositions
+  SyncFollowedToPositions,
+  AnalyzePortfolio,
+  GetLatestPortfolioAnalysis
 } from "../../wailsjs/go/main/App";
 import {NButton, NPopconfirm, useMessage, NModal, NCard, NStatistic, NGrid, NGi, NTabPane, NTabs, NSpin, NAlert, NFlex, NTag, NProgress, NIcon} from "naive-ui";
 import {SyncOutline} from "@vicons/ionicons5";
@@ -40,6 +42,11 @@ const batchAnalyzing = ref(false)
 const batchProgress = ref(0)
 const batchAnalyses = ref([])
 const latestAnalysesMap = ref(new Map())
+
+// 整体仓位分析相关
+const showPortfolioAnalysisModal = ref(false)
+const portfolioAnalyzing = ref(false)
+const currentPortfolioAnalysis = ref(null)
 
 // 添加持仓弹窗相关
 const showAddModal = ref(false)
@@ -398,6 +405,45 @@ function viewAnalysisFromBatch(positionId) {
   showAnalysisModal.value = true
 }
 
+// 分析整体仓位
+async function handlePortfolioAnalysis() {
+  if (positions.value.length === 0) {
+    message.warning('暂无持仓可分析')
+    return
+  }
+
+  currentPortfolioAnalysis.value = null
+  showPortfolioAnalysisModal.value = true
+
+  // 先尝试获取已有的分析结果
+  try {
+    const existingAnalysis = await GetLatestPortfolioAnalysis()
+    if (existingAnalysis) {
+      currentPortfolioAnalysis.value = existingAnalysis
+      return
+    }
+  } catch (err) {
+    console.log('暂无历史整体分析结果')
+  }
+
+  // 如果没有历史分析，自动进行新分析
+  await doPortfolioAnalysis()
+}
+
+// 执行整体仓位分析
+async function doPortfolioAnalysis() {
+  portfolioAnalyzing.value = true
+  try {
+    const analysis = await AnalyzePortfolio(0)
+    currentPortfolioAnalysis.value = analysis
+    message.success('整体仓位分析完成')
+  } catch (err) {
+    message.error('整体仓位分析失败: ' + err)
+  } finally {
+    portfolioAnalyzing.value = false
+  }
+}
+
 onMounted(() => {
   loadPositions()
 })
@@ -444,6 +490,9 @@ onMounted(() => {
               </n-button>
               <n-button type="warning" @click="handleBatchAnalyze">
                 AI批量分析
+              </n-button>
+              <n-button type="success" @click="handlePortfolioAnalysis">
+                整体仓位分析
               </n-button>
             </n-flex>
           </n-gi>
@@ -639,6 +688,46 @@ onMounted(() => {
         <n-flex justify="end" gap="8">
           <n-button v-if="!batchAnalyzing && batchAnalyses.length > 0" type="info" @click="doBatchAnalyze">重新分析</n-button>
           <n-button @click="showBatchAnalysisModal = false">关闭</n-button>
+        </n-flex>
+      </template>
+    </n-modal>
+
+    <!-- 整体仓位分析弹窗 -->
+    <n-modal v-model:show="showPortfolioAnalysisModal" preset="card" title="整体仓位分析" style="width: 900px;">
+      <n-spin :show="portfolioAnalyzing">
+        <div v-if="!currentPortfolioAnalysis && !portfolioAnalyzing" style="text-align: center; padding: 40px;">
+          <n-button type="primary" @click="doPortfolioAnalysis">开始分析</n-button>
+        </div>
+
+        <div v-if="currentPortfolioAnalysis">
+          <n-tabs type="line">
+            <n-tab-pane name="overall" tab="整体评估">
+              <n-card style="margin-top: 16px;">
+                <p style="white-space: pre-wrap; line-height: 1.8;">{{ currentPortfolioAnalysis.overall_assessment }}</p>
+              </n-card>
+            </n-tab-pane>
+            <n-tab-pane name="allocation" tab="仓位分布分析">
+              <n-card style="margin-top: 16px;">
+                <p style="white-space: pre-wrap; line-height: 1.8;">{{ currentPortfolioAnalysis.allocation_analysis }}</p>
+              </n-card>
+            </n-tab-pane>
+            <n-tab-pane name="risk" tab="风险评估">
+              <n-card style="margin-top: 16px;">
+                <p style="white-space: pre-wrap; line-height: 1.8;">{{ currentPortfolioAnalysis.risk_assessment }}</p>
+              </n-card>
+            </n-tab-pane>
+            <n-tab-pane name="suggestions" tab="调整建议">
+              <n-card style="margin-top: 16px;">
+                <p style="white-space: pre-wrap; line-height: 1.8;">{{ currentPortfolioAnalysis.adjustment_suggestions }}</p>
+              </n-card>
+            </n-tab-pane>
+          </n-tabs>
+        </div>
+      </n-spin>
+      <template #footer>
+        <n-flex justify="end" gap="8">
+          <n-button v-if="currentPortfolioAnalysis" type="info" @click="doPortfolioAnalysis">重新分析</n-button>
+          <n-button @click="showPortfolioAnalysisModal = false">关闭</n-button>
         </n-flex>
       </template>
     </n-modal>

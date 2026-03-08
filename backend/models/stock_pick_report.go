@@ -33,6 +33,9 @@ type StockPickReport struct {
 	// 使用的工具列表 (JSON)
 	ToolsUsed string `gorm:"type:text" json:"tools_used"`
 
+	// 工具调用结果 (JSON) - 存储所有工具调用的原始结果，用于舆情分析等
+	ToolCallResults string `gorm:"type:text" json:"tool_call_results"`
+
 	// AI配置
 	AIConfigID uint   `json:"ai_config_id"`
 	AIModel    string `json:"ai_model"`
@@ -137,6 +140,78 @@ type ToolUsage struct {
 	CallTime string `json:"call_time"` // 调用时间
 	Duration string `json:"duration"`  // 耗时
 	Result   string `json:"result"`    // 工具调用结果摘要
+}
+
+// ToolCallResult 工具调用完整结果记录
+type ToolCallResult struct {
+	ToolName   string    `json:"tool_name"`    // 工具名称
+	Arguments  string    `json:"arguments"`    // 调用参数(JSON格式)
+	Result     string    `json:"result"`       // 工具返回结果
+	CallTime   time.Time `json:"call_time"`    // 调用时间
+	StockCode  string    `json:"stock_code"`   // 关联的股票代码(如适用)
+	StockName  string    `json:"stock_name"`   // 关联的股票名称(如适用)
+	IsNewsTool bool      `json:"is_news_tool"` // 是否是新闻/舆情相关工具
+}
+
+// ToolCallResultsCollection 工具调用结果集合
+type ToolCallResultsCollection struct {
+	Results []ToolCallResult `json:"results"`
+}
+
+// AddResult 添加工具调用结果
+func (c *ToolCallResultsCollection) AddResult(result ToolCallResult) {
+	c.Results = append(c.Results, result)
+}
+
+// GetNewsResults 获取所有新闻/舆情相关工具的结果
+func (c *ToolCallResultsCollection) GetNewsResults() []ToolCallResult {
+	var newsResults []ToolCallResult
+	for _, r := range c.Results {
+		if r.IsNewsTool {
+			newsResults = append(newsResults, r)
+		}
+	}
+	return newsResults
+}
+
+// GetResultsByStockCode 获取指定股票代码的工具调用结果
+func (c *ToolCallResultsCollection) GetResultsByStockCode(stockCode string) []ToolCallResult {
+	var results []ToolCallResult
+	for _, r := range c.Results {
+		if r.StockCode == stockCode {
+			results = append(results, r)
+		}
+	}
+	return results
+}
+
+// GetNewsResultsByStockCode 获取指定股票的新闻/舆情结果
+func (c *ToolCallResultsCollection) GetNewsResultsByStockCode(stockCode string) []ToolCallResult {
+	var results []ToolCallResult
+	for _, r := range c.Results {
+		if r.IsNewsTool && r.StockCode == stockCode {
+			results = append(results, r)
+		}
+	}
+	return results
+}
+
+// ToJSON 序列化为JSON
+func (c *ToolCallResultsCollection) ToJSON() (string, error) {
+	data, err := json.Marshal(c)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+// FromJSON 从JSON反序列化
+func (c *ToolCallResultsCollection) FromJSON(jsonStr string) error {
+	if jsonStr == "" {
+		c.Results = []ToolCallResult{}
+		return nil
+	}
+	return json.Unmarshal([]byte(jsonStr), c)
 }
 
 // StockPickReportItem 荐股报告列表项（用于前端展示）

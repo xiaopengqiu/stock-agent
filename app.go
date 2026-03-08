@@ -2239,6 +2239,16 @@ func (a *App) AnalyzeAllPositions(aiConfigID uint) ([]*models.PositionAnalysis, 
 	return a.PositionAnalysisSvc.AnalyzeAllPositions(aiConfigID)
 }
 
+// AnalyzePortfolio analyzes the overall portfolio and returns the analysis
+func (a *App) AnalyzePortfolio(aiConfigID uint) (*models.PortfolioAnalysis, error) {
+	return a.PositionAnalysisSvc.AnalyzePortfolio(aiConfigID)
+}
+
+// GetLatestPortfolioAnalysis gets the latest portfolio analysis
+func (a *App) GetLatestPortfolioAnalysis() (*models.PortfolioAnalysis, error) {
+	return a.PositionAnalysisSvc.GetLatestPortfolioAnalysis()
+}
+
 // SyncFollowedToPositions syncs followed stocks with cost price and volume to positions
 func (a *App) SyncFollowedToPositions() (string, error) {
 	return a.PositionSvc.SyncFollowedToPositions()

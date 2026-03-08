@@ -825,6 +825,54 @@ export namespace models {
 		    return a;
 		}
 	}
+	export class PortfolioAnalysis {
+	    id: number;
+	    // Go type: time
+	    created_at: any;
+	    // Go type: time
+	    updated_at: any;
+	    deleted_at: gorm.DeletedAt;
+	    overall_assessment: string;
+	    allocation_analysis: string;
+	    risk_assessment: string;
+	    adjustment_suggestions: string;
+	    raw_response: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new PortfolioAnalysis(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.created_at = this.convertValues(source["created_at"], null);
+	        this.updated_at = this.convertValues(source["updated_at"], null);
+	        this.deleted_at = this.convertValues(source["deleted_at"], gorm.DeletedAt);
+	        this.overall_assessment = source["overall_assessment"];
+	        this.allocation_analysis = source["allocation_analysis"];
+	        this.risk_assessment = source["risk_assessment"];
+	        this.adjustment_suggestions = source["adjustment_suggestions"];
+	        this.raw_response = source["raw_response"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class Position {
 	    id: number;
 	    // Go type: time

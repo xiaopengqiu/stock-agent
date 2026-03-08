@@ -361,14 +361,6 @@
                         <n-text depth="2" class="analysis-text" style="white-space: pre-wrap;">
                           {{ getDisplaySentiment(item.sentimentAnalysis, item.stockCode) }}
                         </n-text>
-                        <n-button
-                          v-if="item.sentimentAnalysis.length > 100"
-                          text size="tiny"
-                          @click="toggleSentimentExpand(item.stockCode)"
-                          style="margin-top: 4px;"
-                        >
-                          {{ expandedSentiment.has(item.stockCode) ? '收起' : '展开详情' }}
-                        </n-button>
                       </div>
 
                       <!-- 风险提示 -->
@@ -577,13 +569,6 @@
                                   <n-text v-if="item.sentimentAnalysis" type="info" depth="3" style="display: block; margin-top: 8px; white-space: pre-wrap;">
                                     {{ getDisplaySentiment(item.sentimentAnalysis, `panel-${item.stockCode}`) }}
                                   </n-text>
-                                  <n-button
-                                    v-if="item.sentimentAnalysis && item.sentimentAnalysis.length > 100"
-                                    text size="tiny"
-                                    @click="toggleSentimentExpand(`panel-${item.stockCode}`)"
-                                  >
-                                    {{ expandedSentiment.has(`panel-${item.stockCode}`) ? '收起' : '展开详情' }}
-                                  </n-button>
                                   <n-text v-else type="info" depth="3" style="display: block; margin-top: 8px; color: #999;">
                                     暂无舆情数据
                                   </n-text>
@@ -891,25 +876,19 @@ const deletingIds = ref(new Set())
 // 技术面分析当前选中的股票
 const activeTechTab = ref('')
 
-// 舆情分析展开状态
+// 舆情分析展开状态 - 保留用于向后兼容
 const expandedSentiment = ref(new Set())
 
-// 切换舆情分析展开状态
+// 切换舆情分析展开状态 - 保留用于向后兼容
 function toggleSentimentExpand(stockCode) {
-  if (expandedSentiment.value.has(stockCode)) {
-    expandedSentiment.value.delete(stockCode)
-  } else {
-    expandedSentiment.value.add(stockCode)
-  }
+  // 不再需要切换，始终显示完整内容
 }
 
-// 获取舆情分析展示内容（默认显示前100字符）
+// 获取舆情分析展示内容 - 直接返回完整内容，不做任何截断
 function getDisplaySentiment(content, stockCode) {
   if (!content) return ''
-  if (expandedSentiment.value.has(stockCode) || content.length <= 100) {
-    return content
-  }
-  return content.substring(0, 100) + '...'
+  // 直接返回完整内容，不做任何截断
+  return content
 }
 
 // 加入持仓相关
@@ -1233,10 +1212,9 @@ async function sendMessage() {
 // 处理流式响应
 function handleStream(data) {
   if (data.content) {
-    // 收到第一个token时，停止loading状态
+    // 收到第一个token时，标记已开始接收内容
     if (!firstTokenReceived.value) {
       firstTokenReceived.value = true
-      analyzing.value = false
     }
     // 更新最后一条AI消息的完整内容
     const lastMessage = messages.value[messages.value.length - 1]
@@ -1246,8 +1224,8 @@ function handleStream(data) {
         lastMessage.fullContent = ''
       }
       lastMessage.fullContent += data.content
-      // 显示简短提示
-      lastMessage.content = 'AI正在分析中，详情请查看右侧推荐结果...'
+      // 分析过程中显示提示信息
+      lastMessage.content = 'AI正在分析中，请稍候...'
     }
     fullReport.value += data.content
   }
@@ -1348,40 +1326,9 @@ function handleUpdate(data) {
 
 // 从完整报告中提取一句话摘要
 function extractOneLineSummary(fullContent, recs) {
-  // 如果有推荐数据，优先基于推荐数据生成摘要
+  // 分析完成后，只提示用户去右侧查看结果，不展示具体股票信息
   if (recs && recs.length > 0) {
-    const stockNames = recs.slice(0, 3).map(r => r.stock_name || r.stockName).filter(Boolean)
-    const count = recs.length
-    let summary = `AI分析完成，共推荐${count}只股票`
-    if (stockNames.length > 0) {
-      summary += `：${stockNames.join('、')}`
-      if (count > 3) {
-        summary += `等${count}只`
-      }
-    }
-    // 添加涨跌幅信息
-    const upCount = recs.filter(r => (r.price_change || r.priceChange) >= 0).length
-    summary += `，其中${upCount}只上涨，${count - upCount}只下跌。`
-    summary += `详情请查看右侧推荐结果。`
-    return summary
-  }
-
-  // 如果没有推荐数据，尝试从报告内容中提取
-  if (!fullContent) return 'AI分析中...'
-
-  // 尝试提取市场环境分析的第一句话
-  const marketMatch = fullContent.match(/## 市场环境分析\s*([\s\S]*?)(?=\n##|$)/)
-  if (marketMatch && marketMatch[1]) {
-    const firstSentence = marketMatch[1].trim().split(/[。！？.!?]/)[0]
-    if (firstSentence && firstSentence.length > 10) {
-      return firstSentence + '。详情请查看右侧推荐结果。'
-    }
-  }
-
-  // 尝试提取推荐股票部分
-  const recMatch = fullContent.match(/## 推荐股票列表\s*([\s\S]*?)(?=\n##|$)/)
-  if (recMatch && recMatch[1]) {
-    return 'AI分析完成，已为您选出推荐股票。详情请查看右侧推荐结果。'
+    return `AI分析完成，共推荐${recs.length}只股票。详情请查看右侧推荐结果。`
   }
 
   // 回退到通用摘要

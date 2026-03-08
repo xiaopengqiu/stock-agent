@@ -34,6 +34,10 @@ export function AnalyzeAllPositions(arg1) {
   return window['go']['main']['App']['AnalyzeAllPositions'](arg1);
 }
 
+export function AnalyzePortfolio(arg1) {
+  return window['go']['main']['App']['AnalyzePortfolio'](arg1);
+}
+
 export function AnalyzePosition(arg1, arg2) {
   return window['go']['main']['App']['AnalyzePosition'](arg1, arg2);
 }
@@ -152,6 +156,10 @@ export function GetIndustryMoneyRankSina(arg1, arg2) {
 
 export function GetIndustryRank(arg1, arg2) {
   return window['go']['main']['App']['GetIndustryRank'](arg1, arg2);
+}
+
+export function GetLatestPortfolioAnalysis() {
+  return window['go']['main']['App']['GetLatestPortfolioAnalysis']();
 }
 
 export function GetLatestPositionAnalyses() {
