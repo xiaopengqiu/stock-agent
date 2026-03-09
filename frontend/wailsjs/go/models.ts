@@ -683,6 +683,7 @@ export namespace data {
 	export class ToolItem {
 	    name: string;
 	    type: string;
+	    description: string;
 	    enabled: boolean;
 	    config: Record<string, any>;
 	
@@ -694,6 +695,7 @@ export namespace data {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.name = source["name"];
 	        this.type = source["type"];
+	        this.description = source["description"];
 	        this.enabled = source["enabled"];
 	        this.config = source["config"];
 	    }
@@ -1123,6 +1125,7 @@ export namespace models {
 	    candidates_count: number;
 	    recommendations: RecommendationItem[];
 	    tools_used: string;
+	    tool_call_results: string;
 	    ai_config_id: number;
 	    ai_model: string;
 	    status: string;
@@ -1147,6 +1150,7 @@ export namespace models {
 	        this.candidates_count = source["candidates_count"];
 	        this.recommendations = this.convertValues(source["recommendations"], RecommendationItem);
 	        this.tools_used = source["tools_used"];
+	        this.tool_call_results = source["tool_call_results"];
 	        this.ai_config_id = source["ai_config_id"];
 	        this.ai_model = source["ai_model"];
 	        this.status = source["status"];

@@ -1177,6 +1177,9 @@ func (s *StockPickService) parseRecommendationsFromContent(content string) []mod
 			} else if strings.Contains(sectionTitle, "板块") || strings.Contains(sectionTitle, "行业") || strings.Contains(sectionTitle, "概念") {
 				currentSection = "sector"
 				isSectionHeader = true
+			} else if strings.Contains(sectionTitle, "舆情") || strings.Contains(sectionTitle, "情绪") || strings.Contains(sectionTitle, "sentiment") {
+				currentSection = "sentiment"
+				isSectionHeader = true
 			}
 
 			// 尝试用单行解析方式也解析一下
@@ -1242,6 +1245,10 @@ func (s *StockPickService) finalizeRecContent(rec *models.RecommendationItem, se
 	case "sector":
 		if rec.SectorConcept == "" || len(content) > len(rec.SectorConcept) {
 			rec.SectorConcept = content
+		}
+	case "sentiment":
+		if rec.SentimentAnalysis == "" || len(content) > len(rec.SentimentAnalysis) {
+			rec.SentimentAnalysis = content
 		}
 	}
 }

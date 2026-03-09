@@ -220,4 +220,4 @@ export function UpdateConfig(arg1:data.SettingConfig):Promise<string>;
 
 export function UpdateGroupSort(arg1:number,arg2:number):Promise<boolean>;
 
-export function UpdatePosition(arg1:number,arg2:models.Position):Promise<string>;
+export function UpdatePosition(arg1:models.Position):Promise<string>;

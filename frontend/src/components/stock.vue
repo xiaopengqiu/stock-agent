@@ -2244,7 +2244,7 @@ function searchStockReport(stockCode) {
               sort: { required: true, message: '请输入排序值'},
             }" label-placement="left" label-width="80px">
       <n-form-item label="股票成本" path="costPrice">
-        <n-input-number v-model:value="formModel.costPrice" min="0" placeholder="请输入股票成本">
+        <n-input-number v-model:value="formModel.costPrice" min="0" :precision="3" placeholder="请输入股票成本">
           <template #suffix>
             {{ formModel.code.indexOf("hk") >= 0 ? "HK$" : "¥" }}
           </template>

@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/cloudwego/eino/components/tool"
 	"go-stock/backend/agent"
@@ -1856,12 +1857,23 @@ func validateToolConfig(config *data.ToolConfig) error {
 func (a *App) GetAvailableTools() []data.ToolItem {
 	var availableTools []data.ToolItem
 
+	// Get default config for tool descriptions
+	defaultConfig := data.GetDefaultToolConfig()
+	descMap := make(map[string]string)
+	for _, tool := range defaultConfig.Tools {
+		descMap[tool.Name] = tool.Description
+	}
+
 	// Get current config to check enabled status
 	config, err := data.LoadToolConfig()
 	enabledMap := make(map[string]bool)
+	configDescMap := make(map[string]string)
 	if err == nil {
 		for _, tool := range config.Tools {
 			enabledMap[tool.Name] = tool.Enabled
+			if tool.Description != "" {
+				configDescMap[tool.Name] = tool.Description
+			}
 		}
 	}
 
@@ -1873,11 +1885,18 @@ func (a *App) GetAvailableTools() []data.ToolItem {
 			continue
 		}
 
+		// Use description from config if available, otherwise use default
+		description := descMap[info.Name]
+		if configDesc, ok := configDescMap[info.Name]; ok && configDesc != "" {
+			description = configDesc
+		}
+
 		toolItem := data.ToolItem{
-			Name:    info.Name,
-			Type:    "builtin",
-			Enabled: enabledMap[info.Name],
-			Config:  map[string]interface{}{},
+			Name:        info.Name,
+			Type:        "builtin",
+			Description: description,
+			Enabled:     enabledMap[info.Name],
+			Config:      map[string]interface{}{},
 		}
 		availableTools = append(availableTools, toolItem)
 	}
@@ -1885,11 +1904,18 @@ func (a *App) GetAvailableTools() []data.ToolItem {
 	// Get MCP tools from registry
 	mcpTools := agent.GetMCPTools()
 	for name := range mcpTools {
+		// Use description from config if available
+		description := descMap[name]
+		if configDesc, ok := configDescMap[name]; ok && configDesc != "" {
+			description = configDesc
+		}
+
 		toolItem := data.ToolItem{
-			Name:    name,
-			Type:    "mcp",
-			Enabled: enabledMap[name],
-			Config:  map[string]interface{}{},
+			Name:        name,
+			Type:        "mcp",
+			Description: description,
+			Enabled:     enabledMap[name],
+			Config:      map[string]interface{}{},
 		}
 		availableTools = append(availableTools, toolItem)
 	}
@@ -2164,8 +2190,11 @@ func (a *App) AddPosition(pos *models.Position) (string, error) {
 }
 
 // UpdatePosition updates an existing position
-func (a *App) UpdatePosition(id uint, pos *models.Position) (string, error) {
-	if err := a.PositionSvc.UpdatePosition(id, pos); err != nil {
+func (a *App) UpdatePosition(pos *models.Position) (string, error) {
+	if pos == nil || pos.ID == 0 {
+		return "", errors.New("持仓ID不能为空")
+	}
+	if err := a.PositionSvc.UpdatePosition(pos.ID, pos); err != nil {
 		return "", err
 	}
 	return "持仓更新成功", nil

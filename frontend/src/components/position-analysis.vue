@@ -15,9 +15,10 @@ import {
   GetLatestPositionAnalyses,
   SyncFollowedToPositions,
   AnalyzePortfolio,
-  GetLatestPortfolioAnalysis
+  GetLatestPortfolioAnalysis,
+  Greet
 } from "../../wailsjs/go/main/App";
-import {NButton, NPopconfirm, useMessage, NModal, NCard, NStatistic, NGrid, NGi, NTabPane, NTabs, NSpin, NAlert, NFlex, NTag, NProgress, NIcon} from "naive-ui";
+import {NButton, NPopconfirm, useMessage, NModal, NCard, NStatistic, NGrid, NGi, NTabPane, NTabs, NSpin, NAlert, NFlex, NTag, NProgress, NIcon, NText} from "naive-ui";
 import {SyncOutline} from "@vicons/ionicons5";
 
 const message = useMessage()
@@ -58,6 +59,26 @@ const addForm = ref({
   buyDate: null,
   notes: ''
 })
+const addFormCurrentPrice = ref(0)
+const addFormProfitLoss = ref(0)
+const addFormProfitLossPct = ref(0)
+const queryingStockPrice = ref(false)
+
+// 编辑持仓弹窗相关
+const showEditModal = ref(false)
+const editingPositionId = ref(null)
+const editForm = ref({
+  stockCode: '',
+  stockName: '',
+  quantity: 100,
+  buyPrice: 0,
+  buyDate: null,
+  notes: ''
+})
+const editFormCurrentPrice = ref(0)
+const editFormProfitLoss = ref(0)
+const editFormProfitLossPct = ref(0)
+const editQueryingStockPrice = ref(false)
 
 // 表格列定义
 const columns = [
@@ -80,7 +101,7 @@ const columns = [
     title: '成本价',
     key: 'buyPrice',
     width: 100,
-    render: (row) => '¥' + formatNumber(row.buy_price)
+    render: (row) => '¥' + formatNumber(row.buy_price, 3)
   },
   {
     title: '现价',
@@ -196,6 +217,78 @@ function getAdviceColor(advice) {
   return colors[advice] || 'default'
 }
 
+// 查询股票实时价格
+async function queryStockPrice(stockCode, isEdit = false) {
+  if (!stockCode || stockCode.trim() === '') {
+    return
+  }
+
+  const querying = isEdit ? editQueryingStockPrice : queryingStockPrice
+  const currentPrice = isEdit ? editFormCurrentPrice : addFormCurrentPrice
+  const form = isEdit ? editForm : addForm
+
+  querying.value = true
+  try {
+    const stockInfo = await Greet(stockCode.trim())
+    if (stockInfo && stockInfo.Price) {
+      const price = parseFloat(stockInfo.Price)
+      if (!isNaN(price)) {
+        currentPrice.value = price
+        // 如果股票名称为空，自动填充
+        if (stockInfo.Name && (!form.value.stockName || form.value.stockName === '')) {
+          form.value.stockName = stockInfo.Name
+        }
+        // 重新计算盈亏
+        calculateProfitLoss(isEdit)
+      }
+    }
+  } catch (err) {
+    console.error('查询股票价格失败:', err)
+  } finally {
+    querying.value = false
+  }
+}
+
+// 处理成本价变化：自动查询股价并计算盈亏
+async function handleBuyPriceChange(isEdit = false) {
+  const form = isEdit ? editForm : addForm
+  const currentPrice = isEdit ? editFormCurrentPrice : addFormCurrentPrice
+
+  // 如果有股票代码，查询最新股价（如果还没有则必须查询）
+  if (form.value.stockCode) {
+    if (currentPrice.value <= 0) {
+      // 还没有股价，必须查询
+      await queryStockPrice(form.value.stockCode, isEdit)
+    } else {
+      // 已有股价，直接计算盈亏，但可以让用户手动点击刷新按钮更新
+      calculateProfitLoss(isEdit)
+    }
+  } else {
+    // 没有股票代码，只计算盈亏（显示为0）
+    calculateProfitLoss(isEdit)
+  }
+}
+
+// 计算盈亏
+function calculateProfitLoss(isEdit = false) {
+  const form = isEdit ? editForm : addForm
+  const currentPrice = isEdit ? editFormCurrentPrice : addFormCurrentPrice
+  const profitLoss = isEdit ? editFormProfitLoss : addFormProfitLoss
+  const profitLossPct = isEdit ? editFormProfitLossPct : addFormProfitLossPct
+
+  if (form.value.buyPrice > 0 && form.value.quantity > 0 && currentPrice.value > 0) {
+    const marketValue = currentPrice.value * form.value.quantity
+    const costValue = form.value.buyPrice * form.value.quantity
+    profitLoss.value = marketValue - costValue
+    if (costValue > 0) {
+      profitLossPct.value = ((currentPrice.value - form.value.buyPrice) / form.value.buyPrice) * 100
+    }
+  } else {
+    profitLoss.value = 0
+    profitLossPct.value = 0
+  }
+}
+
 // 从自选股同步持仓
 async function syncFromFollowedStocks() {
   syncingFromFollowed.value = true
@@ -260,7 +353,7 @@ async function handleAddPosition() {
       quantity: addForm.value.quantity,
       buy_price: addForm.value.buyPrice,
       buy_date: addForm.value.buyDate ? new Date(addForm.value.buyDate).toISOString() : new Date().toISOString(),
-      current_price: addForm.value.buyPrice,
+      current_price: addFormCurrentPrice.value > 0 ? addFormCurrentPrice.value : addForm.value.buyPrice,
       notes: addForm.value.notes,
       is_active: true
     }
@@ -284,11 +377,72 @@ function resetAddForm() {
     buyDate: null,
     notes: ''
   }
+  addFormCurrentPrice.value = 0
+  addFormProfitLoss.value = 0
+  addFormProfitLossPct.value = 0
 }
 
 // 编辑持仓
-function handleEdit(row) {
-  message.info('编辑功能待实现')
+async function handleEdit(row) {
+  editingPositionId.value = row.id
+  editForm.value = {
+    stockCode: row.stock_code,
+    stockName: row.stock_name,
+    quantity: row.quantity,
+    buyPrice: row.buy_price,
+    buyDate: row.buy_date ? new Date(row.buy_date) : null,
+    notes: row.notes || ''
+  }
+  // 初始化当前价格
+  editFormCurrentPrice.value = row.current_price || 0
+  // 计算盈亏
+  calculateProfitLoss(true)
+  showEditModal.value = true
+  // 自动查询最新股价
+  await queryStockPrice(row.stock_code, true)
+}
+
+// 保存编辑持仓
+async function handleSaveEdit() {
+  if (!editForm.value.stockCode || !editForm.value.stockName || !editForm.value.quantity || !editForm.value.buyPrice) {
+    message.warning('请填写完整信息')
+    return
+  }
+
+  try {
+    const pos = {
+      id: editingPositionId.value,
+      stock_code: editForm.value.stockCode,
+      stock_name: editForm.value.stockName,
+      quantity: editForm.value.quantity,
+      buy_price: editForm.value.buyPrice,
+      buy_date: editForm.value.buyDate ? new Date(editForm.value.buyDate).toISOString() : null,
+      notes: editForm.value.notes
+    }
+    await UpdatePosition(pos)
+    message.success('持仓更新成功')
+    showEditModal.value = false
+    resetEditForm()
+    await loadPositions()
+  } catch (err) {
+    message.error('更新持仓失败: ' + err)
+  }
+}
+
+// 重置编辑表单
+function resetEditForm() {
+  editingPositionId.value = null
+  editForm.value = {
+    stockCode: '',
+    stockName: '',
+    quantity: 100,
+    buyPrice: 0,
+    buyDate: null,
+    notes: ''
+  }
+  editFormCurrentPrice.value = 0
+  editFormProfitLoss.value = 0
+  editFormProfitLossPct.value = 0
 }
 
 // 分析持仓
@@ -520,16 +674,63 @@ onMounted(() => {
     <n-modal v-model:show="showAddModal" preset="card" title="添加持仓" style="width: 500px;">
       <n-form :model="addForm" label-placement="left" label-width="100">
         <n-form-item label="股票代码">
-          <n-input v-model:value="addForm.stockCode" placeholder="请输入股票代码，如：000001.SZ" />
+          <n-input
+            v-model:value="addForm.stockCode"
+            placeholder="请输入股票代码，如：000001.SZ"
+            @blur="queryStockPrice(addForm.stockCode, false)"
+          />
         </n-form-item>
         <n-form-item label="股票名称">
           <n-input v-model:value="addForm.stockName" placeholder="请输入股票名称" />
         </n-form-item>
         <n-form-item label="持股数量">
-          <n-input-number v-model:value="addForm.quantity" :min="1" placeholder="请输入持股数量" style="width: 100%;" />
+          <n-input-number
+            v-model:value="addForm.quantity"
+            :min="1"
+            placeholder="请输入持股数量"
+            style="width: 100%;"
+            @update:value="handleBuyPriceChange(false)"
+          />
         </n-form-item>
         <n-form-item label="买入价格">
-          <n-input-number v-model:value="addForm.buyPrice" :min="0" :precision="2" placeholder="请输入买入价格" style="width: 100%;" />
+          <n-input-number
+            v-model:value="addForm.buyPrice"
+            :min="0"
+            :precision="3"
+            placeholder="请输入买入价格"
+            style="width: 100%;"
+            @update:value="handleBuyPriceChange(false)"
+          />
+        </n-form-item>
+        <n-form-item label="当前股价">
+          <n-input-number
+            :value="addFormCurrentPrice"
+            :precision="3"
+            placeholder="自动查询"
+            style="width: 100%;"
+            readonly
+            :disabled="true"
+          />
+          <n-button
+            v-if="addForm.stockCode"
+            size="small"
+            type="info"
+            :loading="queryingStockPrice"
+            style="margin-top: 8px;"
+            @click="queryStockPrice(addForm.stockCode, false)"
+          >
+            {{ queryingStockPrice ? '查询中...' : '刷新股价' }}
+          </n-button>
+        </n-form-item>
+        <n-form-item label="预估盈亏" v-if="addFormCurrentPrice > 0 && addForm.buyPrice > 0 && addForm.quantity > 0">
+          <div>
+            <span :style="{ color: addFormProfitLoss >= 0 ? '#18a058' : '#d03050', fontSize: '18px', fontWeight: 'bold' }">
+              ¥{{ formatNumber(addFormProfitLoss) }}
+            </span>
+            <span :style="{ color: addFormProfitLossPct >= 0 ? '#18a058' : '#d03050', marginLeft: '12px' }">
+              ({{ formatNumber(addFormProfitLossPct) }}%)
+            </span>
+          </div>
         </n-form-item>
         <n-form-item label="买入日期">
           <n-date-picker v-model:value="addForm.buyDate" type="date" placeholder="请选择买入日期" style="width: 100%;" />
@@ -542,6 +743,83 @@ onMounted(() => {
         <n-flex justify="end">
           <n-button @click="showAddModal = false" style="margin-right: 8px;">取消</n-button>
           <n-button type="primary" @click="handleAddPosition">确认添加</n-button>
+        </n-flex>
+      </template>
+    </n-modal>
+
+    <!-- 编辑持仓弹窗 -->
+    <n-modal v-model:show="showEditModal" preset="card" title="编辑持仓" style="width: 500px;">
+      <n-form :model="editForm" label-placement="left" label-width="100">
+        <n-form-item label="股票代码">
+          <n-input
+            v-model:value="editForm.stockCode"
+            placeholder="请输入股票代码，如：000001.SZ"
+            @blur="queryStockPrice(editForm.stockCode, true)"
+          />
+        </n-form-item>
+        <n-form-item label="股票名称">
+          <n-input v-model:value="editForm.stockName" placeholder="请输入股票名称" />
+        </n-form-item>
+        <n-form-item label="持股数量">
+          <n-input-number
+            v-model:value="editForm.quantity"
+            :min="1"
+            placeholder="请输入持股数量"
+            style="width: 100%;"
+            @update:value="handleBuyPriceChange(true)"
+          />
+        </n-form-item>
+        <n-form-item label="买入价格">
+          <n-input-number
+            v-model:value="editForm.buyPrice"
+            :min="0"
+            :precision="3"
+            placeholder="请输入买入价格"
+            style="width: 100%;"
+            @update:value="handleBuyPriceChange(true)"
+          />
+        </n-form-item>
+        <n-form-item label="当前股价">
+          <n-input-number
+            :value="editFormCurrentPrice"
+            :precision="3"
+            placeholder="自动查询"
+            style="width: 100%;"
+            readonly
+            :disabled="true"
+          />
+          <n-button
+            v-if="editForm.stockCode"
+            size="small"
+            type="info"
+            :loading="editQueryingStockPrice"
+            style="margin-top: 8px;"
+            @click="queryStockPrice(editForm.stockCode, true)"
+          >
+            {{ editQueryingStockPrice ? '查询中...' : '刷新股价' }}
+          </n-button>
+        </n-form-item>
+        <n-form-item label="预估盈亏" v-if="editFormCurrentPrice > 0 && editForm.buyPrice > 0 && editForm.quantity > 0">
+          <div>
+            <span :style="{ color: editFormProfitLoss >= 0 ? '#18a058' : '#d03050', fontSize: '18px', fontWeight: 'bold' }">
+              ¥{{ formatNumber(editFormProfitLoss) }}
+            </span>
+            <span :style="{ color: editFormProfitLossPct >= 0 ? '#18a058' : '#d03050', marginLeft: '12px' }">
+              ({{ formatNumber(editFormProfitLossPct) }}%)
+            </span>
+          </div>
+        </n-form-item>
+        <n-form-item label="买入日期">
+          <n-date-picker v-model:value="editForm.buyDate" type="date" placeholder="请选择买入日期" style="width: 100%;" />
+        </n-form-item>
+        <n-form-item label="备注">
+          <n-input v-model:value="editForm.notes" type="textarea" placeholder="请输入备注" />
+        </n-form-item>
+      </n-form>
+      <template #footer>
+        <n-flex justify="end">
+          <n-button @click="showEditModal = false" style="margin-right: 8px;">取消</n-button>
+          <n-button type="primary" @click="handleSaveEdit">保存修改</n-button>
         </n-flex>
       </template>
     </n-modal>
@@ -560,7 +838,7 @@ onMounted(() => {
               </div>
             </template>
             <n-grid :cols="3" :x-gap="16">
-              <n-gi>成本价: ¥{{ formatNumber(currentPosition.buy_price) }}</n-gi>
+              <n-gi>成本价: ¥{{ formatNumber(currentPosition.buy_price, 3) }}</n-gi>
               <n-gi>现价: ¥{{ formatNumber(currentPosition.current_price) }}</n-gi>
               <n-gi>
                 盈亏:

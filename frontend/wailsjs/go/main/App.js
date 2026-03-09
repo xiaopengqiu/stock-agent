@@ -434,6 +434,6 @@ export function UpdateGroupSort(arg1, arg2) {
   return window['go']['main']['App']['UpdateGroupSort'](arg1, arg2);
 }
 
-export function UpdatePosition(arg1, arg2) {
-  return window['go']['main']['App']['UpdatePosition'](arg1, arg2);
+export function UpdatePosition(arg1) {
+  return window['go']['main']['App']['UpdatePosition'](arg1);
 }

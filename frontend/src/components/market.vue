@@ -34,8 +34,6 @@ import InvestCalendarTimeLine from "./InvestCalendarTimeLine.vue";
 import ClsCalendarTimeLine from "./ClsCalendarTimeLine.vue";
 import SelectStock from "./SelectStock.vue";
 import Stockhotmap from "./stockhotmap.vue";
-import AiStockPickFixed from "./ai-stock-pick.vue";
-import PositionAnalysis from "./position-analysis.vue";
 
 const route = useRoute()
 const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
@@ -639,12 +637,6 @@ function ReFlesh(source) {
       </n-tab-pane>
       <n-tab-pane name="名站优选" tab="名站优选">
         <Stockhotmap />
-      </n-tab-pane>
-      <n-tab-pane name="AI选股" tab="AI选股">
-        <AiStockPickFixed />
-      </n-tab-pane>
-      <n-tab-pane name="持仓分析" tab="持仓分析">
-        <PositionAnalysis />
       </n-tab-pane>
     </n-tabs>
   </n-card>

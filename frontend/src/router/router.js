@@ -7,6 +7,8 @@ import marketView from "../components/market.vue"
 import agentChat from "../components/agent-chat.vue"
 import mcpSettingsView from "../components/mcp-settings.vue"
 import toolSettingsView from "../components/tool-settings.vue"
+import aiStockPickView from "../components/ai-stock-pick.vue"
+import positionAnalysisView from "../components/position-analysis.vue"
 
 const routes = [
     { path: '/', component: stockView,name: 'stock'},
@@ -17,6 +19,8 @@ const routes = [
     { path: '/agent', component: agentChat,name: 'agent' },
     { path: '/mcp-settings', component: mcpSettingsView,name: 'mcp-settings' },
     { path: '/tool-settings', component: toolSettingsView,name: 'tool-settings' },
+    { path: '/ai-stock-pick', component: aiStockPickView,name: 'ai-stock-pick' },
+    { path: '/position-analysis', component: positionAnalysisView,name: 'position-analysis' },
 ]
 
 const router = createRouter({

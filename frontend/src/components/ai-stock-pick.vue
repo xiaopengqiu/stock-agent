@@ -1187,7 +1187,7 @@ async function sendMessage() {
   // 添加AI响应占位
   const aiMessage = {
     role: 'assistant',
-    content: '',
+    content: 'AI正在分析中，请稍候...',
     fullContent: '',
     timestamp: Date.now()
   }
@@ -1307,7 +1307,7 @@ function handleUpdate(data) {
       fullReport.value += '\n---\n\n本报告由AI智能分析生成，仅供参考，不构成投资建议。股市有风险，投资需谨慎。'
     }
 
-    // 更新最后一条AI消息为一句话总结
+    // 更新最后一条AI消息为一句话总结，提示用户去右侧查看
     const lastMessage = messages.value[messages.value.length - 1]
     if (lastMessage && lastMessage.role === 'assistant') {
       lastMessage.content = extractOneLineSummary(fullReport.value, data.recommendations)
@@ -1320,7 +1320,7 @@ function handleUpdate(data) {
       duration: 5000
     })
 
-    message.success(`AI荐股分析完成！推荐${data.candidates_count || 0}只股票`)
+    message.success(`AI荐股分析完成！推荐${data.candidates_count || 0}只股票，请查看右侧`)
   }
 }
 
@@ -1328,11 +1328,11 @@ function handleUpdate(data) {
 function extractOneLineSummary(fullContent, recs) {
   // 分析完成后，只提示用户去右侧查看结果，不展示具体股票信息
   if (recs && recs.length > 0) {
-    return `AI分析完成，共推荐${recs.length}只股票。详情请查看右侧推荐结果。`
+    return `AI分析已完成，共推荐${recs.length}只股票。请查看右侧推荐结果了解详情。`
   }
 
   // 回退到通用摘要
-  return 'AI分析完成，请查看右侧推荐结果了解详情。'
+  return 'AI分析已完成，请查看右侧推荐结果了解详情。'
 }
 
 // 获取工具状态

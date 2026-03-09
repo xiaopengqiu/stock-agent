@@ -22,7 +22,7 @@ import {
   NewspaperSharp, Notifications,
   PowerOutline, Pulse,
   ReorderTwoOutline,
-  SettingsOutline, Skull, SkullOutline, SkullSharp, Hammer,
+  SettingsOutline, Skull, SkullOutline, SkullSharp,
   SparklesOutline,
   StarOutline,
   Wallet, WarningOutline,
@@ -391,51 +391,72 @@ const menuOptions = ref([
         key: 'market12',
         icon: renderIcon(FirefoxBrowser),
       },
+    ]
+  },
+  {
+    label: () => 'AI选股',
+    key: 'ai-stock-pick',
+    icon: renderIcon(Robot),
+    children: [
       {
         label: () =>
             h(
                 RouterLink,
                 {
-                  href: '#',
                   to: {
-                    name: 'market',
+                    name: 'ai-stock-pick',
                     query: {
-                      name: "AI选股"
-                    }
+                      name: 'AI选股',
+                    },
                   },
                   onClick: () => {
-                    activeKey.value = 'market'
-                    EventsEmit("changeMarketTab", {ID: 0, name: 'AI选股'})
+                    activeKey.value = 'ai-stock-pick-1'
                   },
                 },
                 {default: () => 'AI选股',}
             ),
-        key: 'market13',
-        icon: renderIcon(Robot),
+        key: 'ai-stock-pick-1',
       },
       {
         label: () =>
             h(
                 RouterLink,
                 {
-                  href: '#',
                   to: {
-                    name: 'market',
+                    name: 'agent',
                     query: {
-                      name: "持仓分析"
-                    }
-                  },
-                  onClick: () => {
-                    activeKey.value = 'market'
-                    EventsEmit("changeMarketTab", {ID: 0, name: '持仓分析'})
-                  },
+                      name:"资讯问答",
+                    },
+                    onClick: () => {
+                      activeKey.value = 'agent'
+                    },
+                  }
                 },
-                {default: () => '持仓分析',}
+                {default: () => '资讯问答'}
             ),
-        key: 'market14',
-        icon: renderIcon(Wallet),
-      },
+        key: 'agent',
+      }
     ]
+  },
+  {
+    label: () =>
+        h(
+            RouterLink,
+            {
+              to: {
+                name: 'position-analysis',
+                query: {
+                  name: '持仓分析',
+                },
+              },
+              onClick: () => {
+                activeKey.value = 'position-analysis'
+              },
+            },
+            {default: () => '持仓分析',}
+        ),
+    key: 'position-analysis',
+    icon: renderIcon(Wallet),
   },
   {
     label: () =>
@@ -472,26 +493,6 @@ const menuOptions = ref([
             RouterLink,
             {
               to: {
-                name: 'agent',
-                query: {
-                  name:"Ai智能体",
-                },
-                onClick: () => {
-                  activeKey.value = 'agent'
-                },
-              }
-            },
-            {default: () => 'Ai智能体'}
-        ),
-    key: 'agent',
-    icon: renderIcon(Robot),
-  },
-  {
-    label: () =>
-        h(
-            RouterLink,
-            {
-              to: {
                 name: 'settings',
                 query: {
                   name:"设置",
@@ -505,26 +506,6 @@ const menuOptions = ref([
         ),
     key: 'settings',
     icon: renderIcon(SettingsOutline),
-  },
-  {
-    label: () =>
-        h(
-            RouterLink,
-            {
-              to: {
-                name: 'tool-settings',
-                query: {
-                  name:"工具配置",
-                }
-              },
-              onClick: () => {
-                activeKey.value = 'tool-settings'
-              },
-            },
-            {default: () => '工具配置'}
-        ),
-    key: 'tool-settings',
-    icon: renderIcon(Hammer),
   },
   {
     label: () =>

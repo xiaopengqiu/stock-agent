@@ -41,7 +41,8 @@
       "Bash(openclaw update:*)",
       "Bash(npm i:*)",
       "Bash(openclaw:*)",
-      "Bash(npx openclaw:*)"
+      "Bash(npx openclaw:*)",
+      "WebFetch(domain:skillsmp.com)"
     ]
   }
 }

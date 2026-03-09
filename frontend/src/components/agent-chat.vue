@@ -78,7 +78,10 @@ const isStreamLoad = ref(false);
 const chatRef = ref(null);
 const isShowToBottom = ref(false);
 
-const icon = ref('https://raw.githubusercontent.com/ArvinLovegood/go-stock/master/build/appicon.png');
+// 可爱的 AI 助手头像（可爱的猫咪机器人风格）
+const aiAvatar = ref('https://api.dicebear.com/7.x/bottts/svg?seed=stockai&backgroundColor=e0f7fa&colors=00897b,4dd0e1,80deea,b2ebf2,e0f7fa');
+// 可爱的用户头像（可爱的笑脸表情风格）
+const userAvatar = ref('https://api.dicebear.com/7.x/adventurer/svg?seed=happyinvestor&backgroundColor=fff3e0');
 import {darkTheme, NFlex, NImage,NSelect} from "naive-ui";
 import {ChatWithAgent, GetAiConfigs, GetConfig, GetSponsorInfo, GetVersionInfo} from "../../wailsjs/go/main/App";
 import {EventsOff, EventsOn} from '../../wailsjs/runtime'
@@ -137,7 +140,10 @@ onMounted(() => {
 
 
   GetVersionInfo().then((res) => {
-    icon.value = res.icon;
+    // 如果有自定义图标则使用，否则保持可爱头像
+    if (res.icon) {
+      aiAvatar.value = res.icon;
+    }
   });
 
 });
@@ -160,6 +166,32 @@ const clearConfirm = function () {
 const handleOperation = function (type, options) {
   console.log('handleOperation', type, options);
 };
+// 头像渲染辅助函数
+const renderAvatar = (src: string, isAi: boolean) => {
+  return h('div', {
+    class: isAi ? 'chat-avatar ai-avatar' : 'chat-avatar user-avatar',
+    style: {
+      width: '48px',
+      height: '48px',
+      borderRadius: '50%',
+      overflow: 'hidden',
+      flexShrink: '0',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '24px',
+    }
+  }, [
+    h(NImage, {
+      src: src,
+      height: '48px',
+      width: '48px',
+      style: 'border-radius: 50%;',
+      previewDisabled: true
+    })
+  ]);
+};
+
 // 倒序渲染
 const chatList = ref([
   // {
@@ -168,8 +200,8 @@ const chatList = ref([
   //   reasoning: '',
   // },
   {
-    avatar: h(NImage, { src: icon.value, height: '48px', width: '48px'}),
-    name: 'Go-Stock AI',
+    avatar: renderAvatar(aiAvatar.value, true),
+    name: '🤖 Go-Stock AI',
     datetime: '',
     reasoning: '',
     content: '我是您的AI赋能股票分析助手,您可以问我任何关于股票投资方面的问题。',
@@ -177,8 +209,8 @@ const chatList = ref([
     duration: 10,
   },
   {
-    avatar: 'https://tdesign.gtimg.com/site/avatar.jpg',
-    name: '宇宙无敌大韭菜',
+    avatar: renderAvatar(userAvatar.value, false),
+    name: '🚀 投资者',
     datetime: '',
     content: '介绍下自己？',
     role: 'user',
@@ -200,8 +232,8 @@ const inputEnter = function () {
   }
   if (!inputValue.value) return;
   const params = {
-    avatar: 'https://tdesign.gtimg.com/site/avatar.jpg',
-    name: '宇宙无敌大韭菜',
+    avatar: renderAvatar(userAvatar.value, false),
+    name: '🚀 投资者',
     datetime: new Date().toDateString(),
     content: inputValue.value,
     role: 'user',
@@ -209,8 +241,8 @@ const inputEnter = function () {
   chatList.value.unshift(params);
   // 空消息占位
   const params2 = {
-    avatar:  h(NImage, { src: icon.value, height: '48px', width: '48px'}),
-    name: 'Go-Stock AI',
+    avatar: renderAvatar(aiAvatar.value, true),
+    name: '🤖 Go-Stock AI',
     datetime: new Date().toDateString(),
     content: '',
     reasoning: '',
@@ -233,6 +265,78 @@ const inputEnter = function () {
 ::-webkit-scrollbar-track {
   background-color: var(--td-scroll-track-color);
 }
+
+/* 可爱的头像动画效果 */
+.chat-avatar {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: scale(1.1) rotate(5deg);
+  }
+}
+
+.ai-avatar {
+  animation: ai-bounce 3s ease-in-out infinite;
+  box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+
+  &:hover {
+    animation-play-state: paused;
+    box-shadow: 0 6px 20px rgba(0, 137, 123, 0.5);
+  }
+}
+
+.user-avatar {
+  animation: user-wobble 4s ease-in-out infinite;
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+
+  &:hover {
+    animation-play-state: paused;
+    box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5);
+  }
+}
+
+@keyframes ai-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes user-wobble {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-2deg);
+  }
+  75% {
+    transform: rotate(2deg);
+  }
+}
+
+/* 聊天消息气泡美化 */
+.t-chat__message {
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateX(5px);
+  }
+}
+
+.t-chat__message--assistant {
+  .t-chat__message-bubble {
+    border-radius: 16px 16px 16px 4px;
+  }
+}
+
+.t-chat__message--user {
+  .t-chat__message-bubble {
+    border-radius: 16px 16px 4px 16px;
+  }
+}
+
 .chat-box {
   position: relative;
   height: 100%;

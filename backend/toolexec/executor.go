@@ -60,6 +60,16 @@ func isNewsTool(toolName string) bool {
 		"GetStockResearchReport",
 		"GetIndustryResearchReport",
 		"QueryInteractiveAnswerData",
+		"GetNewsList2",
+		"GetTelegraphListWithPaging",
+		"TradingViewNewsDetail",
+		"GetSecuritiesCompanyOpinionContent",
+		"GetNews24HoursList",
+		"GetFinancialReport",
+		"News",
+		"Telegraph",
+		"Research",
+		"Opinion",
 	}
 	for _, name := range newsToolNames {
 		if strings.Contains(toolName, name) || toolName == name {
@@ -71,10 +81,12 @@ func isNewsTool(toolName string) bool {
 
 // extractStockCodeFromArgs 从工具参数中提取股票代码
 func extractStockCodeFromArgs(arguments string) string {
+	logger.SugaredLogger.Debugf("extractStockCodeFromArgs: arguments=%s", arguments)
 	// 尝试从JSON参数中提取常见的股票代码字段
-	stockCodeFields := []string{"stockCode", "stock_code", "code"}
+	stockCodeFields := []string{"stockCode", "stock_code", "code", "stock_code", "tsCode", "ts_code"}
 	for _, field := range stockCodeFields {
 		if code := gjson.Get(arguments, field).String(); code != "" {
+			logger.SugaredLogger.Debugf("extractStockCodeFromArgs: 从字段 %s 提取到股票代码: %s", field, code)
 			return code
 		}
 	}
@@ -83,10 +95,12 @@ func extractStockCodeFromArgs(arguments string) string {
 
 // extractStockNameFromArgs 从工具参数中提取股票名称或搜索关键词
 func extractStockNameFromArgs(arguments string) string {
+	logger.SugaredLogger.Debugf("extractStockNameFromArgs: arguments=%s", arguments)
 	// 尝试从JSON参数中提取常见的字段
-	searchFields := []string{"searchWords", "search_words", "keyWord", "keyword", "words"}
+	searchFields := []string{"searchWords", "search_words", "keyWord", "keyword", "words", "stockName", "stock_name", "name"}
 	for _, field := range searchFields {
 		if name := gjson.Get(arguments, field).String(); name != "" {
+			logger.SugaredLogger.Debugf("extractStockNameFromArgs: 从字段 %s 提取到关键词: %s", field, name)
 			return name
 		}
 	}
