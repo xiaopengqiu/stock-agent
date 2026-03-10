@@ -398,40 +398,65 @@ const menuOptions = ref([
         h(
             RouterLink,
             {
+              href: '#',
               to: {
                 name: 'ai-stock-pick',
                 query: {
                   name: 'AI选股',
-                },
+                }
               },
               onClick: () => {
                 activeKey.value = 'ai-stock-pick'
               },
             },
-            {default: () => 'AI选股',}
+            {default: () => 'AI选股'}
         ),
     key: 'ai-stock-pick',
     icon: renderIcon(Robot),
-  },
-  {
-    label: () =>
-        h(
-            RouterLink,
-            {
-              to: {
-                name: 'agent',
-                query: {
-                  name:"资讯问答",
+    children: [
+      {
+        label: () =>
+            h(
+                RouterLink,
+                {
+                  href: '#',
+                  to: {
+                    name: 'ai-stock-pick',
+                    query: {
+                      name: "AI选股",
+                    }
+                  },
+                  onClick: () => {
+                    activeKey.value = 'ai-stock-pick'
+                  },
                 },
-                onClick: () => {
-                  activeKey.value = 'agent'
+                {default: () => 'AI选股',}
+            ),
+        key: 'ai-stock-pick-1',
+        icon: renderIcon(Robot),
+      },
+      {
+        label: () =>
+            h(
+                RouterLink,
+                {
+                  href: '#',
+                  to: {
+                    name: 'agent',
+                    query: {
+                      name:"资讯问答",
+                    },
+                  },
+                  onClick: () => {
+                    activeKey.value = 'agent'
+                  },
                 },
-              }
-            },
-            {default: () => '资讯问答'}
-        ),
-    key: 'agent',
-    icon: renderIcon(CommentNote20Filled),
+                {default: () => '资讯问答'}
+            ),
+        key: 'agent',
+        icon: renderIcon(CommentNote20Filled),
+      },
+    ]
   },
   {
     label: () =>

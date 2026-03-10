@@ -798,22 +798,36 @@ function restoreFromCache() {
       const data = JSON.parse(cached)
       // 检查缓存是否在1小时内
       if (data.timestamp && Date.now() - data.timestamp < 3600000) {
+        // 检查是否是旧格式的消息（第一条消息是否包含"请告诉我您的选股需求"
+        let isOldFormat = false
         if (data.messages && data.messages.length > 0) {
-          messages.value = data.messages
+          const firstMsg = data.messages[0]
+          if (firstMsg.content && firstMsg.content.includes('请告诉我您的选股需求')) {
+            isOldFormat = true
+          }
         }
-        if (data.recommendations && data.recommendations.length > 0) {
-          recommendations.value = data.recommendations
+        
+        // 如果是旧格式，不恢复消息
+        if (!isOldFormat) {
+          if (data.messages && data.messages.length > 0) {
+            messages.value = data.messages
+          }
+          if (data.recommendations && data.recommendations.length > 0) {
+            recommendations.value = data.recommendations
+          }
+          if (data.fullReport) {
+            fullReport.value = data.fullReport
+          }
+          if (data.reportId) {
+            reportId.value = data.reportId
+          }
+          if (data.viewMode) {
+            viewMode.value = data.viewMode
+          }
+          console.log('从缓存恢复了AI荐股状态')
+        } else {
+          console.log('检测到旧格式缓存，不恢复消息，使用新的引导对话')
         }
-        if (data.fullReport) {
-          fullReport.value = data.fullReport
-        }
-        if (data.reportId) {
-          reportId.value = data.reportId
-        }
-        if (data.viewMode) {
-          viewMode.value = data.viewMode
-        }
-        console.log('从缓存恢复了AI荐股状态')
       }
     }
   } catch (e) {
@@ -856,11 +870,47 @@ const messages = ref([
   {
     id: 1,
     role: 'assistant',
-    content: '请告诉我您的选股需求，例如：\n\n- 推荐今日资金流入大的科技股\n- 寻找市盈率低于20且业绩增长的银行股\n- 推荐近期创新高的新能源龙头股',
+    content: '我是您的AI赋能股票分析助手，您可以告诉我您的选股需求。',
     fullContent: null,
     reasoning: '',
     reasoningExpanded: false,
-    timestamp: Date.now()
+    timestamp: Date.now() - 70000
+  },
+  {
+    id: 2,
+    role: 'user',
+    content: '我是价值投资者，偏好低PE、高ROE的蓝筹股，重点关注财务健康度和长期成长性，帮我筛选出当前A股中符合这些条件的股票',
+    fullContent: null,
+    reasoning: '',
+    reasoningExpanded: false,
+    timestamp: Date.now() - 60000
+  },
+  {
+    id: 3,
+    role: 'assistant',
+    content: '好的！作为价值投资者，我来帮您筛选优质蓝筹股。\n\n**价值投资筛选逻辑：**\n\n1. **低估值（PE）**：\n   - PE（市盈率）处于行业低位\n   - PE < 行业平均水平\n   - 关注PE的历史分位数\n\n2. **高盈利能力（ROE）**：\n   - ROE（净资产收益率）> 15%\n   - ROE连续多年稳定\n   - 关注扣非ROE\n\n3. **财务健康**：\n   - 资产负债率适中\n   - 现金流充裕\n   - 分红稳定\n\n4. **蓝筹特质**：\n   - 行业龙头地位\n   - 业绩稳定增长\n   - 商业模式清晰\n\n让我为您筛选当前市场上的价值投资标的...',
+    fullContent: null,
+    reasoning: '',
+    reasoningExpanded: false,
+    timestamp: Date.now() - 50000
+  },
+  {
+    id: 4,
+    role: 'user',
+    content: '我追求高成长，偏好科技、新能源赛道，重点关注营收增长率和市场空间，能承受较高波动，推荐一些具有爆发潜力的股票',
+    fullContent: null,
+    reasoning: '',
+    reasoningExpanded: false,
+    timestamp: Date.now() - 40000
+  },
+  {
+    id: 5,
+    role: 'assistant',
+    content: '好的！作为成长型投资者，我来帮您筛选具有爆发潜力的股票。\n\n**成长投资筛选逻辑：**\n\n1. **赛道聚焦**：优先筛选电子（半导体、消费电子）、新能源车（锂电池、整车）、新能源（光伏、风电）、人工智能等优质赛道\n\n2. **营收高增长**：\n   - 营收同比增长率 > 30%\n   - 营收环比持续增长\n   - 关注营收增长的可持续性\n\n3. **市场空间**：\n   - 行业景气度高\n   - 政策支持力度大\n   - 市场渗透率低但提升快\n\n4. **技术实力**：\n   - 研发费用率 > 5%\n   - 拥有核心技术或专利\n\n5. **适当容忍估值**：\n   - 不过度看重PE估值\n   - 更关注PS（市销率）\n   - 关注研发投入转化效率\n\n让我为您筛选当前市场上符合这些条件的成长股...',
+    fullContent: null,
+    reasoning: '',
+    reasoningExpanded: false,
+    timestamp: Date.now() - 30000
   }
 ])
 const toolsList = ref([])
@@ -2382,7 +2432,7 @@ watch(messages, () => {
 
 /* ========== 对话UI样式 ========== */
 .message-item {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
   opacity: 0;
   animation: messageSlideIn 0.3s ease forwards;
 }
@@ -2415,7 +2465,7 @@ watch(messages, () => {
   display: flex;
   align-items: flex-start;
   max-width: 90%;
-  gap: 10px;
+  gap: 6px;
 }
 
 .message-wrapper.user-message .message-content-wrapper {
@@ -2428,9 +2478,9 @@ watch(messages, () => {
 }
 
 .message-bubble {
-  padding: 12px 16px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   transition: box-shadow 0.2s ease;
 }
 
@@ -2459,10 +2509,16 @@ watch(messages, () => {
 .ai-bubble :deep(.md-editor-preview) {
   font-size: 14px;
   line-height: 1.7;
+  text-align: left;
 }
 
 .ai-bubble :deep(.md-editor-preview p) {
   margin: 8px 0;
+  text-align: left;
+}
+
+.ai-bubble :deep(.md-editor-preview-wrapper) {
+  text-align: left;
 }
 
 /* 确保 Markdown 内容不会破坏滚动 */
