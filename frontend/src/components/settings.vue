@@ -48,6 +48,7 @@ const formValue = ref({
   sponsorCode: "",
   httpProxy:"",
   httpProxyEnabled:false,
+  enableThinking: false,
 })
 
 // 添加一个新的AI配置到列表
@@ -58,8 +59,8 @@ function addAiConfig() {
     apiKey: '',
     modelName: 'deepseek-chat',
     temperature: 0.1,
-    maxTokens: 1024,
-    timeOut: 60,
+    maxTokens: 32768,
+    timeOut: 600,
   }));
 }
 
@@ -106,6 +107,7 @@ onMounted(() => {
     formValue.value.sponsorCode = res.sponsorCode
     formValue.value.httpProxy=res.httpProxy;
     formValue.value.httpProxyEnabled=res.httpProxyEnabled;
+    formValue.value.enableThinking=res.enableThinking || false;
 
   })
 
@@ -148,6 +150,7 @@ function saveConfig() {
     sponsorCode: formValue.value.sponsorCode,
     httpProxy:formValue.value.httpProxy,
     httpProxyEnabled:formValue.value.httpProxyEnabled,
+    enableThinking: formValue.value.enableThinking,
   })
 
   if (config.sponsorCode) {
@@ -237,6 +240,7 @@ function importConfig() {
       formValue.value.sponsorCode = config.sponsorCode
       formValue.value.httpProxy=config.httpProxy
       formValue.value.httpProxyEnabled=config.httpProxyEnabled
+      formValue.value.enableThinking=config.enableThinking || false
     };
     reader.readAsText(file);
   };
@@ -713,6 +717,9 @@ async function handleReloadTools() {
             <n-form-item-gi :span="10" v-if="formValue.httpProxyEnabled" title="http代理地址"
                             label="http代理地址" path="httpProxy">
               <n-input type="text" placeholder="http代理地址" v-model:value="formValue.httpProxy" clearable/>
+            </n-form-item-gi>
+            <n-form-item-gi :span="3" label="深度思考" path="enableThinking">
+              <n-switch v-model:value="formValue.enableThinking"/>
             </n-form-item-gi>
 
             <n-gi :span="24" v-if="formValue.openAI.enable">

@@ -370,7 +370,7 @@ func (s *StockPickService) getDefaultPrompt() string {
 
 1. ChoiceStockByIndicators - 【首选】根据自然语言筛选股票，获取技术指标（MACD、KDJ、RSI、BOLL、均线等）和财务数据
    - 使用示例："股票名称;MACD,KDJ,RSI,BOLL,5日均线,10日均线,30日均线,60日均线,成交量"
-   - 可以获取：技术指标、PE、PB、ROE、净利润增长率等核心数据
+   - 可以获取：技术指标、PE、PB、ROE、净利润增长率等核心数据。若没有返回有效数据，可以适当放松查询条件
 
 2. QueryStockKLine - 获取K线数据进行技术分析
    - 获取最近60-90天的日K线数据

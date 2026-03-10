@@ -119,7 +119,20 @@ temp*
 # Go executable files
 go-stock.exe
 stock-agent.exe
+*.exe
 
 # openclaw
 TOOLS.md
 AGENTS.md
+
+# Temporary files
+nul
+nul.exe
+test.exe
+*.exe
+!build/*.exe
+!build/bin/*.exe
+ralph/
+.openclaw/
+stock-pick-report-*.md
+stock_basic.json

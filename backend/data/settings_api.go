@@ -38,6 +38,7 @@ type Settings struct {
 	SponsorCode            string `json:"sponsorCode"`
 	HttpProxy              string `json:"httpProxy"`
 	HttpProxyEnabled       bool   `json:"httpProxyEnabled"`
+	EnableThinking         bool   `json:"enableThinking"`
 }
 
 func (receiver Settings) TableName() string {
@@ -110,6 +111,7 @@ func UpdateConfig(s *SettingConfig) string {
 			"sponsor_code":               s.SponsorCode,
 			"http_proxy":                 s.HttpProxy,
 			"http_proxy_enabled":         s.HttpProxyEnabled,
+			"enable_thinking":            s.EnableThinking,
 		})
 
 		//更新AiConfig

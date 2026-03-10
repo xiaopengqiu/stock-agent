@@ -35,7 +35,7 @@
             "baseUrl": "https://ark.cn-beijing.volces.com/api/v3",
             "apiKey": "2f674b95-cefa-4312-9c45-24260ec260fd",
             "modelName": "deepseek-v3-1-terminus",
-            "maxTokens": 4096,
+            "maxTokens": 32768,
             "temperature": 0.1,
             "timeOut": 600
         }

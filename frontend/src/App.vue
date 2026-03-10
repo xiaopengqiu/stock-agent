@@ -394,49 +394,44 @@ const menuOptions = ref([
     ]
   },
   {
-    label: () => 'AI选股',
+    label: () =>
+        h(
+            RouterLink,
+            {
+              to: {
+                name: 'ai-stock-pick',
+                query: {
+                  name: 'AI选股',
+                },
+              },
+              onClick: () => {
+                activeKey.value = 'ai-stock-pick'
+              },
+            },
+            {default: () => 'AI选股',}
+        ),
     key: 'ai-stock-pick',
     icon: renderIcon(Robot),
-    children: [
-      {
-        label: () =>
-            h(
-                RouterLink,
-                {
-                  to: {
-                    name: 'ai-stock-pick',
-                    query: {
-                      name: 'AI选股',
-                    },
-                  },
-                  onClick: () => {
-                    activeKey.value = 'ai-stock-pick-1'
-                  },
+  },
+  {
+    label: () =>
+        h(
+            RouterLink,
+            {
+              to: {
+                name: 'agent',
+                query: {
+                  name:"资讯问答",
                 },
-                {default: () => 'AI选股',}
-            ),
-        key: 'ai-stock-pick-1',
-      },
-      {
-        label: () =>
-            h(
-                RouterLink,
-                {
-                  to: {
-                    name: 'agent',
-                    query: {
-                      name:"资讯问答",
-                    },
-                    onClick: () => {
-                      activeKey.value = 'agent'
-                    },
-                  }
+                onClick: () => {
+                  activeKey.value = 'agent'
                 },
-                {default: () => '资讯问答'}
-            ),
-        key: 'agent',
-      }
-    ]
+              }
+            },
+            {default: () => '资讯问答'}
+        ),
+    key: 'agent',
+    icon: renderIcon(CommentNote20Filled),
   },
   {
     label: () =>

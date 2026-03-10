@@ -120,10 +120,10 @@ const columns = [
   {
     title: '盈亏%',
     key: 'profitLossPct',
-    width: 100,
+    width: 110,
     render: (row) => h('span', {
       style: { color: row.profit_loss_pct >= 0 ? '#18a058' : '#d03050' }
-    }, formatNumber(row.profit_loss_pct) + '%')
+    }, formatNumber(row.profit_loss_pct, 3) + '%')
   },
   {
     title: '市值',
@@ -728,7 +728,7 @@ onMounted(() => {
               ¥{{ formatNumber(addFormProfitLoss) }}
             </span>
             <span :style="{ color: addFormProfitLossPct >= 0 ? '#18a058' : '#d03050', marginLeft: '12px' }">
-              ({{ formatNumber(addFormProfitLossPct) }}%)
+              ({{ formatNumber(addFormProfitLossPct, 3) }}%)
             </span>
           </div>
         </n-form-item>
@@ -805,7 +805,7 @@ onMounted(() => {
               ¥{{ formatNumber(editFormProfitLoss) }}
             </span>
             <span :style="{ color: editFormProfitLossPct >= 0 ? '#18a058' : '#d03050', marginLeft: '12px' }">
-              ({{ formatNumber(editFormProfitLossPct) }}%)
+              ({{ formatNumber(editFormProfitLossPct, 3) }}%)
             </span>
           </div>
         </n-form-item>
@@ -843,7 +843,7 @@ onMounted(() => {
               <n-gi>
                 盈亏:
                 <span :style="{ color: currentPosition.profit_loss >= 0 ? '#18a058' : '#d03050' }">
-                  ¥{{ formatNumber(currentPosition.profit_loss) }} ({{ formatNumber(currentPosition.profit_loss_pct) }}%)
+                  ¥{{ formatNumber(currentPosition.profit_loss) }} ({{ formatNumber(currentPosition.profit_loss_pct, 3) }}%)
                 </span>
               </n-gi>
             </n-grid>

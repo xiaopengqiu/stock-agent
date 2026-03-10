@@ -88,6 +88,16 @@
                             </n-avatar>
                           </div>
                           <div class="message-bubble ai-bubble">
+                            <!-- 思维链展示 - 默认折叠 -->
+                            <div v-if="msg.reasoning && msg.reasoning.length > 0" class="reasoning-section">
+                              <n-collapse>
+                                <n-collapse-item title="🔍 查看思维过程" name="reasoning">
+                                  <div class="reasoning-content">
+                                    <MdPreview :modelValue="msg.reasoning" :theme="darkTheme ? 'dark' : 'light'"/>
+                                  </div>
+                                </n-collapse-item>
+                              </n-collapse>
+                            </div>
                             <!-- 如果有fullContent，则显示摘要，可以点击查看完整报告 -->
                             <div v-if="msg.fullContent" class="ai-summary-content">
                               <p style="margin: 0; line-height: 1.6;">{{ msg.content }}</p>
@@ -767,6 +777,8 @@ import {
   NForm,
   NFormItem,
   NInputNumber,
+  NCollapse,
+  NCollapseItem,
   useMessage,
   useNotification
 } from "naive-ui"
@@ -846,6 +858,8 @@ const messages = ref([
     role: 'assistant',
     content: '请告诉我您的选股需求，例如：\n\n- 推荐今日资金流入大的科技股\n- 寻找市盈率低于20且业绩增长的银行股\n- 推荐近期创新高的新能源龙头股',
     fullContent: null,
+    reasoning: '',
+    reasoningExpanded: false,
     timestamp: Date.now()
   }
 ])
@@ -1189,6 +1203,8 @@ async function sendMessage() {
     role: 'assistant',
     content: 'AI正在分析中，请稍候...',
     fullContent: '',
+    reasoning: '',
+    reasoningExpanded: false,
     timestamp: Date.now()
   }
   messages.value.push(aiMessage)
@@ -1223,11 +1239,26 @@ function handleStream(data) {
       if (!lastMessage.fullContent) {
         lastMessage.fullContent = ''
       }
-      lastMessage.fullContent += data.content
+      // 区分 reasoning 和 content
+      if (data.isReasoning) {
+        // 这是思维链内容
+        if (!lastMessage.reasoning) {
+          lastMessage.reasoning = ''
+        }
+        lastMessage.reasoning += data.content
+      } else {
+        // 这是正常内容
+        lastMessage.fullContent += data.content
+        fullReport.value += data.content
+      }
       // 分析过程中显示提示信息
       lastMessage.content = 'AI正在分析中，请稍候...'
+    } else {
+      // 如果不是AI消息，仍然添加到完整报告（备用逻辑）
+      if (!data.isReasoning) {
+        fullReport.value += data.content
+      }
     }
-    fullReport.value += data.content
   }
 }
 
@@ -1609,6 +1640,9 @@ function clearChat() {
       id: 1,
       role: 'assistant',
       content: '请告诉我您的选股需求，例如：\n\n- 推荐今日资金流入大的科技股\n- 寻找市盈率低于20且业绩增长的银行股\n- 推荐近期创新高的新能源龙头股',
+      fullContent: null,
+      reasoning: '',
+      reasoningExpanded: false,
       timestamp: Date.now()
     }
   ]
@@ -2442,6 +2476,53 @@ watch(messages, () => {
   overflow-wrap: break-word;
 }
 
+/* 思维链部分样式 */
+.reasoning-section {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+}
+
+.reasoning-section :deep(.n-collapse) {
+  background: transparent;
+}
+
+.reasoning-section :deep(.n-collapse-item__header) {
+  padding: 4px 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.reasoning-section :deep(.n-collapse-item__header-main) {
+  display: flex;
+  align-items: center;
+}
+
+.reasoning-section :deep(.n-collapse-item__content) {
+  padding: 8px 0 0 0;
+}
+
+.reasoning-content {
+  background: white;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+.reasoning-content :deep(.md-editor-preview) {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+.reasoning-content :deep(.md-editor-preview p) {
+  margin: 6px 0;
+}
+
 /* 确保代码块可以水平滚动 */
 .ai-bubble :deep(pre) {
   overflow-x: auto;
@@ -2542,6 +2623,24 @@ watch(messages, () => {
 
   .ai-bubble :deep(.md-editor-preview) {
     color: #e0e0e0;
+  }
+
+  .reasoning-section {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border-left-color: #60a5fa;
+  }
+
+  .reasoning-section :deep(.n-collapse-item__header) {
+    color: #e5e7eb;
+  }
+
+  .reasoning-content {
+    background: #1e293b;
+    border-color: #475569;
+  }
+
+  .reasoning-content :deep(.md-editor-preview) {
+    color: #d1d5db;
   }
 }
 </style>

@@ -974,12 +974,13 @@ func AskAi(o *OpenAi, err error, messages []map[string]interface{}, ch chan map[
 							}
 						} else {
 							ch <- map[string]any{
-								"code":     1,
-								"question": question,
-								"chatId":   streamResponse.Id,
-								"model":    streamResponse.Model,
-								"content":  content,
-								"time":     time.Now().Format(time.DateTime),
+								"code":      1,
+								"question":  question,
+								"chatId":    streamResponse.Id,
+								"model":     streamResponse.Model,
+								"content":   content,
+								"time":      time.Now().Format(time.DateTime),
+								"isContent": true,
 							}
 						}
 
@@ -988,12 +989,13 @@ func AskAi(o *OpenAi, err error, messages []map[string]interface{}, ch chan map[
 					if reasoningContent := choice.Delta.ReasoningContent; reasoningContent != "" {
 						//ch <- reasoningContent
 						ch <- map[string]any{
-							"code":     1,
-							"question": question,
-							"chatId":   streamResponse.Id,
-							"model":    streamResponse.Model,
-							"content":  reasoningContent,
-							"time":     time.Now().Format(time.DateTime),
+							"code":          1,
+							"question":      question,
+							"chatId":        streamResponse.Id,
+							"model":         streamResponse.Model,
+							"content":       reasoningContent,
+							"time":          time.Now().Format(time.DateTime),
+							"isReasoning":   true,
 						}
 
 						//logger.SugaredLogger.Infof("ReasoningContent data: %s", reasoningContent)
@@ -1063,16 +1065,34 @@ func AskAiWithTools(o *OpenAi, err error, messages []map[string]interface{}, ch 
 		o.TimeOut = 300
 	}
 	client.SetTimeout(time.Duration(o.TimeOut) * time.Second)
+
+	// 从配置中读取深度思考开关，默认为 false
+	config := GetSettingConfig()
+	var thinking interface{} = nil
+	if config.Settings != nil && config.EnableThinking {
+		thinking = map[string]string{"type": "enabled"}
+		logger.SugaredLogger.Infof("深度思考已启用")
+	} else {
+		logger.SugaredLogger.Infof("深度思考已禁用")
+	}
+
+	// 构建请求体
+	requestBody := map[string]interface{}{
+		"model":       o.Model,
+		"max_tokens":  o.MaxTokens,
+		"temperature": o.Temperature,
+		"stream":      true,
+		"messages":    messages,
+		"tools":       tools,
+	}
+	// 只有当启用深度思考时才添加 thinking 字段
+	if thinking != nil {
+		requestBody["thinking"] = thinking
+	}
+
 	resp, err := client.R().
 		SetDoNotParseResponse(true).
-		SetBody(map[string]interface{}{
-			"model":       o.Model,
-			"max_tokens":  o.MaxTokens,
-			"temperature": o.Temperature,
-			"stream":      true,
-			"messages":    messages,
-			"tools":       tools,
-		}).
+		SetBody(requestBody).
 		Post("/chat/completions")
 
 	body := resp.RawBody()
@@ -1145,12 +1165,13 @@ func AskAiWithTools(o *OpenAi, err error, messages []map[string]interface{}, ch 
 						} else {
 							currentAIContent.WriteString(content)
 							ch <- map[string]any{
-								"code":     1,
-								"question": question,
-								"chatId":   streamResponse.Id,
-								"model":    streamResponse.Model,
-								"content":  content,
-								"time":     time.Now().Format(time.DateTime),
+								"code":      1,
+								"question":  question,
+								"chatId":    streamResponse.Id,
+								"model":     streamResponse.Model,
+								"content":   content,
+								"time":      time.Now().Format(time.DateTime),
+								"isContent": true,
 							}
 						}
 
@@ -1158,12 +1179,13 @@ func AskAiWithTools(o *OpenAi, err error, messages []map[string]interface{}, ch 
 					if reasoningContent := choice.Delta.ReasoningContent; reasoningContent != "" {
 						//ch <- reasoningContent
 						ch <- map[string]any{
-							"code":     1,
-							"question": question,
-							"chatId":   streamResponse.Id,
-							"model":    streamResponse.Model,
-							"content":  reasoningContent,
-							"time":     time.Now().Format(time.DateTime),
+							"code":          1,
+							"question":      question,
+							"chatId":        streamResponse.Id,
+							"model":         streamResponse.Model,
+							"content":       reasoningContent,
+							"time":          time.Now().Format(time.DateTime),
+							"isReasoning":   true,
 						}
 
 						//logger.SugaredLogger.Infof("ReasoningContent data: %s", reasoningContent)

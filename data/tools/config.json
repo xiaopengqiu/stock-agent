@@ -4,72 +4,84 @@
     {
       "name": "SearchStockByIndicators",
       "type": "builtin",
+      "description": "",
       "enabled": true,
       "config": {}
     },
     {
       "name": "GetStockKLine",
       "type": "builtin",
+      "description": "",
       "enabled": true,
       "config": {}
     },
     {
       "name": "InteractiveAnswer",
       "type": "builtin",
+      "description": "",
       "enabled": true,
       "config": {}
     },
     {
       "name": "GetStockResearchReport",
       "type": "builtin",
+      "description": "",
       "enabled": true,
       "config": {}
     },
     {
       "name": "SearchStockCode",
       "type": "builtin",
+      "description": "",
       "enabled": true,
       "config": {}
     },
     {
       "name": "GetStockPriceInfo",
       "type": "builtin",
+      "description": "",
       "enabled": true,
       "config": {}
     },
     {
       "name": "GetMarketNews",
       "type": "builtin",
+      "description": "",
       "enabled": true,
       "config": {}
     },
     {
       "name": "GetStockNews",
       "type": "builtin",
+      "description": "",
       "enabled": true,
       "config": {}
     },
     {
       "name": "GetFinancialReport",
       "type": "builtin",
+      "description": "",
       "enabled": true,
       "config": {}
     },
     {
       "name": "GetIndustryResearchReport",
       "type": "builtin",
+      "description": "",
       "enabled": true,
       "config": {}
     },
     {
       "name": "QueryBKDictInfo",
       "type": "builtin",
+      "description": "",
       "enabled": true,
       "config": {}
     },
     {
       "name": "QueryEconomicData",
       "type": "builtin",
+      "description": "",
       "enabled": true,
       "config": {}
     }
